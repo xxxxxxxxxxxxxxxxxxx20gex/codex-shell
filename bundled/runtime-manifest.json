@@ -1,0 +1,7 @@
+﻿{
+    "schemaVersion":  1,
+    "version":  "codex-cli 0.146.0-alpha.9.2",
+    "target":  "x86_64-pc-windows-msvc",
+    "fileName":  "codex-x86_64-pc-windows-msvc.exe",
+    "sha256":  "ecd7a3eaff5e42723dbba03b5c91514b3986b5db5cbca8f34619620b5356f31f"
+}

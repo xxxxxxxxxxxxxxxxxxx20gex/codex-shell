@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "catalogVersion": "codex-models-2026-08-06",
+  "source": "codex-rs/models-manager/models.json",
+  "templates": [
+    {
+      "id": "gpt-5.6-sol",
+      "label": "GPT-5.6 Sol",
+      "family": "GPT-5.6",
+      "description": "旗舰智能体编码模型，适合复杂、多步骤任务。",
+      "contextWindow": 272000,
+      "inputModalities": ["text", "image"],
+      "reasoningEfforts": ["low", "medium", "high", "xhigh", "max", "ultra"],
+      "defaultReasoningEffort": "low",
+      "supportsVerbosity": true,
+      "defaultVerbosity": "low"
+    },
+    {
+      "id": "gpt-5.6-terra",
+      "label": "GPT-5.6 Terra",
+      "family": "GPT-5.6",
+      "description": "均衡型智能体编码模型，适合日常开发。",
+      "contextWindow": 272000,
+      "inputModalities": ["text", "image"],
+      "reasoningEfforts": ["low", "medium", "high", "xhigh", "max", "ultra"],
+      "defaultReasoningEffort": "low",
+      "supportsVerbosity": true,
+      "defaultVerbosity": "low"
+    },
+    {
+      "id": "gpt-5.6-luna",
+      "label": "GPT-5.6 Luna",
+      "family": "GPT-5.6",
+      "description": "轻量、快速的智能体模型。",
+      "contextWindow": 272000,
+      "inputModalities": ["text", "image"],
+      "reasoningEfforts": ["low", "medium", "high", "xhigh", "max"],
+      "defaultReasoningEffort": "low",
+      "supportsVerbosity": true,
+      "defaultVerbosity": "low"
+    },
+    {
+      "id": "gpt-5.5",
+      "label": "GPT-5.5",
+      "family": "GPT-5",
+      "description": "上一代通用高能力模型。",
+      "contextWindow": 272000,
+      "inputModalities": ["text", "image"],
+      "reasoningEfforts": ["low", "medium", "high", "xhigh"],
+      "defaultReasoningEffort": "low",
+      "supportsVerbosity": true,
+      "defaultVerbosity": "low"
+    },
+    {
+      "id": "gpt-5.4",
+      "label": "GPT-5.4",
+      "family": "GPT-5",
+      "description": "稳定的通用编码与智能体模型。",
+      "contextWindow": 272000,
+      "inputModalities": ["text", "image"],
+      "reasoningEfforts": ["low", "medium", "high", "xhigh"],
+      "defaultReasoningEffort": "low",
+      "supportsVerbosity": true,
+      "defaultVerbosity": "low"
+    },
+    {
+      "id": "gpt-5.4-mini",
+      "label": "GPT-5.4 Mini",
+      "family": "GPT-5",
+      "description": "成本与速度优先的轻量模板。",
+      "contextWindow": 272000,
+      "inputModalities": ["text", "image"],
+      "reasoningEfforts": ["low", "medium", "high", "xhigh"],
+      "defaultReasoningEffort": "medium",
+      "supportsVerbosity": true,
+      "defaultVerbosity": "medium"
+    },
+    {
+      "id": "gpt-5.2",
+      "label": "GPT-5.2",
+      "family": "GPT-5",
+      "description": "兼容常见中转站的保守能力模板。",
+      "contextWindow": 272000,
+      "inputModalities": ["text", "image"],
+      "reasoningEfforts": ["low", "medium", "high", "xhigh"],
+      "defaultReasoningEffort": "low",
+      "supportsVerbosity": true,
+      "defaultVerbosity": "low"
+    },
+    {
+      "id": "openai-compatible-basic",
+      "label": "OpenAI 兼容 · 基础",
+      "family": "自定义",
+      "description": "只发送模型 ID，不附加推理强度或回答冗余参数。",
+      "contextWindow": 0,
+      "inputModalities": ["text"],
+      "reasoningEfforts": [],
+      "defaultReasoningEffort": null,
+      "supportsVerbosity": false,
+      "defaultVerbosity": null
+    }
+  ]
+}

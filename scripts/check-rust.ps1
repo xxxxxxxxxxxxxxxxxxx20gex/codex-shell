@@ -1,0 +1,17 @@
+$ErrorActionPreference = "Stop"
+$vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+$installationPath = (& $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath | Out-String).Trim()
+
+if (-not $installationPath) {
+    throw "未找到包含 x64 C++ 工具的 Visual Studio Build Tools"
+}
+
+$devShellModule = Join-Path $installationPath "Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
+Import-Module $devShellModule
+Enter-VsDevShell -VsInstallPath $installationPath -SkipAutomaticLocation -DevCmdArguments "-arch=x64 -host_arch=x64"
+
+$projectRoot = Split-Path -Parent $PSScriptRoot
+& "$env:USERPROFILE\.cargo\bin\cargo.exe" check --manifest-path (Join-Path $projectRoot "src-tauri\Cargo.toml")
+if ($LASTEXITCODE -ne 0) {
+    throw "cargo check 失败，退出码：$LASTEXITCODE"
+}
