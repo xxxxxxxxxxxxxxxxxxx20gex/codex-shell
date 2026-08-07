@@ -18,6 +18,7 @@ Codex Shell 是面向个人开发者的 Windows 桌面智能体工作台。产�
 - 核心模块保持单一职责；跨模块数据使用显式类型，不通过任意对象隐式传递。
 - 新增 app-server 方法时，先更新生成协议类型，再在协议客户端增加适配。
 - UI 不得直接管理子进程或密钥；所有系统能力必须经过最小化 Tauri 命令。
+- 项目路径不得写死开发机盘符、用户名或仓库位置；运行时使用 Tauri 路径 API、`current_exe`、环境变量和 PATH，脚本使用 `$PSScriptRoot` 拼接，并在使用候选路径前验证文件存在。
 - 不在高频入口文件堆积业务逻辑；超过约 500 行时优先拆分模块。
 - 用户可见行为必须有对应测试或可复现的验证证据。
 - 提交前至少运行 `pnpm typecheck`、`pnpm build` 和 `cargo check --manifest-path src-tauri/Cargo.toml`。
@@ -38,6 +39,7 @@ Codex Shell 是面向个人开发者的 Windows 桌面智能体工作台。产�
 - [凭据安全](docs/status/credentials-status.md)
 - [模型配置](docs/status/model-config-status.md)
 - [工作区与线程](docs/status/workspace-thread-status.md)
+- [智能体命令与扩展能力](docs/status/agent-capabilities-status.md)
 - [任务时间线](docs/status/timeline-status.md)
 - [审批](docs/status/approvals-status.md)
 - [Diff 与文件变更](docs/status/diff-status.md)

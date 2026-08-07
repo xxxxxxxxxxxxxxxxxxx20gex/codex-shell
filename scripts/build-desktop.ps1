@@ -9,7 +9,24 @@ if (-not $installationPath) {
 $devShellModule = Join-Path $installationPath "Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
 Import-Module $devShellModule
 Enter-VsDevShell -VsInstallPath $installationPath -SkipAutomaticLocation -DevCmdArguments "-arch=x64 -host_arch=x64"
-$env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"
+
+$cargoCommand = Get-Command cargo.exe -ErrorAction SilentlyContinue
+if ($cargoCommand) {
+    $cargo = $cargoCommand.Source
+}
+else {
+    $cargoHome = if ($env:CARGO_HOME) {
+        $env:CARGO_HOME
+    }
+    else {
+        Join-Path ([Environment]::GetFolderPath("UserProfile")) ".cargo"
+    }
+    $cargo = Join-Path $cargoHome "bin\cargo.exe"
+}
+if (-not (Test-Path -LiteralPath $cargo -PathType Leaf)) {
+    throw "未找到 cargo.exe；请将 Cargo 加入 PATH 或设置 CARGO_HOME"
+}
+$env:Path = "$(Split-Path -Parent $cargo);$env:Path"
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
 Push-Location $projectRoot

@@ -1,10 +1,17 @@
 use crate::config::read_settings;
 use crate::credentials::read_api_key;
 use crate::runtime::resolve_codex_executable;
+use std::fs;
 use std::io::{BufRead, BufReader, Write};
 use std::process::{Child, ChildStdin, Command, Stdio};
 use std::sync::Mutex;
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, Manager, State};
+
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
+
+#[cfg(windows)]
+const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 struct AppServerSession {
     child: Child,
@@ -44,19 +51,20 @@ pub fn app_server_start(app: AppHandle, state: State<'_, AppServerState>) -> Res
 
     let settings = read_settings(&app)?;
     let api_key = read_api_key()?;
-    let (executable, _) = resolve_codex_executable();
+    let executable = resolve_codex_executable()?;
+    let local_data_directory = app
+        .path()
+        .app_local_data_dir()
+        .map_err(|error| format!("无法解析 Codex Shell 本地数据目录：{error}"))?;
+    let codex_home = local_data_directory.join("codex-home");
+    let default_workspace = local_data_directory.join("workspace");
+    fs::create_dir_all(&codex_home)
+        .map_err(|error| format!("创建 Codex Shell CODEX_HOME 失败：{error}"))?;
+    fs::create_dir_all(&default_workspace)
+        .map_err(|error| format!("创建 Codex Shell 默认工作区失败：{error}"))?;
     let model = serde_json::to_string(&settings.model_id)
         .map_err(|error| format!("模型 ID 编码失败：{error}"))?;
-    let base_url = serde_json::to_string(&settings.base_url)
-        .map_err(|error| format!("Base URL 编码失败：{error}"))?;
-    let mut arguments = vec![
-        "app-server".to_string(),
-        "--stdio".to_string(),
-        "-c".to_string(),
-        format!("model={model}"),
-        "-c".to_string(),
-        format!("openai_base_url={base_url}"),
-    ];
+    let mut arguments = app_server_arguments(&settings, &model)?;
     if settings.capability_template != "openai-compatible-basic" {
         if let Some(reasoning_effort) = settings.reasoning_effort {
             arguments.extend([
@@ -69,12 +77,19 @@ pub fn app_server_start(app: AppHandle, state: State<'_, AppServerState>) -> Res
         }
     }
 
-    let mut child = Command::new(&executable)
+    let mut command = Command::new(&executable);
+    command
         .args(arguments)
+        .current_dir(&default_workspace)
+        .env("CODEX_HOME", &codex_home)
         .env("OPENAI_API_KEY", api_key)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
+        .stderr(Stdio::piped());
+    #[cfg(windows)]
+    command.creation_flags(CREATE_NO_WINDOW);
+
+    let mut child = command
         .spawn()
         .map_err(|error| format!("启动 {} 失败：{error}", executable.display()))?;
 
@@ -108,6 +123,33 @@ pub fn app_server_start(app: AppHandle, state: State<'_, AppServerState>) -> Res
 
     *session = Some(AppServerSession { child, stdin });
     Ok(process_id)
+}
+
+fn app_server_arguments(
+    settings: &crate::config::ModelSettings,
+    encoded_model: &str,
+) -> Result<Vec<String>, String> {
+    const PROVIDER_ID: &str = "codex_shell_gateway";
+    let base_url = serde_json::to_string(&settings.base_url)
+        .map_err(|error| format!("Base URL 编码失败：{error}"))?;
+    Ok(vec![
+        "app-server".to_string(),
+        "--stdio".to_string(),
+        "-c".to_string(),
+        format!("model={encoded_model}"),
+        "-c".to_string(),
+        format!("model_provider=\"{PROVIDER_ID}\""),
+        "-c".to_string(),
+        format!("model_providers.{PROVIDER_ID}.name=\"Codex Shell Gateway\""),
+        "-c".to_string(),
+        format!("model_providers.{PROVIDER_ID}.base_url={base_url}"),
+        "-c".to_string(),
+        format!("model_providers.{PROVIDER_ID}.wire_api=\"responses\""),
+        "-c".to_string(),
+        format!("model_providers.{PROVIDER_ID}.env_key=\"OPENAI_API_KEY\""),
+        "-c".to_string(),
+        format!("model_providers.{PROVIDER_ID}.requires_openai_auth=false"),
+    ])
 }
 
 #[tauri::command]
@@ -145,3 +187,7 @@ pub fn app_server_stop(state: State<'_, AppServerState>) -> Result<(), String> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+#[path = "app_server_tests.rs"]
+mod tests;

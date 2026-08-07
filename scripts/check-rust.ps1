@@ -11,7 +11,24 @@ Import-Module $devShellModule
 Enter-VsDevShell -VsInstallPath $installationPath -SkipAutomaticLocation -DevCmdArguments "-arch=x64 -host_arch=x64"
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
-& "$env:USERPROFILE\.cargo\bin\cargo.exe" check --manifest-path (Join-Path $projectRoot "src-tauri\Cargo.toml")
+$cargoCommand = Get-Command cargo.exe -ErrorAction SilentlyContinue
+if ($cargoCommand) {
+    $cargo = $cargoCommand.Source
+}
+else {
+    $cargoHome = if ($env:CARGO_HOME) {
+        $env:CARGO_HOME
+    }
+    else {
+        Join-Path ([Environment]::GetFolderPath("UserProfile")) ".cargo"
+    }
+    $cargo = Join-Path $cargoHome "bin\cargo.exe"
+}
+if (-not (Test-Path -LiteralPath $cargo -PathType Leaf)) {
+    throw "未找到 cargo.exe；请将 Cargo 加入 PATH 或设置 CARGO_HOME"
+}
+
+& $cargo check --manifest-path (Join-Path $projectRoot "src-tauri\Cargo.toml")
 if ($LASTEXITCODE -ne 0) {
     throw "cargo check 失败，退出码：$LASTEXITCODE"
 }
