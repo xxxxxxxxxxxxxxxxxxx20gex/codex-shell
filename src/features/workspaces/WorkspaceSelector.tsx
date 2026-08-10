@@ -21,12 +21,16 @@ export function WorkspaceSelector({ path, disabled, onExplore, onChange, onError
 
   return (
     <div className="workspace-selector">
-      <button className="workspace-item" disabled={disabled || !path} onClick={onExplore} title={path ? "浏览工作区文件" : "请先选择工作区"}>
-        <span className="folder-icon">⌁</span>
-        <span><strong>{workspaceName(path)}</strong><small>{path || "尚未选择项目目录"}</small></span>
-        <i className="workspace-expand">›</i>
+      {path && (
+        <button className="workspace-item" disabled={disabled} onClick={onExplore} title="浏览工作区文件">
+          <span className="folder-icon">⌁</span>
+          <span><strong>{workspaceName(path)}</strong><small>{path}</small></span>
+          <i className="workspace-expand">›</i>
+        </button>
+      )}
+      <button className="choose-workspace-button" disabled={disabled} onClick={() => void chooseWorkspace()}>
+        {path ? "更换工作区" : "选择工作区"}
       </button>
-      <button className="choose-workspace-button" disabled={disabled} onClick={() => void chooseWorkspace()}>选择工作区</button>
     </div>
   );
 }

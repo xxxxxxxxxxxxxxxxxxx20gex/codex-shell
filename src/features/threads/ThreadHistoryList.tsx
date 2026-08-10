@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Thread } from "../../generated/app-server/v2/Thread";
 import { writeClipboardText } from "./clipboard";
 import {
+  SessionActionConfirmDialog,
+  type SessionDestructiveAction,
+} from "./SessionActionConfirmDialog";
+import {
   buildThreadNumbers,
   formatThreadNumber,
   threadReference,
@@ -79,6 +83,10 @@ function DeleteIcon() {
 export function ThreadHistoryList(props: Props) {
   const threadNumbers = useMemo(() => buildThreadNumbers(props.threads), [props.threads]);
   const [copyFeedback, setCopyFeedback] = useState<{ threadId: string; label: string } | null>(null);
+  const [pendingAction, setPendingAction] = useState<{
+    action: SessionDestructiveAction;
+    thread: Thread;
+  } | null>(null);
 
   useEffect(() => {
     if (!copyFeedback) return;
@@ -91,8 +99,12 @@ export function ThreadHistoryList(props: Props) {
     if (name?.trim() && name.trim() !== threadTitle(thread)) props.onRename(thread.id, name);
   }
 
-  function remove(thread: Thread) {
-    if (window.confirm(`永久删除“${threadTitle(thread)}”？此操作无法撤销。`)) props.onDelete(thread.id);
+  function confirmPendingAction() {
+    if (!pendingAction) return;
+    const { action, thread } = pendingAction;
+    setPendingAction(null);
+    if (action === "archive") props.onArchive(thread.id);
+    else props.onDelete(thread.id);
   }
 
   async function copyReference(thread: Thread) {
@@ -141,14 +153,22 @@ export function ThreadHistoryList(props: Props) {
                 <ThreadActionButton disabled={busy} onClick={() => props.onTogglePin(thread)} label={thread.isPinned ? "取消固定" : "固定"}><PinIcon pinned={thread.isPinned} /></ThreadActionButton>
                 <ThreadActionButton onClick={() => void copyReference(thread)} label={copyLabel}><CopyIcon /></ThreadActionButton>
                 <ThreadActionButton disabled={busy} onClick={() => rename(thread)} label="重命名"><RenameIcon /></ThreadActionButton>
-                <ThreadActionButton disabled={busy || running} onClick={() => props.onArchive(thread.id)} label={running ? "运行中无法归档" : "归档"}><ArchiveIcon /></ThreadActionButton>
-                <ThreadActionButton disabled={busy || running} onClick={() => remove(thread)} label={running ? "运行中无法删除" : "永久删除"}><DeleteIcon /></ThreadActionButton>
+                <ThreadActionButton disabled={busy || running} onClick={() => setPendingAction({ action: "archive", thread })} label={running ? "运行中无法归档" : "归档"}><ArchiveIcon /></ThreadActionButton>
+                <ThreadActionButton disabled={busy || running} onClick={() => setPendingAction({ action: "delete", thread })} label={running ? "运行中无法删除" : "永久删除"}><DeleteIcon /></ThreadActionButton>
               </div>
             </div>
           );
         })}
         {props.hasMore && <button className="load-more" disabled={props.loading} onClick={props.onLoadMore}>{props.loading ? "加载中…" : "加载更多"}</button>}
       </nav>
+      {pendingAction && (
+        <SessionActionConfirmDialog
+          action={pendingAction.action}
+          thread={pendingAction.thread}
+          onCancel={() => setPendingAction(null)}
+          onConfirm={confirmPendingAction}
+        />
+      )}
     </>
   );
 }

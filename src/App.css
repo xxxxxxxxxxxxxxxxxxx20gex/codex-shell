@@ -144,9 +144,20 @@ code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 .codex-home-error, .codex-home-note { display: block; margin-top: 8px; font-size: 8px; line-height: 1.5; }
 .codex-home-error { color: var(--red); }
 .codex-home-note { color: #8f8257; }
+.workspace-status-card > strong { display: block; overflow-wrap: anywhere; line-height: 1.65; }
+.status-card-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 11px; }
+.status-card-actions button { padding: 6px 9px; font-size: 8px; }
 
 .modal-backdrop { position: fixed; z-index: 10; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(5,5,4,.72); backdrop-filter: blur(8px); }
 .approval-backdrop { position: fixed; z-index: 20; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(5,5,4,.78); backdrop-filter: blur(9px); }
+.confirmation-backdrop { position: fixed; z-index: 30; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(5,5,4,.78); backdrop-filter: blur(9px); }
+.confirmation-dialog { width: min(430px, 94vw); padding: 24px; border: 1px solid #444238; border-radius: 15px; background: #1b1b17; box-shadow: 0 28px 90px rgba(0,0,0,.62); }
+.confirmation-dialog h2 { margin: 7px 0 13px; font-size: 18px; }
+.confirmation-dialog > strong { display: block; overflow: hidden; padding: 10px 12px; border: 1px solid #393832; border-radius: 8px; background: #151513; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.confirmation-dialog > p { margin: 12px 0 0; color: var(--muted); font-size: 10px; line-height: 1.6; }
+.confirmation-dialog footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+.confirmation-dialog footer button { padding: 8px 13px; }
+.destructive-confirm-button { color: #fff; background: #b4453d; }
 .approval-dialog { width: min(560px, 94vw); padding: 24px; border: 1px solid #444238; border-radius: 15px; background: #1b1b17; box-shadow: 0 28px 90px rgba(0,0,0,.62); }
 .approval-dialog h2 { margin: 7px 0 5px; font-size: 18px; }
 .approval-dialog > p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.6; }
@@ -217,6 +228,11 @@ code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 .activity-icon { display: grid; height: 21px; place-items: center; border-radius: 5px; color: var(--accent); background: #24261b; font: 8px "Cascadia Code", Consolas, monospace; }
 .activity-body { overflow: hidden; padding: 0 11px 11px 43px; color: #99978e; font-size: 9px; }.activity-body p { white-space: pre-wrap; }.activity-body pre { max-height: 260px; overflow: auto; margin: 8px 0; padding: 9px; border-radius: 6px; color: #aaa89f; background: #10100e; font: 8px/1.6 "Cascadia Code", Consolas, monospace; white-space: pre-wrap; }.activity-body > small { display: block; margin-top: 6px; color: #66645e; }.activity-command { display: block; overflow-wrap: anywhere; color: #d7e8a5; }.activity-body ul { margin: 7px 0 0; padding: 0; list-style: none; }.activity-body li { display: grid; grid-template-columns: 43px minmax(0,1fr); gap: 7px; padding: 3px 0; }.activity-body li span { color: #77756d; font-size: 8px; }.activity-body li span[data-kind="add"] { color: var(--green); }.activity-body li span[data-kind="delete"] { color: var(--red); }.activity-body li code { overflow: hidden; color: #aaa89f; font-size: 8px; text-overflow: ellipsis; }.activity-error { color: #e5a09a !important; }
 .activity-note { display: flex; align-items: center; gap: 8px; margin: 10px 0 10px 38px; color: #69675f; font-size: 8px; }.activity-note span { color: var(--accent); }
+.turn-progress { display: flex; min-width: 0; align-items: center; gap: 7px; margin: 10px 0 10px 38px; color: #8f9e69; font-size: 9px; }
+.turn-progress strong { overflow: hidden; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.turn-progress small { flex: 0 0 auto; color: #66645e; font-size: 8px; }
+.turn-progress-pulse { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 rgba(180,208,107,.5); animation: turn-progress-pulse 1.6s ease-out infinite; }
+@keyframes turn-progress-pulse { 70% { box-shadow: 0 0 0 5px rgba(180,208,107,0); } 100% { box-shadow: 0 0 0 0 rgba(180,208,107,0); } }
 
 .mention-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 7px; }.mention-chips > span { padding: 4px 5px 4px 7px; border: 1px solid #46502a; border-radius: 5px; color: #c6d991; background: #202418; font-size: 8px; }.mention-chips button { margin-left: 5px; padding: 0; border: 0; color: #79845a; background: transparent; cursor: pointer; }
 .mention-chips > span.skill-chip { border-color: #3c4d59; color: #a8c8df; background: #19232a; }

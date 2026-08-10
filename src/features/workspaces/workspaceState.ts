@@ -2,6 +2,11 @@ import type { FuzzyFileSearchResult } from "../../generated/app-server/FuzzyFile
 
 const STORAGE_KEY = "codex-shell.workspace.v1";
 
+export interface DefaultWorkspace {
+  rootPath: string;
+  path: string;
+}
+
 export function loadWorkspacePath() {
   try {
     return window.localStorage.getItem(STORAGE_KEY);
@@ -22,6 +27,14 @@ export function saveWorkspacePath(path: string | null) {
 export function workspaceName(path: string | null) {
   if (!path) return "未选择工作区";
   return path.replace(/[\\/]+$/, "").split(/[\\/]/).pop() || path;
+}
+
+export function isManagedWorkspacePath(path: string, rootPath: string) {
+  const normalizedPath = path.replace(/[\\/]+$/, "");
+  const normalizedRoot = rootPath.replace(/[\\/]+$/, "");
+  if (normalizedPath.toLowerCase() === normalizedRoot.toLowerCase()) return true;
+  return normalizedPath.toLowerCase().startsWith(`${normalizedRoot.toLowerCase()}\\`)
+    || normalizedPath.toLowerCase().startsWith(`${normalizedRoot.toLowerCase()}/`);
 }
 
 export function joinWorkspacePath(directory: string, name: string) {

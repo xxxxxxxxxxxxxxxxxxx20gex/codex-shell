@@ -3,6 +3,7 @@ mod codex_home;
 mod config;
 mod credentials;
 mod runtime;
+mod workspace;
 
 use app_server::AppServerState;
 
@@ -19,6 +20,7 @@ pub fn run() {
             config::load_model_settings,
             config::save_model_settings,
             credentials::save_api_key,
+            workspace::get_default_workspace,
         ])
         .run(tauri::generate_context!())
         .expect("failed to run Codex Shell");

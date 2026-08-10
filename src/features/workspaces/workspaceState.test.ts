@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   activeFileMentionQuery,
+  isManagedWorkspacePath,
   joinWorkspacePath,
   replaceActiveFileMention,
   resolveFileSearchPath,
@@ -35,5 +36,16 @@ describe("workspace paths", () => {
 
   it("renders paths relative to the selected workspace", () => {
     expect(workspaceRelativePath("C:\\Work", "C:\\work\\src\\App.tsx")).toBe("src\\App.tsx");
+  });
+
+  it("recognizes only paths inside the managed default workspace root", () => {
+    expect(isManagedWorkspacePath(
+      "C:\\Users\\example\\Documents\\Codex-Shell\\2026-08-10",
+      "C:\\Users\\example\\Documents\\Codex-Shell",
+    )).toBe(true);
+    expect(isManagedWorkspacePath(
+      "C:\\Users\\example\\Documents\\Codex-Shell-Project",
+      "C:\\Users\\example\\Documents\\Codex-Shell",
+    )).toBe(false);
   });
 });

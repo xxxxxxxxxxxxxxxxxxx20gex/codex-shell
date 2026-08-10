@@ -1,17 +1,21 @@
 import { useEffect, useRef } from "react";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
+import type { McpToolCallProgressNotification } from "../../generated/app-server/v2/McpToolCallProgressNotification";
 import type { Turn } from "../../generated/app-server/v2/Turn";
 import type { TurnPlanUpdatedNotification } from "../../generated/app-server/v2/TurnPlanUpdatedNotification";
 import { userMessageText } from "../runtime/sessionState";
 import { agentMessageTiming, userMessageTiming } from "./conversationTiming";
 import { TurnActivityItem } from "./TurnActivityItem";
 import { TurnPlanView } from "./TurnPlanView";
+import { TurnProgressIndicator } from "./TurnProgressIndicator";
 
 interface Props {
   turns: Turn[];
   running: boolean;
   modelId: string;
   plansByTurnId?: Record<string, TurnPlanUpdatedNotification>;
+  activeItemTurnIds?: Record<string, string>;
+  mcpProgressByItemId?: Record<string, McpToolCallProgressNotification>;
 }
 
 function lastItemId(items: ThreadItem[], type: "userMessage" | "agentMessage") {
@@ -21,7 +25,14 @@ function lastItemId(items: ThreadItem[], type: "userMessage" | "agentMessage") {
   return undefined;
 }
 
-export function ConversationTimeline({ turns, running, modelId, plansByTurnId = {} }: Props) {
+export function ConversationTimeline({
+  turns,
+  running,
+  modelId,
+  plansByTurnId = {},
+  activeItemTurnIds = {},
+  mcpProgressByItemId = {},
+}: Props) {
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,6 +44,8 @@ export function ConversationTimeline({ turns, running, modelId, plansByTurnId = 
       {turns.map((turn, turnIndex) => {
         const items = turn.items;
         const hasAgentItem = items.some((item) => item.type === "agentMessage");
+        const hasActiveProcess = items.some((item) => activeItemTurnIds[item.id] === turn.id
+          && item.type !== "userMessage" && item.type !== "agentMessage");
         const isActiveTurn = running && turnIndex === turns.length - 1;
         const lastUserMessageId = lastItemId(items, "userMessage");
         const lastAgentMessageId = lastItemId(items, "agentMessage");
@@ -61,13 +74,28 @@ export function ConversationTimeline({ turns, running, modelId, plansByTurnId = 
                   )}
                 </div>
               </div>
-            ) : <TurnActivityItem item={item} key={item.id} />)}
+            ) : (
+              <TurnActivityItem
+                item={item}
+                key={item.id}
+                active={activeItemTurnIds[item.id] === turn.id}
+              />
+            ))}
+            {isActiveTurn && (
+              <TurnProgressIndicator
+                turn={turn}
+                activeItemTurnIds={activeItemTurnIds}
+                mcpProgressByItemId={mcpProgressByItemId}
+              />
+            )}
             {isActiveTurn && !hasAgentItem && (
               <div className="agent-block">
                 <div className="agent-avatar">C</div>
                 <div className="agent-content">
                   <div className="agent-meta"><strong>Codex</strong><span>{modelId}</span></div>
-                  <p className="agent-response pending">正在等待模型响应…</p>
+                  <p className="agent-response pending">
+                    {hasActiveProcess ? "Codex 正在处理任务…" : "正在等待模型响应…"}
+                  </p>
                   {answerTiming && (
                     <div className="message-timing agent-message-timing">{answerTiming}</div>
                   )}

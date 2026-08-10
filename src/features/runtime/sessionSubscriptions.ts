@@ -6,7 +6,9 @@ import type { FileChangePatchUpdatedNotification } from "../../generated/app-ser
 import type { FileChangeRequestApprovalParams } from "../../generated/app-server/v2/FileChangeRequestApprovalParams";
 import type { ItemCompletedNotification } from "../../generated/app-server/v2/ItemCompletedNotification";
 import type { ItemStartedNotification } from "../../generated/app-server/v2/ItemStartedNotification";
+import type { McpToolCallProgressNotification } from "../../generated/app-server/v2/McpToolCallProgressNotification";
 import type { PermissionsRequestApprovalParams } from "../../generated/app-server/v2/PermissionsRequestApprovalParams";
+import type { PlanDeltaNotification } from "../../generated/app-server/v2/PlanDeltaNotification";
 import type { ReasoningSummaryTextDeltaNotification } from "../../generated/app-server/v2/ReasoningSummaryTextDeltaNotification";
 import type { ReasoningTextDeltaNotification } from "../../generated/app-server/v2/ReasoningTextDeltaNotification";
 import type { ThreadNameUpdatedNotification } from "../../generated/app-server/v2/ThreadNameUpdatedNotification";
@@ -43,7 +45,9 @@ export function subscribeToSessionEvents(client: AppServerClient, handlers: Hand
 
   const disposers = [
     client.onNotification("item/agentMessage/delta", (params) => onActive<AgentMessageDeltaNotification>(params, (notification) => handlers.dispatch({ type: "agentDelta", notification }))),
+    client.onNotification("item/plan/delta", (params) => onActive<PlanDeltaNotification>(params, (notification) => handlers.dispatch({ type: "planDelta", notification }))),
     client.onNotification("item/commandExecution/outputDelta", (params) => onActive<CommandExecutionOutputDeltaNotification>(params, (notification) => handlers.dispatch({ type: "commandDelta", notification }))),
+    client.onNotification("item/mcpToolCall/progress", (params) => onActive<McpToolCallProgressNotification>(params, (notification) => handlers.dispatch({ type: "mcpProgress", notification }))),
     client.onNotification("item/reasoning/summaryTextDelta", (params) => onActive<ReasoningSummaryTextDeltaNotification>(params, (notification) => handlers.dispatch({ type: "reasoningSummaryDelta", notification }))),
     client.onNotification("item/reasoning/textDelta", (params) => onActive<ReasoningTextDeltaNotification>(params, (notification) => handlers.dispatch({ type: "reasoningTextDelta", notification }))),
     client.onNotification("item/fileChange/patchUpdated", (params) => onActive<FileChangePatchUpdatedNotification>(params, (notification) => handlers.dispatch({ type: "fileChangeUpdated", notification }))),

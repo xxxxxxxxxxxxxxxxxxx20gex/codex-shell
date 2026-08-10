@@ -2,11 +2,11 @@ use crate::codex_home::resolve_codex_home;
 use crate::config::read_settings;
 use crate::credentials::read_api_key;
 use crate::runtime::resolve_codex_executable;
-use std::fs;
+use crate::workspace::resolve_default_workspace;
 use std::io::{BufRead, BufReader, Write};
 use std::process::{Child, ChildStdin, Command, Stdio};
 use std::sync::Mutex;
-use tauri::{AppHandle, Emitter, Manager, State};
+use tauri::{AppHandle, Emitter, State};
 
 #[cfg(windows)]
 use std::os::windows::process::CommandExt;
@@ -54,13 +54,7 @@ pub fn app_server_start(app: AppHandle, state: State<'_, AppServerState>) -> Res
     let api_key = read_api_key()?;
     let executable = resolve_codex_executable()?;
     let codex_home = resolve_codex_home(&app)?;
-    let local_data_directory = app
-        .path()
-        .app_local_data_dir()
-        .map_err(|error| format!("无法解析 Codex Shell 本地数据目录：{error}"))?;
-    let default_workspace = local_data_directory.join("workspace");
-    fs::create_dir_all(&default_workspace)
-        .map_err(|error| format!("创建 Codex Shell 默认工作区失败：{error}"))?;
+    let default_workspace = resolve_default_workspace(&app)?.path;
     let model = serde_json::to_string(&settings.model_id)
         .map_err(|error| format!("模型 ID 编码失败：{error}"))?;
     let mut arguments = app_server_arguments(&settings, &model)?;

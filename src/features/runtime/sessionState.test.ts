@@ -324,4 +324,104 @@ describe("agentSessionReducer", () => {
       memoryCitation: null,
     }]);
   });
+
+  it("streams native plan deltas while tracking the active item lifecycle", () => {
+    const planItem: ThreadItem = { type: "plan", id: "plan-1", text: "" };
+    const loaded = agentSessionReducer(initialAgentSessionState, {
+      type: "loadThread",
+      thread: thread([turn("turn-1")]),
+    });
+    const started = agentSessionReducer(loaded, {
+      type: "itemStarted",
+      notification: {
+        threadId: "thread-1",
+        turnId: "turn-1",
+        item: planItem,
+        startedAtMs: 1,
+      },
+    });
+    const first = agentSessionReducer(started, {
+      type: "planDelta",
+      notification: {
+        threadId: "thread-1",
+        turnId: "turn-1",
+        itemId: "plan-1",
+        delta: "先分析",
+      },
+    });
+    const streamed = agentSessionReducer(first, {
+      type: "planDelta",
+      notification: {
+        threadId: "thread-1",
+        turnId: "turn-1",
+        itemId: "plan-1",
+        delta: "再实施",
+      },
+    });
+
+    expect(streamed.turns[0].items).toEqual([{ ...planItem, text: "先分析再实施" }]);
+    expect(streamed.activeItemTurnIds).toEqual({ "plan-1": "turn-1" });
+
+    const completed = agentSessionReducer(streamed, {
+      type: "itemCompleted",
+      notification: {
+        threadId: "thread-1",
+        turnId: "turn-1",
+        item: { ...planItem, text: "最终计划" },
+        completedAtMs: 2,
+      },
+    });
+
+    expect(completed.turns[0].items).toEqual([{ ...planItem, text: "最终计划" }]);
+    expect(completed.activeItemTurnIds).toEqual({});
+  });
+
+  it("keeps native MCP progress only while its item is active", () => {
+    const mcpItem: ThreadItem = {
+      type: "mcpToolCall",
+      id: "mcp-1",
+      server: "docs",
+      tool: "search",
+      status: "inProgress",
+      arguments: { query: "Codex" },
+      appContext: null,
+      pluginId: null,
+      result: null,
+      error: null,
+      durationMs: null,
+    };
+    const started = agentSessionReducer(initialAgentSessionState, {
+      type: "itemStarted",
+      notification: {
+        threadId: "thread-1",
+        turnId: "turn-1",
+        item: mcpItem,
+        startedAtMs: 1,
+      },
+    });
+    const progress = agentSessionReducer(started, {
+      type: "mcpProgress",
+      notification: {
+        threadId: "thread-1",
+        turnId: "turn-1",
+        itemId: "mcp-1",
+        message: "正在检索文档",
+      },
+    });
+
+    expect(progress.mcpProgressByItemId["mcp-1"]?.message).toBe("正在检索文档");
+
+    const completed = agentSessionReducer(progress, {
+      type: "itemCompleted",
+      notification: {
+        threadId: "thread-1",
+        turnId: "turn-1",
+        item: { ...mcpItem, status: "completed" },
+        completedAtMs: 2,
+      },
+    });
+
+    expect(completed.activeItemTurnIds).toEqual({});
+    expect(completed.mcpProgressByItemId).toEqual({});
+  });
 });

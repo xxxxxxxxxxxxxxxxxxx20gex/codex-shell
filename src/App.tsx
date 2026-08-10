@@ -36,6 +36,8 @@ import { WorkspaceExplorer } from "./features/workspaces/WorkspaceExplorer";
 import { WorkspaceSelector } from "./features/workspaces/WorkspaceSelector";
 import {
   activeFileMentionQuery,
+  type DefaultWorkspace,
+  isManagedWorkspacePath,
   loadWorkspacePath,
   replaceActiveFileMention,
   resolveFileSearchPath,
@@ -61,6 +63,7 @@ function App() {
   const [draft, setDraft] = useState("");
   const [permissionMode, setPermissionMode] = useState<PermissionMode>("ask");
   const [workspacePath, setWorkspacePath] = useState<string | null>(loadWorkspacePath);
+  const [defaultWorkspace, setDefaultWorkspace] = useState<DefaultWorkspace | null>(null);
   const [workspaceExplorerOpen, setWorkspaceExplorerOpen] = useState(false);
   const [mentions, setMentions] = useState<FileMention[]>([]);
   const [skills, setSkills] = useState<SkillMention[]>([]);
@@ -82,7 +85,19 @@ function App() {
   const mentionRequestRef = useRef(0);
   const workspaceGridRef = useRef<HTMLElement>(null);
   const resizingPanelRef = useRef<ResizablePanel | null>(null);
-  const session = useAgentSession(settings, permissionMode, workspacePath);
+  const newThreadWorkspacePath = workspacePath ?? defaultWorkspace?.path ?? null;
+  const session = useAgentSession(settings, permissionMode, newThreadWorkspacePath);
+  const currentWorkspacePath = session.thread?.cwd
+    ? String(session.thread.cwd)
+    : newThreadWorkspacePath;
+  const usingManagedWorkspace = Boolean(
+    currentWorkspacePath
+    && defaultWorkspace
+    && isManagedWorkspacePath(currentWorkspacePath, defaultWorkspace.rootPath),
+  );
+  const workspaceStatusKind = currentWorkspacePath
+    ? (usingManagedWorkspace ? "default" : "custom")
+    : "waiting";
   const mentionQuery = activeFileMentionQuery(draft);
   const typedSlashQuery = activeSlashCommandQuery(draft);
   const slashQuery = slashMenuForced ? "" : slashMenuDismissed ? null : typedSlashQuery;
@@ -101,18 +116,26 @@ function App() {
   useEffect(() => {
     if (!("__TAURI_INTERNALS__" in window)) return;
     void invoke<ModelSettings>("load_model_settings").then(setSettings).catch(() => undefined);
+    void invoke<DefaultWorkspace>("get_default_workspace")
+      .then(setDefaultWorkspace)
+      .catch((error) => setUiError(error instanceof Error ? error.message : String(error)));
   }, []);
 
   useEffect(() => {
     if (!session.thread?.cwd) return;
     const cwd = String(session.thread.cwd);
+    if (defaultWorkspace && isManagedWorkspacePath(cwd, defaultWorkspace.rootPath)) {
+      setWorkspacePath(null);
+      saveWorkspacePath(null);
+      return;
+    }
     setWorkspacePath(cwd);
     saveWorkspacePath(cwd);
-  }, [session.thread?.id, session.thread?.cwd]);
+  }, [defaultWorkspace, session.thread?.id, session.thread?.cwd]);
 
   useEffect(() => {
     const requestId = ++mentionRequestRef.current;
-    if (!workspacePath || mentionQuery === null) {
+    if (!currentWorkspacePath || mentionQuery === null) {
       setMentionResults([]);
       setMentionLoading(false);
       return;
@@ -128,7 +151,7 @@ function App() {
       });
     }, 120);
     return () => window.clearTimeout(timeout);
-  }, [mentionQuery, session.searchFiles, workspacePath]);
+  }, [currentWorkspacePath, mentionQuery, session.searchFiles]);
 
   useEffect(() => setSlashSelectedIndex(0), [slashQuery]);
 
@@ -327,7 +350,7 @@ function App() {
         <aside className="sidebar panel">
           <button className="primary-button new-task" onClick={startNewTask} disabled={session.submitting || session.openingThreadId !== null}>＋ 新建对话</button>
           <div className="section-label">工作区</div>
-          <WorkspaceSelector path={workspacePath} disabled={session.submitting || session.openingThreadId !== null} onExplore={() => setWorkspaceExplorerOpen(true)} onChange={changeWorkspace} onError={setUiError} />
+          <WorkspaceSelector path={usingManagedWorkspace ? null : workspacePath} disabled={session.submitting || session.openingThreadId !== null} onExplore={() => setWorkspaceExplorerOpen(true)} onChange={changeWorkspace} onError={setUiError} />
           <ThreadHistoryList
             threads={session.history}
             activeThreadId={session.thread?.id ?? null}
@@ -381,9 +404,16 @@ function App() {
             </div>
           )}
           {session.turns.length > 0 ? (
-            <ConversationTimeline turns={session.turns} running={session.running} modelId={settings.modelId} plansByTurnId={session.plansByTurnId} />
+            <ConversationTimeline
+              turns={session.turns}
+              running={session.running}
+              modelId={settings.modelId}
+              plansByTurnId={session.plansByTurnId}
+              activeItemTurnIds={session.activeItemTurnIds}
+              mcpProgressByItemId={session.mcpProgressByItemId}
+            />
           ) : (
-            <div className="timeline"><div className="conversation-empty"><div className="agent-avatar">C</div><h2>开始一个新对话</h2><p>选择工作区，配置模型与 API Key，然后描述需要 Codex 完成的工作。</p></div></div>
+            <div className="timeline"><div className="conversation-empty"><div className="agent-avatar">C</div><h2>开始一个新对话</h2><p>今日默认工作区会自动准备，也可以选择已有项目目录，然后描述需要 Codex 完成的工作。</p></div></div>
           )}
           <div className="composer-wrap">
             {(session.error || uiError) && <div className="composer-error">{session.error || uiError}</div>}
@@ -394,8 +424,8 @@ function App() {
                 {skills.map((skill) => <span className="skill-chip" key={skill.path} title={skill.path}>✦ {skill.name}<button onClick={() => toggleSkill(skill)}>×</button></span>)}
                 {mentions.map((mention) => <span key={mention.path} title={mention.path}>@{mention.name}<button onClick={() => setMentions((current) => current.filter((item) => item.path !== mention.path))}>×</button></span>)}
               </div>}
-              <textarea value={draft} onChange={(event) => { setDraft(event.target.value); setUiError(""); setCommandNotice(""); setSlashMenuForced(false); setSlashMenuDismissed(false); }} onKeyDown={handleComposerKeyDown} placeholder={collaborationMode === "plan" ? "描述需要分析和规划的任务…" : workspacePath ? "交给 Codex 一个任务，输入 / 使用命令，输入 @ 引用文件…" : "输入 / 使用命令，或直接交给 Codex 一个任务…"} />
-              {workspacePath && mentionQuery !== null && <FileMentionMenu query={mentionQuery} results={mentionResults} loading={mentionLoading} onSelect={selectMention} />}
+              <textarea value={draft} onChange={(event) => { setDraft(event.target.value); setUiError(""); setCommandNotice(""); setSlashMenuForced(false); setSlashMenuDismissed(false); }} onKeyDown={handleComposerKeyDown} placeholder={collaborationMode === "plan" ? "描述需要分析和规划的任务…" : currentWorkspacePath ? "交给 Codex 一个任务，输入 / 使用命令，输入 @ 引用文件…" : "正在准备默认工作区…"} />
+              {currentWorkspacePath && mentionQuery !== null && <FileMentionMenu query={mentionQuery} results={mentionResults} loading={mentionLoading} onSelect={selectMention} />}
               {slashMenuVisible && <SlashCommandMenu query={slashQuery ?? ""} selectedIndex={slashSelectedIndex} hasThread={Boolean(session.thread)} running={session.running} onSelect={(id) => void runSlashCommand(id, "", !slashMenuForced)} />}
               {commandPanel === "skills" && <SkillPicker selected={skills} loadSkills={session.listSkills} onToggle={toggleSkill} onClose={() => setCommandPanel(null)} />}
               {commandPanel === "mcp" && <McpStatusPanel loadServers={session.listMcpServers} onClose={() => setCommandPanel(null)} />}
@@ -444,7 +474,16 @@ function App() {
             <button className={inspectorTab === "status" ? "active" : ""} onClick={() => setInspectorTab("status")}>状态</button>
           </div>
           {inspectorTab === "changes" ? <DiffInspector diff={currentDiff} /> : <>
-            <div className="inspector-card"><div className="card-title"><span>本地会话</span><i>{session.turns.length} 回合</i></div><strong>{session.thread?.id || "尚未创建"}</strong><p>{session.thread ? `工作区：${session.thread.cwd}` : "创建对话后会自动持久化，重新启动软件仍可恢复。"}</p></div>
+            <div className="inspector-card"><div className="card-title"><span>本地会话</span><i>{session.turns.length} 回合</i></div><strong>{session.thread?.id || "尚未创建"}</strong><p>{session.thread ? "当前 Session 已由 app-server 持久化。" : "创建对话后会自动持久化，重新启动软件仍可恢复。"}</p></div>
+            <div className="inspector-card workspace-status-card">
+              <div className="card-title"><span>当前工作区</span><i>{workspaceStatusKind}</i></div>
+              <strong>{currentWorkspacePath || "正在准备默认工作区"}</strong>
+              <p>{usingManagedWorkspace ? "Codex Shell 按日期维护的默认工作区；左侧仅展示用户主动选择的项目。" : "用户选择的项目目录；新 Session 将在这里创建。"}</p>
+              <div className="status-card-actions">
+                <button className="secondary-button" disabled={!currentWorkspacePath} onClick={() => setWorkspaceExplorerOpen(true)}>浏览文件</button>
+                {!usingManagedWorkspace && defaultWorkspace && <button className="secondary-button" onClick={() => changeWorkspace(null)}>使用今日默认</button>}
+              </div>
+            </div>
             <CodexHomeCard path={session.codexHome} disabled={session.runningThreadCount > 0 || session.submitting} onRestart={session.restart} />
           </>}
         </aside>
@@ -452,7 +491,7 @@ function App() {
 
       {settingsOpen && <ModelSettingsPanel settings={settings} onClose={() => setSettingsOpen(false)} onSave={(next) => { setSettings(next); setSettingsOpen(false); void session.restart(); }} />}
       {session.approval && <ApprovalDialog approval={session.approval} onApprove={session.approve} onDecline={session.decline} />}
-      {workspaceExplorerOpen && workspacePath && <WorkspaceExplorer rootPath={workspacePath} onClose={() => setWorkspaceExplorerOpen(false)} readDirectory={session.readWorkspaceDirectory} readFile={session.readWorkspaceFile} />}
+      {workspaceExplorerOpen && currentWorkspacePath && <WorkspaceExplorer rootPath={currentWorkspacePath} onClose={() => setWorkspaceExplorerOpen(false)} readDirectory={session.readWorkspaceDirectory} readFile={session.readWorkspaceFile} />}
     </main>
   );
 }

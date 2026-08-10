@@ -128,6 +128,7 @@ export function useAgentSession(
         clearRunningTurns();
         setSubmitting(false);
         clearApprovals();
+        dispatch({ type: "clearLiveProgress" });
       },
       onProtocolError: (protocolError) => setError(protocolError.message),
       requestApproval: (pending) => new Promise<JsonValue>((resolve) => {
@@ -407,12 +408,15 @@ export function useAgentSession(
     }
   }, [ensureConnected, isThreadRunning, startNewTask, threadActionId]);
 
+  const activeWorkspacePath = sessionState.thread?.cwd
+    ? String(sessionState.thread.cwd)
+    : workspacePath;
   const { searchFiles, readWorkspaceDirectory, readWorkspaceFile } = useWorkspaceFiles(
     ensureConnected,
-    workspacePath,
+    activeWorkspacePath,
   );
   const currentThreadId = useCallback(() => threadIdRef.current, []);
-  const agentCommands = useAgentCommands(ensureConnected, currentThreadId, workspacePath);
+  const agentCommands = useAgentCommands(ensureConnected, currentThreadId, activeWorkspacePath);
 
   const restart = useCallback(async () => {
     threadOperationRef.current = true;
@@ -445,6 +449,8 @@ export function useAgentSession(
     turns: sessionState.turns,
     diffsByTurnId: sessionState.diffsByTurnId,
     plansByTurnId: sessionState.plansByTurnId,
+    activeItemTurnIds: sessionState.activeItemTurnIds,
+    mcpProgressByItemId: sessionState.mcpProgressByItemId,
     tokenUsage: sessionState.tokenUsage,
     history,
     historyLoading,

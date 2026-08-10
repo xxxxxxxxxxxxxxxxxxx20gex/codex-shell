@@ -2,6 +2,7 @@ import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 
 interface Props {
   item: ThreadItem;
+  active?: boolean;
 }
 
 function durationLabel(durationMs: number | null) {
@@ -136,14 +137,14 @@ function ActivityBody({ item }: Props) {
   }
 }
 
-export function TurnActivityItem({ item }: Props) {
+export function TurnActivityItem({ item, active = false }: Props) {
   if (item.type === "userMessage" || item.type === "agentMessage") return null;
   const expandable = item.type !== "contextCompaction";
   if (!expandable) {
     return <div className="activity-note"><span>{activityIcon(item)}</span>{activityTitle(item)}</div>;
   }
   return (
-    <details className="activity-card" open={item.type === "plan" || item.type === "fileChange"}>
+    <details className="activity-card" open={active || item.type === "plan" || item.type === "fileChange"}>
       <summary>
         <span className="activity-icon">{activityIcon(item)}</span>
         <strong>{activityTitle(item)}</strong>

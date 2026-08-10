@@ -89,4 +89,46 @@ describe("conversation timing", () => {
     expect(markup).toContain("pnpm test");
     expect(markup).toContain("16 tests passed");
   });
+
+  it("surfaces the native active item and MCP progress in the conversation", () => {
+    const mcp: ThreadItem = {
+      type: "mcpToolCall",
+      id: "mcp-1",
+      server: "docs",
+      tool: "search",
+      status: "inProgress",
+      arguments: { query: "app-server" },
+      appContext: null,
+      pluginId: null,
+      result: null,
+      error: null,
+      durationMs: null,
+    };
+    const turn = {
+      ...completedTurn(),
+      items: [mcp],
+      status: "inProgress",
+      completedAt: null,
+      durationMs: null,
+    } as Turn;
+    const progress = {
+      threadId: "thread-1",
+      turnId: "turn-1",
+      itemId: "mcp-1",
+      message: "正在读取接口文档",
+    };
+    const markup = renderToStaticMarkup(
+      <ConversationTimeline
+        turns={[turn]}
+        running
+        modelId="gpt-test"
+        activeItemTurnIds={{ "mcp-1": "turn-1" }}
+        mcpProgressByItemId={{ "mcp-1": progress }}
+      />,
+    );
+
+    expect(markup).toContain("正在读取接口文档");
+    expect(markup).toContain("Codex 正在处理任务…");
+    expect(markup).toContain("role=\"status\"");
+  });
 });

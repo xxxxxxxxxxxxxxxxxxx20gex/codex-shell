@@ -3,6 +3,8 @@ import type { CommandExecutionOutputDeltaNotification } from "../../generated/ap
 import type { FileChangePatchUpdatedNotification } from "../../generated/app-server/v2/FileChangePatchUpdatedNotification";
 import type { ItemCompletedNotification } from "../../generated/app-server/v2/ItemCompletedNotification";
 import type { ItemStartedNotification } from "../../generated/app-server/v2/ItemStartedNotification";
+import type { McpToolCallProgressNotification } from "../../generated/app-server/v2/McpToolCallProgressNotification";
+import type { PlanDeltaNotification } from "../../generated/app-server/v2/PlanDeltaNotification";
 import type { ReasoningSummaryTextDeltaNotification } from "../../generated/app-server/v2/ReasoningSummaryTextDeltaNotification";
 import type { ReasoningTextDeltaNotification } from "../../generated/app-server/v2/ReasoningTextDeltaNotification";
 import type { Thread } from "../../generated/app-server/v2/Thread";
@@ -22,11 +24,14 @@ export interface AgentSessionState {
   turns: Turn[];
   diffsByTurnId: Record<string, string>;
   plansByTurnId: Record<string, TurnPlanUpdatedNotification>;
+  activeItemTurnIds: Record<string, string>;
+  mcpProgressByItemId: Record<string, McpToolCallProgressNotification>;
   tokenUsage: ThreadTokenUsage | null;
 }
 
 export type AgentSessionAction =
   | { type: "clear" }
+  | { type: "clearLiveProgress" }
   | { type: "loadThread"; thread: Thread }
   | { type: "updateThread"; thread: Thread }
   | { type: "renameThread"; threadId: string; name: string | null }
@@ -34,7 +39,9 @@ export type AgentSessionAction =
   | { type: "itemStarted"; notification: ItemStartedNotification }
   | { type: "itemCompleted"; notification: ItemCompletedNotification }
   | { type: "agentDelta"; notification: AgentMessageDeltaNotification }
+  | { type: "planDelta"; notification: PlanDeltaNotification }
   | { type: "commandDelta"; notification: CommandExecutionOutputDeltaNotification }
+  | { type: "mcpProgress"; notification: McpToolCallProgressNotification }
   | { type: "reasoningSummaryDelta"; notification: ReasoningSummaryTextDeltaNotification }
   | { type: "reasoningTextDelta"; notification: ReasoningTextDeltaNotification }
   | { type: "fileChangeUpdated"; notification: FileChangePatchUpdatedNotification }
@@ -48,6 +55,8 @@ export const initialAgentSessionState: AgentSessionState = {
   turns: [],
   diffsByTurnId: {},
   plansByTurnId: {},
+  activeItemTurnIds: {},
+  mcpProgressByItemId: {},
   tokenUsage: null,
 };
 
@@ -68,11 +77,19 @@ function entriesForVisibleTurns<T>(
 function withTurns(state: AgentSessionState, turns: Turn[]): AgentSessionState {
   const visibleTurns = boundedTurns(turns);
   if (visibleTurns.length === turns.length) return { ...state, turns: visibleTurns };
+  const visibleTurnIds = new Set(visibleTurns.map((turn) => turn.id));
   return {
     ...state,
     turns: visibleTurns,
     diffsByTurnId: entriesForVisibleTurns(state.diffsByTurnId, visibleTurns),
     plansByTurnId: entriesForVisibleTurns(state.plansByTurnId, visibleTurns),
+    activeItemTurnIds: Object.fromEntries(
+      Object.entries(state.activeItemTurnIds).filter(([, turnId]) => visibleTurnIds.has(turnId)),
+    ),
+    mcpProgressByItemId: Object.fromEntries(
+      Object.entries(state.mcpProgressByItemId)
+        .filter(([, notification]) => visibleTurnIds.has(notification.turnId)),
+    ),
   };
 }
 
@@ -205,6 +222,20 @@ function applyAgentDelta(turns: Turn[], notification: AgentMessageDeltaNotificat
   });
 }
 
+function applyPlanDelta(turns: Turn[], notification: PlanDeltaNotification) {
+  if (!turns.some((turn) => turn.id === notification.turnId)) {
+    return applyPlanDelta([...turns, pendingTurn(notification.turnId)], notification);
+  }
+  return turns.map((turn) => {
+    if (turn.id !== notification.turnId) return turn;
+    const existing = turn.items.find((item) => item.id === notification.itemId);
+    const item: ThreadItem = existing?.type === "plan"
+      ? { ...existing, text: existing.text + notification.delta }
+      : { type: "plan", id: notification.itemId, text: notification.delta };
+    return upsertItem(turn, item);
+  });
+}
+
 export function agentSessionReducer(
   state: AgentSessionState,
   action: AgentSessionAction,
@@ -212,6 +243,8 @@ export function agentSessionReducer(
   switch (action.type) {
     case "clear":
       return initialAgentSessionState;
+    case "clearLiveProgress":
+      return { ...state, activeItemTurnIds: {}, mcpProgressByItemId: {} };
     case "loadThread":
       const visibleTurns = boundedTurns(action.thread.turns);
       return {
@@ -219,6 +252,8 @@ export function agentSessionReducer(
         turns: visibleTurns,
         diffsByTurnId: reconstructedDiffs(visibleTurns),
         plansByTurnId: {},
+        activeItemTurnIds: {},
+        mcpProgressByItemId: {},
         tokenUsage: null,
       };
     case "updateThread":
@@ -236,16 +271,29 @@ export function agentSessionReducer(
       );
     case "itemStarted":
       return withTurns(
-        state,
+        {
+          ...state,
+          activeItemTurnIds: {
+            ...state.activeItemTurnIds,
+            [action.notification.item.id]: action.notification.turnId,
+          },
+        },
         updateTurnItem(state.turns, action.notification.turnId, action.notification.item),
       );
-    case "itemCompleted":
+    case "itemCompleted": {
+      const activeItemTurnIds = { ...state.activeItemTurnIds };
+      const mcpProgressByItemId = { ...state.mcpProgressByItemId };
+      delete activeItemTurnIds[action.notification.item.id];
+      delete mcpProgressByItemId[action.notification.item.id];
       return withTurns(
-        state,
+        { ...state, activeItemTurnIds, mcpProgressByItemId },
         updateTurnItem(state.turns, action.notification.turnId, action.notification.item),
       );
+    }
     case "agentDelta":
       return withTurns(state, applyAgentDelta(state.turns, action.notification));
+    case "planDelta":
+      return withTurns(state, applyPlanDelta(state.turns, action.notification));
     case "commandDelta":
       return {
         ...state,
@@ -257,6 +305,15 @@ export function agentSessionReducer(
             ? { ...item, aggregatedOutput: `${item.aggregatedOutput ?? ""}${action.notification.delta}` }
             : item,
         ),
+      };
+    case "mcpProgress":
+      if (!state.turns.some((turn) => turn.id === action.notification.turnId)) return state;
+      return {
+        ...state,
+        mcpProgressByItemId: {
+          ...state.mcpProgressByItemId,
+          [action.notification.itemId]: action.notification,
+        },
       };
     case "reasoningSummaryDelta":
       return {
@@ -328,8 +385,23 @@ export function agentSessionReducer(
       };
     case "tokenUsageUpdated":
       return { ...state, tokenUsage: action.notification.tokenUsage };
-    case "turnCompleted":
-      return withTurns(state, mergeCompletedTurn(state.turns, action.notification.turn));
+    case "turnCompleted": {
+      const completedTurnId = action.notification.turn.id;
+      return withTurns(
+        {
+          ...state,
+          activeItemTurnIds: Object.fromEntries(
+            Object.entries(state.activeItemTurnIds)
+              .filter(([, turnId]) => turnId !== completedTurnId),
+          ),
+          mcpProgressByItemId: Object.fromEntries(
+            Object.entries(state.mcpProgressByItemId)
+              .filter(([, notification]) => notification.turnId !== completedTurnId),
+          ),
+        },
+        mergeCompletedTurn(state.turns, action.notification.turn),
+      );
+    }
   }
 }
 
