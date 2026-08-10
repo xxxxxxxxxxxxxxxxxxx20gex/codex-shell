@@ -36,6 +36,7 @@ import type { TurnInterruptParams } from "../../generated/app-server/v2/TurnInte
 import type { TurnInterruptResponse } from "../../generated/app-server/v2/TurnInterruptResponse";
 import type { TurnStartParams } from "../../generated/app-server/v2/TurnStartParams";
 import type { TurnStartResponse } from "../../generated/app-server/v2/TurnStartResponse";
+import { asError, errorMessage } from "../../shared/errors";
 import {
   TauriAppServerTransport,
   type AppServerTransport,
@@ -67,10 +68,6 @@ type ReverseRequestHandler = (params: unknown) => Promise<JsonValue>;
 type ProtocolErrorHandler = (error: Error) => void;
 
 const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
-
-function asError(error: unknown) {
-  return error instanceof Error ? error : new Error(String(error));
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -365,7 +362,7 @@ export class AppServerClient {
     } catch (error) {
       await this.send({
         id: message.id,
-        error: { code: -32603, message: error instanceof Error ? error.message : String(error) },
+        error: { code: -32603, message: errorMessage(error) },
       }).catch(() => undefined);
     }
   }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import type { FsReadDirectoryEntry } from "../../generated/app-server/v2/FsReadDirectoryEntry";
+import { errorMessage } from "../../shared/errors";
 import { decodeFilePreview, formatFileSize, type FilePreview } from "./filePreview";
 import { joinWorkspacePath, workspaceName, workspaceRelativePath } from "./workspaceState";
 
@@ -14,10 +15,6 @@ interface DirectoryState {
   entries: FsReadDirectoryEntry[];
   loading: boolean;
   error: string;
-}
-
-function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : String(error);
 }
 
 function fileName(path: string) {

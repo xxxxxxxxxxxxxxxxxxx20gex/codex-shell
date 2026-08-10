@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ThreadGoal } from "../../generated/app-server/v2/ThreadGoal";
+import { errorMessage } from "../../shared/errors";
 
 interface Props {
   getGoal: () => Promise<ThreadGoal | null>;
@@ -16,14 +17,14 @@ export function GoalPanel({ getGoal, setGoal, clearGoal, onClose }: Props) {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    void getGoal().then((value) => { setCurrentGoal(value); setObjective(value?.objective ?? ""); }).catch((value) => setError(value instanceof Error ? value.message : String(value))).finally(() => setLoading(false));
+    void getGoal().then((value) => { setCurrentGoal(value); setObjective(value?.objective ?? ""); }).catch((value) => setError(errorMessage(value))).finally(() => setLoading(false));
   }, [getGoal]);
 
   async function save() {
     if (!objective.trim() || saving) return;
     setSaving(true); setError("");
     try { setCurrentGoal(await setGoal(objective.trim())); }
-    catch (value) { setError(value instanceof Error ? value.message : String(value)); }
+    catch (value) { setError(errorMessage(value)); }
     finally { setSaving(false); }
   }
 
@@ -31,7 +32,7 @@ export function GoalPanel({ getGoal, setGoal, clearGoal, onClose }: Props) {
     if (saving) return;
     setSaving(true); setError("");
     try { await clearGoal(); setCurrentGoal(null); setObjective(""); }
-    catch (value) { setError(value instanceof Error ? value.message : String(value)); }
+    catch (value) { setError(errorMessage(value)); }
     finally { setSaving(false); }
   }
 

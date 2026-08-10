@@ -5,7 +5,7 @@
 - 最近变更：`/plan` 可仅切换模式，也可用 `/plan <需求>` 直接发起规划 Turn；输入框显示 Plan 状态及退出入口。每个 Turn 都显式发送 `default` 或 `plan`，避免 app-server 的协作模式状态粘连到后续普通对话。
 - 当前接口：`SlashCommandMenu`、`SkillPicker`、`McpStatusPanel`、`GoalPanel`、`useAgentCommands` 及 `AppServerClient` 对应稳定 RPC 包装。
 - 能力边界：Plan 是当前唯一启用的实验字段，只在 initialize 能力声明和 `turn/start` 客户端封装中最小扩展，不生成或暴露整套 experimental schema。Codex Core 从模型元数据动态决定自动压缩阈值：缺省为原始上下文窗口的 90%，模型或配置提供的更低值优先且不会超过 90%；Codex Shell 不设置、不复制也不触发该阈值，只展示 app-server 上报的实际用量。独立 CODEX_HOME 只会列出安装到 Codex Shell 环境的 Skills 和 MCP 配置，不自动读取官方 Codex 用户目录。
-- 已知问题：尚无 Skills/MCP 安装与配置界面；命令面板尚未实现焦点陷阱和完整屏幕阅读器播报。
+- 已知问题：尚无 Skills/MCP 安装与配置界面；命令面板尚未实现焦点陷阱和完整屏幕阅读器播报。阶段性上下文审查发现：普通文本发送沿用 app-server 的约 1 MiB 字符上限，Shell 尚无单片段 10K-token 硬上限；多 Skill 选择没有整轮数量/总预算；固定 Runtime 的全局 `AGENTS.md` 与 Goal continuation 也需要上游或 Runtime 层的有界化审查。为保持原生输入语义，本轮未在 UI 单点增加可绕过的截断规则。
 - 下一步：增加独立 CODEX_HOME 内的 Skills 安装、MCP 配置与认证流程，并跟踪 collaborationMode 的稳定化进度以移除局部实验类型。
 - 验证证据：客户端测试精确验证 experimental 能力声明与 Plan collaborationMode 线格式；真实固定 Runtime Plan smoke 完成，收到 192 条 `item/plan/delta` 和 2 条 Plan item 通知。既有 Skills/MCP/Goal smoke 继续有效。
 - 最后更新：2026-08-10

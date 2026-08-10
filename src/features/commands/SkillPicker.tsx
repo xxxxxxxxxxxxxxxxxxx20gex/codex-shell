@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { SkillMetadata } from "../../generated/app-server/v2/SkillMetadata";
+import { errorMessage } from "../../shared/errors";
 import type { SkillMention } from "../runtime/useAgentSession";
 
 interface Props {
@@ -16,7 +17,7 @@ export function SkillPicker({ selected, loadSkills, onToggle, onClose }: Props) 
   const [error, setError] = useState("");
 
   useEffect(() => {
-    void loadSkills().then(setSkills).catch((value) => setError(value instanceof Error ? value.message : String(value))).finally(() => setLoading(false));
+    void loadSkills().then(setSkills).catch((value) => setError(errorMessage(value))).finally(() => setLoading(false));
   }, [loadSkills]);
 
   const filtered = useMemo(() => {

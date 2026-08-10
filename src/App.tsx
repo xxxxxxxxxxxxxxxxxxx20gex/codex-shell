@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { FuzzyFileSearchResult } from "./generated/app-server/FuzzyFileSearchResult";
 import type { ModeKind } from "./generated/app-server/ModeKind";
+import { errorMessage } from "./shared/errors";
 import "./App.css";
 import { ApprovalDialog } from "./features/approvals/ApprovalDialog";
 import { PermissionModeSelector } from "./features/approvals/PermissionModeSelector";
@@ -10,12 +11,7 @@ import { GoalPanel } from "./features/commands/GoalPanel";
 import { McpStatusPanel } from "./features/commands/McpStatusPanel";
 import { SkillPicker } from "./features/commands/SkillPicker";
 import { commandDisabled, SlashCommandMenu } from "./features/commands/SlashCommandMenu";
-import {
-  DEFAULT_INSPECTOR_WIDTH,
-  DEFAULT_SIDEBAR_WIDTH,
-  resizedPanelWidth,
-  type ResizablePanel,
-} from "./features/layout/panelLayout";
+import { useResizablePanels } from "./features/layout/useResizablePanels";
 import {
   activeSlashCommandQuery,
   matchingSlashCommands,
@@ -53,11 +49,6 @@ const initialSettings: ModelSettings = {
   verbosity: "low",
 };
 
-type WorkspaceGridStyle = CSSProperties & {
-  "--sidebar-width": string;
-  "--inspector-width": string;
-};
-
 function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settings, setSettings] = useState(initialSettings);
@@ -78,14 +69,21 @@ function App() {
   const [slashMenuDismissed, setSlashMenuDismissed] = useState(false);
   const [slashSelectedIndex, setSlashSelectedIndex] = useState(0);
   const [inspectorTab, setInspectorTab] = useState<"changes" | "status" | "logs">("changes");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [inspectorOpen, setInspectorOpen] = useState(true);
-  const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH);
-  const [inspectorWidth, setInspectorWidth] = useState(DEFAULT_INSPECTOR_WIDTH);
-  const [resizingPanel, setResizingPanel] = useState<ResizablePanel | null>(null);
   const mentionRequestRef = useRef(0);
-  const workspaceGridRef = useRef<HTMLElement>(null);
-  const resizingPanelRef = useRef<ResizablePanel | null>(null);
+  const {
+    workspaceGridRef,
+    workspaceGridStyle,
+    sidebarOpen,
+    setSidebarOpen,
+    inspectorOpen,
+    setInspectorOpen,
+    sidebarWidth,
+    inspectorWidth,
+    resizingPanel,
+    beginPanelResize,
+    resizePanel,
+    finishPanelResize,
+  } = useResizablePanels();
   const newThreadWorkspacePath = workspacePath ?? defaultWorkspace?.path ?? null;
   const session = useAgentSession(settings, permissionMode, newThreadWorkspacePath);
   const currentWorkspacePath = session.thread?.cwd
@@ -119,7 +117,7 @@ function App() {
     void invoke<ModelSettings>("load_model_settings").then(setSettings).catch(() => undefined);
     void invoke<DefaultWorkspace>("get_default_workspace")
       .then(setDefaultWorkspace)
-      .catch((error) => setUiError(error instanceof Error ? error.message : String(error)));
+      .catch((error) => setUiError(errorMessage(error)));
   }, []);
 
   useEffect(() => {
@@ -146,7 +144,7 @@ function App() {
       void session.searchFiles(mentionQuery).then((results) => {
         if (mentionRequestRef.current === requestId) setMentionResults(results);
       }).catch((error) => {
-        if (mentionRequestRef.current === requestId) setUiError(error instanceof Error ? error.message : String(error));
+        if (mentionRequestRef.current === requestId) setUiError(errorMessage(error));
       }).finally(() => {
         if (mentionRequestRef.current === requestId) setMentionLoading(false);
       });
@@ -210,7 +208,7 @@ function App() {
         setCommandNotice("长期目标已保存，后续 Turn 会持续跟进。");
       }
     } catch (error) {
-      setUiError(error instanceof Error ? error.message : String(error));
+      setUiError(errorMessage(error));
     }
   }
 
@@ -305,41 +303,6 @@ function App() {
       ? current.filter((item) => item.path !== skill.path)
       : [...current, skill]);
   }
-
-  function beginPanelResize(event: React.PointerEvent<HTMLDivElement>, panel: ResizablePanel) {
-    if (event.button !== 0) return;
-    event.preventDefault();
-    resizingPanelRef.current = panel;
-    setResizingPanel(panel);
-    event.currentTarget.setPointerCapture(event.pointerId);
-  }
-
-  function resizePanel(event: React.PointerEvent<HTMLDivElement>, panel: ResizablePanel) {
-    if (resizingPanelRef.current !== panel) return;
-    const bounds = workspaceGridRef.current?.getBoundingClientRect();
-    if (!bounds) return;
-    if (panel === "sidebar") {
-      const oppositeWidth = inspectorOpen && bounds.width > 1040 ? inspectorWidth : 0;
-      setSidebarWidth(resizedPanelWidth(panel, event.clientX, bounds, oppositeWidth));
-      return;
-    }
-
-    const oppositeWidth = sidebarOpen && bounds.width > 720 ? sidebarWidth : 0;
-    setInspectorWidth(resizedPanelWidth(panel, event.clientX, bounds, oppositeWidth));
-  }
-
-  function finishPanelResize(event: React.PointerEvent<HTMLDivElement>) {
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-    resizingPanelRef.current = null;
-    setResizingPanel(null);
-  }
-
-  const workspaceGridStyle = {
-    "--sidebar-width": sidebarOpen ? `${sidebarWidth}px` : "0px",
-    "--inspector-width": inspectorOpen ? `${inspectorWidth}px` : "0px",
-  } as WorkspaceGridStyle;
 
   return (
     <main className="app-shell">
@@ -476,7 +439,7 @@ function App() {
             <button className={inspectorTab === "logs" ? "active" : ""} onClick={() => setInspectorTab("logs")}>日志</button>
           </div>
           {inspectorTab === "changes" ? <DiffInspector diff={currentDiff} /> : inspectorTab === "logs" ? (
-            <RuntimeLogPanel entries={session.runtimeLogs} onClear={session.clearRuntimeLogs} />
+            <RuntimeLogPanel store={session.runtimeLogStore} />
           ) : (
             <StatusInspector turnCount={session.turns.length} threadId={session.thread?.id ?? null} workspacePath={currentWorkspacePath} workspaceKind={workspaceStatusKind} usingManagedWorkspace={usingManagedWorkspace} canUseDefaultWorkspace={Boolean(defaultWorkspace)} codexHome={session.codexHome} codexHomeDisabled={session.runningThreadCount > 0 || session.submitting} onBrowseWorkspace={() => setWorkspaceExplorerOpen(true)} onUseDefaultWorkspace={() => changeWorkspace(null)} onRestart={session.restart} />
           )}

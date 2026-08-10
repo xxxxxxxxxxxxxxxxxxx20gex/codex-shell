@@ -1,8 +1,9 @@
-import type { RuntimeLogEntry } from "./useRuntimeLogs";
+import { useSyncExternalStore } from "react";
+import type { RuntimeLogStore } from "./runtimeLogStore";
+import "./RuntimeLogPanel.css";
 
 interface Props {
-  entries: RuntimeLogEntry[];
-  onClear: () => void;
+  store: RuntimeLogStore;
 }
 
 const timeFormatter = new Intl.DateTimeFormat("zh-CN", {
@@ -25,12 +26,13 @@ function logLevel(line: string) {
   return "info";
 }
 
-export function RuntimeLogPanel({ entries, onClear }: Props) {
+export function RuntimeLogPanel({ store }: Props) {
+  const entries = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
   return (
     <section className="runtime-log-panel" aria-label="app-server 实时日志">
       <header>
         <div><strong>app-server stderr</strong><small>最近 {entries.length}/200 条</small></div>
-        <button className="secondary-button" type="button" disabled={entries.length === 0} onClick={onClear}>清空</button>
+        <button className="secondary-button" type="button" disabled={entries.length === 0} onClick={store.clear}>清空</button>
       </header>
       <p>仅保留本次运行期间收到的有界实时日志；日志可能包含对话和工具参数，请按敏感本地数据处理。</p>
       {entries.length === 0 ? (

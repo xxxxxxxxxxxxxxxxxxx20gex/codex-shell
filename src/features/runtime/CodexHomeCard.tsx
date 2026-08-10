@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useState } from "react";
+import { errorMessage } from "../../shared/errors";
 
 interface Props {
   path: string;
@@ -20,7 +21,7 @@ export function CodexHomeCard({ path, disabled, onRestart }: Props) {
       await invoke<string>("set_codex_home", { path: nextPath });
       await onRestart();
     } catch (changeError) {
-      setError(changeError instanceof Error ? changeError.message : String(changeError));
+      setError(errorMessage(changeError));
     } finally {
       setChanging(false);
     }
@@ -36,7 +37,7 @@ export function CodexHomeCard({ path, disabled, onRestart }: Props) {
       });
       if (typeof selected === "string") await applyPath(selected);
     } catch (dialogError) {
-      setError(dialogError instanceof Error ? dialogError.message : String(dialogError));
+      setError(errorMessage(dialogError));
     }
   }
 

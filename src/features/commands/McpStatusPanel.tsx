@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { McpServerStatus } from "../../generated/app-server/v2/McpServerStatus";
+import { errorMessage } from "../../shared/errors";
 
 interface Props {
   loadServers: () => Promise<McpServerStatus[]>;
@@ -19,7 +20,7 @@ export function McpStatusPanel({ loadServers, onClose }: Props) {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    void loadServers().then(setServers).catch((value) => setError(value instanceof Error ? value.message : String(value))).finally(() => setLoading(false));
+    void loadServers().then(setServers).catch((value) => setError(errorMessage(value))).finally(() => setLoading(false));
   }, [loadServers]);
 
   return <div className="agent-command-panel mcp-panel">

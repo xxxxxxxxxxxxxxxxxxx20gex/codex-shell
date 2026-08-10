@@ -1,4 +1,5 @@
 import { open } from "@tauri-apps/plugin-dialog";
+import { errorMessage } from "../../shared/errors";
 import { workspaceName } from "./workspaceState";
 
 interface Props {
@@ -15,7 +16,7 @@ export function WorkspaceSelector({ path, disabled, onExplore, onChange, onError
       const selected = await open({ directory: true, multiple: false, title: "选择 Codex 工作区" });
       if (typeof selected === "string") onChange(selected);
     } catch (error) {
-      onError(error instanceof Error ? error.message : String(error));
+      onError(errorMessage(error));
     }
   }
 

@@ -3,6 +3,7 @@ import type { GrantedPermissionProfile } from "../../generated/app-server/v2/Gra
 import type { ModeKind } from "../../generated/app-server/ModeKind";
 import type { Thread } from "../../generated/app-server/v2/Thread";
 import type { ThreadNameUpdatedNotification } from "../../generated/app-server/v2/ThreadNameUpdatedNotification";
+import { errorMessage } from "../../shared/errors";
 import type { ModelSettings } from "../models/types";
 import { getPermissionMode, type PermissionMode } from "../approvals/permissionModes";
 import { AppServerClient, type JsonValue } from "./appServerClient";
@@ -11,7 +12,7 @@ import { buildUserInput, type FileMention, type SkillMention } from "./sessionIn
 import { subscribeToSessionEvents, type PendingApprovalPayload } from "./sessionSubscriptions";
 import { useAgentCommands } from "./useAgentCommands";
 import { useRunningTurns } from "./useRunningTurns";
-import { useRuntimeLogs } from "./useRuntimeLogs";
+import { RuntimeLogStore } from "./runtimeLogStore";
 import { useWorkspaceFiles } from "./useWorkspaceFiles";
 
 export type { FileMention, SkillMention } from "./sessionInput";
@@ -28,10 +29,6 @@ type ApprovalResolver = (result: JsonValue) => void;
 interface ApprovalEntry {
   approval: PendingApproval;
   resolve: ApprovalResolver;
-}
-
-function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : String(error);
 }
 
 function declineResult(approval: PendingApproval): JsonValue {
@@ -77,7 +74,9 @@ export function useAgentSession(
   const [threadActionId, setThreadActionId] = useState<string | null>(null);
   const [approvalQueue, setApprovalQueue] = useState<PendingApproval[]>([]);
   const [error, setError] = useState("");
-  const runtimeLogs = useRuntimeLogs();
+  const runtimeLogStoreRef = useRef<RuntimeLogStore | null>(null);
+  runtimeLogStoreRef.current ??= new RuntimeLogStore();
+  const runtimeLogStore = runtimeLogStoreRef.current;
 
   if (!clientRef.current) clientRef.current = new AppServerClient();
 
@@ -132,7 +131,7 @@ export function useAgentSession(
         clearApprovals();
         dispatch({ type: "clearLiveProgress" });
       },
-      onRuntimeLog: runtimeLogs.enqueue,
+      onRuntimeLog: runtimeLogStore.enqueue,
       onProtocolError: (protocolError) => setError(protocolError.message),
       requestApproval: (pending) => new Promise<JsonValue>((resolve) => {
         const requestKey = `${pending.kind}:${pending.params.threadId}:${pending.params.turnId}:${pending.params.itemId}:${approvalSequenceRef.current++}`;
@@ -141,7 +140,9 @@ export function useAgentSession(
         setApprovalQueue((current) => [...current, approval]);
       }),
     });
-  }, [clearApprovals, clearRunningTurns, markThreadRunning, markThreadStopped, runtimeLogs.enqueue]);
+  }, [clearApprovals, clearRunningTurns, markThreadRunning, markThreadStopped, runtimeLogStore]);
+
+  useEffect(() => () => runtimeLogStore.dispose(), [runtimeLogStore]);
 
   const resolveApproval = useCallback((approval: PendingApproval, result: JsonValue) => {
     const entry = approvalEntriesRef.current.get(approval.requestKey);
@@ -463,8 +464,7 @@ export function useAgentSession(
     threadActionId,
     error,
     approval: approvalQueue[0] ?? null,
-    runtimeLogs: runtimeLogs.entries,
-    clearRuntimeLogs: runtimeLogs.clear,
+    runtimeLogStore,
     approve,
     decline,
     send,
