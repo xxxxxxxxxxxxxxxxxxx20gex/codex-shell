@@ -37,15 +37,14 @@ function turnDurationMs(turn: Turn) {
 }
 
 export function userMessageTiming(turn: Turn) {
-  const sentAt = formatMessageTimestamp(turn.startedAt);
-  return sentAt ? `发送于 ${sentAt}` : null;
+  return formatMessageTimestamp(turn.startedAt);
 }
 
 export function agentMessageTiming(turn: Turn, active: boolean) {
   const answeredAt = formatMessageTimestamp(turn.completedAt);
-  if (!answeredAt) return active || turn.status === "inProgress" ? "回答生成中" : null;
+  if (!answeredAt) return active || turn.status === "inProgress" ? "生成中" : null;
   const durationMs = turnDurationMs(turn);
   return durationMs === null
-    ? `回答于 ${answeredAt}`
-    : `回答于 ${answeredAt} · 耗时 ${formatTurnDuration(durationMs)}`;
+    ? answeredAt
+    : `${answeredAt} · ${formatTurnDuration(durationMs)}`;
 }

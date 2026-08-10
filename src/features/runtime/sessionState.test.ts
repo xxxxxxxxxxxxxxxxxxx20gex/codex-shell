@@ -246,4 +246,82 @@ describe("agentSessionReducer", () => {
 
     expect(state.tokenUsage).toEqual(tokenUsage);
   });
+
+  it("keeps only the latest 200 turns and reconstructs diffs for visible history", () => {
+    const turns = Array.from({ length: 205 }, (_, index) => turn(`turn-${index}`, [{
+      type: "fileChange",
+      id: `change-${index}`,
+      status: "completed",
+      changes: [{ path: `src/${index}.ts`, kind: { type: "update", move_path: null }, diff: `+${index}` }],
+    }]));
+
+    const state = agentSessionReducer(initialAgentSessionState, {
+      type: "loadThread",
+      thread: thread(turns),
+    });
+
+    expect(state.turns).toHaveLength(200);
+    expect(state.turns[0].id).toBe("turn-5");
+    expect(Object.keys(state.diffsByTurnId)).toHaveLength(200);
+    expect(state.diffsByTurnId["turn-0"]).toBeUndefined();
+    expect(state.diffsByTurnId["turn-204"]).toContain("+204");
+  });
+
+  it("removes diff and plan entries when their turn leaves visible history", () => {
+    const loaded = agentSessionReducer(initialAgentSessionState, {
+      type: "loadThread",
+      thread: thread(Array.from({ length: 200 }, (_, index) => turn(`turn-${index}`))),
+    });
+    const withDiff = agentSessionReducer(loaded, {
+      type: "turnDiffUpdated",
+      notification: { threadId: "thread-1", turnId: "turn-0", diff: "+old" },
+    });
+    const withPlan = agentSessionReducer(withDiff, {
+      type: "turnPlanUpdated",
+      notification: {
+        threadId: "thread-1",
+        turnId: "turn-0",
+        explanation: null,
+        plan: [],
+      },
+    });
+
+    const state = agentSessionReducer(withPlan, {
+      type: "turnSubmitted",
+      turn: turn("turn-200"),
+      userText: "下一问",
+    });
+
+    expect(state.turns).toHaveLength(200);
+    expect(state.turns[0].id).toBe("turn-1");
+    expect(state.diffsByTurnId).toEqual({});
+    expect(state.plansByTurnId).toEqual({});
+  });
+
+  it("does not exceed the visible limit when an unknown turn streams an agent delta", () => {
+    const loaded = agentSessionReducer(initialAgentSessionState, {
+      type: "loadThread",
+      thread: thread(Array.from({ length: 200 }, (_, index) => turn(`turn-${index}`))),
+    });
+
+    const state = agentSessionReducer(loaded, {
+      type: "agentDelta",
+      notification: {
+        threadId: "thread-1",
+        turnId: "turn-200",
+        itemId: "agent-200",
+        delta: "新回复",
+      },
+    });
+
+    expect(state.turns).toHaveLength(200);
+    expect(state.turns[0].id).toBe("turn-1");
+    expect(state.turns[199].items).toEqual([{
+      type: "agentMessage",
+      id: "agent-200",
+      text: "新回复",
+      phase: null,
+      memoryCitation: null,
+    }]);
+  });
 });

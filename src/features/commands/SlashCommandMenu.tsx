@@ -9,8 +9,7 @@ interface Props {
 }
 
 export function commandDisabled(command: SlashCommandDefinition, hasThread: boolean, running: boolean) {
-  return Boolean(command.experimental || (command.requiresThread && !hasThread)
-    || (command.blockedWhileRunning && running));
+  return Boolean((command.requiresThread && !hasThread) || (command.blockedWhileRunning && running));
 }
 
 export function SlashCommandMenu({ query, selectedIndex, hasThread, running, onSelect }: Props) {
@@ -25,7 +24,6 @@ export function SlashCommandMenu({ query, selectedIndex, hasThread, running, onS
           <button key={command.id} className={index === selectedIndex ? "selected" : ""} disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => onSelect(command.id)} role="option" aria-selected={index === selectedIndex}>
             <i>{command.icon}</i>
             <span><strong>/{command.id} <em>{command.label}</em></strong><small>{command.description}</small></span>
-            {command.experimental && <b>实验 API</b>}
           </button>
         );
       })}

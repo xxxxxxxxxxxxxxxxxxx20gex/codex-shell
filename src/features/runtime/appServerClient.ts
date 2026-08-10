@@ -1,4 +1,5 @@
 import type { InitializeResponse } from "../../generated/app-server/InitializeResponse";
+import type { CollaborationMode } from "../../generated/app-server/CollaborationMode";
 import type { FuzzyFileSearchParams } from "../../generated/app-server/FuzzyFileSearchParams";
 import type { FuzzyFileSearchResponse } from "../../generated/app-server/FuzzyFileSearchResponse";
 import type { FsReadDirectoryParams } from "../../generated/app-server/v2/FsReadDirectoryParams";
@@ -220,8 +221,11 @@ export class AppServerClient {
     return this.request<FsReadFileResponse>("fs/readFile", params);
   }
 
-  startTurn(params: TurnStartParams) {
-    return this.request<TurnStartResponse>("turn/start", params);
+  startTurn(params: TurnStartParams, collaborationMode?: CollaborationMode) {
+    return this.request<TurnStartResponse>(
+      "turn/start",
+      collaborationMode ? { ...params, collaborationMode } : params,
+    );
   }
 
   interruptTurn(params: TurnInterruptParams) {
@@ -235,7 +239,7 @@ export class AppServerClient {
       await this.transport.start();
       this.initializeResponse = await this.requestRaw<InitializeResponse>("initialize", {
         clientInfo: { name: "codex-shell", title: "Codex Shell", version: "0.1.0" },
-        capabilities: { experimentalApi: false },
+        capabilities: { experimentalApi: true },
       });
       if (this.connectionStatus === "stopped") throw new Error("app-server 在初始化期间退出");
       await this.send({ method: "initialized" });

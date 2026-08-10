@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import type { GrantedPermissionProfile } from "../../generated/app-server/v2/GrantedPermissionProfile";
+import type { ModeKind } from "../../generated/app-server/ModeKind";
 import type { Thread } from "../../generated/app-server/v2/Thread";
 import type { ThreadNameUpdatedNotification } from "../../generated/app-server/v2/ThreadNameUpdatedNotification";
 import type { ModelSettings } from "../models/types";
@@ -11,8 +12,6 @@ import { subscribeToSessionEvents, type PendingApprovalPayload } from "./session
 import { useAgentCommands } from "./useAgentCommands";
 import { useRunningTurns } from "./useRunningTurns";
 import { useWorkspaceFiles } from "./useWorkspaceFiles";
-
-type ConnectionStatus = "disconnected" | "connecting" | "connected" | "error";
 
 export type { FileMention, SkillMention } from "./sessionInput";
 
@@ -59,7 +58,6 @@ export function useAgentSession(
   const refreshHistoryRef = useRef<(append?: boolean) => Promise<void>>(async () => undefined);
   const initialHistoryLoadedRef = useRef(false);
   const [sessionState, dispatch] = useReducer(agentSessionReducer, initialAgentSessionState);
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("disconnected");
   const [codexHome, setCodexHome] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const {
@@ -126,7 +124,6 @@ export function useAgentSession(
         });
       },
       onStopped: () => {
-        setConnectionStatus("disconnected");
         setCodexHome("");
         clearRunningTurns();
         setSubmitting(false);
@@ -173,21 +170,13 @@ export function useAgentSession(
     const client = clientRef.current;
     if (!client) throw new Error("app-server 客户端尚未初始化");
     if (client.connectionStatus === "ready") {
-      setConnectionStatus("connected");
       setCodexHome(client.serverInfo?.codexHome ?? "");
       return client;
     }
 
-    setConnectionStatus("connecting");
-    try {
-      await client.start();
-      setConnectionStatus("connected");
-      setCodexHome(client.serverInfo?.codexHome ?? "");
-      return client;
-    } catch (startError) {
-      setConnectionStatus("error");
-      throw startError;
-    }
+    await client.start();
+    setCodexHome(client.serverInfo?.codexHome ?? "");
+    return client;
   }, []);
 
   const refreshHistory = useCallback(async (append = false) => {
@@ -232,6 +221,7 @@ export function useAgentSession(
     text: string,
     mentions: FileMention[] = [],
     skills: SkillMention[] = [],
+    collaborationMode: ModeKind = "default",
   ) => {
     const message = text.trim();
     const activeThreadId = threadIdRef.current;
@@ -262,12 +252,23 @@ export function useAgentSession(
       }
 
       const input = buildUserInput(message, mentions, skills);
-      const response = await client.startTurn({
-        threadId,
-        input,
-        model: settings.modelId,
-        effort: settings.reasoningEffort,
-      });
+      const collaboration = collaborationMode === "plan" ? {
+        mode: collaborationMode,
+        settings: {
+          model: settings.modelId,
+          reasoning_effort: settings.reasoningEffort,
+          developer_instructions: null,
+        },
+      } : undefined;
+      const response = await client.startTurn(
+        {
+          threadId,
+          input,
+          model: settings.modelId,
+          effort: settings.reasoningEffort,
+        },
+        collaboration,
+      );
       markThreadRunning(threadId, response.turn.id);
       dispatch({ type: "turnSubmitted", turn: response.turn, userText: message });
       return true;
@@ -422,10 +423,8 @@ export function useAgentSession(
     dispatch({ type: "clear" });
     try {
       await clientRef.current?.stop();
-      setConnectionStatus("disconnected");
       await refreshHistory();
     } catch (restartError) {
-      setConnectionStatus("error");
       setError(errorMessage(restartError));
     } finally {
       threadOperationRef.current = false;
@@ -437,7 +436,6 @@ export function useAgentSession(
   );
 
   return {
-    connectionStatus,
     codexHome,
     running,
     submitting,

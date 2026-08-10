@@ -55,9 +55,30 @@ function boundedTurns(turns: Turn[]) {
   return turns.slice(-MAX_VISIBLE_TURNS);
 }
 
+function entriesForVisibleTurns<T>(
+  entries: Record<string, T>,
+  turns: Turn[],
+): Record<string, T> {
+  const visibleTurnIds = new Set(turns.map((turn) => turn.id));
+  return Object.fromEntries(
+    Object.entries(entries).filter(([turnId]) => visibleTurnIds.has(turnId)),
+  );
+}
+
+function withTurns(state: AgentSessionState, turns: Turn[]): AgentSessionState {
+  const visibleTurns = boundedTurns(turns);
+  if (visibleTurns.length === turns.length) return { ...state, turns: visibleTurns };
+  return {
+    ...state,
+    turns: visibleTurns,
+    diffsByTurnId: entriesForVisibleTurns(state.diffsByTurnId, visibleTurns),
+    plansByTurnId: entriesForVisibleTurns(state.plansByTurnId, visibleTurns),
+  };
+}
+
 function upsertTurn(turns: Turn[], turn: Turn) {
   const existingIndex = turns.findIndex((item) => item.id === turn.id);
-  if (existingIndex < 0) return boundedTurns([...turns, turn]);
+  if (existingIndex < 0) return [...turns, turn];
   const next = [...turns];
   next[existingIndex] = turn;
   return next;
@@ -127,7 +148,7 @@ function upsertItem(turn: Turn, item: ThreadItem) {
 
 function updateTurnItem(turns: Turn[], turnId: string, item: ThreadItem) {
   if (!turns.some((turn) => turn.id === turnId)) {
-    return boundedTurns([...turns, upsertItem(pendingTurn(turnId), item)]);
+    return [...turns, upsertItem(pendingTurn(turnId), item)];
   }
   return turns.map((turn) => turn.id === turnId ? upsertItem(turn, item) : turn);
 }
@@ -192,10 +213,11 @@ export function agentSessionReducer(
     case "clear":
       return initialAgentSessionState;
     case "loadThread":
+      const visibleTurns = boundedTurns(action.thread.turns);
       return {
         thread: { ...action.thread, turns: [] },
-        turns: boundedTurns(action.thread.turns),
-        diffsByTurnId: reconstructedDiffs(action.thread.turns),
+        turns: visibleTurns,
+        diffsByTurnId: reconstructedDiffs(visibleTurns),
         plansByTurnId: {},
         tokenUsage: null,
       };
@@ -208,22 +230,22 @@ export function agentSessionReducer(
         ? { ...state, thread: { ...state.thread, name: action.name } }
         : state;
     case "turnSubmitted":
-      return {
-        ...state,
-        turns: mergeSubmittedTurn(state.turns, withOptimisticUser(action.turn, action.userText)),
-      };
+      return withTurns(
+        state,
+        mergeSubmittedTurn(state.turns, withOptimisticUser(action.turn, action.userText)),
+      );
     case "itemStarted":
-      return {
-        ...state,
-        turns: updateTurnItem(state.turns, action.notification.turnId, action.notification.item),
-      };
+      return withTurns(
+        state,
+        updateTurnItem(state.turns, action.notification.turnId, action.notification.item),
+      );
     case "itemCompleted":
-      return {
-        ...state,
-        turns: updateTurnItem(state.turns, action.notification.turnId, action.notification.item),
-      };
+      return withTurns(
+        state,
+        updateTurnItem(state.turns, action.notification.turnId, action.notification.item),
+      );
     case "agentDelta":
-      return { ...state, turns: applyAgentDelta(state.turns, action.notification) };
+      return withTurns(state, applyAgentDelta(state.turns, action.notification));
     case "commandDelta":
       return {
         ...state,
@@ -287,6 +309,7 @@ export function agentSessionReducer(
         ),
       };
     case "turnDiffUpdated":
+      if (!state.turns.some((turn) => turn.id === action.notification.turnId)) return state;
       return {
         ...state,
         diffsByTurnId: {
@@ -295,6 +318,7 @@ export function agentSessionReducer(
         },
       };
     case "turnPlanUpdated":
+      if (!state.turns.some((turn) => turn.id === action.notification.turnId)) return state;
       return {
         ...state,
         plansByTurnId: {
@@ -305,7 +329,7 @@ export function agentSessionReducer(
     case "tokenUsageUpdated":
       return { ...state, tokenUsage: action.notification.tokenUsage };
     case "turnCompleted":
-      return { ...state, turns: mergeCompletedTurn(state.turns, action.notification.turn) };
+      return withTurns(state, mergeCompletedTurn(state.turns, action.notification.turn));
   }
 }
 

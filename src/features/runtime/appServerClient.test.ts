@@ -72,7 +72,11 @@ describe("AppServerClient", () => {
     await Promise.all([client.start(), client.start(), client.start()]);
 
     expect(transport.startCount).toBe(1);
-    expect(transport.sent.filter((message) => message.method === "initialize")).toHaveLength(1);
+    expect(transport.sent.filter((message) => message.method === "initialize")).toEqual([
+      expect.objectContaining({
+        params: expect.objectContaining({ capabilities: { experimentalApi: true } }),
+      }),
+    ]);
     expect(transport.sent.filter((message) => message.method === "initialized")).toHaveLength(1);
     expect(client.connectionStatus).toBe("ready");
     expect(client.serverInfo?.codexHome).toBe("C:\\app\\codex-home");
@@ -278,5 +282,65 @@ describe("AppServerClient", () => {
       transport.emit({ id: request.id, result: item.result });
       await expect(promise).resolves.toEqual(item.result);
     }
+  });
+
+  it("sends plan mode through the isolated experimental turn field", async () => {
+    const transport = new FakeTransport();
+    const client = new AppServerClient(transport);
+    await client.start();
+
+    const plan = client.startTurn(
+      {
+        threadId: "thread-1",
+        input: [{ type: "text", text: "Plan this migration", text_elements: [] }],
+        model: "gpt-test",
+        effort: "high",
+      },
+      {
+        mode: "plan",
+        settings: {
+          model: "gpt-test",
+          reasoning_effort: "high",
+          developer_instructions: null,
+        },
+      },
+    );
+    const request = transport.sent[transport.sent.length - 1];
+
+    expect(request).toMatchObject({
+      method: "turn/start",
+      params: {
+        threadId: "thread-1",
+        collaborationMode: {
+          mode: "plan",
+          settings: {
+            model: "gpt-test",
+            reasoning_effort: "high",
+            developer_instructions: null,
+          },
+        },
+      },
+    });
+    transport.emit({ id: request.id, result: { turn: { id: "turn-plan" } } });
+    await expect(plan).resolves.toEqual({ turn: { id: "turn-plan" } });
+  });
+
+  it("keeps default turns on the stable request shape", async () => {
+    const transport = new FakeTransport();
+    const client = new AppServerClient(transport);
+    await client.start();
+
+    const turn = client.startTurn({
+      threadId: "thread-1",
+      input: [{ type: "text", text: "Implement this migration", text_elements: [] }],
+      model: "gpt-test",
+      effort: "high",
+    });
+    const request = transport.sent[transport.sent.length - 1];
+
+    expect(request).toMatchObject({ method: "turn/start", params: { threadId: "thread-1" } });
+    expect(request.params).not.toHaveProperty("collaborationMode");
+    transport.emit({ id: request.id, result: { turn: { id: "turn-default" } } });
+    await expect(turn).resolves.toEqual({ turn: { id: "turn-default" } });
   });
 });

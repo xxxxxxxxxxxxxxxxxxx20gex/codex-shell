@@ -48,8 +48,11 @@ describe("conversation timing", () => {
       <ConversationTimeline turns={[completedTurn()]} running={false} modelId="gpt-test" />,
     );
 
-    expect(markup).toContain("发送于 2026/08/07 10:20:30");
-    expect(markup).toContain("回答于 2026/08/07 10:20:38 · 耗时 8.4 秒");
+    expect(markup).toContain("2026/08/07 10:20:30");
+    expect(markup).toContain("2026/08/07 10:20:38 · 8.4 秒");
+    expect(markup).not.toContain("发送于");
+    expect(markup).not.toContain("回答于");
+    expect(markup).not.toContain("耗时");
   });
 
   it("shows an in-progress answer label", () => {
@@ -58,7 +61,7 @@ describe("conversation timing", () => {
       <ConversationTimeline turns={[turn]} running modelId="gpt-test" />,
     );
 
-    expect(markup).toContain("回答生成中");
+    expect(markup).toContain("生成中");
   });
 
   it("renders app-server command activity instead of hiding it", () => {

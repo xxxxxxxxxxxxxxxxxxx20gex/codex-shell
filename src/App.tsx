@@ -1,14 +1,21 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { FuzzyFileSearchResult } from "./generated/app-server/FuzzyFileSearchResult";
+import type { ModeKind } from "./generated/app-server/ModeKind";
 import "./App.css";
 import { ApprovalDialog } from "./features/approvals/ApprovalDialog";
 import { PermissionModeSelector } from "./features/approvals/PermissionModeSelector";
-import { getPermissionMode, type PermissionMode } from "./features/approvals/permissionModes";
+import type { PermissionMode } from "./features/approvals/permissionModes";
 import { GoalPanel } from "./features/commands/GoalPanel";
 import { McpStatusPanel } from "./features/commands/McpStatusPanel";
 import { SkillPicker } from "./features/commands/SkillPicker";
 import { commandDisabled, SlashCommandMenu } from "./features/commands/SlashCommandMenu";
+import {
+  DEFAULT_INSPECTOR_WIDTH,
+  DEFAULT_SIDEBAR_WIDTH,
+  resizedPanelWidth,
+  type ResizablePanel,
+} from "./features/layout/panelLayout";
 import {
   activeSlashCommandQuery,
   matchingSlashCommands,
@@ -18,10 +25,12 @@ import {
 import { DiffInspector } from "./features/diff/DiffInspector";
 import { ModelSettingsPanel } from "./features/models/ModelSettingsPanel";
 import type { ModelSettings } from "./features/models/types";
+import { CodexHomeCard } from "./features/runtime/CodexHomeCard";
 import { type FileMention, type SkillMention, useAgentSession } from "./features/runtime/useAgentSession";
 import { ConversationTimeline } from "./features/threads/ConversationTimeline";
 import { ContextHeatBar } from "./features/threads/ContextHeatBar";
 import { ThreadHistoryList } from "./features/threads/ThreadHistoryList";
+import { buildThreadNumbers, formatThreadNumber, threadTitle } from "./features/threads/threadPresentation";
 import { FileMentionMenu } from "./features/workspaces/FileMentionMenu";
 import { WorkspaceExplorer } from "./features/workspaces/WorkspaceExplorer";
 import { WorkspaceSelector } from "./features/workspaces/WorkspaceSelector";
@@ -41,6 +50,11 @@ const initialSettings: ModelSettings = {
   verbosity: "low",
 };
 
+type WorkspaceGridStyle = CSSProperties & {
+  "--sidebar-width": string;
+  "--inspector-width": string;
+};
+
 function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settings, setSettings] = useState(initialSettings);
@@ -55,13 +69,20 @@ function App() {
   const [uiError, setUiError] = useState("");
   const [commandNotice, setCommandNotice] = useState("");
   const [commandPanel, setCommandPanel] = useState<"skills" | "mcp" | "goal" | null>(null);
+  const [collaborationMode, setCollaborationMode] = useState<ModeKind>("default");
   const [slashMenuForced, setSlashMenuForced] = useState(false);
   const [slashMenuDismissed, setSlashMenuDismissed] = useState(false);
   const [slashSelectedIndex, setSlashSelectedIndex] = useState(0);
   const [inspectorTab, setInspectorTab] = useState<"changes" | "status">("changes");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [inspectorOpen, setInspectorOpen] = useState(true);
+  const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH);
+  const [inspectorWidth, setInspectorWidth] = useState(DEFAULT_INSPECTOR_WIDTH);
+  const [resizingPanel, setResizingPanel] = useState<ResizablePanel | null>(null);
   const mentionRequestRef = useRef(0);
+  const workspaceGridRef = useRef<HTMLElement>(null);
+  const resizingPanelRef = useRef<ResizablePanel | null>(null);
   const session = useAgentSession(settings, permissionMode, workspacePath);
-  const permissionConfig = getPermissionMode(permissionMode);
   const mentionQuery = activeFileMentionQuery(draft);
   const typedSlashQuery = activeSlashCommandQuery(draft);
   const slashQuery = slashMenuForced ? "" : slashMenuDismissed ? null : typedSlashQuery;
@@ -74,6 +95,8 @@ function App() {
     }
     return "";
   }, [session.diffsByTurnId, session.turns]);
+  const threadNumbers = useMemo(() => buildThreadNumbers(session.history), [session.history]);
+  const activeThreadNumber = session.thread ? threadNumbers.get(session.thread.id) : undefined;
 
   useEffect(() => {
     if (!("__TAURI_INTERNALS__" in window)) return;
@@ -133,7 +156,18 @@ function App() {
       if (id === "skills") { setCommandPanel("skills"); return; }
       if (id === "mcp") { setCommandPanel("mcp"); return; }
       if (id === "plan") {
-        setUiError("真正的 Plan 模式依赖实验性 collaborationMode；Codex Shell 当前只使用稳定 app-server v2，因此暂不启用。");
+        if (session.running) throw new Error("当前任务完成后才能切换到计划模式");
+        setCollaborationMode("plan");
+        if (!args) {
+          setCommandNotice("计划模式已开启。下一条消息会让 Codex 先分析需求并制定计划；点击工具栏中的计划模式可退出。");
+          return;
+        }
+        if (await session.send(args, mentions, skills, "plan")) {
+          setMentions([]);
+          setSkills([]);
+          setMentionResults([]);
+          setCommandNotice("计划请求已发送，Codex 将先输出计划而不是直接实施。");
+        }
         return;
       }
       if (id === "compact") {
@@ -164,7 +198,7 @@ function App() {
       await runSlashCommand(command.id, command.args);
       return;
     }
-    if (await session.send(message, mentions, skills)) {
+    if (await session.send(message, mentions, skills, collaborationMode)) {
       setDraft("");
       setMentions([]);
       setSkills([]);
@@ -181,6 +215,7 @@ function App() {
     setSlashMenuForced(false);
     setSlashMenuDismissed(false);
     setCommandNotice("");
+    setCollaborationMode("default");
     session.startNewTask();
   }
 
@@ -229,8 +264,7 @@ function App() {
         event.preventDefault();
         const command = slashCommands[slashSelectedIndex] ?? slashCommands[0];
         if (command && commandDisabled(command, Boolean(session.thread), session.running)) {
-          if (command.experimental) void runSlashCommand(command.id, "", !slashMenuForced);
-          else setUiError(command.requiresThread && !session.thread ? "请先发送一条消息创建 Session" : "当前任务运行期间不能执行该命令");
+          setUiError(command.requiresThread && !session.thread ? "请先发送一条消息创建 Session" : "当前任务运行期间不能执行该命令");
         } else if (command) {
           void runSlashCommand(command.id, "", !slashMenuForced);
         }
@@ -248,28 +282,50 @@ function App() {
       : [...current, skill]);
   }
 
-  const runtimeLabel = session.connectionStatus === "connected"
-    ? (session.runningThreadCount > 0
-        ? `app-server 运行中 · ${session.runningThreadCount}`
-        : session.submitting ? "app-server 正在启动任务" : "app-server 已连接")
-    : session.connectionStatus === "connecting"
-      ? "app-server 连接中"
-      : session.connectionStatus === "error"
-        ? "app-server 连接失败"
-        : "app-server 未连接";
-  const sessionTitle = session.thread?.name?.trim() || session.thread?.preview.trim() || "新任务";
+  function beginPanelResize(event: React.PointerEvent<HTMLDivElement>, panel: ResizablePanel) {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    resizingPanelRef.current = panel;
+    setResizingPanel(panel);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function resizePanel(event: React.PointerEvent<HTMLDivElement>, panel: ResizablePanel) {
+    if (resizingPanelRef.current !== panel) return;
+    const bounds = workspaceGridRef.current?.getBoundingClientRect();
+    if (!bounds) return;
+    if (panel === "sidebar") {
+      const oppositeWidth = inspectorOpen && bounds.width > 1040 ? inspectorWidth : 0;
+      setSidebarWidth(resizedPanelWidth(panel, event.clientX, bounds, oppositeWidth));
+      return;
+    }
+
+    const oppositeWidth = sidebarOpen && bounds.width > 720 ? sidebarWidth : 0;
+    setInspectorWidth(resizedPanelWidth(panel, event.clientX, bounds, oppositeWidth));
+  }
+
+  function finishPanelResize(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    resizingPanelRef.current = null;
+    setResizingPanel(null);
+  }
+
+  const workspaceGridStyle = {
+    "--sidebar-width": sidebarOpen ? `${sidebarWidth}px` : "0px",
+    "--inspector-width": inspectorOpen ? `${inspectorWidth}px` : "0px",
+  } as WorkspaceGridStyle;
 
   return (
     <main className="app-shell">
-      <header className="titlebar" data-tauri-drag-region>
-        <div className="brand-mark" data-tauri-drag-region>C</div>
-        <div className="brand-copy" data-tauri-drag-region><strong>Codex Shell</strong><span>个人智能体工作台</span></div>
-        <div className={`runtime-pill ${session.connectionStatus}`} data-tauri-drag-region><i /> {runtimeLabel}</div>
-      </header>
-
-      <section className="workspace-grid">
+      <section
+        ref={workspaceGridRef}
+        className={`workspace-grid ${sidebarOpen ? "" : "sidebar-hidden"} ${inspectorOpen ? "" : "inspector-hidden"} ${resizingPanel ? "resizing" : ""}`}
+        style={workspaceGridStyle}
+      >
         <aside className="sidebar panel">
-          <button className="primary-button new-task" onClick={startNewTask} disabled={session.submitting || session.openingThreadId !== null}>＋ 新建任务</button>
+          <button className="primary-button new-task" onClick={startNewTask} disabled={session.submitting || session.openingThreadId !== null}>＋ 新建对话</button>
           <div className="section-label">工作区</div>
           <WorkspaceSelector path={workspacePath} disabled={session.submitting || session.openingThreadId !== null} onExplore={() => setWorkspaceExplorerOpen(true)} onChange={changeWorkspace} onError={setUiError} />
           <ThreadHistoryList
@@ -281,7 +337,7 @@ function App() {
             actionThreadId={session.threadActionId}
             runningThreadIds={session.runningThreadIds}
             hasMore={session.historyHasMore}
-            onOpen={(threadId) => void session.openThread(threadId)}
+            onOpen={(threadId) => { setCollaborationMode("default"); void session.openThread(threadId); }}
             onRename={(threadId, name) => void session.renameThread(threadId, name)}
             onTogglePin={(thread) => void session.toggleThreadPin(thread)}
             onArchive={(threadId) => void session.archiveThread(threadId)}
@@ -292,14 +348,42 @@ function App() {
           <div className="sidebar-footer"><div className="avatar">本</div><span><strong>本地模式</strong><small>Windows · 个人使用</small></span></div>
         </aside>
 
+        <div
+          className={`panel-resizer sidebar-resizer ${sidebarOpen ? "" : "collapsed"}`}
+          role="separator"
+          aria-label="调整左侧功能区宽度"
+          aria-orientation="vertical"
+          aria-valuenow={sidebarWidth}
+          onPointerDown={(event) => sidebarOpen && beginPanelResize(event, "sidebar")}
+          onPointerMove={(event) => resizePanel(event, "sidebar")}
+          onPointerUp={finishPanelResize}
+          onPointerCancel={finishPanelResize}
+        >
+          <button
+            type="button"
+            className="panel-toggle"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={() => setSidebarOpen((open) => !open)}
+            aria-label={sidebarOpen ? "隐藏左侧功能区" : "显示左侧功能区"}
+            title={sidebarOpen ? "隐藏左侧功能区" : "显示左侧功能区"}
+          >
+            <svg aria-hidden="true" viewBox="0 0 10 10">
+              <path d={sidebarOpen ? "M6.5 2 3.5 5l3 3" : "M3.5 2l3 3-3 3"} />
+            </svg>
+          </button>
+        </div>
+
         <section className="conversation panel">
-          <div className="conversation-header">
-            <div><h1>{sessionTitle}</h1><p>{session.thread ? `${session.turns.length} 个本地回合 · ${session.thread.cwd}` : "准备开始新的本地会话"}</p></div>
-          </div>
+          {session.thread && (
+            <div className="conversation-session-heading" title={session.thread.id}>
+              <span>{activeThreadNumber ? formatThreadNumber(activeThreadNumber) : "#--"}</span>
+              <strong>{threadTitle(session.thread)}</strong>
+            </div>
+          )}
           {session.turns.length > 0 ? (
             <ConversationTimeline turns={session.turns} running={session.running} modelId={settings.modelId} plansByTurnId={session.plansByTurnId} />
           ) : (
-            <div className="timeline"><div className="conversation-empty"><div className="agent-avatar">C</div><h2>开始一个新任务</h2><p>选择工作区，配置模型与 API Key，然后描述需要 Codex 完成的工作。</p></div></div>
+            <div className="timeline"><div className="conversation-empty"><div className="agent-avatar">C</div><h2>开始一个新对话</h2><p>选择工作区，配置模型与 API Key，然后描述需要 Codex 完成的工作。</p></div></div>
           )}
           <div className="composer-wrap">
             {(session.error || uiError) && <div className="composer-error">{session.error || uiError}</div>}
@@ -310,7 +394,7 @@ function App() {
                 {skills.map((skill) => <span className="skill-chip" key={skill.path} title={skill.path}>✦ {skill.name}<button onClick={() => toggleSkill(skill)}>×</button></span>)}
                 {mentions.map((mention) => <span key={mention.path} title={mention.path}>@{mention.name}<button onClick={() => setMentions((current) => current.filter((item) => item.path !== mention.path))}>×</button></span>)}
               </div>}
-              <textarea value={draft} onChange={(event) => { setDraft(event.target.value); setUiError(""); setCommandNotice(""); setSlashMenuForced(false); setSlashMenuDismissed(false); }} onKeyDown={handleComposerKeyDown} placeholder={workspacePath ? "交给 Codex 一个任务，输入 / 使用命令，输入 @ 引用文件…" : "输入 / 使用命令，或直接交给 Codex 一个任务…"} />
+              <textarea value={draft} onChange={(event) => { setDraft(event.target.value); setUiError(""); setCommandNotice(""); setSlashMenuForced(false); setSlashMenuDismissed(false); }} onKeyDown={handleComposerKeyDown} placeholder={collaborationMode === "plan" ? "描述需要分析和规划的任务…" : workspacePath ? "交给 Codex 一个任务，输入 / 使用命令，输入 @ 引用文件…" : "输入 / 使用命令，或直接交给 Codex 一个任务…"} />
               {workspacePath && mentionQuery !== null && <FileMentionMenu query={mentionQuery} results={mentionResults} loading={mentionLoading} onSelect={selectMention} />}
               {slashMenuVisible && <SlashCommandMenu query={slashQuery ?? ""} selectedIndex={slashSelectedIndex} hasThread={Boolean(session.thread)} running={session.running} onSelect={(id) => void runSlashCommand(id, "", !slashMenuForced)} />}
               {commandPanel === "skills" && <SkillPicker selected={skills} loadSkills={session.listSkills} onToggle={toggleSkill} onClose={() => setCommandPanel(null)} />}
@@ -318,16 +402,41 @@ function App() {
               {commandPanel === "goal" && <GoalPanel getGoal={session.getThreadGoal} setGoal={session.setThreadGoal} clearGoal={session.clearThreadGoal} onClose={() => setCommandPanel(null)} />}
               <div className="composer-toolbar">
                 <div className="composer-tools">
-                  <button className={`command-button ${slashMenuVisible || commandPanel ? "active" : ""}`} onClick={() => { setCommandPanel(null); setSlashMenuDismissed(false); setSlashMenuForced((current) => !current); setSlashSelectedIndex(0); }} title="Skills、MCP、压缩与目标">/</button>
+                  <button className={`command-button ${slashMenuVisible || commandPanel ? "active" : ""}`} onClick={() => { setCommandPanel(null); setSlashMenuDismissed(false); setSlashMenuForced((current) => !current); setSlashSelectedIndex(0); }} title="Skills、MCP、计划、压缩与目标">/</button>
+                  {collaborationMode === "plan" && <button className="plan-mode-button" onClick={() => { setCollaborationMode("default"); setCommandNotice("已退出计划模式，下一条消息将按默认模式执行。"); }} title="退出计划模式"><span>☷</span>计划模式<i>×</i></button>}
                   <button className="model-button" disabled={session.submitting || session.runningThreadCount > 0} onClick={() => setSettingsOpen(true)} title={session.submitting || session.runningThreadCount > 0 ? "任务运行期间不能重启模型连接" : "配置模型"}>{settings.modelId}⌄</button>
                   <PermissionModeSelector value={permissionMode} disabled={session.running} onChange={changePermissionMode} />
                 </div>
                 <button className={session.running ? "stop-button" : "send-button"} disabled={!session.running && !draft.trim()} onClick={() => session.running ? void session.interrupt() : void submit()} aria-label={session.running ? "停止任务" : "发送任务"}>{session.running ? "■" : "↑"}</button>
               </div>
             </div>
-            <p>Codex 可能会修改文件并执行命令，请在批准前检查操作。</p>
           </div>
         </section>
+
+        <div
+          className={`panel-resizer inspector-resizer ${inspectorOpen ? "" : "collapsed"}`}
+          role="separator"
+          aria-label="调整右侧功能区宽度"
+          aria-orientation="vertical"
+          aria-valuenow={inspectorWidth}
+          onPointerDown={(event) => inspectorOpen && beginPanelResize(event, "inspector")}
+          onPointerMove={(event) => resizePanel(event, "inspector")}
+          onPointerUp={finishPanelResize}
+          onPointerCancel={finishPanelResize}
+        >
+          <button
+            type="button"
+            className="panel-toggle"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={() => setInspectorOpen((open) => !open)}
+            aria-label={inspectorOpen ? "隐藏右侧功能区" : "显示右侧功能区"}
+            title={inspectorOpen ? "隐藏右侧功能区" : "显示右侧功能区"}
+          >
+            <svg aria-hidden="true" viewBox="0 0 10 10">
+              <path d={inspectorOpen ? "M3.5 2l3 3-3 3" : "M6.5 2 3.5 5l3 3"} />
+            </svg>
+          </button>
+        </div>
 
         <aside className="inspector panel">
           <div className="inspector-heading inspector-tabs">
@@ -335,10 +444,8 @@ function App() {
             <button className={inspectorTab === "status" ? "active" : ""} onClick={() => setInspectorTab("status")}>状态</button>
           </div>
           {inspectorTab === "changes" ? <DiffInspector diff={currentDiff} /> : <>
-            <div className="inspector-card"><div className="card-title"><span>Codex Runtime</span><i>{session.connectionStatus}</i></div><strong>{runtimeLabel}</strong><p>{session.error || "发送任务时自动启动，空闲时保持当前连接状态。"}</p></div>
-            <div className="inspector-card approval-card"><div className="card-title"><span>审批策略</span><i>{permissionConfig.label}</i></div><p>{permissionConfig.description}</p></div>
-            <div className="inspector-card"><div className="card-title"><span>本地会话</span><i>{session.turns.length} 回合</i></div><strong>{session.thread?.id || "尚未创建"}</strong><p>{session.thread ? `工作区：${session.thread.cwd}` : "创建任务后会自动持久化，重新启动软件仍可恢复。"}</p></div>
-            <div className="inspector-card"><div className="card-title"><span>独立 CODEX_HOME</span><i>{session.codexHome ? "isolated" : "waiting"}</i></div><strong>{session.codexHome || "等待 app-server 初始化"}</strong><p>Codex Shell 的线程、状态库和缓存不会写入官方 Codex 的用户目录。</p></div>
+            <div className="inspector-card"><div className="card-title"><span>本地会话</span><i>{session.turns.length} 回合</i></div><strong>{session.thread?.id || "尚未创建"}</strong><p>{session.thread ? `工作区：${session.thread.cwd}` : "创建对话后会自动持久化，重新启动软件仍可恢复。"}</p></div>
+            <CodexHomeCard path={session.codexHome} disabled={session.runningThreadCount > 0 || session.submitting} onRestart={session.restart} />
           </>}
         </aside>
       </section>

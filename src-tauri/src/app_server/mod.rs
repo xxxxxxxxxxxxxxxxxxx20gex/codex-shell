@@ -1,3 +1,4 @@
+use crate::codex_home::resolve_codex_home;
 use crate::config::read_settings;
 use crate::credentials::read_api_key;
 use crate::runtime::resolve_codex_executable;
@@ -52,14 +53,12 @@ pub fn app_server_start(app: AppHandle, state: State<'_, AppServerState>) -> Res
     let settings = read_settings(&app)?;
     let api_key = read_api_key()?;
     let executable = resolve_codex_executable()?;
+    let codex_home = resolve_codex_home(&app)?;
     let local_data_directory = app
         .path()
         .app_local_data_dir()
         .map_err(|error| format!("无法解析 Codex Shell 本地数据目录：{error}"))?;
-    let codex_home = local_data_directory.join("codex-home");
     let default_workspace = local_data_directory.join("workspace");
-    fs::create_dir_all(&codex_home)
-        .map_err(|error| format!("创建 Codex Shell CODEX_HOME 失败：{error}"))?;
     fs::create_dir_all(&default_workspace)
         .map_err(|error| format!("创建 Codex Shell 默认工作区失败：{error}"))?;
     let model = serde_json::to_string(&settings.model_id)

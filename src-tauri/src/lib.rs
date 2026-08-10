@@ -1,4 +1,5 @@
 mod app_server;
+mod codex_home;
 mod config;
 mod credentials;
 mod runtime;
@@ -14,6 +15,7 @@ pub fn run() {
             app_server::app_server_send,
             app_server::app_server_start,
             app_server::app_server_stop,
+            codex_home::set_codex_home,
             config::load_model_settings,
             config::save_model_settings,
             credentials::save_api_key,
