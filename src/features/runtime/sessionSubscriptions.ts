@@ -33,6 +33,7 @@ interface Handlers {
   onError: (notification: ErrorNotification) => void;
   onThreadName: (notification: ThreadNameUpdatedNotification) => void;
   onStopped: () => void;
+  onRuntimeLog: (line: string) => void;
   onProtocolError: (error: Error) => void;
   requestApproval: (pending: PendingApprovalPayload) => Promise<JsonValue>;
 }
@@ -61,6 +62,7 @@ export function subscribeToSessionEvents(client: AppServerClient, handlers: Hand
     client.onNotification("thread/name/updated", (params) => handlers.onThreadName(params as ThreadNameUpdatedNotification)),
     client.onNotification("thread/tokenUsage/updated", (params) => onActive<ThreadTokenUsageUpdatedNotification>(params, (notification) => handlers.dispatch({ type: "tokenUsageUpdated", notification }))),
     client.onNotification("app-server/stopped", handlers.onStopped),
+    client.onLog(handlers.onRuntimeLog),
     client.onProtocolError(handlers.onProtocolError),
     client.onReverseRequest("item/commandExecution/requestApproval", (params) => handlers.requestApproval({ kind: "command", params: params as CommandExecutionRequestApprovalParams })),
     client.onReverseRequest("item/fileChange/requestApproval", (params) => handlers.requestApproval({ kind: "fileChange", params: params as FileChangeRequestApprovalParams })),

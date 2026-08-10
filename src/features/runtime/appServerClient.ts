@@ -62,6 +62,7 @@ interface PendingRequest {
 }
 
 type NotificationHandler = (params: unknown) => void;
+type LogHandler = (line: string) => void;
 type ReverseRequestHandler = (params: unknown) => Promise<JsonValue>;
 type ProtocolErrorHandler = (error: Error) => void;
 
@@ -91,6 +92,7 @@ export class AppServerClient {
   private nextId = 1;
   private pending = new Map<JsonRpcId, PendingRequest>();
   private notificationHandlers = new Map<string, Set<NotificationHandler>>();
+  private logHandlers = new Set<LogHandler>();
   private reverseRequestHandlers = new Map<string, ReverseRequestHandler>();
   private protocolErrorHandlers = new Set<ProtocolErrorHandler>();
   private disposeTransportListeners: DisposeListener[] = [];
@@ -145,6 +147,11 @@ export class AppServerClient {
     handlers.add(handler);
     this.notificationHandlers.set(method, handlers);
     return () => handlers.delete(handler);
+  }
+
+  onLog(handler: LogHandler) {
+    this.logHandlers.add(handler);
+    return () => this.logHandlers.delete(handler);
   }
 
   onReverseRequest(method: string, handler: ReverseRequestHandler) {
@@ -331,6 +338,10 @@ export class AppServerClient {
     const messageListener = await this.transport.onMessage((line) => this.receive(line));
     this.disposeTransportListeners.push(messageListener);
     try {
+      const logListener = await this.transport.onLog((line) => {
+        this.logHandlers.forEach((handler) => handler(line));
+      });
+      this.disposeTransportListeners.push(logListener);
       const stoppedListener = await this.transport.onStopped(() => {
         this.handleStopped(new Error("app-server 意外退出"));
       });

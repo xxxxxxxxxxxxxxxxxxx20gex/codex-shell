@@ -17,6 +17,7 @@ class FakeTransport implements AppServerTransport {
   stopCount = 0;
   sent: SentMessage[] = [];
   private messageHandlers = new Set<(line: string) => void>();
+  private logHandlers = new Set<(line: string) => void>();
   private stoppedHandlers = new Set<() => void>();
 
   async start() {
@@ -49,6 +50,11 @@ class FakeTransport implements AppServerTransport {
     return () => this.messageHandlers.delete(handler);
   }
 
+  async onLog(handler: (line: string) => void): Promise<DisposeListener> {
+    this.logHandlers.add(handler);
+    return () => this.logHandlers.delete(handler);
+  }
+
   async onStopped(handler: () => void): Promise<DisposeListener> {
     this.stoppedHandlers.add(handler);
     return () => this.stoppedHandlers.delete(handler);
@@ -61,6 +67,10 @@ class FakeTransport implements AppServerTransport {
 
   emitStopped() {
     this.stoppedHandlers.forEach((handler) => handler());
+  }
+
+  emitLog(line: string) {
+    this.logHandlers.forEach((handler) => handler(line));
   }
 }
 
@@ -92,6 +102,23 @@ describe("AppServerClient", () => {
     transport.emit({ id: request?.id, result: { ok: true } });
 
     await expect(responsePromise).resolves.toEqual({ ok: true });
+  });
+
+  it("subscribes to app-server stderr logs and disposes the transport listener", async () => {
+    const transport = new FakeTransport();
+    const client = new AppServerClient(transport);
+    const lines: string[] = [];
+    const disposedHandler = vi.fn();
+    client.onLog(disposedHandler)();
+    client.onLog((line) => lines.push(line));
+    await client.start();
+
+    transport.emitLog("first line");
+    await client.stop();
+    transport.emitLog("ignored after stop");
+
+    expect(lines).toEqual(["first line"]);
+    expect(disposedHandler).not.toHaveBeenCalled();
   });
 
   it("times out requests that never receive a response", async () => {
@@ -207,6 +234,7 @@ describe("AppServerClient", () => {
       onError: () => undefined,
       onThreadName: () => undefined,
       onStopped: () => undefined,
+      onRuntimeLog: () => undefined,
       onProtocolError: () => undefined,
       requestApproval: async () => ({ decision: "decline" }),
     });

@@ -11,6 +11,7 @@ import { buildUserInput, type FileMention, type SkillMention } from "./sessionIn
 import { subscribeToSessionEvents, type PendingApprovalPayload } from "./sessionSubscriptions";
 import { useAgentCommands } from "./useAgentCommands";
 import { useRunningTurns } from "./useRunningTurns";
+import { useRuntimeLogs } from "./useRuntimeLogs";
 import { useWorkspaceFiles } from "./useWorkspaceFiles";
 
 export type { FileMention, SkillMention } from "./sessionInput";
@@ -76,6 +77,7 @@ export function useAgentSession(
   const [threadActionId, setThreadActionId] = useState<string | null>(null);
   const [approvalQueue, setApprovalQueue] = useState<PendingApproval[]>([]);
   const [error, setError] = useState("");
+  const runtimeLogs = useRuntimeLogs();
 
   if (!clientRef.current) clientRef.current = new AppServerClient();
 
@@ -130,6 +132,7 @@ export function useAgentSession(
         clearApprovals();
         dispatch({ type: "clearLiveProgress" });
       },
+      onRuntimeLog: runtimeLogs.enqueue,
       onProtocolError: (protocolError) => setError(protocolError.message),
       requestApproval: (pending) => new Promise<JsonValue>((resolve) => {
         const requestKey = `${pending.kind}:${pending.params.threadId}:${pending.params.turnId}:${pending.params.itemId}:${approvalSequenceRef.current++}`;
@@ -138,7 +141,7 @@ export function useAgentSession(
         setApprovalQueue((current) => [...current, approval]);
       }),
     });
-  }, [clearApprovals, clearRunningTurns, markThreadRunning, markThreadStopped]);
+  }, [clearApprovals, clearRunningTurns, markThreadRunning, markThreadStopped, runtimeLogs.enqueue]);
 
   const resolveApproval = useCallback((approval: PendingApproval, result: JsonValue) => {
     const entry = approvalEntriesRef.current.get(approval.requestKey);
@@ -460,6 +463,8 @@ export function useAgentSession(
     threadActionId,
     error,
     approval: approvalQueue[0] ?? null,
+    runtimeLogs: runtimeLogs.entries,
+    clearRuntimeLogs: runtimeLogs.clear,
     approve,
     decline,
     send,

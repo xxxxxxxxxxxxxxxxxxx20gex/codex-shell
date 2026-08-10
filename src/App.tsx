@@ -25,7 +25,8 @@ import {
 import { DiffInspector } from "./features/diff/DiffInspector";
 import { ModelSettingsPanel } from "./features/models/ModelSettingsPanel";
 import type { ModelSettings } from "./features/models/types";
-import { CodexHomeCard } from "./features/runtime/CodexHomeCard";
+import { RuntimeLogPanel } from "./features/runtime/RuntimeLogPanel";
+import { StatusInspector } from "./features/runtime/StatusInspector";
 import { type FileMention, type SkillMention, useAgentSession } from "./features/runtime/useAgentSession";
 import { ConversationTimeline } from "./features/threads/ConversationTimeline";
 import { ContextHeatBar } from "./features/threads/ContextHeatBar";
@@ -76,7 +77,7 @@ function App() {
   const [slashMenuForced, setSlashMenuForced] = useState(false);
   const [slashMenuDismissed, setSlashMenuDismissed] = useState(false);
   const [slashSelectedIndex, setSlashSelectedIndex] = useState(0);
-  const [inspectorTab, setInspectorTab] = useState<"changes" | "status">("changes");
+  const [inspectorTab, setInspectorTab] = useState<"changes" | "status" | "logs">("changes");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [inspectorOpen, setInspectorOpen] = useState(true);
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH);
@@ -472,20 +473,13 @@ function App() {
           <div className="inspector-heading inspector-tabs">
             <button className={inspectorTab === "changes" ? "active" : ""} onClick={() => setInspectorTab("changes")}>变更</button>
             <button className={inspectorTab === "status" ? "active" : ""} onClick={() => setInspectorTab("status")}>状态</button>
+            <button className={inspectorTab === "logs" ? "active" : ""} onClick={() => setInspectorTab("logs")}>日志</button>
           </div>
-          {inspectorTab === "changes" ? <DiffInspector diff={currentDiff} /> : <>
-            <div className="inspector-card"><div className="card-title"><span>本地会话</span><i>{session.turns.length} 回合</i></div><strong>{session.thread?.id || "尚未创建"}</strong><p>{session.thread ? "当前 Session 已由 app-server 持久化。" : "创建对话后会自动持久化，重新启动软件仍可恢复。"}</p></div>
-            <div className="inspector-card workspace-status-card">
-              <div className="card-title"><span>当前工作区</span><i>{workspaceStatusKind}</i></div>
-              <strong>{currentWorkspacePath || "正在准备默认工作区"}</strong>
-              <p>{usingManagedWorkspace ? "Codex Shell 按日期维护的默认工作区；左侧仅展示用户主动选择的项目。" : "用户选择的项目目录；新 Session 将在这里创建。"}</p>
-              <div className="status-card-actions">
-                <button className="secondary-button" disabled={!currentWorkspacePath} onClick={() => setWorkspaceExplorerOpen(true)}>浏览文件</button>
-                {!usingManagedWorkspace && defaultWorkspace && <button className="secondary-button" onClick={() => changeWorkspace(null)}>使用今日默认</button>}
-              </div>
-            </div>
-            <CodexHomeCard path={session.codexHome} disabled={session.runningThreadCount > 0 || session.submitting} onRestart={session.restart} />
-          </>}
+          {inspectorTab === "changes" ? <DiffInspector diff={currentDiff} /> : inspectorTab === "logs" ? (
+            <RuntimeLogPanel entries={session.runtimeLogs} onClear={session.clearRuntimeLogs} />
+          ) : (
+            <StatusInspector turnCount={session.turns.length} threadId={session.thread?.id ?? null} workspacePath={currentWorkspacePath} workspaceKind={workspaceStatusKind} usingManagedWorkspace={usingManagedWorkspace} canUseDefaultWorkspace={Boolean(defaultWorkspace)} codexHome={session.codexHome} codexHomeDisabled={session.runningThreadCount > 0 || session.submitting} onBrowseWorkspace={() => setWorkspaceExplorerOpen(true)} onUseDefaultWorkspace={() => changeWorkspace(null)} onRestart={session.restart} />
+          )}
         </aside>
       </section>
 

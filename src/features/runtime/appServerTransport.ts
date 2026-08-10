@@ -8,6 +8,7 @@ export interface AppServerTransport {
   stop(): Promise<void>;
   send(line: string): Promise<void>;
   onMessage(handler: (line: string) => void): Promise<DisposeListener>;
+  onLog(handler: (line: string) => void): Promise<DisposeListener>;
   onStopped(handler: () => void): Promise<DisposeListener>;
 }
 
@@ -26,6 +27,10 @@ export class TauriAppServerTransport implements AppServerTransport {
 
   onMessage(handler: (line: string) => void) {
     return listen<string>("app-server://message", (event) => handler(event.payload));
+  }
+
+  onLog(handler: (line: string) => void) {
+    return listen<string>("app-server://log", (event) => handler(event.payload));
   }
 
   onStopped(handler: () => void) {

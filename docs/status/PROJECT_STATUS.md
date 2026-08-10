@@ -39,6 +39,7 @@
 - 已对齐官方桌面壳的默认工作区方式：使用系统文档目录下独立的 `Codex-Shell/YYYY-MM-DD` 每日目录；左侧只展示用户选择的项目，默认路径集中到右侧状态区。
 - 归档和永久删除 Session 均增加产品内二次确认窗口，清楚说明可恢复性差异，并提供安全取消焦点、Escape 与遮罩关闭。
 - 已确认原版 app-server 在隔离 CODEX_HOME 中原生记录 SQLite tracing 日志和 rollout 事件；一次 33.5 秒回合中壳层与 app-server 提交开销不足 1 秒，约 28 秒消耗在网关首个可见增量等待，后续回合另出现上游 overloaded 与 Core 原生重试。
+- 已消费 Tauri `app-server://log`：右侧新增实时日志页，使用 200 条/单行 4000 字符硬上限和 150ms 批量刷新控制内存及渲染开销，并标注日志的敏感数据属性。
 
 ## 当前数据流
 
@@ -49,7 +50,7 @@
 - app-server 崩溃后的当前 Session 自动恢复、超大文件预览/超大 Diff 的源端截断和二进制文件变更提示尚未完成。
 - 旧 CODEX_HOME 的跨卷迁移仍需可恢复复制方案；当前同卷迁移和双目录冲突已按保数据原则处理。
 - Runtime 自动获取、安装包、签名和干净 Windows 环境验证尚未完成。
-- 当前没有面向用户的诊断日志查看器；app-server 初始化前的早期 stderr 也尚未持久化为壳层滚动日志。
+- 实时 stderr 只保留当前窗口最近 200 条，不提供跨启动查询；长期诊断仍需直接读取 Core 的 `logs_2.sqlite`，尚未提供脱敏导出流程。
 
 ## 下一里程碑
 
@@ -58,7 +59,7 @@
 ## 验证证据
 
 - `pnpm typecheck`：通过。
-- `pnpm test`：15 个测试文件、63 项测试全部通过，包含 Session 归档/永久删除二次确认、每日默认工作区、动态编号与引用、Plan/默认 Turn 协议、原生 Item 中间态、200 Turn 有界状态、三栏尺寸边界、并行 Thread、Token 用量、文件预览、slash 解析、原生 Skill 输入和稳定命令 RPC 覆盖。
+- `pnpm test`：17 个测试文件、67 项测试全部通过，包含 app-server stderr 订阅/释放与有界缓冲、Session 归档/永久删除二次确认、每日默认工作区、动态编号与引用、Plan/默认 Turn 协议、原生 Item 中间态、200 Turn 有界状态、三栏尺寸边界、并行 Thread、Token 用量、文件预览、slash 解析、原生 Skill 输入和稳定命令 RPC 覆盖。
 - Rust 单元测试：9 项全部通过，覆盖动态 Runtime、每日默认工作区、独立 provider 参数、旧 CODEX_HOME 迁移、双目录冲突和官方目录防重叠校验。
 - `pnpm rust:check`：从 clean target 完整重编译后通过。
 - `pnpm build`：包含目录选择插件和 P0 工作台 UI 的生产构建通过。

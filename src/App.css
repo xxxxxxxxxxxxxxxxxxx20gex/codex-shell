@@ -147,6 +147,21 @@ code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 .workspace-status-card > strong { display: block; overflow-wrap: anywhere; line-height: 1.65; }
 .status-card-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 11px; }
 .status-card-actions button { padding: 6px 9px; font-size: 8px; }
+.runtime-log-panel { min-height: 0; overflow: auto; padding: 12px; }
+.runtime-log-panel > header { position: sticky; z-index: 1; top: -12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 0 9px; background: var(--panel); }
+.runtime-log-panel > header div { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
+.runtime-log-panel > header strong { font-size: 10px; }
+.runtime-log-panel > header small { color: var(--muted); font-size: 8px; }
+.runtime-log-panel > header button { padding: 5px 8px; font-size: 8px; }
+.runtime-log-panel > p { margin: 0 0 10px; color: #8f8257; font-size: 8px; line-height: 1.55; }
+.runtime-log-empty { padding: 18px 10px; border: 1px dashed #35342e; border-radius: 8px; color: var(--muted); font-size: 9px; line-height: 1.7; }
+.runtime-log-entries { display: grid; gap: 6px; }
+.runtime-log-entries article { padding: 7px 8px; border-left: 2px solid #55534b; border-radius: 0 6px 6px 0; background: #151513; }
+.runtime-log-entries article[data-level="warning"] { border-left-color: #b99a4e; }
+.runtime-log-entries article[data-level="error"] { border-left-color: var(--red); }
+.runtime-log-entries article[data-level="debug"], .runtime-log-entries article[data-level="trace"] { opacity: .72; }
+.runtime-log-entries time { display: block; margin-bottom: 4px; color: #67655e; font: 7px "Cascadia Code", Consolas, monospace; }
+.runtime-log-entries pre { overflow-wrap: anywhere; margin: 0; color: #aaa89f; font: 8px/1.55 "Cascadia Code", Consolas, monospace; white-space: pre-wrap; }
 
 .modal-backdrop { position: fixed; z-index: 10; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(5,5,4,.72); backdrop-filter: blur(8px); }
 .approval-backdrop { position: fixed; z-index: 20; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(5,5,4,.78); backdrop-filter: blur(9px); }
