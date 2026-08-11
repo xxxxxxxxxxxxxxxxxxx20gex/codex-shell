@@ -42,6 +42,14 @@ export function joinWorkspacePath(directory: string, name: string) {
   return `${directory.replace(/[\\/]+$/, "")}${separator}${name.replace(/^[\\/]+/, "")}`;
 }
 
+export function resolveWorkspaceRelativePath(root: string, relativePath: string) {
+  const normalized = relativePath.replace(/\\/g, "/");
+  if (!normalized || normalized.startsWith("/") || /^[a-zA-Z]:\//.test(normalized)) return null;
+  const parts = normalized.split("/").filter((part) => part && part !== ".");
+  if (parts.length === 0 || parts.some((part) => part === "..")) return null;
+  return parts.reduce(joinWorkspacePath, root);
+}
+
 export function workspaceRelativePath(root: string, path: string) {
   const normalizedRoot = root.replace(/[\\/]+$/, "");
   if (path.toLowerCase() === normalizedRoot.toLowerCase()) return workspaceName(root);

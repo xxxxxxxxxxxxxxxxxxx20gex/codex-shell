@@ -1,9 +1,17 @@
 import { useCallback } from "react";
 import type { FuzzyFileSearchResult } from "../../generated/app-server/FuzzyFileSearchResult";
 import type { FsReadDirectoryEntry } from "../../generated/app-server/v2/FsReadDirectoryEntry";
+import type { FsChangedNotification } from "../../generated/app-server/v2/FsChangedNotification";
 import type { AppServerClient } from "./appServerClient";
 
 type EnsureConnected = () => Promise<AppServerClient>;
+export type DisposeWorkspaceWatch = () => void | Promise<void>;
+export type WatchWorkspacePath = (
+  path: string,
+  onChanged: (changedPaths: string[]) => void,
+) => Promise<DisposeWorkspaceWatch>;
+
+let nextWatchId = 1;
 
 export function useWorkspaceFiles(
   ensureConnected: EnsureConnected,
@@ -46,5 +54,31 @@ export function useWorkspaceFiles(
     return (await client.readFile({ path })).dataBase64;
   }, [ensureConnected]);
 
-  return { searchFiles, readWorkspaceDirectory, readWorkspaceFile };
+  const watchWorkspacePath = useCallback<WatchWorkspacePath>(async (path, onChanged) => {
+    const client = await ensureConnected();
+    const watchId = `codex-shell-workspace-${Date.now()}-${nextWatchId++}`;
+    let disposed = false;
+    const disposeNotification = client.onNotification("fs/changed", (params) => {
+      const notification = params as FsChangedNotification;
+      if (!disposed && notification.watchId === watchId) {
+        onChanged(notification.changedPaths.map(String));
+      }
+    });
+    try {
+      await client.watchPath({ watchId, path });
+    } catch (error) {
+      disposeNotification();
+      throw error;
+    }
+    return async () => {
+      if (disposed) return;
+      disposed = true;
+      disposeNotification();
+      if (client.connectionStatus === "ready") {
+        await client.unwatchPath({ watchId }).catch(() => undefined);
+      }
+    };
+  }, [ensureConnected]);
+
+  return { searchFiles, readWorkspaceDirectory, readWorkspaceFile, watchWorkspacePath };
 }

@@ -6,6 +6,10 @@ import type { FsReadDirectoryParams } from "../../generated/app-server/v2/FsRead
 import type { FsReadDirectoryResponse } from "../../generated/app-server/v2/FsReadDirectoryResponse";
 import type { FsReadFileParams } from "../../generated/app-server/v2/FsReadFileParams";
 import type { FsReadFileResponse } from "../../generated/app-server/v2/FsReadFileResponse";
+import type { FsUnwatchParams } from "../../generated/app-server/v2/FsUnwatchParams";
+import type { FsUnwatchResponse } from "../../generated/app-server/v2/FsUnwatchResponse";
+import type { FsWatchParams } from "../../generated/app-server/v2/FsWatchParams";
+import type { FsWatchResponse } from "../../generated/app-server/v2/FsWatchResponse";
 import type { ModelListParams } from "../../generated/app-server/v2/ModelListParams";
 import type { ModelListResponse } from "../../generated/app-server/v2/ModelListResponse";
 import type { ModelProviderCapabilitiesReadResponse } from "../../generated/app-server/v2/ModelProviderCapabilitiesReadResponse";
@@ -284,6 +288,14 @@ export class AppServerClient {
 
   readFile(params: FsReadFileParams) {
     return this.request<FsReadFileResponse>("fs/readFile", params);
+  }
+
+  watchPath(params: FsWatchParams) {
+    return this.request<FsWatchResponse>("fs/watch", params);
+  }
+
+  unwatchPath(params: FsUnwatchParams) {
+    return this.request<FsUnwatchResponse>("fs/unwatch", params);
   }
 
   startTurn(params: TurnStartParams, collaborationMode?: CollaborationMode) {

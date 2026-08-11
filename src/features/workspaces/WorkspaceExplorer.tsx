@@ -1,14 +1,18 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import type { FsReadDirectoryEntry } from "../../generated/app-server/v2/FsReadDirectoryEntry";
 import { errorMessage } from "../../shared/errors";
+import type { WatchWorkspacePath } from "../runtime/useWorkspaceFiles";
 import { decodeFilePreview, formatFileSize, type FilePreview } from "./filePreview";
+import { useWorkspaceDirectoryWatches } from "./useWorkspaceDirectoryWatches";
 import { joinWorkspacePath, workspaceName, workspaceRelativePath } from "./workspaceState";
 
 interface Props {
   rootPath: string;
+  initialFilePath?: string | null;
   onClose: () => void;
   readDirectory: (path: string) => Promise<FsReadDirectoryEntry[]>;
   readFile: (path: string) => Promise<string>;
+  watchPath: WatchWorkspacePath;
 }
 
 interface DirectoryState {
@@ -21,9 +25,22 @@ function fileName(path: string) {
   return path.split(/[\\/]/).pop() || path;
 }
 
-export function WorkspaceExplorer({ rootPath, onClose, readDirectory, readFile }: Props) {
+function normalizedPath(path: string) {
+  return path.replace(/\\/g, "/").replace(/\/+$/, "").toLocaleLowerCase();
+}
+
+function pathsAffectFile(changedPaths: string[], filePath: string) {
+  const file = normalizedPath(filePath);
+  return changedPaths.some((path) => {
+    const changed = normalizedPath(path);
+    return file === changed || file.startsWith(`${changed}/`);
+  });
+}
+
+export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, readDirectory, readFile, watchPath }: Props) {
   const loadingDirectoriesRef = useRef(new Set<string>());
   const previewRequestRef = useRef(0);
+  const selectedPathRef = useRef<string | null>(null);
   const [directories, setDirectories] = useState<Record<string, DirectoryState>>({});
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set([rootPath]));
   const [filter, setFilter] = useState("");
@@ -31,6 +48,7 @@ export function WorkspaceExplorer({ rootPath, onClose, readDirectory, readFile }
   const [preview, setPreview] = useState<FilePreview | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState("");
+  const [watchError, setWatchError] = useState("");
 
   const loadDirectory = useCallback(async (path: string) => {
     if (loadingDirectoriesRef.current.has(path)) return;
@@ -54,16 +72,49 @@ export function WorkspaceExplorer({ rootPath, onClose, readDirectory, readFile }
     }
   }, [readDirectory]);
 
+  const loadPreview = useCallback(async (path: string) => {
+    const requestId = ++previewRequestRef.current;
+    setPreview(null);
+    setPreviewLoading(true);
+    setPreviewError("");
+    try {
+      const dataBase64 = await readFile(path);
+      if (previewRequestRef.current === requestId) setPreview(decodeFilePreview(path, dataBase64));
+    } catch (error) {
+      if (previewRequestRef.current === requestId) setPreviewError(errorMessage(error));
+    } finally {
+      if (previewRequestRef.current === requestId) setPreviewLoading(false);
+    }
+  }, [readFile]);
+
+  const selectFile = useCallback((path: string) => {
+    selectedPathRef.current = path;
+    setSelectedPath(path);
+    void loadPreview(path);
+  }, [loadPreview]);
+
   useEffect(() => {
     loadingDirectoriesRef.current.clear();
+    previewRequestRef.current += 1;
+    selectedPathRef.current = null;
     setDirectories({});
-    setExpanded(new Set([rootPath]));
     setFilter("");
     setSelectedPath(null);
     setPreview(null);
+    setPreviewLoading(false);
     setPreviewError("");
-    void loadDirectory(rootPath);
-  }, [loadDirectory, rootPath]);
+    setWatchError("");
+    const relativeParts = initialFilePath
+      ? workspaceRelativePath(rootPath, initialFilePath).split(/[\\/]/).filter(Boolean)
+      : [];
+    const parentDirectories = relativeParts.slice(0, -1).reduce<string[]>((paths, part) => {
+      paths.push(joinWorkspacePath(paths[paths.length - 1] ?? rootPath, part));
+      return paths;
+    }, []);
+    setExpanded(new Set([rootPath, ...parentDirectories]));
+    void Promise.all([rootPath, ...parentDirectories].map(loadDirectory));
+    if (initialFilePath) selectFile(initialFilePath);
+  }, [initialFilePath, loadDirectory, rootPath, selectFile]);
 
   useEffect(() => {
     function closeOnEscape(event: KeyboardEvent) {
@@ -84,21 +135,22 @@ export function WorkspaceExplorer({ rootPath, onClose, readDirectory, readFile }
     if (!isExpanded && !directories[path]) void loadDirectory(path);
   }
 
-  async function selectFile(path: string) {
-    const requestId = ++previewRequestRef.current;
-    setSelectedPath(path);
-    setPreview(null);
-    setPreviewLoading(true);
-    setPreviewError("");
-    try {
-      const dataBase64 = await readFile(path);
-      if (previewRequestRef.current === requestId) setPreview(decodeFilePreview(path, dataBase64));
-    } catch (error) {
-      if (previewRequestRef.current === requestId) setPreviewError(errorMessage(error));
-    } finally {
-      if (previewRequestRef.current === requestId) setPreviewLoading(false);
-    }
-  }
+  const handleWorkspaceChanged = useCallback((directory: string, changedPaths: string[]) => {
+    void loadDirectory(directory);
+    const selected = selectedPathRef.current;
+    if (selected && pathsAffectFile(changedPaths, selected)) void loadPreview(selected);
+  }, [loadDirectory, loadPreview]);
+
+  const handleWatchError = useCallback((error: unknown) => {
+    setWatchError(errorMessage(error));
+  }, []);
+
+  useWorkspaceDirectoryWatches({
+    directories: expanded,
+    watchPath,
+    onChanged: handleWorkspaceChanged,
+    onError: handleWatchError,
+  });
 
   function renderDirectory(directory: string, depth: number): ReactNode {
     const state = directories[directory];
@@ -127,7 +179,7 @@ export function WorkspaceExplorer({ rootPath, onClose, readDirectory, readFile }
       }
       if (!entry.isFile) return null;
       return (
-        <button key={path} className={`explorer-tree-row file ${selectedPath === path ? "selected" : ""}`} style={{ paddingLeft: 30 + depth * 16 }} onClick={() => void selectFile(path)} title={path}>
+        <button key={path} className={`explorer-tree-row file ${selectedPath === path ? "selected" : ""}`} style={{ paddingLeft: 30 + depth * 16 }} onClick={() => selectFile(path)} title={path}>
           <span className="tree-file">{fileName(path).includes(".") ? "{}" : "·"}</span><span>{entry.fileName}</span>
         </button>
       );
@@ -141,7 +193,7 @@ export function WorkspaceExplorer({ rootPath, onClose, readDirectory, readFile }
       <button className="workspace-explorer-scrim" onClick={onClose} aria-label="关闭工作区文件浏览器" />
       <section className="workspace-explorer-drawer">
         <header className="explorer-header">
-          <div><span className="eyebrow">Workspace Explorer</span><strong>{workspaceName(rootPath)}</strong><small>{rootPath}</small></div>
+          <div><span className="eyebrow">Workspace Explorer</span><strong>{workspaceName(rootPath)}</strong><small>{rootPath}</small>{watchError && <i className="explorer-watch-warning" title={watchError}>自动刷新不可用</i>}</div>
           <button className="explorer-close" onClick={onClose} aria-label="关闭文件浏览器">×</button>
         </header>
         <div className="explorer-body">

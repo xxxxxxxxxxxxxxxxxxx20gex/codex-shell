@@ -1,10 +1,10 @@
 # Diff 与文件变更状态
 
 - 模块职责：展示工作区文件修改、增删统计与可审查 diff。
-- 当前状态：app-server 实时 Diff 和历史文件变更审查视图已完成。
-- 最近变更：直接消费 `turn/diff/updated` 的聚合 unified diff；恢复历史线程时从持久化 `fileChange.changes` 重建；右侧支持文件选择、增删统计和逐行着色。
+- 当前状态：app-server 实时 Diff 和历史文件变更审查视图已完成，支持文件级状态摘要、选择与工作区跳转。
+- 最近变更：unified diff 解析新增新增/删除/重命名/修改分类并保留重命名前路径；右栏汇总各类文件数量，非删除文件可一键在工作区浏览器中展开父目录并预览。
 - 当前接口：`DiffInspector`、`parseUnifiedDiff`、`AgentSessionState.diffsByTurnId`。
 - 已知问题：尚未限制超大 Diff DOM 规模，也没有二进制文件专用提示和行号。
 - 下一步：增加大文件截断/虚拟化、二进制状态与复制补丁操作。
-- 验证证据：unified diff 单元测试覆盖多文件解析和增删计数；TypeScript、Vitest 与 Vite production build 通过。
-- 最后更新：2026-08-07
+- 验证证据：parser 测试覆盖多文件、增删计数及新增/删除/重命名语义；happy-dom 测试覆盖文件状态摘要和工作区跳转回调。
+- 最后更新：2026-08-11

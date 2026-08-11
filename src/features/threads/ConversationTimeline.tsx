@@ -1,13 +1,11 @@
-import { useEffect, useRef } from "react";
-import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import type { McpToolCallProgressNotification } from "../../generated/app-server/v2/McpToolCallProgressNotification";
 import type { Turn } from "../../generated/app-server/v2/Turn";
 import type { TurnPlanUpdatedNotification } from "../../generated/app-server/v2/TurnPlanUpdatedNotification";
 import { userMessageText } from "../runtime/sessionState";
-import { agentMessageTiming, userMessageTiming } from "./conversationTiming";
-import { TurnActivityItem } from "./TurnActivityItem";
-import { TurnPlanView } from "./TurnPlanView";
-import { TurnProgressIndicator } from "./TurnProgressIndicator";
+import { ConversationTurn } from "./ConversationTurn";
+import "./ConversationTimeline.css";
 
 interface Props {
   turns: Turn[];
@@ -18,11 +16,18 @@ interface Props {
   mcpProgressByItemId?: Record<string, McpToolCallProgressNotification>;
 }
 
-function lastItemId(items: ThreadItem[], type: "userMessage" | "agentMessage") {
-  for (let index = items.length - 1; index >= 0; index -= 1) {
-    if (items[index].type === type) return items[index].id;
-  }
-  return undefined;
+interface UserTurnLink {
+  index: number;
+  label: string;
+}
+
+function userTurnLinks(turns: Turn[]): UserTurnLink[] {
+  return turns.flatMap((turn, index) => {
+    const message = turn.items.find((item) => item.type === "userMessage");
+    if (!message || message.type !== "userMessage") return [];
+    const text = userMessageText(message).replace(/\s+/g, " ").trim();
+    return [{ index, label: text || `第 ${index + 1} 条用户消息` }];
+  });
 }
 
 export function ConversationTimeline({
@@ -33,80 +38,72 @@ export function ConversationTimeline({
   activeItemTurnIds = {},
   mcpProgressByItemId = {},
 }: Props) {
-  const endRef = useRef<HTMLDivElement>(null);
+  const virtuosoRef = useRef<VirtuosoHandle>(null);
+  const [atBottom, setAtBottom] = useState(true);
+  const [hasNewActivity, setHasNewActivity] = useState(false);
+  const links = useMemo(() => userTurnLinks(turns), [turns]);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: "end" });
+    if (!atBottom) setHasNewActivity(true);
   }, [running, turns]);
 
+  const handleAtBottomChange = useCallback((nextAtBottom: boolean) => {
+    setAtBottom(nextAtBottom);
+    if (nextAtBottom) setHasNewActivity(false);
+  }, []);
+
+  const scrollToTurn = useCallback((index: number) => {
+    virtuosoRef.current?.scrollToIndex({ index, align: "start", behavior: "smooth" });
+    if (index === turns.length - 1) setHasNewActivity(false);
+  }, [turns.length]);
+
+  const scrollToLatest = useCallback(() => {
+    scrollToTurn(turns.length - 1);
+    setHasNewActivity(false);
+  }, [scrollToTurn, turns.length]);
+
   return (
-    <div className="timeline">
-      {turns.map((turn, turnIndex) => {
-        const items = turn.items;
-        const hasAgentItem = items.some((item) => item.type === "agentMessage");
-        const hasActiveProcess = items.some((item) => activeItemTurnIds[item.id] === turn.id
-          && item.type !== "userMessage" && item.type !== "agentMessage");
-        const isActiveTurn = running && turnIndex === turns.length - 1;
-        const lastUserMessageId = lastItemId(items, "userMessage");
-        const lastAgentMessageId = lastItemId(items, "agentMessage");
-        const sentTiming = userMessageTiming(turn);
-        const answerTiming = agentMessageTiming(turn, isActiveTurn);
-        return (
-          <section className="conversation-turn" key={turn.id} data-status={turn.status}>
-            {plansByTurnId[turn.id] && <TurnPlanView plan={plansByTurnId[turn.id]} />}
-            {items.map((item) => item.type === "userMessage" ? (
-              <div className="user-message-group" key={item.id}>
-                <div className="user-message">{userMessageText(item)}</div>
-                {item.id === lastUserMessageId && sentTiming && (
-                  <div className="message-timing user-message-timing">{sentTiming}</div>
-                )}
-              </div>
-            ) : item.type === "agentMessage" ? (
-              <div className="agent-block" key={item.id}>
-                <div className="agent-avatar">C</div>
-                <div className="agent-content">
-                  <div className="agent-meta"><strong>Codex</strong><span>{modelId}</span></div>
-                  <p className={item.text ? "agent-response" : "agent-response pending"}>
-                    {item.text || "正在等待模型响应…"}
-                  </p>
-                  {item.id === lastAgentMessageId && answerTiming && (
-                    <div className="message-timing agent-message-timing">{answerTiming}</div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <TurnActivityItem
-                item={item}
-                key={item.id}
-                active={activeItemTurnIds[item.id] === turn.id}
-              />
-            ))}
-            {isActiveTurn && (
-              <TurnProgressIndicator
-                turn={turn}
-                activeItemTurnIds={activeItemTurnIds}
-                mcpProgressByItemId={mcpProgressByItemId}
-              />
-            )}
-            {isActiveTurn && !hasAgentItem && (
-              <div className="agent-block">
-                <div className="agent-avatar">C</div>
-                <div className="agent-content">
-                  <div className="agent-meta"><strong>Codex</strong><span>{modelId}</span></div>
-                  <p className="agent-response pending">
-                    {hasActiveProcess ? "Codex 正在处理任务…" : "正在等待模型响应…"}
-                  </p>
-                  {answerTiming && (
-                    <div className="message-timing agent-message-timing">{answerTiming}</div>
-                  )}
-                </div>
-              </div>
-            )}
-            {turn.error && <div className="turn-error">{turn.error.message}</div>}
-          </section>
-        );
-      })}
-      <div ref={endRef} />
+    <div className="timeline-shell">
+      <Virtuoso
+        ref={virtuosoRef}
+        className="timeline"
+        data={turns}
+        atBottomThreshold={96}
+        atBottomStateChange={handleAtBottomChange}
+        computeItemKey={(_index, turn) => turn.id}
+        followOutput={(isAtBottom) => isAtBottom ? "auto" : false}
+        initialTopMostItemIndex={Math.max(0, turns.length - 1)}
+        itemContent={(turnIndex, turn) => (
+          <div className={`conversation-turn-frame ${turnIndex === 0 ? "first" : "separated"} ${turnIndex === turns.length - 1 ? "last" : ""}`}>
+            <ConversationTurn
+              turn={turn}
+              active={running && turnIndex === turns.length - 1}
+              modelId={modelId}
+              plan={plansByTurnId[turn.id]}
+              activeItemTurnIds={activeItemTurnIds}
+              mcpProgressByItemId={mcpProgressByItemId}
+            />
+          </div>
+        )}
+      />
+      {links.length > 1 && (
+        <nav className="user-message-navigation" aria-label="用户消息导航">
+          {links.map((link, index) => (
+            <button
+              key={`${link.index}:${link.label}`}
+              type="button"
+              onClick={() => scrollToTurn(link.index)}
+              aria-label={`跳到用户消息 ${index + 1}：${link.label}`}
+              title={link.label}
+            />
+          ))}
+        </nav>
+      )}
+      {!atBottom && (
+        <button className="timeline-latest-button" type="button" onClick={scrollToLatest}>
+          {hasNewActivity ? "有新内容 · 返回最新" : "返回最新"}
+        </button>
+      )}
     </div>
   );
 }

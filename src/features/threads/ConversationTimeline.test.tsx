@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import type { Turn } from "../../generated/app-server/v2/Turn";
-import { ConversationTimeline } from "./ConversationTimeline";
+import { ConversationTurn } from "./ConversationTurn";
 import { formatMessageTimestamp, formatTurnDuration } from "./conversationTiming";
 
 function completedTurn(): Turn {
@@ -31,6 +31,18 @@ function completedTurn(): Turn {
   };
 }
 
+function renderTurn(turn: Turn, active = false) {
+  return renderToStaticMarkup(
+    <ConversationTurn
+      turn={turn}
+      active={active}
+      modelId="gpt-test"
+      activeItemTurnIds={{}}
+      mcpProgressByItemId={{}}
+    />,
+  );
+}
+
 describe("conversation timing", () => {
   it("formats timestamps in local time", () => {
     const timestamp = new Date(2026, 7, 7, 10, 20, 30).getTime() / 1000;
@@ -44,9 +56,7 @@ describe("conversation timing", () => {
   });
 
   it("renders send time, answer time, and duration", () => {
-    const markup = renderToStaticMarkup(
-      <ConversationTimeline turns={[completedTurn()]} running={false} modelId="gpt-test" />,
-    );
+    const markup = renderTurn(completedTurn());
 
     expect(markup).toContain("2026/08/07 10:20:30");
     expect(markup).toContain("2026/08/07 10:20:38 · 8.4 秒");
@@ -57,9 +67,7 @@ describe("conversation timing", () => {
 
   it("shows an in-progress answer label", () => {
     const turn = { ...completedTurn(), status: "inProgress", completedAt: null, durationMs: null } as Turn;
-    const markup = renderToStaticMarkup(
-      <ConversationTimeline turns={[turn]} running modelId="gpt-test" />,
-    );
+    const markup = renderTurn(turn, true);
 
     expect(markup).toContain("生成中");
   });
@@ -81,9 +89,7 @@ describe("conversation timing", () => {
       durationMs: 8400,
     };
     const turn = { ...completedTurn(), items: [command] };
-    const markup = renderToStaticMarkup(
-      <ConversationTimeline turns={[turn]} running={false} modelId="gpt-test" />,
-    );
+    const markup = renderTurn(turn);
 
     expect(markup).toContain("运行命令");
     expect(markup).toContain("pnpm test");
@@ -118,9 +124,9 @@ describe("conversation timing", () => {
       message: "正在读取接口文档",
     };
     const markup = renderToStaticMarkup(
-      <ConversationTimeline
-        turns={[turn]}
-        running
+      <ConversationTurn
+        turn={turn}
+        active
         modelId="gpt-test"
         activeItemTurnIds={{ "mcp-1": "turn-1" }}
         mcpProgressByItemId={{ "mcp-1": progress }}

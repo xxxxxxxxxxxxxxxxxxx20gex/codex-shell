@@ -45,6 +45,7 @@ import {
   loadWorkspacePath,
   replaceActiveFileMention,
   resolveFileSearchPath,
+  resolveWorkspaceRelativePath,
   saveWorkspacePath,
 } from "./features/workspaces/workspaceState";
 
@@ -64,6 +65,7 @@ function App() {
   const [workspacePath, setWorkspacePath] = useState<string | null>(loadWorkspacePath);
   const [defaultWorkspace, setDefaultWorkspace] = useState<DefaultWorkspace | null>(null);
   const [workspaceExplorerOpen, setWorkspaceExplorerOpen] = useState(false);
+  const [workspaceExplorerInitialPath, setWorkspaceExplorerInitialPath] = useState<string | null>(null);
   const [mentions, setMentions] = useState<FileMention[]>([]);
   const [skills, setSkills] = useState<SkillMention[]>([]);
   const [mentionResults, setMentionResults] = useState<FuzzyFileSearchResult[]>([]);
@@ -264,9 +266,15 @@ function App() {
 
   function changeWorkspace(path: string | null) {
     setWorkspaceExplorerOpen(false);
+    setWorkspaceExplorerInitialPath(null);
     startNewTask();
     setWorkspacePath(path);
     saveWorkspacePath(path);
+  }
+
+  function openWorkspaceExplorer(initialFilePath: string | null = null) {
+    setWorkspaceExplorerInitialPath(initialFilePath);
+    setWorkspaceExplorerOpen(true);
   }
 
   function selectMention(result: FuzzyFileSearchResult) {
@@ -329,7 +337,7 @@ function App() {
         <aside className="sidebar panel">
           <button className="primary-button new-task" onClick={startNewTask} disabled={session.submitting || session.openingThreadId !== null}>＋ 新建对话</button>
           <div className="section-label">工作区</div>
-          <WorkspaceSelector path={usingManagedWorkspace ? null : workspacePath} disabled={session.submitting || session.openingThreadId !== null} onExplore={() => setWorkspaceExplorerOpen(true)} onChange={changeWorkspace} onError={setUiError} />
+          <WorkspaceSelector path={usingManagedWorkspace ? null : workspacePath} disabled={session.submitting || session.openingThreadId !== null} onExplore={() => openWorkspaceExplorer()} onChange={changeWorkspace} onError={setUiError} />
           <ThreadHistoryList
             threads={session.history}
             archived={session.historyArchived}
@@ -388,6 +396,7 @@ function App() {
           )}
           {session.turns.length > 0 ? (
             <ConversationTimeline
+              key={session.thread?.id ?? "new"}
               turns={session.turns}
               running={session.running}
               modelId={settings.modelId}
@@ -468,17 +477,21 @@ function App() {
             <button className={inspectorTab === "status" ? "active" : ""} onClick={() => setInspectorTab("status")}>状态</button>
             <button className={inspectorTab === "logs" ? "active" : ""} onClick={() => setInspectorTab("logs")}>日志</button>
           </div>
-          {inspectorTab === "changes" ? <DiffInspector diff={currentDiff} /> : inspectorTab === "logs" ? (
+          {inspectorTab === "changes" ? <DiffInspector diff={currentDiff} onOpenFile={currentWorkspacePath ? (path) => {
+            const filePath = resolveWorkspaceRelativePath(currentWorkspacePath, path);
+            if (filePath) openWorkspaceExplorer(filePath);
+            else setUiError("Diff 文件不在当前工作区内，无法预览");
+          } : undefined} /> : inspectorTab === "logs" ? (
             <RuntimeLogPanel store={session.runtimeLogStore} />
           ) : (
-            <StatusInspector turnCount={session.turns.length} threadId={session.thread?.id ?? null} workspacePath={currentWorkspacePath} workspaceKind={workspaceStatusKind} usingManagedWorkspace={usingManagedWorkspace} canUseDefaultWorkspace={Boolean(defaultWorkspace)} codexHome={session.codexHome} codexHomeDisabled={session.runningThreadCount > 0 || session.submitting} noticeStore={session.runtimeNoticeStore} windowsSandboxReadiness={session.windowsSandboxReadiness} onBrowseWorkspace={() => setWorkspaceExplorerOpen(true)} onUseDefaultWorkspace={() => changeWorkspace(null)} onSetupWindowsSandbox={() => session.setupWindowsSandbox("unelevated")} onRestart={session.restart} />
+            <StatusInspector turnCount={session.turns.length} threadId={session.thread?.id ?? null} workspacePath={currentWorkspacePath} workspaceKind={workspaceStatusKind} usingManagedWorkspace={usingManagedWorkspace} canUseDefaultWorkspace={Boolean(defaultWorkspace)} codexHome={session.codexHome} codexHomeDisabled={session.runningThreadCount > 0 || session.submitting} noticeStore={session.runtimeNoticeStore} windowsSandboxReadiness={session.windowsSandboxReadiness} onBrowseWorkspace={() => openWorkspaceExplorer()} onUseDefaultWorkspace={() => changeWorkspace(null)} onSetupWindowsSandbox={() => session.setupWindowsSandbox("unelevated")} onRestart={session.restart} />
           )}
         </aside>
       </section>
 
       {settingsOpen && <ModelSettingsPanel settings={settings} loadModels={session.listModels} loadProviderCapabilities={session.readModelProviderCapabilities} onClose={() => setSettingsOpen(false)} onSave={(next) => { setSettings(next); setSettingsOpen(false); void session.restart(); }} />}
       <ServerInteractionDialog store={session.interactionStore} />
-      {workspaceExplorerOpen && currentWorkspacePath && <WorkspaceExplorer rootPath={currentWorkspacePath} onClose={() => setWorkspaceExplorerOpen(false)} readDirectory={session.readWorkspaceDirectory} readFile={session.readWorkspaceFile} />}
+      {workspaceExplorerOpen && currentWorkspacePath && <WorkspaceExplorer rootPath={currentWorkspacePath} initialFilePath={workspaceExplorerInitialPath} onClose={() => setWorkspaceExplorerOpen(false)} readDirectory={session.readWorkspaceDirectory} readFile={session.readWorkspaceFile} watchPath={session.watchWorkspacePath} />}
     </main>
   );
 }

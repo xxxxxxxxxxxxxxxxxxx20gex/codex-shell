@@ -5,6 +5,7 @@ import {
   joinWorkspacePath,
   replaceActiveFileMention,
   resolveFileSearchPath,
+  resolveWorkspaceRelativePath,
   workspaceRelativePath,
 } from "./workspaceState";
 
@@ -32,6 +33,12 @@ describe("workspace paths", () => {
   it("joins child names using the workspace path style", () => {
     expect(joinWorkspacePath("C:\\work", "src")).toBe("C:\\work\\src");
     expect(joinWorkspacePath("/work/", "src")).toBe("/work/src");
+  });
+
+  it("resolves only files contained by the workspace", () => {
+    expect(resolveWorkspaceRelativePath("C:\\work", "src/App.tsx")).toBe("C:\\work\\src\\App.tsx");
+    expect(resolveWorkspaceRelativePath("C:\\work", "../secret.txt")).toBeNull();
+    expect(resolveWorkspaceRelativePath("C:\\work", "D:\\other.txt")).toBeNull();
   });
 
   it("renders paths relative to the selected workspace", () => {

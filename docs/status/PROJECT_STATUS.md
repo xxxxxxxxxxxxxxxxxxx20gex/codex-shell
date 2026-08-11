@@ -47,6 +47,8 @@
 - 已完成提交前兼容性加固：模型可见文本统一限制为 8000 UTF-8 bytes；Runtime Notice、MCP 资源预览和外部 URL 均有硬边界；旧 paginated rollout 在原生只读接口不支持时只对固定错误回退 Resume。
 - 已修复归档/活动历史串列、归档 Session 误打开、inline Review 合成 Turn 丢失和 detached Review 父线程订阅残留；`openai/form` 已通过 initialize 显式协商，typed form 按 schema 校验并省略未填写的可选字段。
 - Thread 历史与 Review 生命周期已从主控制器拆为独立 Hook；通知路由测试也从 JSON-RPC 客户端测试中拆出，核心手写模块保持在约 500 行目标内。
+- 已参考官方桌面壳完成 P0 对话体验优化：Turn 使用可变高度虚拟列表，流式输出仅在底部智能跟随，离开底部后显示新内容提示，并提供用户消息快速导航。
+- Diff 已支持新增、删除、重命名和修改的文件级摘要，非删除文件可直接在工作区浏览器定位预览；工作区通过稳定 `fs/watch/fs/changed/fs/unwatch` 自动刷新展开目录和当前文件，并完整清理订阅、listener 与防抖 timer。
 
 ## 当前数据流
 
@@ -54,7 +56,7 @@
 
 ## 当前风险
 
-- app-server 崩溃后的当前 Session 自动恢复、超大文件预览/超大 Diff 的源端截断和二进制文件变更提示尚未完成。
+- app-server 崩溃后的当前 Session 自动恢复、超大文件预览/超大 Diff 的源端截断和二进制文件变更提示尚未完成；单个超长 Turn 内部活动尚未二次虚拟化。
 - `useThreadController` 已拆出历史和 Review，但发送、Steer 与 Thread 元数据操作仍集中；继续扩充前应再拆执行生命周期。`App.css` 仍包含多个 feature 的集中样式，应按实际功能改动渐进迁移。
 - PATH Runtime 尚未校验与生成协议的版本/hash；旧进程无代际 `stopped` 事件、跨卷 CODEX_HOME 迁移和旧应用标识/凭据迁移仍存在兼容风险。
 - 用户文本、Steer、Review、Goal 和结构化问答已在 Shell 边界限制为 8000 UTF-8 bytes；多 Skill 聚合、全局 `AGENTS.md` 和 Runtime Goal continuation 仍缺少统一硬预算，应优先在 app-server/Runtime 中建立不可绕过的中央边界。
@@ -69,15 +71,15 @@
 ## 验证证据
 
 - `pnpm typecheck`：通过。
-- `pnpm test`：29 个测试文件、107 项测试全部通过，包含真实 DOM 行为、统一反向交互、Thread 读写/退订时序、Review/模型设置、MCP schema 与第二阶段 RPC 覆盖。
+- `pnpm test`：33 个测试文件、114 项测试全部通过，包含时间线滚动/导航、Diff 状态/跳转、工作区 watch 生命周期、真实 DOM 行为、统一反向交互、Thread 读写/退订时序、Review/模型设置、MCP schema 与第二阶段 RPC 覆盖。
 - Rust 单元测试：9 项全部通过，覆盖动态 Runtime、每日默认工作区、独立 provider 参数、旧 CODEX_HOME 迁移、双目录冲突和官方目录防重叠校验。
 - `pnpm rust:check`：从 clean target 完整重编译后通过。
-- `pnpm build`：包含目录选择插件和 P0 工作台 UI 的生产构建通过。
-- Tauri debug build：从项目目录之外调用脚本成功，证明脚本不依赖调用者 cwd。
+- `pnpm build`：包含虚拟时间线、目录 watch、目录选择插件和 P0 工作台 UI 的生产构建通过。
+- Tauri debug build：P0 优化后构建通过，产物为 `src-tauri/target/debug/codex-shell.exe`；此前从项目目录之外调用脚本的动态路径证据继续有效。
 - 后台 app-server smoke：创建两个真实 turn、停止并重启 app-server、`thread/list` 找到线程、`thread/resume` 恢复 2 个 turn，独立 CODEX_HOME 通过断言。
 - 后台并行 smoke：同一 app-server 中启动两个独立 Thread/Turn，观测到最大并发数 2 且两个 Turn 均完成；使用临时独立 CODEX_HOME，测试后自动清理。
 - 后台文件 smoke：真实 `fs/readDirectory` 能列出临时工作区文件，`fs/readFile` 返回内容与源文件一致；临时目录测试后自动清理。
 - 后台命令 smoke：真实 `skills/list`、`mcpServerStatus/list` 及 Goal set/get/clear 生命周期通过；Windows 句柄释放后临时目录已清理。
 - 后台 Plan smoke：固定 Runtime 完成真实 Plan Turn，收到 192 条 plan delta 与 2 条 Plan item 通知；临时独立 CODEX_HOME 已清理。
 - 新网关验证：`/models` 返回 21 个模型，配置模型存在，`/responses` 状态为 completed；使用独立 provider 的真实 app-server turn 完成，并将验证后的凭据同步到 Windows Credential Manager。
-- 阶段性健康审查：Knip 零问题；jscpd 对非生成源码未发现达到 6 行/60 tokens 阈值的克隆；TypeScript、production build 与 Rust check 通过。
+- 阶段性健康审查：Knip 零问题；jscpd 检查 72 个非生成源码文件，未发现达到 6 行/60 tokens 阈值的克隆；生产依赖审计无已知漏洞，TypeScript、production build 与 Rust check 通过。

@@ -155,6 +155,24 @@ describe("AppServerClient", () => {
     transport.emit({ id: fileRequest.id, result: { dataBase64: "IyBSRUFETUU=" } });
     await expect(file).resolves.toEqual({ dataBase64: "IyBSRUFETUU=" });
 
+    const watch = client.watchPath({ watchId: "watch-1", path: "C:\\work" });
+    const watchRequest = transport.sent[transport.sent.length - 1];
+    expect(watchRequest).toMatchObject({
+      method: "fs/watch",
+      params: { watchId: "watch-1", path: "C:\\work" },
+    });
+    transport.emit({ id: watchRequest.id, result: { path: "C:\\work" } });
+    await expect(watch).resolves.toEqual({ path: "C:\\work" });
+
+    const unwatch = client.unwatchPath({ watchId: "watch-1" });
+    const unwatchRequest = transport.sent[transport.sent.length - 1];
+    expect(unwatchRequest).toMatchObject({
+      method: "fs/unwatch",
+      params: { watchId: "watch-1" },
+    });
+    transport.emit({ id: unwatchRequest.id, result: {} });
+    await expect(unwatch).resolves.toEqual({});
+
     const archive = client.archiveThread({ threadId: "thread-1" });
     const archiveRequest = transport.sent[transport.sent.length - 1];
     expect(archiveRequest).toMatchObject({
