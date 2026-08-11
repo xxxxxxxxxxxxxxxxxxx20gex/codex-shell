@@ -21,6 +21,7 @@ describe("ThreadHistoryList", () => {
     const markup = renderToStaticMarkup(
       <ThreadHistoryList
         threads={[thread("real-thread-a", "C:\\sessions\\a.jsonl"), thread("real-thread-b", null)]}
+        archived={false}
         activeThreadId="real-thread-b"
         loading={false}
         error=""
@@ -32,7 +33,10 @@ describe("ThreadHistoryList", () => {
         onRename={vi.fn()}
         onTogglePin={vi.fn()}
         onArchive={vi.fn()}
+        onUnarchive={vi.fn()}
+        onFork={vi.fn()}
         onDelete={vi.fn()}
+        onShowArchived={vi.fn()}
         onRefresh={vi.fn()}
         onLoadMore={vi.fn()}
       />,
@@ -44,6 +48,35 @@ describe("ThreadHistoryList", () => {
     expect(markup).toContain('aria-label="复制 Session ID"');
     expect(markup).toContain('class="thread-action-button"');
     expect(markup).toContain("real-thread-b");
+  });
+
+  it("renders restore actions in the archived view", () => {
+    const markup = renderToStaticMarkup(
+      <ThreadHistoryList
+        threads={[thread("archived-thread", null)]}
+        archived
+        activeThreadId={null}
+        loading={false}
+        error=""
+        disabled={false}
+        actionThreadId={null}
+        runningThreadIds={new Set()}
+        hasMore={false}
+        onOpen={vi.fn()}
+        onRename={vi.fn()}
+        onTogglePin={vi.fn()}
+        onArchive={vi.fn()}
+        onUnarchive={vi.fn()}
+        onFork={vi.fn()}
+        onDelete={vi.fn()}
+        onShowArchived={vi.fn()}
+        onRefresh={vi.fn()}
+        onLoadMore={vi.fn()}
+      />,
+    );
+
+    expect(markup).toContain("已归档");
+    expect(markup).toContain('aria-label="恢复 Session"');
   });
 
   it("renders distinct archive and permanent-delete confirmations", () => {

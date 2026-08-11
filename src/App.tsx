@@ -4,11 +4,11 @@ import type { FuzzyFileSearchResult } from "./generated/app-server/FuzzyFileSear
 import type { ModeKind } from "./generated/app-server/ModeKind";
 import { errorMessage } from "./shared/errors";
 import "./App.css";
-import { ApprovalDialog } from "./features/approvals/ApprovalDialog";
 import { PermissionModeSelector } from "./features/approvals/PermissionModeSelector";
 import type { PermissionMode } from "./features/approvals/permissionModes";
 import { GoalPanel } from "./features/commands/GoalPanel";
 import { McpStatusPanel } from "./features/commands/McpStatusPanel";
+import { ReviewPanel } from "./features/commands/ReviewPanel";
 import { SkillPicker } from "./features/commands/SkillPicker";
 import { commandDisabled, SlashCommandMenu } from "./features/commands/SlashCommandMenu";
 import { useResizablePanels } from "./features/layout/useResizablePanels";
@@ -22,8 +22,15 @@ import { DiffInspector } from "./features/diff/DiffInspector";
 import { ModelSettingsPanel } from "./features/models/ModelSettingsPanel";
 import type { ModelSettings } from "./features/models/types";
 import { RuntimeLogPanel } from "./features/runtime/RuntimeLogPanel";
+import { RuntimeNoticeBanner } from "./features/runtime/RuntimeNoticeBanner";
 import { StatusInspector } from "./features/runtime/StatusInspector";
-import { type FileMention, type SkillMention, useAgentSession } from "./features/runtime/useAgentSession";
+import {
+  sendOrSteer,
+  type FileMention,
+  type SkillMention,
+  useAgentSession,
+} from "./features/runtime/useAgentSession";
+import { ServerInteractionDialog } from "./features/interactions/ServerInteractionDialog";
 import { ConversationTimeline } from "./features/threads/ConversationTimeline";
 import { ContextHeatBar } from "./features/threads/ContextHeatBar";
 import { ThreadHistoryList } from "./features/threads/ThreadHistoryList";
@@ -63,7 +70,7 @@ function App() {
   const [mentionLoading, setMentionLoading] = useState(false);
   const [uiError, setUiError] = useState("");
   const [commandNotice, setCommandNotice] = useState("");
-  const [commandPanel, setCommandPanel] = useState<"skills" | "mcp" | "goal" | null>(null);
+  const [commandPanel, setCommandPanel] = useState<"skills" | "mcp" | "goal" | "review" | null>(null);
   const [collaborationMode, setCollaborationMode] = useState<ModeKind>("default");
   const [slashMenuForced, setSlashMenuForced] = useState(false);
   const [slashMenuDismissed, setSlashMenuDismissed] = useState(false);
@@ -177,6 +184,14 @@ function App() {
     try {
       if (id === "skills") { setCommandPanel("skills"); return; }
       if (id === "mcp") { setCommandPanel("mcp"); return; }
+      if (id === "review") {
+        if (session.running) throw new Error("当前任务完成后才能启动代码审查");
+        if (!args) { setCommandPanel("review"); return; }
+        if (await session.startReview({ type: "custom", instructions: args }, "inline")) {
+          setCommandNotice("原生代码审查已在当前 Session 启动。");
+        }
+        return;
+      }
       if (id === "plan") {
         if (session.running) throw new Error("当前任务完成后才能切换到计划模式");
         setCollaborationMode("plan");
@@ -220,7 +235,7 @@ function App() {
       await runSlashCommand(command.id, command.args);
       return;
     }
-    if (await session.send(message, mentions, skills, collaborationMode)) {
+    if (await sendOrSteer(session, message, mentions, skills, collaborationMode)) {
       setDraft("");
       setMentions([]);
       setSkills([]);
@@ -317,6 +332,7 @@ function App() {
           <WorkspaceSelector path={usingManagedWorkspace ? null : workspacePath} disabled={session.submitting || session.openingThreadId !== null} onExplore={() => setWorkspaceExplorerOpen(true)} onChange={changeWorkspace} onError={setUiError} />
           <ThreadHistoryList
             threads={session.history}
+            archived={session.historyArchived}
             activeThreadId={session.thread?.id ?? null}
             loading={session.historyLoading}
             error={session.historyError}
@@ -328,7 +344,10 @@ function App() {
             onRename={(threadId, name) => void session.renameThread(threadId, name)}
             onTogglePin={(thread) => void session.toggleThreadPin(thread)}
             onArchive={(threadId) => void session.archiveThread(threadId)}
+            onUnarchive={(threadId) => void session.unarchiveThread(threadId)}
+            onFork={(threadId) => void session.forkThread(threadId)}
             onDelete={(threadId) => void session.deleteThread(threadId)}
+            onShowArchived={session.showArchivedHistory}
             onRefresh={() => void session.refreshHistory()}
             onLoadMore={() => void session.loadMoreHistory()}
           />
@@ -380,6 +399,13 @@ function App() {
             <div className="timeline"><div className="conversation-empty"><div className="agent-avatar">C</div><h2>开始一个新对话</h2><p>今日默认工作区会自动准备，也可以选择已有项目目录，然后描述需要 Codex 完成的工作。</p></div></div>
           )}
           <div className="composer-wrap">
+            <RuntimeNoticeBanner
+              store={session.runtimeNoticeStore}
+              onShowStatus={() => {
+                setInspectorOpen(true);
+                setInspectorTab("status");
+              }}
+            />
             {(session.error || uiError) && <div className="composer-error">{session.error || uiError}</div>}
             {commandNotice && <div className="composer-notice">{commandNotice}</div>}
             <div className="composer has-context-heatbar">
@@ -392,8 +418,9 @@ function App() {
               {currentWorkspacePath && mentionQuery !== null && <FileMentionMenu query={mentionQuery} results={mentionResults} loading={mentionLoading} onSelect={selectMention} />}
               {slashMenuVisible && <SlashCommandMenu query={slashQuery ?? ""} selectedIndex={slashSelectedIndex} hasThread={Boolean(session.thread)} running={session.running} onSelect={(id) => void runSlashCommand(id, "", !slashMenuForced)} />}
               {commandPanel === "skills" && <SkillPicker selected={skills} loadSkills={session.listSkills} onToggle={toggleSkill} onClose={() => setCommandPanel(null)} />}
-              {commandPanel === "mcp" && <McpStatusPanel loadServers={session.listMcpServers} onClose={() => setCommandPanel(null)} />}
+              {commandPanel === "mcp" && <McpStatusPanel loadServers={session.listMcpServers} loginServer={session.loginMcpServer} reloadServers={session.reloadMcpServers} readResource={session.readMcpResource} onClose={() => setCommandPanel(null)} />}
               {commandPanel === "goal" && <GoalPanel getGoal={session.getThreadGoal} setGoal={session.setThreadGoal} clearGoal={session.clearThreadGoal} onClose={() => setCommandPanel(null)} />}
+              {commandPanel === "review" && <ReviewPanel startReview={session.startReview} onStarted={(delivery) => { setCommandPanel(null); setCommandNotice(delivery === "detached" ? "已打开独立 Review Session。" : "原生代码审查已在当前 Session 启动。"); }} onClose={() => setCommandPanel(null)} />}
               <div className="composer-toolbar">
                 <div className="composer-tools">
                   <button className={`command-button ${slashMenuVisible || commandPanel ? "active" : ""}`} onClick={() => { setCommandPanel(null); setSlashMenuDismissed(false); setSlashMenuForced((current) => !current); setSlashSelectedIndex(0); }} title="Skills、MCP、计划、压缩与目标">/</button>
@@ -401,7 +428,10 @@ function App() {
                   <button className="model-button" disabled={session.submitting || session.runningThreadCount > 0} onClick={() => setSettingsOpen(true)} title={session.submitting || session.runningThreadCount > 0 ? "任务运行期间不能重启模型连接" : "配置模型"}>{settings.modelId}⌄</button>
                   <PermissionModeSelector value={permissionMode} disabled={session.running} onChange={changePermissionMode} />
                 </div>
-                <button className={session.running ? "stop-button" : "send-button"} disabled={!session.running && !draft.trim()} onClick={() => session.running ? void session.interrupt() : void submit()} aria-label={session.running ? "停止任务" : "发送任务"}>{session.running ? "■" : "↑"}</button>
+                <div className="composer-actions">
+                  <button className="send-button" disabled={!draft.trim()} onClick={() => void submit()} aria-label={session.running ? "补充指令" : "发送任务"}>↑</button>
+                  {session.running && <button className="stop-button" onClick={() => void session.interrupt()} aria-label="停止任务">■</button>}
+                </div>
               </div>
             </div>
           </div>
@@ -441,13 +471,13 @@ function App() {
           {inspectorTab === "changes" ? <DiffInspector diff={currentDiff} /> : inspectorTab === "logs" ? (
             <RuntimeLogPanel store={session.runtimeLogStore} />
           ) : (
-            <StatusInspector turnCount={session.turns.length} threadId={session.thread?.id ?? null} workspacePath={currentWorkspacePath} workspaceKind={workspaceStatusKind} usingManagedWorkspace={usingManagedWorkspace} canUseDefaultWorkspace={Boolean(defaultWorkspace)} codexHome={session.codexHome} codexHomeDisabled={session.runningThreadCount > 0 || session.submitting} onBrowseWorkspace={() => setWorkspaceExplorerOpen(true)} onUseDefaultWorkspace={() => changeWorkspace(null)} onRestart={session.restart} />
+            <StatusInspector turnCount={session.turns.length} threadId={session.thread?.id ?? null} workspacePath={currentWorkspacePath} workspaceKind={workspaceStatusKind} usingManagedWorkspace={usingManagedWorkspace} canUseDefaultWorkspace={Boolean(defaultWorkspace)} codexHome={session.codexHome} codexHomeDisabled={session.runningThreadCount > 0 || session.submitting} noticeStore={session.runtimeNoticeStore} windowsSandboxReadiness={session.windowsSandboxReadiness} onBrowseWorkspace={() => setWorkspaceExplorerOpen(true)} onUseDefaultWorkspace={() => changeWorkspace(null)} onSetupWindowsSandbox={() => session.setupWindowsSandbox("unelevated")} onRestart={session.restart} />
           )}
         </aside>
       </section>
 
-      {settingsOpen && <ModelSettingsPanel settings={settings} onClose={() => setSettingsOpen(false)} onSave={(next) => { setSettings(next); setSettingsOpen(false); void session.restart(); }} />}
-      {session.approval && <ApprovalDialog approval={session.approval} onApprove={session.approve} onDecline={session.decline} />}
+      {settingsOpen && <ModelSettingsPanel settings={settings} loadModels={session.listModels} loadProviderCapabilities={session.readModelProviderCapabilities} onClose={() => setSettingsOpen(false)} onSave={(next) => { setSettings(next); setSettingsOpen(false); void session.restart(); }} />}
+      <ServerInteractionDialog store={session.interactionStore} />
       {workspaceExplorerOpen && currentWorkspacePath && <WorkspaceExplorer rootPath={currentWorkspacePath} onClose={() => setWorkspaceExplorerOpen(false)} readDirectory={session.readWorkspaceDirectory} readFile={session.readWorkspaceFile} />}
     </main>
   );

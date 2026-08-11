@@ -1,10 +1,10 @@
 # app-server 客户端状态
 
 - 模块职责：维护双向 JSON-RPC 请求、响应、通知和反向请求。
-- 当前状态：真实多轮、P0 工作区/线程管理、多 Thread 并行、Token 用量、原生 Item 中间态、稳定智能体命令与 scoped experimental Plan 已接入。
-- 最近变更：补齐 Tauri `app-server://log` 消费链路，传输层、JSON-RPC 客户端和 Session Hook 均支持独立 stderr 订阅；日志按 150ms 批量进入 200 条外部 Store，单行最多保留 4000 字符并去除 ANSI 控制码。只有日志页订阅该 Store，高频 stderr 不再使 Session Hook 更新并重渲染整个工作台。
-- 当前接口：除基础连接与 turn 方法外，提供线程分页、目录/文件、Skills、MCP 状态、Token 用量、上下文压缩、长期目标、Item 生命周期、Plan/MCP/推理/命令/Patch 流式活动、Diff 通知和 `onLog` stderr 订阅适配。
-- 已知问题：尚未实现自动断线重连和请求级取消；旧 app-server reader 的停止通知缺少进程代际，快速重启需要增加旧事件隔离。
-- 下一步：增加断线恢复策略，并覆盖更多真实反向请求类型。
-- 验证证据：客户端测试覆盖 6 个稳定命令 RPC、experimental initialize 能力、Plan Turn 精确请求体，以及默认 Turn 不携带实验字段；真实 app-server Plan smoke、Skills/MCP 列表和 Goal 生命周期 smoke 均通过。
-- 最后更新：2026-08-10
+- 当前状态：第一、第二阶段高优先级 v2 能力已接入，包括完整 Thread 生命周期、统一反向交互、原生模型目录、Review、Steer、Fork、归档恢复、只读读取和订阅释放。
+- 最近变更：JSON-RPC request ID 扩展为字符串或数字并原样交给反向请求处理器；`serverRequest/resolved` 可无响应撤销过期交互。新增 `thread/read/fork/unsubscribe/unarchive`、`turn/steer`、`review/start`、`model/list`、Provider 能力、Windows Sandbox 及 MCP OAuth/重载/资源读取包装；initialize 显式协商 `openai/form`，paginated rollout 只读失败时兼容固定 Runtime 回退。
+- 当前接口：基础连接、Thread/Turn、文件、Skills、MCP、模型、Review、压缩、Goal、Windows Sandbox、完整 Item 流、运行提示和 stderr 日志均通过固定 Runtime 的生成类型适配。
+- 已知问题：尚未实现自动断线重连和请求级取消；旧 app-server reader 的停止通知缺少进程代际，快速重启需要增加旧事件隔离。低优先级 Account、Plugin/App Marketplace、Hooks、Realtime 和 Feedback 仍未接入。
+- 下一步：优先增加断线恢复与进程代际；再评估 Plugin/Apps 和 Hooks，避免为个人第三方网关产品引入无用的 OpenAI 账户面板。
+- 验证证据：客户端与独立通知订阅测试验证 initialize capability、真实反向 request ID、过期请求无响应撤销，以及 Thread、Model、Review、Steer、MCP 方法和关键通知的精确 wire shape。
+- 最后更新：2026-08-11

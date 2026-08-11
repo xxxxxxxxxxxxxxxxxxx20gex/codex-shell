@@ -1,46 +1,29 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import type { GrantedPermissionProfile } from "../../generated/app-server/v2/GrantedPermissionProfile";
 import type { ModeKind } from "../../generated/app-server/ModeKind";
-import type { Thread } from "../../generated/app-server/v2/Thread";
-import type { ThreadNameUpdatedNotification } from "../../generated/app-server/v2/ThreadNameUpdatedNotification";
+import type { WindowsSandboxReadiness } from "../../generated/app-server/v2/WindowsSandboxReadiness";
+import type { WindowsSandboxSetupMode } from "../../generated/app-server/v2/WindowsSandboxSetupMode";
 import { errorMessage } from "../../shared/errors";
+import type { ServerInteractionStore } from "../interactions/serverInteractionStore";
+import { ServerInteractionStore as InteractionStore } from "../interactions/serverInteractionStore";
 import type { ModelSettings } from "../models/types";
-import { getPermissionMode, type PermissionMode } from "../approvals/permissionModes";
-import { AppServerClient, type JsonValue } from "./appServerClient";
+import type { PermissionMode } from "../approvals/permissionModes";
+import { AppServerClient } from "./appServerClient";
+import { RuntimeLogStore } from "./runtimeLogStore";
+import { RuntimeNoticeStore } from "./runtimeNoticeStore";
 import { agentSessionReducer, initialAgentSessionState } from "./sessionState";
-import { buildUserInput, type FileMention, type SkillMention } from "./sessionInput";
-import { subscribeToSessionEvents, type PendingApprovalPayload } from "./sessionSubscriptions";
+import type { FileMention, SkillMention } from "./sessionInput";
+import { subscribeToSessionEvents } from "./sessionSubscriptions";
 import { useAgentCommands } from "./useAgentCommands";
 import { useRunningTurns } from "./useRunningTurns";
-import { RuntimeLogStore } from "./runtimeLogStore";
+import { useThreadController } from "./useThreadController";
 import { useWorkspaceFiles } from "./useWorkspaceFiles";
 
 export type { FileMention, SkillMention } from "./sessionInput";
 
-interface ApprovalIdentity {
-  requestKey: string;
-}
-
-export type PendingApproval = ApprovalIdentity & PendingApprovalPayload;
-
-type ApprovalScope = "turn" | "session";
-type ApprovalResolver = (result: JsonValue) => void;
-
-interface ApprovalEntry {
-  approval: PendingApproval;
-  resolve: ApprovalResolver;
-}
-
-function declineResult(approval: PendingApproval): JsonValue {
-  return approval.kind === "permissions"
-    ? { permissions: {}, scope: "turn" }
-    : { decision: "decline" };
-}
-
-function updateThreadName(thread: Thread, notification: ThreadNameUpdatedNotification): Thread {
-  return thread.id === notification.threadId
-    ? { ...thread, name: notification.threadName ?? null }
-    : thread;
+function useStableStore<T>(create: () => T) {
+  const storeRef = useRef<T | null>(null);
+  storeRef.current ??= create();
+  return storeRef.current;
 }
 
 export function useAgentSession(
@@ -49,368 +32,217 @@ export function useAgentSession(
   workspacePath: string | null,
 ) {
   const clientRef = useRef<AppServerClient | null>(null);
-  const threadIdRef = useRef<string | null>(null);
-  const threadOperationRef = useRef(false);
-  const approvalSequenceRef = useRef(0);
-  const approvalEntriesRef = useRef(new Map<string, ApprovalEntry>());
-  const refreshHistoryRef = useRef<(append?: boolean) => Promise<void>>(async () => undefined);
-  const initialHistoryLoadedRef = useRef(false);
+  clientRef.current ??= new AppServerClient();
   const [sessionState, dispatch] = useReducer(agentSessionReducer, initialAgentSessionState);
   const [codexHome, setCodexHome] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [windowsSandboxReadiness, setWindowsSandboxReadiness] = useState<WindowsSandboxReadiness | null>(null);
+  const runtimeLogStore = useStableStore(() => new RuntimeLogStore());
+  const runtimeNoticeStore = useStableStore(() => new RuntimeNoticeStore());
+  const interactionStore: ServerInteractionStore = useStableStore(() => new InteractionStore());
+  const sandboxReadinessCheckedRef = useRef(false);
   const {
     runningThreadIds,
     markThreadRunning,
     markThreadStopped,
+    markThreadStatus,
     clearRunningTurns,
     getRunningTurnId,
     isThreadRunning,
   } = useRunningTurns();
-  const [history, setHistory] = useState<Thread[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
-  const [historyError, setHistoryError] = useState("");
-  const [historyNextCursor, setHistoryNextCursor] = useState<string | null>(null);
-  const [openingThreadId, setOpeningThreadId] = useState<string | null>(null);
-  const [threadActionId, setThreadActionId] = useState<string | null>(null);
-  const [approvalQueue, setApprovalQueue] = useState<PendingApproval[]>([]);
-  const [error, setError] = useState("");
-  const runtimeLogStoreRef = useRef<RuntimeLogStore | null>(null);
-  runtimeLogStoreRef.current ??= new RuntimeLogStore();
-  const runtimeLogStore = runtimeLogStoreRef.current;
 
-  if (!clientRef.current) clientRef.current = new AppServerClient();
-
-  const clearApprovals = useCallback(() => {
-    for (const entry of approvalEntriesRef.current.values()) {
-      entry.resolve(declineResult(entry.approval));
+  const readSandboxReadiness = useCallback(async (client: AppServerClient) => {
+    if (sandboxReadinessCheckedRef.current) return;
+    sandboxReadinessCheckedRef.current = true;
+    try {
+      const response = await client.readWindowsSandboxReadiness();
+      setWindowsSandboxReadiness(response.status);
+      if (response.status !== "ready") {
+        runtimeNoticeStore.push({
+          kind: "security",
+          title: "Windows Sandbox 尚未就绪",
+          message: response.status === "notConfigured"
+            ? "app-server 检测到沙箱尚未配置，可在右侧状态页启动原生设置。"
+            : "app-server 检测到沙箱需要更新，可在右侧状态页重新设置。",
+        });
+      }
+    } catch {
+      sandboxReadinessCheckedRef.current = false;
     }
-    approvalEntriesRef.current.clear();
-    setApprovalQueue([]);
-  }, []);
+  }, [runtimeNoticeStore]);
+
+  const ensureConnected = useCallback(async () => {
+    const client = clientRef.current;
+    if (!client) throw new Error("app-server 客户端尚未初始化");
+    if (client.connectionStatus !== "ready") await client.start();
+    setCodexHome(client.serverInfo?.codexHome ?? "");
+    void readSandboxReadiness(client);
+    return client;
+  }, [readSandboxReadiness]);
+
+  const threads = useThreadController({
+    clientRef,
+    ensureConnected,
+    settings,
+    permissionMode,
+    workspacePath,
+    dispatch,
+    submitting,
+    setSubmitting,
+    setError,
+    markThreadRunning,
+    markThreadStopped,
+    markThreadStatus,
+    getRunningTurnId,
+    isThreadRunning,
+  });
+  const {
+    currentThreadId,
+    ensureActiveThread,
+    onTurnStarted,
+    onTurnCompleted,
+    onThreadName,
+    onThreadStarted,
+    onThreadStatus,
+    removeThread,
+    onThreadUnarchived,
+    onThreadClosed,
+    reset: resetThreads,
+    refreshHistory,
+  } = threads;
 
   useEffect(() => {
     const client = clientRef.current;
     if (!client) return;
     return subscribeToSessionEvents(client, {
-      currentThreadId: () => threadIdRef.current,
+      currentThreadId,
       dispatch,
-      onTurnStarted: (notification) => {
-        markThreadRunning(notification.threadId, notification.turn.id);
-        if (notification.threadId === threadIdRef.current) {
-          setSubmitting(false);
-        }
-      },
-      onTurnCompleted: (notification) => {
-        markThreadStopped(notification.threadId);
-        if (notification.threadId === threadIdRef.current) {
-          setSubmitting(false);
-          dispatch({ type: "turnCompleted", notification });
-          if (notification.turn.error) setError(notification.turn.error.message);
-        }
-        void refreshHistoryRef.current();
-      },
+      onTurnStarted,
+      onTurnCompleted,
       onError: (notification) => {
-        if (notification.threadId === threadIdRef.current) setError(notification.error.message);
+        if (notification.threadId === currentThreadId()) {
+          setError(notification.error.message);
+        }
         if (!notification.willRetry) {
           markThreadStopped(notification.threadId);
-          if (notification.threadId === threadIdRef.current) setSubmitting(false);
+          if (notification.threadId === currentThreadId()) setSubmitting(false);
         }
       },
-      onThreadName: (notification) => {
-        setHistory((current) => current.map((thread) => updateThreadName(thread, notification)));
-        dispatch({
-          type: "renameThread",
-          threadId: notification.threadId,
-          name: notification.threadName ?? null,
+      onThreadName,
+      onThreadStarted,
+      onThreadStatus,
+      onThreadArchived: (notification) => removeThread(notification.threadId),
+      onThreadDeleted: (notification) => removeThread(notification.threadId),
+      onThreadUnarchived: (notification) => onThreadUnarchived(notification.threadId),
+      onThreadClosed: (notification) => onThreadClosed(notification.threadId),
+      onServerRequestResolved: (notification) => interactionStore.dismiss(notification.requestId),
+      onWarning: (notification) => runtimeNoticeStore.push({
+        kind: "warning",
+        title: "app-server 提示",
+        message: notification.message,
+      }),
+      onGuardianWarning: (notification) => runtimeNoticeStore.push({
+        kind: "security",
+        title: "Guardian 安全提示",
+        message: notification.message,
+      }),
+      onConfigWarning: (notification) => runtimeNoticeStore.push({
+        kind: "warning",
+        title: notification.summary,
+        message: notification.details ?? "配置没有完全生效，请检查对应文件。",
+        path: notification.path,
+      }),
+      onDeprecation: (notification) => runtimeNoticeStore.push({
+        kind: "deprecation",
+        title: notification.summary,
+        message: notification.details ?? "当前能力将在未来版本中移除。",
+      }),
+      onWorldWritableWarning: (notification) => runtimeNoticeStore.push({
+        kind: "security",
+        title: "检测到世界可写目录",
+        message: notification.failedScan
+          ? "app-server 未能完成目录安全扫描。"
+          : `${notification.samplePaths.join("、")}${notification.extraCount > 0 ? `，另有 ${notification.extraCount} 项` : ""}`,
+      }),
+      onSandboxSetupCompleted: (notification) => {
+        setWindowsSandboxReadiness(notification.success ? "ready" : "notConfigured");
+        runtimeNoticeStore.push({
+          kind: notification.success ? "info" : "security",
+          title: notification.success ? "Windows Sandbox 已就绪" : "Windows Sandbox 设置失败",
+          message: notification.error ?? `已完成 ${notification.mode} 模式设置。`,
         });
       },
+      onContextCompacted: (notification) => runtimeNoticeStore.push({
+        kind: "info",
+        title: "Session 上下文已压缩",
+        message: `Thread ${notification.threadId} 已由 app-server 完成上下文压缩。`,
+      }),
+      onModelRerouted: (notification) => runtimeNoticeStore.push({
+        kind: "warning",
+        title: "模型已被重新路由",
+        message: `${notification.fromModel} → ${notification.toModel}（${notification.reason}）`,
+      }),
+      onModelVerification: (notification) => runtimeNoticeStore.push({
+        kind: "warning",
+        title: "模型需要额外验证",
+        message: `当前请求需要：${notification.verifications.join("、")}`,
+      }),
+      onModelSafetyBuffering: (notification) => {
+        if (!notification.showBufferingUi) return;
+        runtimeNoticeStore.push({
+          kind: "warning",
+          title: "模型响应正在安全缓冲",
+          message: notification.fasterModel
+            ? `可改用 ${notification.fasterModel} 以更快响应。`
+            : "app-server 正在等待安全检查完成。",
+        });
+      },
+      onMcpOauthLoginCompleted: (notification) => runtimeNoticeStore.push({
+        kind: notification.success ? "info" : "warning",
+        title: notification.success ? `MCP ${notification.name} 登录成功` : `MCP ${notification.name} 登录失败`,
+        message: notification.error ?? (notification.success ? "app-server 已完成 OAuth 登录。" : "请重新发起 OAuth 登录。"),
+      }),
+      onMcpServerStatusUpdated: (notification) => runtimeNoticeStore.push({
+        kind: notification.status === "failed" ? "warning" : "info",
+        title: `MCP ${notification.name} · ${notification.status}`,
+        message: notification.error ?? (notification.status === "ready" ? "服务器已就绪。" : "服务器启动状态已更新。"),
+      }),
       onStopped: () => {
         setCodexHome("");
+        setWindowsSandboxReadiness(null);
+        sandboxReadinessCheckedRef.current = false;
         clearRunningTurns();
-        setSubmitting(false);
-        clearApprovals();
-        dispatch({ type: "clearLiveProgress" });
+        interactionStore.clear();
+        resetThreads();
       },
       onRuntimeLog: runtimeLogStore.enqueue,
       onProtocolError: (protocolError) => setError(protocolError.message),
-      requestApproval: (pending) => new Promise<JsonValue>((resolve) => {
-        const requestKey = `${pending.kind}:${pending.params.threadId}:${pending.params.turnId}:${pending.params.itemId}:${approvalSequenceRef.current++}`;
-        const approval = { ...pending, requestKey } as PendingApproval;
-        approvalEntriesRef.current.set(requestKey, { approval, resolve });
-        setApprovalQueue((current) => [...current, approval]);
-      }),
+      requestInteraction: interactionStore.request,
     });
-  }, [clearApprovals, clearRunningTurns, markThreadRunning, markThreadStopped, runtimeLogStore]);
+  }, [
+    clearRunningTurns,
+    currentThreadId,
+    interactionStore,
+    markThreadStopped,
+    onThreadClosed,
+    onThreadName,
+    onThreadStarted,
+    onThreadStatus,
+    onThreadUnarchived,
+    onTurnCompleted,
+    onTurnStarted,
+    removeThread,
+    resetThreads,
+    runtimeLogStore,
+    runtimeNoticeStore,
+  ]);
 
-  useEffect(() => () => runtimeLogStore.dispose(), [runtimeLogStore]);
-
-  const resolveApproval = useCallback((approval: PendingApproval, result: JsonValue) => {
-    const entry = approvalEntriesRef.current.get(approval.requestKey);
-    if (!entry) return;
-    approvalEntriesRef.current.delete(approval.requestKey);
-    setApprovalQueue((current) => current.filter((item) => item.requestKey !== approval.requestKey));
-    entry.resolve(result);
-  }, []);
-
-  const approve = useCallback((scope: ApprovalScope) => {
-    const approval = approvalQueue[0];
-    if (!approval) return;
-    if (approval.kind === "command" || approval.kind === "fileChange") {
-      resolveApproval(approval, { decision: scope === "session" ? "acceptForSession" : "accept" });
-      return;
-    }
-
-    const granted: GrantedPermissionProfile = {};
-    if (approval.params.permissions.network) granted.network = approval.params.permissions.network;
-    if (approval.params.permissions.fileSystem) granted.fileSystem = approval.params.permissions.fileSystem;
-    resolveApproval(approval, { permissions: granted as JsonValue, scope });
-  }, [approvalQueue, resolveApproval]);
-
-  const decline = useCallback(() => {
-    const approval = approvalQueue[0];
-    if (approval) resolveApproval(approval, declineResult(approval));
-  }, [approvalQueue, resolveApproval]);
-
-  const ensureConnected = useCallback(async () => {
-    const client = clientRef.current;
-    if (!client) throw new Error("app-server 客户端尚未初始化");
-    if (client.connectionStatus === "ready") {
-      setCodexHome(client.serverInfo?.codexHome ?? "");
-      return client;
-    }
-
-    await client.start();
-    setCodexHome(client.serverInfo?.codexHome ?? "");
-    return client;
-  }, []);
-
-  const refreshHistory = useCallback(async (append = false) => {
-    setHistoryLoading(true);
-    setHistoryError("");
-    try {
-      const client = await ensureConnected();
-      const response = await client.listThreads({
-        cursor: append ? historyNextCursor : null,
-        limit: 30,
-        sortKey: "recency_at",
-        sortDirection: "desc",
-      });
-      const localThreads = response.data.filter((thread) => !thread.ephemeral);
-      const active = localThreads.find((thread) => thread.id === threadIdRef.current);
-      if (active) dispatch({ type: "updateThread", thread: active });
-      setHistory((current) => {
-        if (append) {
-          const byId = new Map(current.map((thread) => [thread.id, thread]));
-          localThreads.forEach((thread) => byId.set(thread.id, thread));
-          return [...byId.values()];
-        }
-        const currentActive = current.find((thread) => thread.id === threadIdRef.current);
-        return currentActive && !active ? [currentActive, ...localThreads] : localThreads;
-      });
-      setHistoryNextCursor(response.nextCursor);
-    } catch (historyLoadError) {
-      setHistoryError(errorMessage(historyLoadError));
-    } finally {
-      setHistoryLoading(false);
-    }
-  }, [ensureConnected, historyNextCursor]);
-  refreshHistoryRef.current = refreshHistory;
-
-  useEffect(() => {
-    if (initialHistoryLoadedRef.current) return;
-    initialHistoryLoadedRef.current = true;
-    void refreshHistory();
-  }, [refreshHistory]);
-
-  const send = useCallback(async (
-    text: string,
-    mentions: FileMention[] = [],
-    skills: SkillMention[] = [],
-    collaborationMode: ModeKind = "default",
-  ) => {
-    const message = text.trim();
-    const activeThreadId = threadIdRef.current;
-    if (!message || submitting || threadOperationRef.current
-      || (activeThreadId !== null && isThreadRunning(activeThreadId))) return false;
-
-    threadOperationRef.current = true;
-    setSubmitting(true);
-    setError("");
-    try {
-      const client = await ensureConnected();
-      let threadId = threadIdRef.current;
-      if (!threadId) {
-        const permissions = getPermissionMode(permissionMode);
-        const response = await client.startThread({
-          model: settings.modelId,
-          cwd: workspacePath,
-          approvalPolicy: permissions.approvalPolicy,
-          approvalsReviewer: permissions.approvalsReviewer,
-          sandbox: permissions.sandbox,
-          ephemeral: false,
-        });
-        threadId = response.thread.id;
-        threadIdRef.current = threadId;
-        const optimisticThread = { ...response.thread, preview: response.thread.preview || message };
-        dispatch({ type: "loadThread", thread: optimisticThread });
-        setHistory((current) => [optimisticThread, ...current.filter((thread) => thread.id !== threadId)]);
-      }
-
-      const input = buildUserInput(message, mentions, skills);
-      const collaboration = collaborationMode === "plan" ? {
-        mode: collaborationMode,
-        settings: {
-          model: settings.modelId,
-          reasoning_effort: settings.reasoningEffort,
-          developer_instructions: null,
-        },
-      } : undefined;
-      const response = await client.startTurn(
-        {
-          threadId,
-          input,
-          model: settings.modelId,
-          effort: settings.reasoningEffort,
-        },
-        collaboration,
-      );
-      markThreadRunning(threadId, response.turn.id);
-      dispatch({ type: "turnSubmitted", turn: response.turn, userText: message });
-      return true;
-    } catch (sendError) {
-      setError(errorMessage(sendError));
-      return false;
-    } finally {
-      threadOperationRef.current = false;
-      setSubmitting(false);
-    }
-  }, [ensureConnected, isThreadRunning, markThreadRunning, permissionMode, settings.modelId, settings.reasoningEffort, submitting, workspacePath]);
-
-  const interrupt = useCallback(async () => {
-    const threadId = threadIdRef.current;
-    const turnId = threadId ? getRunningTurnId(threadId) : undefined;
-    if (!threadId || !turnId || !clientRef.current) return;
-    try {
-      await clientRef.current.interruptTurn({ threadId, turnId });
-    } catch (interruptError) {
-      setError(errorMessage(interruptError));
-    }
-  }, [getRunningTurnId]);
-
-  const openThread = useCallback(async (threadId: string) => {
-    if (threadOperationRef.current || threadId === threadIdRef.current) return;
-    threadOperationRef.current = true;
-    setOpeningThreadId(threadId);
-    setError("");
-    try {
-      const client = await ensureConnected();
-      const permissions = getPermissionMode(permissionMode);
-      const response = await client.resumeThread({
-        threadId,
-        model: settings.modelId,
-        approvalPolicy: permissions.approvalPolicy,
-        approvalsReviewer: permissions.approvalsReviewer,
-        sandbox: permissions.sandbox,
-      });
-      threadIdRef.current = response.thread.id;
-      const activeTurn = [...response.thread.turns].reverse().find((turn) => turn.status === "inProgress");
-      if (activeTurn) markThreadRunning(response.thread.id, activeTurn.id);
-      else markThreadStopped(response.thread.id);
-      setSubmitting(false);
-      dispatch({ type: "loadThread", thread: response.thread });
-    } catch (resumeError) {
-      setError(errorMessage(resumeError));
-    } finally {
-      threadOperationRef.current = false;
-      setOpeningThreadId(null);
-    }
-  }, [ensureConnected, markThreadRunning, markThreadStopped, permissionMode, settings.modelId]);
-
-  const startNewTask = useCallback(() => {
-    if (threadOperationRef.current) return;
-    threadIdRef.current = null;
-    setSubmitting(false);
-    setError("");
-    dispatch({ type: "clear" });
-  }, []);
-
-  const renameThread = useCallback(async (threadId: string, name: string) => {
-    const normalizedName = name.trim();
-    if (!normalizedName || threadActionId) return false;
-    setThreadActionId(threadId);
-    setError("");
-    try {
-      const client = await ensureConnected();
-      await client.setThreadName({ threadId, name: normalizedName });
-      setHistory((current) => current.map((thread) => thread.id === threadId
-        ? { ...thread, name: normalizedName }
-        : thread));
-      dispatch({ type: "renameThread", threadId, name: normalizedName });
-      return true;
-    } catch (renameError) {
-      setError(errorMessage(renameError));
-      return false;
-    } finally {
-      setThreadActionId(null);
-    }
-  }, [ensureConnected, threadActionId]);
-
-  const toggleThreadPin = useCallback(async (thread: Thread) => {
-    if (threadActionId) return false;
-    setThreadActionId(thread.id);
-    setError("");
-    try {
-      const client = await ensureConnected();
-      const response = await client.updateThreadMetadata({
-        threadId: thread.id,
-        isPinned: !thread.isPinned,
-      });
-      setHistory((current) => current.map((item) => item.id === thread.id ? response.thread : item));
-      dispatch({ type: "updateThread", thread: response.thread });
-      return true;
-    } catch (pinError) {
-      setError(errorMessage(pinError));
-      return false;
-    } finally {
-      setThreadActionId(null);
-    }
-  }, [ensureConnected, threadActionId]);
-
-  const archiveThread = useCallback(async (threadId: string) => {
-    if (threadActionId || isThreadRunning(threadId)) return false;
-    setThreadActionId(threadId);
-    setError("");
-    try {
-      const client = await ensureConnected();
-      await client.archiveThread({ threadId });
-      if (threadId === threadIdRef.current) startNewTask();
-      await refreshHistoryRef.current();
-      return true;
-    } catch (archiveError) {
-      setError(errorMessage(archiveError));
-      return false;
-    } finally {
-      setThreadActionId(null);
-    }
-  }, [ensureConnected, isThreadRunning, startNewTask, threadActionId]);
-
-  const deleteThread = useCallback(async (threadId: string) => {
-    if (threadActionId || isThreadRunning(threadId)) return false;
-    setThreadActionId(threadId);
-    setError("");
-    try {
-      const client = await ensureConnected();
-      await client.deleteThread({ threadId });
-      if (threadId === threadIdRef.current) startNewTask();
-      setHistory((current) => current.filter((thread) => thread.id !== threadId));
-      return true;
-    } catch (deleteError) {
-      setError(errorMessage(deleteError));
-      return false;
-    } finally {
-      setThreadActionId(null);
-    }
-  }, [ensureConnected, isThreadRunning, startNewTask, threadActionId]);
+  useEffect(() => () => {
+    runtimeLogStore.dispose();
+    runtimeNoticeStore.dispose();
+    interactionStore.dispose();
+  }, [interactionStore, runtimeLogStore, runtimeNoticeStore]);
 
   const activeWorkspacePath = sessionState.thread?.cwd
     ? String(sessionState.thread.cwd)
@@ -419,25 +251,43 @@ export function useAgentSession(
     ensureConnected,
     activeWorkspacePath,
   );
-  const currentThreadId = useCallback(() => threadIdRef.current, []);
-  const agentCommands = useAgentCommands(ensureConnected, currentThreadId, activeWorkspacePath);
+  const agentCommands = useAgentCommands(
+    ensureConnected,
+    ensureActiveThread,
+    currentThreadId,
+    activeWorkspacePath,
+  );
+
+  const setupWindowsSandbox = useCallback(async (mode: WindowsSandboxSetupMode) => {
+    try {
+      const client = await ensureConnected();
+      await client.startWindowsSandboxSetup({ mode, cwd: activeWorkspacePath });
+      runtimeNoticeStore.push({
+        kind: "info",
+        title: "Windows Sandbox 设置已开始",
+        message: "app-server 会在设置完成后发送结果。",
+      });
+      return true;
+    } catch (setupError) {
+      setError(errorMessage(setupError));
+      return false;
+    }
+  }, [activeWorkspacePath, ensureConnected, runtimeNoticeStore]);
 
   const restart = useCallback(async () => {
-    threadOperationRef.current = true;
     setSubmitting(false);
-    threadIdRef.current = null;
     clearRunningTurns();
-    clearApprovals();
-    dispatch({ type: "clear" });
+    interactionStore.clear();
+    resetThreads();
+    sandboxReadinessCheckedRef.current = false;
+    setWindowsSandboxReadiness(null);
     try {
       await clientRef.current?.stop();
       await refreshHistory();
     } catch (restartError) {
       setError(errorMessage(restartError));
-    } finally {
-      threadOperationRef.current = false;
     }
-  }, [clearApprovals, clearRunningTurns, refreshHistory]);
+  }, [clearRunningTurns, interactionStore, refreshHistory, resetThreads]);
 
   const running = submitting || Boolean(
     sessionState.thread && runningThreadIds.has(sessionState.thread.id),
@@ -456,31 +306,31 @@ export function useAgentSession(
     activeItemTurnIds: sessionState.activeItemTurnIds,
     mcpProgressByItemId: sessionState.mcpProgressByItemId,
     tokenUsage: sessionState.tokenUsage,
-    history,
-    historyLoading,
-    historyError,
-    historyHasMore: historyNextCursor !== null,
-    openingThreadId,
-    threadActionId,
     error,
-    approval: approvalQueue[0] ?? null,
     runtimeLogStore,
-    approve,
-    decline,
-    send,
-    interrupt,
-    openThread,
-    renameThread,
-    toggleThreadPin,
-    archiveThread,
-    deleteThread,
+    runtimeNoticeStore,
+    interactionStore,
+    windowsSandboxReadiness,
+    setupWindowsSandbox,
     searchFiles,
     readWorkspaceDirectory,
     readWorkspaceFile,
+    ...threads,
     ...agentCommands,
-    loadMoreHistory: () => refreshHistory(true),
-    startNewTask,
     restart,
-    refreshHistory,
   };
+}
+
+export type AgentSession = ReturnType<typeof useAgentSession>;
+
+export async function sendOrSteer(
+  session: Pick<AgentSession, "running" | "send" | "steer">,
+  text: string,
+  mentions: FileMention[],
+  skills: SkillMention[],
+  collaborationMode: ModeKind,
+) {
+  return session.running
+    ? session.steer(text, mentions, skills)
+    : session.send(text, mentions, skills, collaborationMode);
 }

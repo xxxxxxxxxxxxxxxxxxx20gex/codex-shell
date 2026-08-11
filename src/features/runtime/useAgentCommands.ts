@@ -1,19 +1,19 @@
 import { useCallback } from "react";
 import type { McpServerStatus } from "../../generated/app-server/v2/McpServerStatus";
+import type { ResourceContent } from "../../generated/app-server/ResourceContent";
+import type { Model } from "../../generated/app-server/v2/Model";
+import type { ModelProviderCapabilitiesReadResponse } from "../../generated/app-server/v2/ModelProviderCapabilitiesReadResponse";
 import type { SkillMetadata } from "../../generated/app-server/v2/SkillMetadata";
 import type { ThreadGoal } from "../../generated/app-server/v2/ThreadGoal";
+import { assertModelVisibleInput } from "../../shared/modelVisibleInput";
 import type { AppServerClient } from "./appServerClient";
 
 type EnsureConnected = () => Promise<AppServerClient>;
-
-function requireThreadId(currentThreadId: () => string | null) {
-  const threadId = currentThreadId();
-  if (!threadId) throw new Error("请先发送一条消息创建 Session");
-  return threadId;
-}
+type EnsureActiveThread = () => Promise<{ client: AppServerClient; threadId: string }>;
 
 export function useAgentCommands(
   ensureConnected: EnsureConnected,
+  ensureActiveThread: EnsureActiveThread,
   currentThreadId: () => string | null,
   workspacePath: string | null,
 ) {
@@ -30,35 +30,77 @@ export function useAgentCommands(
     const client = await ensureConnected();
     const response = await client.listMcpServers({
       threadId: currentThreadId(),
-      detail: "toolsAndAuthOnly",
+      detail: "full",
       limit: 100,
     });
     return response.data;
   }, [currentThreadId, ensureConnected]);
 
-  const compactThread = useCallback(async () => {
-    const threadId = requireThreadId(currentThreadId);
+  const loginMcpServer = useCallback(async (name: string) => {
     const client = await ensureConnected();
-    await client.compactThread({ threadId });
+    return (await client.loginMcpServer({ name, threadId: currentThreadId() })).authorizationUrl;
   }, [currentThreadId, ensureConnected]);
+
+  const reloadMcpServers = useCallback(async () => {
+    const client = await ensureConnected();
+    await client.reloadMcpServers();
+  }, [ensureConnected]);
+
+  const readMcpResource = useCallback(async (server: string, uri: string): Promise<ResourceContent[]> => {
+    const client = await ensureConnected();
+    return (await client.readMcpResource({ server, uri, threadId: currentThreadId() })).contents;
+  }, [currentThreadId, ensureConnected]);
+
+  const compactThread = useCallback(async () => {
+    const { client, threadId } = await ensureActiveThread();
+    await client.compactThread({ threadId });
+  }, [ensureActiveThread]);
 
   const getThreadGoal = useCallback(async (): Promise<ThreadGoal | null> => {
-    const threadId = requireThreadId(currentThreadId);
-    const client = await ensureConnected();
+    const { client, threadId } = await ensureActiveThread();
     return (await client.getThreadGoal({ threadId })).goal;
-  }, [currentThreadId, ensureConnected]);
+  }, [ensureActiveThread]);
 
   const setThreadGoal = useCallback(async (objective: string): Promise<ThreadGoal> => {
-    const threadId = requireThreadId(currentThreadId);
-    const client = await ensureConnected();
+    assertModelVisibleInput(objective, "长期目标");
+    const { client, threadId } = await ensureActiveThread();
     return (await client.setThreadGoal({ threadId, objective, status: "active" })).goal;
-  }, [currentThreadId, ensureConnected]);
+  }, [ensureActiveThread]);
 
   const clearThreadGoal = useCallback(async () => {
-    const threadId = requireThreadId(currentThreadId);
-    const client = await ensureConnected();
+    const { client, threadId } = await ensureActiveThread();
     return (await client.clearThreadGoal({ threadId })).cleared;
-  }, [currentThreadId, ensureConnected]);
+  }, [ensureActiveThread]);
 
-  return { listSkills, listMcpServers, compactThread, getThreadGoal, setThreadGoal, clearThreadGoal };
+  const listModels = useCallback(async (): Promise<Model[]> => {
+    const client = await ensureConnected();
+    const models: Model[] = [];
+    let cursor: string | null = null;
+    for (let page = 0; page < 10; page += 1) {
+      const response = await client.listModels({ cursor, limit: 100 });
+      models.push(...response.data);
+      cursor = response.nextCursor;
+      if (!cursor) break;
+    }
+    return models;
+  }, [ensureConnected]);
+
+  const readModelProviderCapabilities = useCallback(async (): Promise<ModelProviderCapabilitiesReadResponse> => {
+    const client = await ensureConnected();
+    return client.readModelProviderCapabilities();
+  }, [ensureConnected]);
+
+  return {
+    listSkills,
+    listMcpServers,
+    loginMcpServer,
+    reloadMcpServers,
+    readMcpResource,
+    compactThread,
+    getThreadGoal,
+    setThreadGoal,
+    clearThreadGoal,
+    listModels,
+    readModelProviderCapabilities,
+  };
 }

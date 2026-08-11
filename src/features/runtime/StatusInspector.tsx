@@ -1,4 +1,7 @@
+import type { WindowsSandboxReadiness } from "../../generated/app-server/v2/WindowsSandboxReadiness";
 import { CodexHomeCard } from "./CodexHomeCard";
+import { RuntimeNoticeList } from "./RuntimeNoticeList";
+import type { RuntimeNoticeStore } from "./runtimeNoticeStore";
 
 interface Props {
   turnCount: number;
@@ -9,10 +12,19 @@ interface Props {
   canUseDefaultWorkspace: boolean;
   codexHome: string;
   codexHomeDisabled: boolean;
+  noticeStore: RuntimeNoticeStore;
+  windowsSandboxReadiness: WindowsSandboxReadiness | null;
   onBrowseWorkspace: () => void;
   onUseDefaultWorkspace: () => void;
+  onSetupWindowsSandbox: () => Promise<boolean>;
   onRestart: () => Promise<void>;
 }
+
+const SANDBOX_LABELS: Record<WindowsSandboxReadiness, string> = {
+  ready: "已就绪",
+  notConfigured: "未配置",
+  updateRequired: "需要更新",
+};
 
 export function StatusInspector(props: Props) {
   return (
@@ -27,6 +39,14 @@ export function StatusInspector(props: Props) {
           {!props.usingManagedWorkspace && props.canUseDefaultWorkspace && <button className="secondary-button" onClick={props.onUseDefaultWorkspace}>使用今日默认</button>}
         </div>
       </div>
+      <div className="inspector-card sandbox-status-card">
+        <div className="card-title"><span>Windows Sandbox</span><i>{props.windowsSandboxReadiness ? SANDBOX_LABELS[props.windowsSandboxReadiness] : "检查中"}</i></div>
+        <p>{props.windowsSandboxReadiness === "ready" ? "app-server 原生 Windows 沙箱已可用。" : "沙箱可降低本地命令和文件操作的风险。"}</p>
+        {props.windowsSandboxReadiness && props.windowsSandboxReadiness !== "ready" && (
+          <button className="secondary-button" onClick={() => void props.onSetupWindowsSandbox()}>启动原生设置</button>
+        )}
+      </div>
+      <RuntimeNoticeList store={props.noticeStore} />
       <CodexHomeCard path={props.codexHome} disabled={props.codexHomeDisabled} onRestart={props.onRestart} />
     </>
   );

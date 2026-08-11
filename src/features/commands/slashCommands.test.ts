@@ -14,6 +14,7 @@ describe("slash command parsing", () => {
     expect(matchingSlashCommands("ski").map((command) => command.id)).toEqual(["skills"]);
     expect(parseSlashCommand("/goal build the app")).toEqual({ id: "goal", args: "build the app" });
     expect(parseSlashCommand("/plan migrate the database")).toEqual({ id: "plan", args: "migrate the database" });
+    expect(parseSlashCommand("/review focus on lifecycle leaks")).toEqual({ id: "review", args: "focus on lifecycle leaks" });
     expect(parseSlashCommand("/unknown")).toBeNull();
   });
 

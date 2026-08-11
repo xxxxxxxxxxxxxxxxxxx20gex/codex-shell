@@ -1,8 +1,8 @@
 # 项目总状态
 
 - 当前阶段：Milestone 2 — P0 桌面编程工作台
-- 总体状态：工作区、执行时间线、实时 Diff、多 Session 并行与稳定智能体命令已完成
-- 最后更新：2026-08-10
+- 总体状态：P0 工作台与第一、第二阶段 app-server 原生能力接入已完成
+- 最后更新：2026-08-11
 
 ## 已完成
 
@@ -41,6 +41,12 @@
 - 已确认原版 app-server 在隔离 CODEX_HOME 中原生记录 SQLite tracing 日志和 rollout 事件；一次 33.5 秒回合中壳层与 app-server 提交开销不足 1 秒，约 28 秒消耗在网关首个可见增量等待，后续回合另出现上游 overloaded 与 Core 原生重试。
 - 已消费 Tauri `app-server://log`：右侧新增实时日志页，使用 200 条/单行 4000 字符硬上限和 150ms 批量刷新控制内存及渲染开销，并标注日志的敏感数据属性。
 - 已完成阶段性代码健康审查：53 个非生成源码文件未发现达到阈值的复制代码，Knip 未发现无效文件、导出或依赖；Runtime 日志迁移到独立外部 Store，关闭日志页时不再带动最多 200 个 Turn 的主界面刷新；三栏缩放逻辑和日志样式从 `App` 拆出，并统一跨模块错误消息转换。
+- 已完成第一阶段服务端交互与运行态接入：三类审批、结构化工具问答和 MCP elicitation 进入统一有界队列；真实 JSON-RPC request ID、服务端撤销、Thread 完整生命周期、通用/配置/Guardian/Windows 安全提示和 Sandbox setup 均复用 app-server 原生协议。
+- 已完成第二阶段生产能力接入：原生模型目录与 Provider capabilities、Review、运行中 Steer、Thread Fork、活动/归档历史与恢复、`thread/read` 只读打开、按需 Resume 和空闲 Unsubscribe 已接入。
+- MCP 面板已补齐 OAuth 登录、配置重载、工具与资源清单、资源读取预览；OAuth 和启动状态由原生通知反馈。未增加自定义 system/developer prompt，也未修改 Codex Core。
+- 已完成提交前兼容性加固：模型可见文本统一限制为 8000 UTF-8 bytes；Runtime Notice、MCP 资源预览和外部 URL 均有硬边界；旧 paginated rollout 在原生只读接口不支持时只对固定错误回退 Resume。
+- 已修复归档/活动历史串列、归档 Session 误打开、inline Review 合成 Turn 丢失和 detached Review 父线程订阅残留；`openai/form` 已通过 initialize 显式协商，typed form 按 schema 校验并省略未填写的可选字段。
+- Thread 历史与 Review 生命周期已从主控制器拆为独立 Hook；通知路由测试也从 JSON-RPC 客户端测试中拆出，核心手写模块保持在约 500 行目标内。
 
 ## 当前数据流
 
@@ -49,21 +55,21 @@
 ## 当前风险
 
 - app-server 崩溃后的当前 Session 自动恢复、超大文件预览/超大 Diff 的源端截断和二进制文件变更提示尚未完成。
-- `useAgentSession` 仍接近 500 行，审批队列和连接/线程生命周期应在后续功能继续进入前拆成独立职责；`App.css` 仍包含多个 feature 的集中样式，应按实际功能改动渐进迁移，避免一次性视觉回归。
+- `useThreadController` 已拆出历史和 Review，但发送、Steer 与 Thread 元数据操作仍集中；继续扩充前应再拆执行生命周期。`App.css` 仍包含多个 feature 的集中样式，应按实际功能改动渐进迁移。
 - PATH Runtime 尚未校验与生成协议的版本/hash；旧进程无代际 `stopped` 事件、跨卷 CODEX_HOME 迁移和旧应用标识/凭据迁移仍存在兼容风险。
-- 用户文本、多 Skill 聚合、全局 `AGENTS.md` 和 Goal continuation 的模型可见上下文缺少统一的硬预算；应优先在 Runtime/app-server 中建立不可绕过的中央边界，避免只在某个 UI 入口截断而破坏原生语义。
+- 用户文本、Steer、Review、Goal 和结构化问答已在 Shell 边界限制为 8000 UTF-8 bytes；多 Skill 聚合、全局 `AGENTS.md` 和 Runtime Goal continuation 仍缺少统一硬预算，应优先在 app-server/Runtime 中建立不可绕过的中央边界。
 - 旧 CODEX_HOME 的跨卷迁移仍需可恢复复制方案；当前同卷迁移和双目录冲突已按保数据原则处理。
 - Runtime 自动获取、安装包、签名和干净 Windows 环境验证尚未完成。
 - 实时 stderr 只保留当前窗口最近 200 条，不提供跨启动查询；长期诊断仍需直接读取 Core 的 `logs_2.sqlite`，尚未提供脱敏导出流程。
 
 ## 下一里程碑
 
-建立 Runtime 获取、断线恢复及 Windows 安装包验证流程，并继续接入 Review、Skills 安装与 MCP 配置管理。
+先建立 app-server 断线恢复和进程代际，再评估 Plugin/Apps、Hooks、Skills 安装与 MCP 配置编辑；Account/额度、Realtime 和底层文件写删保持低优先级或明确不接。
 
 ## 验证证据
 
 - `pnpm typecheck`：通过。
-- `pnpm test`：17 个测试文件、71 项测试全部通过，包含 app-server stderr 订阅/释放、定时器取消与有界缓冲、Session 归档/永久删除二次确认、每日默认工作区、动态编号与引用、Plan/默认 Turn 协议、原生 Item 中间态、200 Turn 有界状态、三栏尺寸边界、并行 Thread、Token 用量、文件预览、slash 解析、原生 Skill 输入和稳定命令 RPC 覆盖。
+- `pnpm test`：29 个测试文件、107 项测试全部通过，包含真实 DOM 行为、统一反向交互、Thread 读写/退订时序、Review/模型设置、MCP schema 与第二阶段 RPC 覆盖。
 - Rust 单元测试：9 项全部通过，覆盖动态 Runtime、每日默认工作区、独立 provider 参数、旧 CODEX_HOME 迁移、双目录冲突和官方目录防重叠校验。
 - `pnpm rust:check`：从 clean target 完整重编译后通过。
 - `pnpm build`：包含目录选择插件和 P0 工作台 UI 的生产构建通过。
@@ -74,4 +80,4 @@
 - 后台命令 smoke：真实 `skills/list`、`mcpServerStatus/list` 及 Goal set/get/clear 生命周期通过；Windows 句柄释放后临时目录已清理。
 - 后台 Plan smoke：固定 Runtime 完成真实 Plan Turn，收到 192 条 plan delta 与 2 条 Plan item 通知；临时独立 CODEX_HOME 已清理。
 - 新网关验证：`/models` 返回 21 个模型，配置模型存在，`/responses` 状态为 completed；使用独立 provider 的真实 app-server turn 完成，并将验证后的凭据同步到 Windows Credential Manager。
-- 阶段性健康审查：jscpd 扫描 53 个非生成源码文件、约 5044 行和 52906 tokens，未发现达到 6 行/60 tokens 阈值的克隆；本轮最小回归测试与 TypeScript 检查通过，完整验证结果见测试与发布状态。
+- 阶段性健康审查：Knip 零问题；jscpd 对非生成源码未发现达到 6 行/60 tokens 阈值的克隆；TypeScript、production build 与 Rust check 通过。

@@ -28,4 +28,12 @@ describe("updateRunningTurns", () => {
 
     expect([...updateRunningTurns(running, { type: "cleared" })]).toEqual([]);
   });
+
+  it("tracks app-server active status before a turn id is known", () => {
+    const active = updateRunningTurns(new Map(), { type: "active", threadId: "thread-a" });
+    const withTurn = updateRunningTurns(active, { type: "started", threadId: "thread-a", turnId: "turn-a" });
+
+    expect([...active]).toEqual([["thread-a", null]]);
+    expect([...withTurn]).toEqual([["thread-a", "turn-a"]]);
+  });
 });

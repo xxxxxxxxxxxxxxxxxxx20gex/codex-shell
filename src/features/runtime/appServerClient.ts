@@ -6,14 +6,26 @@ import type { FsReadDirectoryParams } from "../../generated/app-server/v2/FsRead
 import type { FsReadDirectoryResponse } from "../../generated/app-server/v2/FsReadDirectoryResponse";
 import type { FsReadFileParams } from "../../generated/app-server/v2/FsReadFileParams";
 import type { FsReadFileResponse } from "../../generated/app-server/v2/FsReadFileResponse";
+import type { ModelListParams } from "../../generated/app-server/v2/ModelListParams";
+import type { ModelListResponse } from "../../generated/app-server/v2/ModelListResponse";
+import type { ModelProviderCapabilitiesReadResponse } from "../../generated/app-server/v2/ModelProviderCapabilitiesReadResponse";
 import type { ListMcpServerStatusParams } from "../../generated/app-server/v2/ListMcpServerStatusParams";
 import type { ListMcpServerStatusResponse } from "../../generated/app-server/v2/ListMcpServerStatusResponse";
+import type { McpResourceReadParams } from "../../generated/app-server/v2/McpResourceReadParams";
+import type { McpResourceReadResponse } from "../../generated/app-server/v2/McpResourceReadResponse";
+import type { McpServerOauthLoginParams } from "../../generated/app-server/v2/McpServerOauthLoginParams";
+import type { McpServerOauthLoginResponse } from "../../generated/app-server/v2/McpServerOauthLoginResponse";
+import type { McpServerRefreshResponse } from "../../generated/app-server/v2/McpServerRefreshResponse";
+import type { ReviewStartParams } from "../../generated/app-server/v2/ReviewStartParams";
+import type { ReviewStartResponse } from "../../generated/app-server/v2/ReviewStartResponse";
 import type { SkillsListParams } from "../../generated/app-server/v2/SkillsListParams";
 import type { SkillsListResponse } from "../../generated/app-server/v2/SkillsListResponse";
 import type { ThreadArchiveParams } from "../../generated/app-server/v2/ThreadArchiveParams";
 import type { ThreadArchiveResponse } from "../../generated/app-server/v2/ThreadArchiveResponse";
 import type { ThreadDeleteParams } from "../../generated/app-server/v2/ThreadDeleteParams";
 import type { ThreadDeleteResponse } from "../../generated/app-server/v2/ThreadDeleteResponse";
+import type { ThreadForkParams } from "../../generated/app-server/v2/ThreadForkParams";
+import type { ThreadForkResponse } from "../../generated/app-server/v2/ThreadForkResponse";
 import type { ThreadCompactStartParams } from "../../generated/app-server/v2/ThreadCompactStartParams";
 import type { ThreadCompactStartResponse } from "../../generated/app-server/v2/ThreadCompactStartResponse";
 import type { ThreadGoalClearParams } from "../../generated/app-server/v2/ThreadGoalClearParams";
@@ -26,16 +38,27 @@ import type { ThreadListParams } from "../../generated/app-server/v2/ThreadListP
 import type { ThreadListResponse } from "../../generated/app-server/v2/ThreadListResponse";
 import type { ThreadMetadataUpdateParams } from "../../generated/app-server/v2/ThreadMetadataUpdateParams";
 import type { ThreadMetadataUpdateResponse } from "../../generated/app-server/v2/ThreadMetadataUpdateResponse";
+import type { ThreadReadParams } from "../../generated/app-server/v2/ThreadReadParams";
+import type { ThreadReadResponse } from "../../generated/app-server/v2/ThreadReadResponse";
 import type { ThreadResumeParams } from "../../generated/app-server/v2/ThreadResumeParams";
 import type { ThreadResumeResponse } from "../../generated/app-server/v2/ThreadResumeResponse";
 import type { ThreadStartParams } from "../../generated/app-server/v2/ThreadStartParams";
 import type { ThreadStartResponse } from "../../generated/app-server/v2/ThreadStartResponse";
 import type { ThreadSetNameParams } from "../../generated/app-server/v2/ThreadSetNameParams";
 import type { ThreadSetNameResponse } from "../../generated/app-server/v2/ThreadSetNameResponse";
+import type { ThreadUnarchiveParams } from "../../generated/app-server/v2/ThreadUnarchiveParams";
+import type { ThreadUnarchiveResponse } from "../../generated/app-server/v2/ThreadUnarchiveResponse";
+import type { ThreadUnsubscribeParams } from "../../generated/app-server/v2/ThreadUnsubscribeParams";
+import type { ThreadUnsubscribeResponse } from "../../generated/app-server/v2/ThreadUnsubscribeResponse";
 import type { TurnInterruptParams } from "../../generated/app-server/v2/TurnInterruptParams";
 import type { TurnInterruptResponse } from "../../generated/app-server/v2/TurnInterruptResponse";
 import type { TurnStartParams } from "../../generated/app-server/v2/TurnStartParams";
 import type { TurnStartResponse } from "../../generated/app-server/v2/TurnStartResponse";
+import type { TurnSteerParams } from "../../generated/app-server/v2/TurnSteerParams";
+import type { TurnSteerResponse } from "../../generated/app-server/v2/TurnSteerResponse";
+import type { WindowsSandboxReadinessResponse } from "../../generated/app-server/v2/WindowsSandboxReadinessResponse";
+import type { WindowsSandboxSetupStartParams } from "../../generated/app-server/v2/WindowsSandboxSetupStartParams";
+import type { WindowsSandboxSetupStartResponse } from "../../generated/app-server/v2/WindowsSandboxSetupStartResponse";
 import { asError, errorMessage } from "../../shared/errors";
 import {
   TauriAppServerTransport,
@@ -43,8 +66,10 @@ import {
   type DisposeListener,
 } from "./appServerTransport";
 
-type JsonRpcId = number | string;
+export type JsonRpcId = number | string;
 export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
+export const REVERSE_REQUEST_DISMISSED = Symbol("reverse-request-dismissed");
+export type ReverseRequestResult = JsonValue | typeof REVERSE_REQUEST_DISMISSED;
 type AppServerClientStatus = "stopped" | "starting" | "ready" | "stopping";
 
 interface JsonRpcMessage {
@@ -64,7 +89,7 @@ interface PendingRequest {
 
 type NotificationHandler = (params: unknown) => void;
 type LogHandler = (line: string) => void;
-type ReverseRequestHandler = (params: unknown) => Promise<JsonValue>;
+type ReverseRequestHandler = (params: unknown, requestId: JsonRpcId) => Promise<ReverseRequestResult>;
 type ProtocolErrorHandler = (error: Error) => void;
 
 const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
@@ -169,6 +194,18 @@ export class AppServerClient {
     return this.request<ThreadResumeResponse>("thread/resume", params);
   }
 
+  readThread(params: ThreadReadParams) {
+    return this.request<ThreadReadResponse>("thread/read", params);
+  }
+
+  forkThread(params: ThreadForkParams) {
+    return this.request<ThreadForkResponse>("thread/fork", params);
+  }
+
+  unsubscribeThread(params: ThreadUnsubscribeParams) {
+    return this.request<ThreadUnsubscribeResponse>("thread/unsubscribe", params);
+  }
+
   startThread(params: ThreadStartParams) {
     return this.request<ThreadStartResponse>("thread/start", params);
   }
@@ -183,6 +220,10 @@ export class AppServerClient {
 
   archiveThread(params: ThreadArchiveParams) {
     return this.request<ThreadArchiveResponse>("thread/archive", params);
+  }
+
+  unarchiveThread(params: ThreadUnarchiveParams) {
+    return this.request<ThreadUnarchiveResponse>("thread/unarchive", params);
   }
 
   deleteThread(params: ThreadDeleteParams) {
@@ -213,6 +254,26 @@ export class AppServerClient {
     return this.request<ListMcpServerStatusResponse>("mcpServerStatus/list", params);
   }
 
+  loginMcpServer(params: McpServerOauthLoginParams) {
+    return this.request<McpServerOauthLoginResponse>("mcpServer/oauth/login", params);
+  }
+
+  reloadMcpServers() {
+    return this.request<McpServerRefreshResponse>("config/mcpServer/reload");
+  }
+
+  readMcpResource(params: McpResourceReadParams) {
+    return this.request<McpResourceReadResponse>("mcpServer/resource/read", params);
+  }
+
+  listModels(params: ModelListParams = {}) {
+    return this.request<ModelListResponse>("model/list", params);
+  }
+
+  readModelProviderCapabilities() {
+    return this.request<ModelProviderCapabilitiesReadResponse>("modelProvider/capabilities/read", {});
+  }
+
   fuzzyFileSearch(params: FuzzyFileSearchParams) {
     return this.request<FuzzyFileSearchResponse>("fuzzyFileSearch", params);
   }
@@ -236,6 +297,22 @@ export class AppServerClient {
     return this.request<TurnInterruptResponse>("turn/interrupt", params);
   }
 
+  steerTurn(params: TurnSteerParams) {
+    return this.request<TurnSteerResponse>("turn/steer", params);
+  }
+
+  startReview(params: ReviewStartParams) {
+    return this.request<ReviewStartResponse>("review/start", params);
+  }
+
+  readWindowsSandboxReadiness() {
+    return this.request<WindowsSandboxReadinessResponse>("windowsSandbox/readiness");
+  }
+
+  startWindowsSandboxSetup(params: WindowsSandboxSetupStartParams) {
+    return this.request<WindowsSandboxSetupStartResponse>("windowsSandbox/setupStart", params);
+  }
+
   private async startConnection() {
     this.status = "starting";
     await this.attachTransportListeners();
@@ -243,7 +320,10 @@ export class AppServerClient {
       await this.transport.start();
       this.initializeResponse = await this.requestRaw<InitializeResponse>("initialize", {
         clientInfo: { name: "codex-shell", title: "Codex Shell", version: "0.1.0" },
-        capabilities: { experimentalApi: true },
+        capabilities: {
+          experimentalApi: true,
+          mcpServerOpenaiFormElicitation: true,
+        },
       });
       if (this.connectionStatus === "stopped") throw new Error("app-server 在初始化期间退出");
       await this.send({ method: "initialized" });
@@ -357,7 +437,8 @@ export class AppServerClient {
     const handler = this.reverseRequestHandlers.get(message.method ?? "");
     try {
       if (!handler) throw new Error(`客户端尚未处理反向请求：${message.method}`);
-      const result = await handler(message.params);
+      const result = await handler(message.params, message.id as JsonRpcId);
+      if (result === REVERSE_REQUEST_DISMISSED) return;
       await this.send({ id: message.id, result });
     } catch (error) {
       await this.send({

@@ -1,78 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import type { AppServerTransport, DisposeListener } from "./appServerTransport";
-import { AppServerClient } from "./appServerClient";
-import { subscribeToSessionEvents } from "./sessionSubscriptions";
-import type { AgentSessionAction } from "./sessionState";
-
-interface SentMessage {
-  id?: number | string;
-  method?: string;
-  params?: unknown;
-  result?: unknown;
-  error?: unknown;
-}
-
-class FakeTransport implements AppServerTransport {
-  startCount = 0;
-  stopCount = 0;
-  sent: SentMessage[] = [];
-  private messageHandlers = new Set<(line: string) => void>();
-  private logHandlers = new Set<(line: string) => void>();
-  private stoppedHandlers = new Set<() => void>();
-
-  async start() {
-    this.startCount += 1;
-    return 1000 + this.startCount;
-  }
-
-  async stop() {
-    this.stopCount += 1;
-  }
-
-  async send(line: string) {
-    const message = JSON.parse(line) as SentMessage;
-    this.sent.push(message);
-    if (message.method === "initialize" && message.id !== undefined) {
-      this.emit({
-        id: message.id,
-        result: {
-          userAgent: "test",
-          codexHome: "C:\\app\\codex-home",
-          platformFamily: "windows",
-          platformOs: "windows",
-        },
-      });
-    }
-  }
-
-  async onMessage(handler: (line: string) => void): Promise<DisposeListener> {
-    this.messageHandlers.add(handler);
-    return () => this.messageHandlers.delete(handler);
-  }
-
-  async onLog(handler: (line: string) => void): Promise<DisposeListener> {
-    this.logHandlers.add(handler);
-    return () => this.logHandlers.delete(handler);
-  }
-
-  async onStopped(handler: () => void): Promise<DisposeListener> {
-    this.stoppedHandlers.add(handler);
-    return () => this.stoppedHandlers.delete(handler);
-  }
-
-  emit(message: unknown) {
-    const line = typeof message === "string" ? message : JSON.stringify(message);
-    this.messageHandlers.forEach((handler) => handler(line));
-  }
-
-  emitStopped() {
-    this.stoppedHandlers.forEach((handler) => handler());
-  }
-
-  emitLog(line: string) {
-    this.logHandlers.forEach((handler) => handler(line));
-  }
-}
+import { AppServerClient, REVERSE_REQUEST_DISMISSED } from "./appServerClient";
+import { FakeTransport } from "./appServerClientTestSupport";
 
 describe("AppServerClient", () => {
   it("deduplicates concurrent starts and performs one handshake", async () => {
@@ -84,7 +12,12 @@ describe("AppServerClient", () => {
     expect(transport.startCount).toBe(1);
     expect(transport.sent.filter((message) => message.method === "initialize")).toEqual([
       expect.objectContaining({
-        params: expect.objectContaining({ capabilities: { experimentalApi: true } }),
+        params: expect.objectContaining({
+          capabilities: {
+            experimentalApi: true,
+            mcpServerOpenaiFormElicitation: true,
+          },
+        }),
       }),
     ]);
     expect(transport.sent.filter((message) => message.method === "initialized")).toHaveLength(1);
@@ -176,6 +109,19 @@ describe("AppServerClient", () => {
     });
   });
 
+  it("passes the server request id to reverse handlers and can dismiss stale requests", async () => {
+    const transport = new FakeTransport();
+    const client = new AppServerClient(transport);
+    const handler = vi.fn(async (): Promise<typeof REVERSE_REQUEST_DISMISSED> => REVERSE_REQUEST_DISMISSED);
+    await client.start();
+    client.onReverseRequest("test/input", handler);
+
+    transport.emit({ id: "request-42", method: "test/input", params: { question: "value" } });
+
+    await vi.waitFor(() => expect(handler).toHaveBeenCalledWith({ question: "value" }, "request-42"));
+    expect(transport.sent.some((message) => message.id === "request-42")).toBe(false);
+  });
+
   it("uses stable app-server methods for P0 workspace and thread operations", async () => {
     const transport = new FakeTransport();
     const client = new AppServerClient(transport);
@@ -219,74 +165,90 @@ describe("AppServerClient", () => {
     await expect(archive).resolves.toEqual({});
   });
 
-  it("routes activity notifications only to the active thread", async () => {
+  it("uses native v2 methods for thread, model, review, steering, and MCP workflows", async () => {
     const transport = new FakeTransport();
     const client = new AppServerClient(transport);
-    const actions: AgentSessionAction[] = [];
-    const startedThreads: string[] = [];
-    const completedThreads: string[] = [];
     await client.start();
-    const dispose = subscribeToSessionEvents(client, {
-      currentThreadId: () => "thread-active",
-      dispatch: (action) => actions.push(action),
-      onTurnStarted: (notification) => startedThreads.push(notification.threadId),
-      onTurnCompleted: (notification) => completedThreads.push(notification.threadId),
-      onError: () => undefined,
-      onThreadName: () => undefined,
-      onStopped: () => undefined,
-      onRuntimeLog: () => undefined,
-      onProtocolError: () => undefined,
-      requestApproval: async () => ({ decision: "decline" }),
-    });
 
-    transport.emit({
-      method: "turn/diff/updated",
-      params: { threadId: "thread-other", turnId: "turn-1", diff: "ignored" },
-    });
-    transport.emit({
-      method: "turn/diff/updated",
-      params: { threadId: "thread-active", turnId: "turn-1", diff: "+kept" },
-    });
-    transport.emit({
-      method: "turn/started",
-      params: {
-        threadId: "thread-background",
-        turn: {
-          id: "turn-background",
-          items: [],
-          itemsView: "full",
-          status: "inProgress",
-          error: null,
-          startedAt: 1,
-          completedAt: null,
-          durationMs: null,
-        },
-      },
-    });
-    transport.emit({
-      method: "turn/completed",
-      params: {
-        threadId: "thread-background",
-        turn: {
-          id: "turn-background",
-          items: [],
-          itemsView: "full",
-          status: "completed",
-          error: null,
-          startedAt: 1,
-          completedAt: 2,
-          durationMs: 1000,
-        },
-      },
-    });
+    const read = client.readThread({ threadId: "thread-1", includeTurns: true });
+    let request = transport.sent[transport.sent.length - 1];
+    expect(request).toMatchObject({ method: "thread/read", params: { threadId: "thread-1", includeTurns: true } });
+    transport.emit({ id: request.id, result: { thread: { id: "thread-1" } } });
+    await read;
 
-    expect(actions).toEqual([{
-      type: "turnDiffUpdated",
-      notification: { threadId: "thread-active", turnId: "turn-1", diff: "+kept" },
-    }]);
-    expect(startedThreads).toEqual(["thread-background"]);
-    expect(completedThreads).toEqual(["thread-background"]);
-    dispose();
+    const fork = client.forkThread({ threadId: "thread-1", ephemeral: false });
+    request = transport.sent[transport.sent.length - 1];
+    expect(request).toMatchObject({ method: "thread/fork", params: { threadId: "thread-1", ephemeral: false } });
+    transport.emit({ id: request.id, result: { thread: { id: "thread-2" } } });
+    await fork;
+
+    const models = client.listModels({ cursor: null, limit: 100 });
+    request = transport.sent[transport.sent.length - 1];
+    expect(request).toMatchObject({ method: "model/list", params: { cursor: null, limit: 100 } });
+    transport.emit({ id: request.id, result: { data: [], nextCursor: null } });
+    await models;
+
+    const review = client.startReview({ threadId: "thread-1", target: { type: "uncommittedChanges" }, delivery: "inline" });
+    request = transport.sent[transport.sent.length - 1];
+    expect(request).toMatchObject({ method: "review/start" });
+    transport.emit({ id: request.id, result: { turn: { id: "turn-review" }, reviewThreadId: "thread-1" } });
+    await review;
+
+    const steer = client.steerTurn({ threadId: "thread-1", expectedTurnId: "turn-1", input: [] });
+    request = transport.sent[transport.sent.length - 1];
+    expect(request).toMatchObject({ method: "turn/steer", params: { threadId: "thread-1", expectedTurnId: "turn-1", input: [] } });
+    transport.emit({ id: request.id, result: { turnId: "turn-1" } });
+    await steer;
+
+    const login = client.loginMcpServer({ name: "docs", threadId: "thread-1" });
+    request = transport.sent[transport.sent.length - 1];
+    expect(request).toMatchObject({ method: "mcpServer/oauth/login", params: { name: "docs", threadId: "thread-1" } });
+    transport.emit({ id: request.id, result: { authorizationUrl: "https://example.test/oauth" } });
+    await login;
+
+    const reload = client.reloadMcpServers();
+    request = transport.sent[transport.sent.length - 1];
+    expect(request).toEqual(expect.objectContaining({ method: "config/mcpServer/reload" }));
+    expect(request.params).toBeUndefined();
+    transport.emit({ id: request.id, result: {} });
+    await reload;
+
+    const resource = client.readMcpResource({ server: "docs", uri: "docs://readme", threadId: "thread-1" });
+    request = transport.sent[transport.sent.length - 1];
+    expect(request).toMatchObject({ method: "mcpServer/resource/read", params: { server: "docs", uri: "docs://readme", threadId: "thread-1" } });
+    transport.emit({ id: request.id, result: { contents: [] } });
+    await resource;
+
+    const unsubscribe = client.unsubscribeThread({ threadId: "thread-1" });
+    request = transport.sent[transport.sent.length - 1];
+    expect(request).toMatchObject({ method: "thread/unsubscribe", params: { threadId: "thread-1" } });
+    transport.emit({ id: request.id, result: { status: "notLoaded" } });
+    await unsubscribe;
+
+    const unarchive = client.unarchiveThread({ threadId: "thread-1" });
+    request = transport.sent[transport.sent.length - 1];
+    expect(request).toMatchObject({ method: "thread/unarchive", params: { threadId: "thread-1" } });
+    transport.emit({ id: request.id, result: { thread: { id: "thread-1" } } });
+    await unarchive;
+
+    const capabilities = client.readModelProviderCapabilities();
+    request = transport.sent[transport.sent.length - 1];
+    expect(request).toMatchObject({ method: "modelProvider/capabilities/read", params: {} });
+    transport.emit({ id: request.id, result: { namespaceTools: false, imageGeneration: false, webSearch: true } });
+    await capabilities;
+
+    const readiness = client.readWindowsSandboxReadiness();
+    request = transport.sent[transport.sent.length - 1];
+    expect(request).toMatchObject({ method: "windowsSandbox/readiness" });
+    expect(request.params).toBeUndefined();
+    transport.emit({ id: request.id, result: { status: "ready" } });
+    await readiness;
+
+    const setup = client.startWindowsSandboxSetup({ mode: "unelevated", cwd: "C:\\work" });
+    request = transport.sent[transport.sent.length - 1];
+    expect(request).toMatchObject({ method: "windowsSandbox/setupStart", params: { mode: "unelevated", cwd: "C:\\work" } });
+    transport.emit({ id: request.id, result: { started: true } });
+    await setup;
   });
 
   it("uses stable app-server methods for slash-command capabilities", async () => {

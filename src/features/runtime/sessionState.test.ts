@@ -83,6 +83,17 @@ describe("agentSessionReducer", () => {
     expect(state.turns[1].items[0]).toMatchObject({ type: "userMessage" });
   });
 
+  it("keeps the synthetic user item returned for an inline Review", () => {
+    const reviewTurn = turn("review-turn", [userMessage("review-target", "审查未提交更改")]);
+
+    const state = agentSessionReducer(initialAgentSessionState, {
+      type: "turnStarted",
+      turn: reviewTurn,
+    });
+
+    expect(state.turns).toEqual([reviewTurn]);
+  });
+
   it("replaces the optimistic user item when the persisted item starts", () => {
     const submitted = agentSessionReducer(initialAgentSessionState, {
       type: "turnSubmitted",
@@ -423,5 +434,25 @@ describe("agentSessionReducer", () => {
 
     expect(completed.activeItemTurnIds).toEqual({});
     expect(completed.mcpProgressByItemId).toEqual({});
+  });
+
+  it("applies authoritative status only to the active thread", () => {
+    const loaded = agentSessionReducer(initialAgentSessionState, {
+      type: "loadThread",
+      thread: thread(),
+    });
+    const unchanged = agentSessionReducer(loaded, {
+      type: "threadStatusChanged",
+      threadId: "thread-other",
+      status: { type: "active", activeFlags: [] },
+    });
+    const active = agentSessionReducer(unchanged, {
+      type: "threadStatusChanged",
+      threadId: "thread-1",
+      status: { type: "active", activeFlags: [] },
+    });
+
+    expect(unchanged).toBe(loaded);
+    expect(active.thread?.status).toEqual({ type: "active", activeFlags: [] });
   });
 });

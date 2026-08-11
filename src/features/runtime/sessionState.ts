@@ -9,6 +9,7 @@ import type { ReasoningSummaryTextDeltaNotification } from "../../generated/app-
 import type { ReasoningTextDeltaNotification } from "../../generated/app-server/v2/ReasoningTextDeltaNotification";
 import type { Thread } from "../../generated/app-server/v2/Thread";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
+import type { ThreadStatus } from "../../generated/app-server/v2/ThreadStatus";
 import type { ThreadTokenUsage } from "../../generated/app-server/v2/ThreadTokenUsage";
 import type { ThreadTokenUsageUpdatedNotification } from "../../generated/app-server/v2/ThreadTokenUsageUpdatedNotification";
 import type { Turn } from "../../generated/app-server/v2/Turn";
@@ -35,7 +36,9 @@ export type AgentSessionAction =
   | { type: "loadThread"; thread: Thread }
   | { type: "updateThread"; thread: Thread }
   | { type: "renameThread"; threadId: string; name: string | null }
+  | { type: "threadStatusChanged"; threadId: string; status: ThreadStatus }
   | { type: "turnSubmitted"; turn: Turn; userText: string }
+  | { type: "turnStarted"; turn: Turn }
   | { type: "itemStarted"; notification: ItemStartedNotification }
   | { type: "itemCompleted"; notification: ItemCompletedNotification }
   | { type: "agentDelta"; notification: AgentMessageDeltaNotification }
@@ -264,11 +267,17 @@ export function agentSessionReducer(
       return state.thread?.id === action.threadId
         ? { ...state, thread: { ...state.thread, name: action.name } }
         : state;
+    case "threadStatusChanged":
+      return state.thread?.id === action.threadId
+        ? { ...state, thread: { ...state.thread, status: action.status } }
+        : state;
     case "turnSubmitted":
       return withTurns(
         state,
         mergeSubmittedTurn(state.turns, withOptimisticUser(action.turn, action.userText)),
       );
+    case "turnStarted":
+      return withTurns(state, mergeSubmittedTurn(state.turns, action.turn));
     case "itemStarted":
       return withTurns(
         {

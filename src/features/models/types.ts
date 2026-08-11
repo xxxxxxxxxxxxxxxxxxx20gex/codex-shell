@@ -1,4 +1,4 @@
-export type ReasoningEffort = "none" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max" | "ultra";
+type ReasoningEffort = string;
 export type Verbosity = "low" | "medium" | "high";
 
 export interface ModelTemplate {
