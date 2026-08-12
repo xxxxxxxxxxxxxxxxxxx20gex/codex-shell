@@ -2,7 +2,7 @@
 
 - 模块职责：管理 Base URL、手填模型 ID、能力模板、推理强度与回答冗余度。
 - 当前状态：手填第三方网关配置和 app-server 原生模型目录已合并到唯一模型设置入口。
-- 最近变更：接入 `model/list` 游标分页与 `modelProvider/capabilities/read`；原生目录显示名称、描述、输入模态并保留服务端声明的任意推理强度。已有 Session 可热切换模型和推理强度，下一轮通过原生 `turn/start` 覆盖生效；Base URL、API Key、能力模板或回答冗余度改变时会重启 app-server，因为这些配置由进程启动参数提供，但重启后会只读恢复当前 Thread，不再把下一条消息误建为新 Session。
+- 最近变更：接入 `model/list` 游标分页与 `modelProvider/capabilities/read`；原生目录每项只显示一个可读名称，真实模型 ID 仍作为选择值和请求参数，避免名称与 ID 相同时重复；目录描述、输入模态和服务端声明的任意推理强度均保留。已有 Session 可热切换模型和推理强度，下一轮通过原生 `turn/start` 覆盖生效；Base URL、API Key、能力模板或回答冗余度改变时会重启 app-server，因为这些配置由进程启动参数提供，但重启后会只读恢复当前 Thread，不再把下一条消息误建为新 Session。
 - 当前接口：`ModelSettings`、模型模板、`model/list`、Provider capability read、Windows Credential Manager 持久化接口。
 - 已知问题：更改 Base URL 或 API Key 后需要重启连接才能让 Provider 与原生目录同步；模板尚未自动同步固定 Runtime 元数据。
 - 下一步：增加显式连接测试和保存前兼容性诊断，区分鉴权、模型不存在和参数不兼容。

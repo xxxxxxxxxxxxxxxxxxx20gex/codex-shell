@@ -75,6 +75,8 @@ describe("ModelSettingsPanel", () => {
 
     const catalog = await screen.findByRole("combobox");
     expect(screen.queryByText(/HIDDEN-MODEL/)).toBeNull();
+    expect(screen.getByRole("option", { name: "NATIVE-MODEL" })).toBeTruthy();
+    expect(screen.queryByRole("option", { name: "NATIVE-MODEL · native-model" })).toBeNull();
     fireEvent.change(catalog, { target: { value: "native-model" } });
     fireEvent.click(screen.getByRole("button", { name: "保存配置" }));
 

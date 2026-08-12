@@ -120,7 +120,7 @@ export function ModelSettingsPanel({
             <span>app-server 原生模型目录</span>
             <select value={nativeModel?.id ?? ""} disabled={catalogLoading || nativeModels.length === 0} onChange={(event) => selectNativeModel(event.target.value)}>
               <option value="">{catalogLoading ? "正在读取模型…" : nativeModels.length === 0 ? "当前 Provider 没有返回模型目录" : "保留手填模型 ID"}</option>
-              {nativeModels.map((model) => <option key={model.id} value={model.id}>{model.displayName} · {model.model}</option>)}
+              {nativeModels.map((model) => <option key={model.id} value={model.id}>{model.displayName || model.model}</option>)}
             </select>
             <small>原生目录提供推理强度与输入模态；第三方中转站仍可使用下方手填方式。</small>
           </label>

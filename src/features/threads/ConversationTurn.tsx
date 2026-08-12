@@ -77,9 +77,8 @@ export function ConversationTurn({
         </div>
       ) : item.type === "agentMessage" ? (
         <div className={`agent-block${item.id === firstAgentMessageId ? "" : " agent-block-continuation"}`} key={item.id}>
-          {item.id === firstAgentMessageId && <div className="agent-avatar">C</div>}
+          {item.id === firstAgentMessageId && <div className="agent-accent" aria-hidden="true" />}
           <div className="agent-content">
-            {item.id === firstAgentMessageId && <div className="agent-meta"><strong>Codex</strong></div>}
             <p className={item.text ? "agent-response" : "agent-response pending"}>
               {item.text || "正在等待模型响应…"}
             </p>
@@ -114,11 +113,10 @@ export function ConversationTurn({
       )}
       {active && !hasAgentItem && (
         <div className="agent-block">
-          <div className="agent-avatar">C</div>
+          <div className="agent-accent" aria-hidden="true" />
           <div className="agent-content">
-            <div className="agent-meta"><strong>Codex</strong></div>
             <p className="agent-response pending">
-              {hasActiveProcess ? "Codex 正在处理任务…" : "正在等待模型响应…"}
+              {hasActiveProcess ? "正在处理任务…" : "正在等待模型响应…"}
             </p>
             {answerTiming && (
               <div className="message-timing agent-message-timing">{answerTiming}</div>

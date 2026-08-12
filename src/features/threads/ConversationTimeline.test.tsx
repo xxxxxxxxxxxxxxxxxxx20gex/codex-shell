@@ -145,7 +145,7 @@ describe("conversation timing", () => {
     expect(markup).toContain('class="activity-card activity-command-card" open=""');
   });
 
-  it("keeps one assistant header and summarizes file changes at the end", () => {
+  it("uses a minimal assistant accent and summarizes file changes at the end", () => {
     const firstAgent: ThreadItem = { type: "agentMessage", id: "agent-1", text: "第一段", phase: null, memoryCitation: null };
     const secondAgent: ThreadItem = { type: "agentMessage", id: "agent-2", text: "第二段", phase: null, memoryCitation: null };
     const fileChange: ThreadItem = {
@@ -160,7 +160,10 @@ describe("conversation timing", () => {
     };
     const markup = renderTurn({ ...completedTurn(), items: [firstAgent, fileChange, secondAgent] });
 
-    expect((markup.match(/class="agent-meta"/g) ?? []).length).toBe(1);
+    expect((markup.match(/class="agent-accent"/g) ?? []).length).toBe(1);
+    expect(markup).not.toContain('class="agent-avatar"');
+    expect(markup).not.toContain('class="agent-meta"');
+    expect(markup).not.toContain("<strong>Codex</strong>");
     expect(markup).toContain("已编辑 1 个文件");
     expect(markup).toContain("修改");
     expect(markup.indexOf("已编辑 1 个文件")).toBeGreaterThan(markup.indexOf("第二段"));
@@ -205,7 +208,8 @@ describe("conversation timing", () => {
     );
 
     expect(markup).toContain("正在读取接口文档");
-    expect(markup).toContain("Codex 正在处理任务…");
+    expect(markup).toContain("正在处理任务…");
+    expect(markup).not.toContain("Codex 正在处理任务…");
     expect(markup).toContain("role=\"status\"");
   });
 });
