@@ -4,15 +4,18 @@ interface Options {
   open: boolean;
   onClose: () => void;
   returnFocus?: boolean;
+  isInside?: (target: Node) => boolean;
 }
 
 /** Adds outside-pointer and Escape dismissal to a popup and restores trigger focus. */
-export function useDismissiblePopover<T extends HTMLElement>({ open, onClose, returnFocus = true }: Options) {
+export function useDismissiblePopover<T extends HTMLElement>({ open, onClose, returnFocus = true, isInside }: Options) {
   const rootRef = useRef<T>(null);
   const lastFocusedRef = useRef<HTMLElement | null>(null);
   const dismissalReasonRef = useRef<"escape" | "outside" | null>(null);
   const onCloseRef = useRef(onClose);
+  const isInsideRef = useRef(isInside);
   onCloseRef.current = onClose;
+  isInsideRef.current = isInside;
 
   useEffect(() => {
     if (!open) return;
@@ -20,7 +23,7 @@ export function useDismissiblePopover<T extends HTMLElement>({ open, onClose, re
     lastFocusedRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     function dismissOnOutsidePointer(event: PointerEvent) {
       const target = event.target;
-      if (!(target instanceof Node) || rootRef.current?.contains(target)) return;
+      if (!(target instanceof Node) || rootRef.current?.contains(target) || isInsideRef.current?.(target)) return;
       dismissalReasonRef.current = "outside";
       onCloseRef.current();
     }

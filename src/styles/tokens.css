@@ -3,12 +3,19 @@
   --ui-panel: #171714;
   --ui-panel-raised: #1d1d19;
   --ui-panel-overlay: #24231f;
+  --ui-surface-control: #191916;
+  --ui-surface-active: #20201c;
+  --ui-surface-hover: #22221e;
+  --ui-surface-selected: #34332d;
   --ui-line: #2b2a25;
   --ui-line-strong: #3b3a34;
+  --ui-line-subtle: #302f29;
   --ui-text-primary: #f2f2ee;
   --ui-text-secondary: #d6d5cf;
   --ui-text-muted: #aaa9a2;
   --ui-text-quiet: #898880;
+  --ui-text-control: #d0cfc8;
+  --ui-text-disabled: #55534d;
   --ui-accent: #c2e85c;
   --ui-accent-ink: #182000;
   --ui-danger: #e48f86;
@@ -16,6 +23,7 @@
   --ui-control-radius: 8px;
   --ui-panel-radius: 11px;
   --ui-card-radius: 9px;
+  --ui-radius-sm: 6px;
   --ui-shadow-popover: 0 18px 50px rgba(0, 0, 0, .5);
   --ui-shadow-panel: 0 20px 50px rgba(0, 0, 0, .25);
   --ui-motion-fast: .16s ease;

@@ -39,6 +39,7 @@ import { threadTitle } from "./features/threads/threadPresentation";
 import { FileMentionMenu } from "./features/workspaces/FileMentionMenu";
 import { WorkspaceExplorer } from "./features/workspaces/WorkspaceExplorer";
 import { WorkspaceSelector } from "./features/workspaces/WorkspaceSelector";
+import { useDismissiblePopover } from "./shared/useDismissiblePopover";
 import "./styles/tokens.css";
 import {
   activeFileMentionQuery,
@@ -172,31 +173,15 @@ function App() {
 
   useEffect(() => setSlashSelectedIndex(0), [slashQuery]);
 
-  useEffect(() => {
-    if (!slashMenuVisible && commandPanel === null) return;
-    function dismissOnOutsidePointer(event: PointerEvent) {
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-      if (target.closest(".slash-command-menu, .agent-command-panel, .command-button")) return;
+  useDismissiblePopover<HTMLDivElement>({
+    open: slashMenuVisible || commandPanel !== null,
+    onClose: () => {
       setSlashMenuForced(false);
       setSlashMenuDismissed(true);
       setCommandPanel(null);
-    }
-    function dismissOnEscape(event: KeyboardEvent) {
-      if (event.key !== "Escape") return;
-      event.preventDefault();
-      setSlashMenuForced(false);
-      setSlashMenuDismissed(true);
-      setCommandPanel(null);
-      commandButtonRef.current?.focus();
-    }
-    document.addEventListener("pointerdown", dismissOnOutsidePointer, true);
-    document.addEventListener("keydown", dismissOnEscape, true);
-    return () => {
-      document.removeEventListener("pointerdown", dismissOnOutsidePointer, true);
-      document.removeEventListener("keydown", dismissOnEscape, true);
-    };
-  }, [commandPanel, slashMenuVisible]);
+    },
+    isInside: (target) => target instanceof Element && Boolean(target.closest(".slash-command-menu, .agent-command-panel, .command-button")),
+  });
 
   async function runSlashCommand(id: SlashCommandId, args = "", clearDraft = true) {
     setSlashMenuForced(false);

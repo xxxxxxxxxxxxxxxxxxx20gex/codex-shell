@@ -14,7 +14,11 @@ interface Props {
 
 export function ModelQuickPicker({ settings, loadModels, onChange, onDisplayName, onAdvanced, onClose }: Props) {
   const [models, setModels] = useState<Model[]>([]);
-  const rootRef = useDismissiblePopover<HTMLDivElement>({ open: true, onClose });
+  const rootRef = useDismissiblePopover<HTMLDivElement>({
+    open: true,
+    onClose,
+    isInside: (target) => target instanceof Element && Boolean(target.closest(".model-picker-anchor")),
+  });
   useEffect(() => {
     let active = true;
     void loadModels().then((items) => {
