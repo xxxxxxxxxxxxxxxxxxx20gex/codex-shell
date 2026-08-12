@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
+import { Virtuoso, type ListRange, type VirtuosoHandle } from "react-virtuoso";
 import type { McpToolCallProgressNotification } from "../../generated/app-server/v2/McpToolCallProgressNotification";
 import type { Turn } from "../../generated/app-server/v2/Turn";
 import type { TurnPlanUpdatedNotification } from "../../generated/app-server/v2/TurnPlanUpdatedNotification";
@@ -43,7 +43,16 @@ export function ConversationTimeline({
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const [atBottom, setAtBottom] = useState(true);
   const [hasNewActivity, setHasNewActivity] = useState(false);
+  const [visibleStartIndex, setVisibleStartIndex] = useState(Math.max(0, turns.length - 1));
   const links = useMemo(() => userTurnLinks(turns), [turns]);
+
+  const activeLinkIndex = useMemo(() => {
+    let activeIndex = 0;
+    links.forEach((link, index) => {
+      if (link.index <= visibleStartIndex) activeIndex = index;
+    });
+    return activeIndex;
+  }, [links, visibleStartIndex]);
 
   useEffect(() => {
     if (!atBottom) setHasNewActivity(true);
@@ -56,8 +65,13 @@ export function ConversationTimeline({
 
   const scrollToTurn = useCallback((index: number) => {
     virtuosoRef.current?.scrollToIndex({ index, align: "start", behavior: "smooth" });
+    setVisibleStartIndex(index);
     if (index === turns.length - 1) setHasNewActivity(false);
   }, [turns.length]);
+
+  const handleRangeChanged = useCallback((range: ListRange) => {
+    setVisibleStartIndex(range.startIndex);
+  }, []);
 
   const scrollToLatest = useCallback(() => {
     scrollToTurn(turns.length - 1);
@@ -75,6 +89,7 @@ export function ConversationTimeline({
         computeItemKey={(_index, turn) => turn.id}
         followOutput={(isAtBottom) => isAtBottom ? "auto" : false}
         initialTopMostItemIndex={Math.max(0, turns.length - 1)}
+        rangeChanged={handleRangeChanged}
         itemContent={(turnIndex, turn) => (
           <div className={`conversation-turn-frame ${turnIndex === 0 ? "first" : "separated"} ${turnIndex === turns.length - 1 ? "last" : ""}`}>
             <ConversationTurn
@@ -95,10 +110,11 @@ export function ConversationTimeline({
             <button
               key={`${link.index}:${link.label}`}
               type="button"
+              className={index === activeLinkIndex ? "active" : undefined}
               onClick={() => scrollToTurn(link.index)}
-              aria-label={`跳到用户消息 ${index + 1}：${link.label}`}
+              aria-label={`跳到消息：${link.label}`}
               title={link.label}
-            />
+            ><span aria-hidden="true" /></button>
           ))}
         </nav>
       )}

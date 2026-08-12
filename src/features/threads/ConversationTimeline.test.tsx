@@ -166,6 +166,32 @@ describe("conversation timing", () => {
     expect((markup.match(/class="agent-accent"/g) ?? []).length).toBe(1);
   });
 
+  it("keeps steered user messages in their native item order", () => {
+    const firstUser: ThreadItem = {
+      type: "userMessage",
+      id: "user-first",
+      clientId: null,
+      content: [{ type: "text", text: "先检查项目", text_elements: [] }],
+    };
+    const firstReasoning: ThreadItem = { type: "reasoning", id: "reasoning-before", summary: ["正在检查"], content: [] };
+    const steeredUser: ThreadItem = {
+      type: "userMessage",
+      id: "user-steered",
+      clientId: "client-steer-1",
+      content: [{ type: "text", text: "优先检查测试", text_elements: [] }],
+    };
+    const secondReasoning: ThreadItem = { type: "reasoning", id: "reasoning-after", summary: ["调整检查顺序"], content: [] };
+    const answer: ThreadItem = { type: "agentMessage", id: "answer-steered", text: "检查完成", phase: "final_answer", memoryCitation: null };
+    const markup = renderTurn({ ...completedTurn(), items: [firstUser, firstReasoning, steeredUser, secondReasoning, answer] });
+
+    expect(markup.indexOf("先检查项目")).toBeLessThan(markup.indexOf("正在检查"));
+    expect(markup.indexOf("正在检查")).toBeLessThan(markup.indexOf("优先检查测试"));
+    expect(markup.indexOf("优先检查测试")).toBeLessThan(markup.indexOf("调整检查顺序"));
+    expect(markup.indexOf("调整检查顺序")).toBeLessThan(markup.indexOf("检查完成"));
+    expect((markup.match(/2026\/08\/07 10:20:30/g) ?? []).length).toBe(1);
+    expect((markup.match(/class="turn-activity-group"/g) ?? []).length).toBe(2);
+  });
+
   it("renders final answers as safe Markdown", () => {
     const answer: ThreadItem = {
       type: "agentMessage",
