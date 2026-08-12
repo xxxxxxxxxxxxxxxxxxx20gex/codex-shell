@@ -6,6 +6,7 @@ import { errorMessage } from "../../shared/errors";
 import { assertModelVisibleInput } from "../../shared/modelVisibleInput";
 import type { AppServerClient } from "./appServerClient";
 import type { AgentSessionAction } from "./sessionState";
+import type { RunningTurnKind } from "./useRunningTurns";
 
 interface Props {
   threadOperationRef: MutableRefObject<boolean>;
@@ -14,7 +15,7 @@ interface Props {
   ensureActiveThread: () => Promise<{ client: AppServerClient; threadId: string }>;
   unsubscribeIfIdle: (threadId: string | null) => Promise<void>;
   dispatch: Dispatch<AgentSessionAction>;
-  markThreadRunning: (threadId: string, turnId: string) => void;
+  markThreadRunning: (threadId: string, turnId: string | null, kind: RunningTurnKind) => void;
   setError: Dispatch<SetStateAction<string>>;
   upsertHistory: (thread: Thread) => void;
 }
@@ -43,7 +44,7 @@ export function useThreadReview({
       }
       const { client, threadId } = await ensureActiveThread();
       const response = await client.startReview({ threadId, target, delivery });
-      markThreadRunning(response.reviewThreadId, response.turn.id);
+      markThreadRunning(response.reviewThreadId, response.turn.id, "review");
       if (delivery === "inline") {
         dispatch({ type: "turnStarted", turn: response.turn });
       } else {

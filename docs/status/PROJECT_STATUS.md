@@ -2,7 +2,7 @@
 
 - 当前阶段：Milestone 2 — P0 桌面编程工作台
 - 总体状态：P0 工作台与第一、第二阶段 app-server 原生能力接入已完成
-- 最后更新：2026-08-12
+- 最后更新：2026-08-13
 
 ## 已完成
 
@@ -62,6 +62,7 @@
 - 模型入口已改为 Codex 风格两层结构：输入框旁即时选择 app-server 原生模型与推理强度，高级设置管理网关、Key、自定义模型和扩展参数；能力模板及静态模板目录已移除，所有参数变化均保持当前 Session。
 - 对话执行体验进一步对齐 Codex 桌面端：同一 Turn 的 commentary、reasoning、命令与工具事件按原始顺序归并为可折叠执行过程，运行中显示当前原生活动或 MCP progress，完成后收起；最终回答使用禁用原始 HTML 的 Markdown/GFM 渲染。完整 `turn/completed` 结果会清除流式阶段遗留 Item，避免已完成活动错误停留在运行中。
 - 用户可在普通 Turn 执行期间继续编辑并发送补充信息：Shell 复用原生 `turn/steer`，输入框显示轻量插入态；steer 返回的用户 Item 按时间顺序穿插在执行过程之间，不新建 Turn 或 Session。对话区左缘新增 Codex 风格消息轨道，当前可视 Turn 高亮且可点击跳转，不显示动态编号。
+- 已修正前端壳对 app-server 运行状态的过度简化：按 Thread 区分普通、Review、Compact 和未知 active Turn，并消费等待批准/用户输入标志；只有普通 Turn 且有真实 Turn ID 时开放 `turn/steer`，其他阶段显示准确状态，不再出现“提示可插入、提交后才报错”的体验落差。普通 Turn 发送、Steer 与中断生命周期已从 `useThreadController` 拆到独立 Hook，主线程控制器回落到约 433 行。
 
 ## 当前数据流
 
@@ -70,7 +71,7 @@
 ## 当前风险
 
 - app-server 崩溃后的当前 Session 自动恢复、超大文件预览/超大 Diff 的源端截断和二进制文件变更提示尚未完成；单个超长 Turn 内部活动尚未二次虚拟化。
-- `useThreadController` 已拆出历史和 Review，但发送、Steer 与 Thread 元数据操作仍集中；继续扩充前应再拆执行生命周期。`App.css` 仍包含多个 feature 的集中样式，应按实际功能改动渐进迁移。
+- `useThreadController` 已拆出历史、Review 和普通 Turn 执行生命周期；Thread 元数据操作仍集中，继续扩充前应按操作族拆分。`App.tsx` 仍约 510 行，Composer 状态和面板编排是下一处明确拆分边界；`App.css` 仍包含多个 feature 的集中样式，应按实际功能改动渐进迁移。
 - PATH Runtime 尚未校验与生成协议的版本/hash；旧进程无代际 `stopped` 事件、跨卷 CODEX_HOME 迁移和旧应用标识/凭据迁移仍存在兼容风险。
 - 用户文本、Steer、Review、Goal 和结构化问答已在 Shell 边界限制为 8000 UTF-8 bytes；多 Skill 聚合、全局 `AGENTS.md` 和 Runtime Goal continuation 仍缺少统一硬预算，应优先在 app-server/Runtime 中建立不可绕过的中央边界。
 - 旧 CODEX_HOME 的跨卷迁移仍需可恢复复制方案；当前同卷迁移和双目录冲突已按保数据原则处理。
@@ -84,7 +85,7 @@
 ## 验证证据
 
 - `pnpm typecheck`：通过。
-- `pnpm test`：38 个测试文件、133 项测试全部通过，包含左侧消息轨道当前 Turn 高亮、原生 Steer 分流与中途消息顺序、执行过程归并、安全 Markdown、完整完成态残留清理、轻量模型/推理强度选择、连续回答流、命令折叠、文件变更汇总、模型切换与连接重启后同 Session 恢复、每 Turn 完全访问权限覆盖、活动/归档分叉祖先隔离、时间线滚动/导航、Diff 状态/跳转、工作区 watch 生命周期、统一反向交互、Thread 读写/退订时序、Review、MCP schema 与第二阶段 RPC 覆盖。
+- `pnpm test`：39 个测试文件、140 项测试全部通过，新增普通/Review/Compact/未知 active 运行类型、等待标志保持、非 Steer 阶段拒绝发送、手动压缩标记及请求失败回滚覆盖；左侧消息轨道、原生 Steer 中途消息顺序、执行过程归并、安全 Markdown、模型/权限热切换、分叉祖先、工作区 watch、统一反向交互、Review 和 MCP 覆盖继续通过。
 - Rust 单元测试：11 项全部通过，覆盖显式模型参数、旧模板配置兼容归一化、动态 Runtime、每日默认工作区、独立 provider 参数、旧 CODEX_HOME 迁移、双目录冲突和官方目录防重叠校验。
 - `pnpm rust:check`：从 clean target 完整重编译后通过。
 - `pnpm build`：包含虚拟时间线、目录 watch、目录选择插件和 P0 工作台 UI 的生产构建通过。

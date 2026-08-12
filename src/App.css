@@ -113,8 +113,10 @@ code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 .composer textarea::placeholder { color: #8e8d86; }
 .composer-toolbar { display: flex; align-items: center; justify-content: space-between; }
 .composer-tools { display: flex; align-items: center; gap: 5px; }
-.steer-mode-indicator { display: inline-flex; height: var(--ui-control-height); align-items: center; gap: 6px; padding: 0 8px; border: 1px solid rgba(194,232,92,.2); border-radius: var(--ui-control-radius); color: #b9cc87; background: rgba(36,44,25,.72); font-size: 9px; white-space: nowrap; }
-.steer-mode-indicator i { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 7px rgba(194,232,92,.48); animation: activity-pulse 1.4s ease-in-out infinite; }
+.steer-mode-indicator { display: inline-flex; height: var(--ui-control-height); align-items: center; gap: 6px; padding: 0 8px; border: 1px solid var(--ui-line-strong); border-radius: var(--ui-control-radius); color: var(--text-secondary); background: rgba(29,29,26,.72); font-size: 9px; white-space: nowrap; }
+.steer-mode-indicator i { width: 5px; height: 5px; border-radius: 50%; background: #8d8b80; box-shadow: 0 0 7px rgba(141,139,128,.36); animation: activity-pulse 1.4s ease-in-out infinite; }
+.steer-mode-indicator.steerable { border-color: rgba(194,232,92,.2); color: #b9cc87; background: rgba(36,44,25,.72); }
+.steer-mode-indicator.steerable i { background: var(--accent); box-shadow: 0 0 7px rgba(194,232,92,.48); }
 .command-button { display: grid; width: var(--ui-control-height); height: var(--ui-control-height); place-items: center; border: 1px solid var(--ui-line-strong); border-radius: var(--ui-control-radius); color: #d0cfc8; background: #191916; font: 700 15px "Cascadia Code", Consolas, monospace; cursor: pointer; }
 .command-button:hover, .command-button.active { border-color: #596b35; color: var(--accent); background: #252a1d; }
 .plan-mode-button { display: flex; height: 31px; align-items: center; gap: 5px; padding: 0 9px; border: 1px solid #526635; border-radius: 8px; color: #c1d49a; background: #202719; font-size: 11px; cursor: pointer; }

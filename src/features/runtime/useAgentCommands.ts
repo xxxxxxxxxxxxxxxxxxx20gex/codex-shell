@@ -7,6 +7,7 @@ import type { SkillMetadata } from "../../generated/app-server/v2/SkillMetadata"
 import type { ThreadGoal } from "../../generated/app-server/v2/ThreadGoal";
 import { assertModelVisibleInput } from "../../shared/modelVisibleInput";
 import type { AppServerClient } from "./appServerClient";
+import type { RunningTurnKind } from "./useRunningTurns";
 
 type EnsureConnected = () => Promise<AppServerClient>;
 type EnsureActiveThread = () => Promise<{ client: AppServerClient; threadId: string }>;
@@ -16,6 +17,8 @@ export function useAgentCommands(
   ensureActiveThread: EnsureActiveThread,
   currentThreadId: () => string | null,
   workspacePath: string | null,
+  markThreadRunning: (threadId: string, turnId: string | null, kind: RunningTurnKind) => void,
+  markThreadStopped: (threadId: string) => void,
 ) {
   const listSkills = useCallback(async (forceReload = false): Promise<SkillMetadata[]> => {
     const client = await ensureConnected();
@@ -53,8 +56,14 @@ export function useAgentCommands(
 
   const compactThread = useCallback(async () => {
     const { client, threadId } = await ensureActiveThread();
-    await client.compactThread({ threadId });
-  }, [ensureActiveThread]);
+    markThreadRunning(threadId, null, "compact");
+    try {
+      await client.compactThread({ threadId });
+    } catch (error) {
+      markThreadStopped(threadId);
+      throw error;
+    }
+  }, [ensureActiveThread, markThreadRunning, markThreadStopped]);
 
   const getThreadGoal = useCallback(async (): Promise<ThreadGoal | null> => {
     const { client, threadId } = await ensureActiveThread();

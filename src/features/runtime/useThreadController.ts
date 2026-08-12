@@ -6,7 +6,6 @@ import {
   type MutableRefObject,
   type SetStateAction,
 } from "react";
-import type { ModeKind } from "../../generated/app-server/ModeKind";
 import type { Thread } from "../../generated/app-server/v2/Thread";
 import type { ThreadNameUpdatedNotification } from "../../generated/app-server/v2/ThreadNameUpdatedNotification";
 import type { ThreadStartedNotification } from "../../generated/app-server/v2/ThreadStartedNotification";
@@ -14,14 +13,14 @@ import type { ThreadStatusChangedNotification } from "../../generated/app-server
 import type { TurnCompletedNotification } from "../../generated/app-server/v2/TurnCompletedNotification";
 import type { TurnStartedNotification } from "../../generated/app-server/v2/TurnStartedNotification";
 import { errorMessage } from "../../shared/errors";
-import { assertModelVisibleInput } from "../../shared/modelVisibleInput";
 import { getPermissionMode, type PermissionMode } from "../approvals/permissionModes";
 import type { ModelSettings } from "../models/types";
 import type { AppServerClient } from "./appServerClient";
-import { buildUserInput, type FileMention, type SkillMention } from "./sessionInput";
 import type { AgentSessionAction } from "./sessionState";
+import type { RunningTurn, RunningTurnKind } from "./useRunningTurns";
 import { useThreadHistory } from "./useThreadHistory";
 import { useThreadReview } from "./useThreadReview";
+import { useTurnExecution } from "./useTurnExecution";
 
 type EnsureConnected = () => Promise<AppServerClient>;
 
@@ -35,10 +34,10 @@ interface Props {
   submitting: boolean;
   setSubmitting: Dispatch<SetStateAction<boolean>>;
   setError: Dispatch<SetStateAction<string>>;
-  markThreadRunning: (threadId: string, turnId: string) => void;
+  markThreadRunning: (threadId: string, turnId: string | null, kind: RunningTurnKind) => void;
   markThreadStopped: (threadId: string) => void;
   markThreadStatus: (threadId: string, status: Thread["status"]) => void;
-  getRunningTurnId: (threadId: string) => string | undefined;
+  getRunningTurn: (threadId: string) => RunningTurn | undefined;
   isThreadRunning: (threadId: string) => boolean;
 }
 
@@ -85,7 +84,7 @@ export function useThreadController(props: Props) {
 
   const applyThreadRuntimeState = useCallback((thread: Thread) => {
     const runningTurn = activeTurn(thread);
-    if (runningTurn) props.markThreadRunning(thread.id, runningTurn.id);
+    if (runningTurn) props.markThreadRunning(thread.id, runningTurn.id, "unknown");
     else props.markThreadStatus(thread.id, thread.status);
   }, [props.markThreadRunning, props.markThreadStatus]);
 
@@ -123,127 +122,25 @@ export function useThreadController(props: Props) {
     return { client, threadId };
   }, [applyThreadRuntimeState, props.dispatch, props.ensureConnected, props.permissionMode, props.settings.modelId]);
 
-  const send = useCallback(async (
-    text: string,
-    mentions: FileMention[] = [],
-    skills: SkillMention[] = [],
-    collaborationMode: ModeKind = "default",
-  ) => {
-    const message = text.trim();
-    const activeThreadId = threadIdRef.current;
-    if (!message || props.submitting || threadOperationRef.current
-      || (activeThreadId !== null && props.isThreadRunning(activeThreadId))) return false;
-
-    threadOperationRef.current = true;
-    props.setSubmitting(true);
-    props.setError("");
-    try {
-      assertModelVisibleInput(message, "消息");
-      const client = await props.ensureConnected();
-      let threadId = threadIdRef.current;
-      if (!threadId) {
-        const permissions = getPermissionMode(props.permissionMode);
-        const response = await client.startThread({
-          model: props.settings.modelId,
-          cwd: props.workspacePath,
-          approvalPolicy: permissions.approvalPolicy,
-          approvalsReviewer: permissions.approvalsReviewer,
-          sandbox: permissions.sandbox,
-          ephemeral: false,
-        });
-        threadId = response.thread.id;
-        threadIdRef.current = threadId;
-        subscribedThreadIdsRef.current.add(threadId);
-        const optimisticThread = { ...response.thread, preview: response.thread.preview || message };
-        props.dispatch({ type: "loadThread", thread: optimisticThread });
-        showActiveWith(optimisticThread);
-      } else if (!subscribedThreadIdsRef.current.has(threadId)) {
-        await ensureActiveThread();
-      }
-
-      const input = buildUserInput(message, mentions, skills);
-      const permissions = getPermissionMode(props.permissionMode);
-      const collaboration = collaborationMode === "plan" ? {
-        mode: collaborationMode,
-        settings: {
-          model: props.settings.modelId,
-          reasoning_effort: props.settings.reasoningEffort,
-          developer_instructions: null,
-        },
-      } : undefined;
-      const response = await client.startTurn({
-        threadId,
-        input,
-        model: props.settings.modelId,
-        effort: props.settings.reasoningEffort,
-        approvalPolicy: permissions.approvalPolicy,
-        approvalsReviewer: permissions.approvalsReviewer,
-        ...(permissions.sandbox === "danger-full-access" ? { sandboxPolicy: { type: "dangerFullAccess" as const } } : {}),
-      }, collaboration);
-      props.markThreadRunning(threadId, response.turn.id);
-      props.dispatch({ type: "turnSubmitted", turn: response.turn, userText: message });
-      return true;
-    } catch (sendError) {
-      props.setError(errorMessage(sendError));
-      return false;
-    } finally {
-      threadOperationRef.current = false;
-      props.setSubmitting(false);
-    }
-  }, [
+  const { send, steer, interrupt } = useTurnExecution({
+    clientRef: props.clientRef,
+    threadIdRef,
+    threadOperationRef,
+    subscribedThreadIdsRef,
+    ensureConnected: props.ensureConnected,
     ensureActiveThread,
-    props.dispatch,
-    props.ensureConnected,
-    props.isThreadRunning,
-    props.markThreadRunning,
-    props.permissionMode,
-    props.setError,
-    props.setSubmitting,
-    props.settings.modelId,
-    props.settings.reasoningEffort,
-    props.submitting,
+    settings: props.settings,
+    permissionMode: props.permissionMode,
+    workspacePath: props.workspacePath,
+    submitting: props.submitting,
+    setSubmitting: props.setSubmitting,
+    setError: props.setError,
+    dispatch: props.dispatch,
+    getRunningTurn: props.getRunningTurn,
+    isThreadRunning: props.isThreadRunning,
+    markThreadRunning: props.markThreadRunning,
     showActiveWith,
-    props.workspacePath,
-  ]);
-
-  const steer = useCallback(async (
-    text: string,
-    mentions: FileMention[] = [],
-    skills: SkillMention[] = [],
-  ) => {
-    const message = text.trim();
-    const threadId = threadIdRef.current;
-    const expectedTurnId = threadId ? props.getRunningTurnId(threadId) : undefined;
-    if (!message || !threadId || !expectedTurnId || threadOperationRef.current) return false;
-    threadOperationRef.current = true;
-    props.setError("");
-    try {
-      assertModelVisibleInput(message, "补充指令");
-      const { client } = await ensureActiveThread();
-      await client.steerTurn({
-        threadId,
-        expectedTurnId,
-        input: buildUserInput(message, mentions, skills),
-      });
-      return true;
-    } catch (steerError) {
-      props.setError(errorMessage(steerError));
-      return false;
-    } finally {
-      threadOperationRef.current = false;
-    }
-  }, [ensureActiveThread, props.getRunningTurnId, props.setError]);
-
-  const interrupt = useCallback(async () => {
-    const threadId = threadIdRef.current;
-    const turnId = threadId ? props.getRunningTurnId(threadId) : undefined;
-    if (!threadId || !turnId || !props.clientRef.current) return;
-    try {
-      await props.clientRef.current.interruptTurn({ threadId, turnId });
-    } catch (interruptError) {
-      props.setError(errorMessage(interruptError));
-    }
-  }, [props.clientRef, props.getRunningTurnId, props.setError]);
+  });
 
   const openThread = useCallback(async (threadId: string) => {
     if (threadOperationRef.current || threadId === threadIdRef.current) return;
@@ -429,7 +326,7 @@ export function useThreadController(props: Props) {
   });
 
   const onTurnStarted = useCallback((notification: TurnStartedNotification) => {
-    props.markThreadRunning(notification.threadId, notification.turn.id);
+    props.markThreadRunning(notification.threadId, notification.turn.id, "unknown");
     if (notification.threadId === threadIdRef.current) props.setSubmitting(false);
   }, [props.markThreadRunning, props.setSubmitting]);
 

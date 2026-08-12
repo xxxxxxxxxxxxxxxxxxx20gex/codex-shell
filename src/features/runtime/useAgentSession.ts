@@ -14,7 +14,7 @@ import { agentSessionReducer, initialAgentSessionState } from "./sessionState";
 import type { FileMention, SkillMention } from "./sessionInput";
 import { subscribeToSessionEvents } from "./sessionSubscriptions";
 import { useAgentCommands } from "./useAgentCommands";
-import { useRunningTurns } from "./useRunningTurns";
+import { canSteerRunningTurn, runningTurnLabel, useRunningTurns } from "./useRunningTurns";
 import { useThreadController } from "./useThreadController";
 import { useWorkspaceFiles } from "./useWorkspaceFiles";
 
@@ -43,12 +43,12 @@ export function useAgentSession(
   const interactionStore: ServerInteractionStore = useStableStore(() => new InteractionStore());
   const sandboxReadinessCheckedRef = useRef(false);
   const {
-    runningThreadIds,
+    runningTurns,
     markThreadRunning,
     markThreadStopped,
     markThreadStatus,
     clearRunningTurns,
-    getRunningTurnId,
+    getRunningTurn,
     isThreadRunning,
   } = useRunningTurns();
 
@@ -94,7 +94,7 @@ export function useAgentSession(
     markThreadRunning,
     markThreadStopped,
     markThreadStatus,
-    getRunningTurnId,
+    getRunningTurn,
     isThreadRunning,
   });
   const {
@@ -257,6 +257,8 @@ export function useAgentSession(
     ensureActiveThread,
     currentThreadId,
     activeWorkspacePath,
+    markThreadRunning,
+    markThreadStopped,
   );
 
   const setupWindowsSandbox = useCallback(async (mode: WindowsSandboxSetupMode) => {
@@ -291,13 +293,23 @@ export function useAgentSession(
     }
   }, [clearRunningTurns, currentThreadId, interactionStore, openThread, refreshHistory]);
 
-  const running = submitting || Boolean(
-    sessionState.thread && runningThreadIds.has(sessionState.thread.id),
-  );
+  const currentRunningTurn = sessionState.thread
+    ? runningTurns.get(sessionState.thread.id)
+    : undefined;
+  const running = submitting || Boolean(currentRunningTurn);
+  const canSteer = canSteerRunningTurn(currentRunningTurn);
+  const canInterrupt = Boolean(currentRunningTurn?.turnId);
+  const activityLabel = submitting && !currentRunningTurn
+    ? "正在提交"
+    : runningTurnLabel(currentRunningTurn);
+  const runningThreadIds = new Set(runningTurns.keys());
 
   return {
     codexHome,
     running,
+    canSteer,
+    canInterrupt,
+    activityLabel,
     submitting,
     runningThreadIds,
     runningThreadCount: runningThreadIds.size,
@@ -327,13 +339,13 @@ export function useAgentSession(
 export type AgentSession = ReturnType<typeof useAgentSession>;
 
 export async function sendOrSteer(
-  session: Pick<AgentSession, "running" | "send" | "steer">,
+  session: Pick<AgentSession, "running" | "canSteer" | "send" | "steer">,
   text: string,
   mentions: FileMention[],
   skills: SkillMention[],
   collaborationMode: ModeKind,
 ) {
-  return session.running
-    ? session.steer(text, mentions, skills)
-    : session.send(text, mentions, skills, collaborationMode);
+  if (!session.running) return session.send(text, mentions, skills, collaborationMode);
+  if (session.canSteer) return session.steer(text, mentions, skills);
+  return false;
 }

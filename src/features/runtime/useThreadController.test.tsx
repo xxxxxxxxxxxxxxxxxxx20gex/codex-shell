@@ -78,8 +78,23 @@ function setup() {
     })),
   };
   const dispatch = vi.fn();
-  const markThreadRunning = vi.fn((threadId: string) => running.add(threadId));
-  const markThreadStopped = vi.fn((threadId: string) => running.delete(threadId));
+  const runningTurns = new Map<string, {
+    turnId: string | null;
+    kind: "regular" | "review" | "compact" | "unknown";
+    activeFlags: [];
+  }>();
+  const markThreadRunning = vi.fn((
+    threadId: string,
+    turnId: string | null,
+    kind: "regular" | "review" | "compact" | "unknown",
+  ) => {
+    running.add(threadId);
+    runningTurns.set(threadId, { turnId, kind, activeFlags: [] });
+  });
+  const markThreadStopped = vi.fn((threadId: string) => {
+    running.delete(threadId);
+    runningTurns.delete(threadId);
+  });
   const props = {
     clientRef: { current: client as unknown as AppServerClient },
     ensureConnected: vi.fn(async () => client as unknown as AppServerClient),
@@ -98,10 +113,10 @@ function setup() {
     markThreadRunning,
     markThreadStopped,
     markThreadStatus: vi.fn(),
-    getRunningTurnId: vi.fn(() => "turn-a"),
+    getRunningTurn: vi.fn((threadId: string) => runningTurns.get(threadId)),
     isThreadRunning: vi.fn((threadId: string) => running.has(threadId)),
   };
-  return { client, dispatch, props, running };
+  return { client, dispatch, props, running, runningTurns };
 }
 
 describe("useThreadController", () => {
@@ -125,6 +140,7 @@ describe("useThreadController", () => {
       approvalPolicy: "on-request",
       approvalsReviewer: "user",
     }), undefined);
+    expect(props.markThreadRunning).toHaveBeenCalledWith("thread-a", "turn-a", "regular");
     expect(client.resumeThread.mock.invocationCallOrder[0]).toBeLessThan(client.startTurn.mock.invocationCallOrder[0]);
   });
 
@@ -268,6 +284,7 @@ describe("useThreadController", () => {
       type: "turnStarted",
       turn: expect.objectContaining({ id: "review-turn" }),
     }));
+    expect(props.markThreadRunning).toHaveBeenCalledWith("thread-a", "review-turn", "review");
 
     props.markThreadStopped("thread-a");
     await act(async () => {
@@ -278,5 +295,28 @@ describe("useThreadController", () => {
       type: "loadThread",
       thread: expect.objectContaining({ id: "review-thread" }),
     }));
+    expect(props.markThreadRunning).toHaveBeenCalledWith("review-thread", "review-turn", "review");
+  });
+
+  it("restores an active Session as unknown instead of promising steering", async () => {
+    const { client, props } = setup();
+    client.readThread.mockResolvedValueOnce({
+      thread: thread("thread-a", {
+        status: { type: "active", activeFlags: [] },
+        turns: [turn("turn-running")],
+      }),
+    });
+    const { result } = renderHook(() => useThreadController(props));
+    await waitFor(() => expect(client.listThreads).toHaveBeenCalled());
+
+    await act(async () => {
+      await result.current.openThread("thread-a");
+    });
+
+    expect(props.markThreadRunning).toHaveBeenCalledWith(
+      "thread-a",
+      "turn-running",
+      "unknown",
+    );
   });
 });
