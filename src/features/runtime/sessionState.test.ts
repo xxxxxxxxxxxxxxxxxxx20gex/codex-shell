@@ -174,6 +174,42 @@ describe("agentSessionReducer", () => {
     expect(state.turns[0].items.map((item) => item.type)).toEqual(["userMessage", "agentMessage"]);
   });
 
+  it("drops streaming-only items when a full completed turn omits them", () => {
+    const command: ThreadItem = {
+      type: "commandExecution",
+      id: "command-stale",
+      pluginId: null,
+      scriptPath: null,
+      command: "pnpm test",
+      cwd: "C:\\work",
+      processId: "123",
+      source: "agent",
+      status: "inProgress",
+      commandActions: [],
+      aggregatedOutput: null,
+      exitCode: null,
+      durationMs: null,
+    };
+    const loaded = agentSessionReducer(initialAgentSessionState, {
+      type: "loadThread",
+      thread: thread([turn("turn-1", [command])]),
+    });
+    const completed = {
+      ...turn("turn-1", [
+        { type: "agentMessage", id: "agent-1", text: "答案", phase: "final_answer", memoryCitation: null },
+      ]),
+      status: "completed",
+      completedAt: 2,
+    } as Turn;
+
+    const state = agentSessionReducer(loaded, {
+      type: "turnCompleted",
+      notification: { threadId: "thread-1", turn: completed },
+    });
+
+    expect(state.turns[0]).toEqual(completed);
+  });
+
   it("accumulates command output and the latest turn diff", () => {
     const command: ThreadItem = {
       type: "commandExecution",

@@ -111,6 +111,8 @@ describe("conversation timing", () => {
     expect(markup).toContain("运行命令");
     expect(markup).toContain("pnpm test");
     expect(markup).toContain("16 tests passed");
+    expect(markup).toContain("执行过程");
+    expect(markup).toContain("已完成 1 项活动");
     expect(markup).toContain('class="activity-card activity-command-card"');
     expect(markup).not.toContain('class="activity-card activity-command-card" open=""');
   });
@@ -143,6 +145,41 @@ describe("conversation timing", () => {
     );
 
     expect(markup).toContain('class="activity-card activity-command-card" open=""');
+    expect(markup).toContain('class="turn-activity-group" open=""');
+    expect(markup).toContain("运行中");
+    expect(markup).not.toContain("<small>inProgress</small>");
+  });
+
+  it("groups commentary and reasoning outside the final answer", () => {
+    const commentary: ThreadItem = { type: "agentMessage", id: "commentary-1", text: "我先检查项目结构。", phase: "commentary", memoryCitation: null };
+    const reasoning: ThreadItem = { type: "reasoning", id: "reasoning-1", summary: ["定位核心模块"], content: [] };
+    const answer: ThreadItem = { type: "agentMessage", id: "answer-1", text: "检查完成。", phase: "final_answer", memoryCitation: null };
+    const markup = renderTurn({ ...completedTurn(), items: [commentary, reasoning, answer] });
+
+    expect(markup).toContain("执行过程");
+    expect(markup).toContain('class="turn-commentary"');
+    expect(markup).toContain("我先检查项目结构。");
+    expect(markup).toContain("分析过程");
+    expect(markup.indexOf("我先检查项目结构。")).toBeLessThan(markup.indexOf("分析过程"));
+    expect(markup).toContain('class="agent-response"');
+    expect(markup).toContain("检查完成。");
+    expect((markup.match(/class="agent-accent"/g) ?? []).length).toBe(1);
+  });
+
+  it("renders final answers as safe Markdown", () => {
+    const answer: ThreadItem = {
+      type: "agentMessage",
+      id: "answer-markdown",
+      text: "## 结果\n\n```powershell\ncodex --version\n```\n\n<script>alert(1)</script>",
+      phase: "final_answer",
+      memoryCitation: null,
+    };
+    const markup = renderTurn({ ...completedTurn(), items: [answer] });
+
+    expect(markup).toContain("<h2>结果</h2>");
+    expect(markup).toContain("<pre><code class=\"language-powershell\">codex --version");
+    expect(markup).not.toContain("<script>");
+    expect(markup).not.toContain("```powershell");
   });
 
   it("uses a minimal assistant accent and summarizes file changes at the end", () => {
@@ -208,7 +245,8 @@ describe("conversation timing", () => {
     );
 
     expect(markup).toContain("正在读取接口文档");
-    expect(markup).toContain("正在处理任务…");
+    expect(markup).toContain("正在处理");
+    expect(markup).not.toContain("正在处理任务…");
     expect(markup).not.toContain("Codex 正在处理任务…");
     expect(markup).toContain("role=\"status\"");
   });

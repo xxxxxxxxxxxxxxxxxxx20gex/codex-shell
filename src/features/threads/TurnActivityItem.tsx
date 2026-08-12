@@ -38,7 +38,7 @@ function activityIcon(item: ThreadItem) {
   }
 }
 
-function activityTitle(item: ThreadItem) {
+export function activityTitle(item: ThreadItem) {
   switch (item.type) {
     case "reasoning": return "分析过程";
     case "plan": return "执行计划";
@@ -61,14 +61,24 @@ function activityTitle(item: ThreadItem) {
   }
 }
 
+function localizedStatus(status: string) {
+  switch (status) {
+    case "inProgress": return "运行中";
+    case "completed": return "已完成";
+    case "failed": return "失败";
+    case "declined": return "已拒绝";
+    default: return status;
+  }
+}
+
 function statusText(item: ThreadItem) {
   switch (item.type) {
-    case "commandExecution": return `${item.status}${durationLabel(item.durationMs) ? ` · ${durationLabel(item.durationMs)}` : ""}`;
-    case "fileChange": return item.status;
-    case "mcpToolCall": return `${item.status}${durationLabel(item.durationMs) ? ` · ${durationLabel(item.durationMs)}` : ""}`;
-    case "dynamicToolCall": return item.status;
-    case "collabAgentToolCall": return item.status;
-    case "imageGeneration": return item.status;
+    case "commandExecution": return `${localizedStatus(item.status)}${durationLabel(item.durationMs) ? ` · ${durationLabel(item.durationMs)}` : ""}`;
+    case "fileChange": return localizedStatus(item.status);
+    case "mcpToolCall": return `${localizedStatus(item.status)}${durationLabel(item.durationMs) ? ` · ${durationLabel(item.durationMs)}` : ""}`;
+    case "dynamicToolCall": return localizedStatus(item.status);
+    case "collabAgentToolCall": return localizedStatus(item.status);
+    case "imageGeneration": return localizedStatus(item.status);
     default: return "";
   }
 }
@@ -144,7 +154,7 @@ export function TurnActivityItem({ item, active = false }: Props) {
     return <div className="activity-note"><span>{activityIcon(item)}</span>{activityTitle(item)}</div>;
   }
   return (
-    <details className={`activity-card${item.type === "commandExecution" ? " activity-command-card" : ""}`} open={active || item.type === "plan"}>
+    <details className={`activity-card${item.type === "commandExecution" ? " activity-command-card" : ""}`} open={active}>
       <summary>
         <span className="activity-icon">{activityIcon(item)}</span>
         <strong>{activityTitle(item)}</strong>

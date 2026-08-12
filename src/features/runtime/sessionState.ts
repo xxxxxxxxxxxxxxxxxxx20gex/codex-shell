@@ -130,11 +130,17 @@ function mergeSubmittedTurn(turns: Turn[], turn: Turn) {
 function mergeCompletedTurn(turns: Turn[], turn: Turn) {
   const existing = turns.find((item) => item.id === turn.id);
   if (!existing) return upsertTurn(turns, turn);
-  const incomingById = new Map(turn.items.map((item) => [item.id, item]));
   const includesPersistedUser = turn.items.some((item) => item.type === "userMessage");
   const existingItems = existing.items.filter((item) => {
     return !(includesPersistedUser && item.id.startsWith(LOCAL_USER_PREFIX));
   });
+  if (turn.itemsView === "full") {
+    const optimisticUser = includesPersistedUser
+      ? []
+      : existingItems.filter((item) => item.type === "userMessage" && item.id.startsWith(LOCAL_USER_PREFIX));
+    return upsertTurn(turns, { ...turn, items: [...optimisticUser, ...turn.items] });
+  }
+  const incomingById = new Map(turn.items.map((item) => [item.id, item]));
   const mergedItems = existingItems.map((item) => incomingById.get(item.id) ?? item);
   const existingIds = new Set(existingItems.map((item) => item.id));
   mergedItems.push(...turn.items.filter((item) => !existingIds.has(item.id)));

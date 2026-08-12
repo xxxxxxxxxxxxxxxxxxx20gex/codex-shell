@@ -5,11 +5,12 @@ import type { Turn } from "../../generated/app-server/v2/Turn";
 import type { TurnPlanUpdatedNotification } from "../../generated/app-server/v2/TurnPlanUpdatedNotification";
 import { userMessageText } from "../runtime/sessionState";
 import { agentMessageTiming, userMessageTiming } from "./conversationTiming";
-import { TurnActivityItem } from "./TurnActivityItem";
+import { TurnActivityGroup } from "./TurnActivityGroup";
 import { TurnFileChanges } from "./TurnFileChanges";
 import { TurnPlanView } from "./TurnPlanView";
 import { TurnProgressIndicator } from "./TurnProgressIndicator";
 import { writeClipboardText } from "./clipboard";
+import { MarkdownContent } from "./MarkdownContent";
 
 interface Props {
   turn: Turn;
@@ -38,16 +39,19 @@ export function ConversationTurn({
   mcpProgressByItemId,
 }: Props) {
   const items = turn.items;
-  const hasAgentItem = items.some((item) => item.type === "agentMessage");
   const hasActiveProcess = items.some((item) => activeItemTurnIds[item.id] === turn.id
     && item.type !== "userMessage" && item.type !== "agentMessage");
   const lastUserMessageId = lastItemId(items, "userMessage");
-  const lastAgentMessageId = lastItemId(items, "agentMessage");
+  const answerItems = items.filter((item): item is Extract<ThreadItem, { type: "agentMessage" }> => item.type === "agentMessage" && item.phase !== "commentary");
+  const activityItems = items.filter((item) => item.type !== "userMessage"
+    && item.type !== "fileChange"
+    && !(item.type === "agentMessage" && item.phase !== "commentary"));
+  const lastAgentMessageId = answerItems[answerItems.length - 1]?.id;
   const sentTiming = userMessageTiming(turn);
   const answerTiming = agentMessageTiming(turn, active);
   const [copyFeedback, setCopyFeedback] = useState(false);
-  const agentText = items.filter((item) => item.type === "agentMessage").map((item) => item.text).join("\n\n");
-  const firstAgentMessageId = items.find((item) => item.type === "agentMessage")?.id;
+  const agentText = answerItems.map((item) => item.text).join("\n\n");
+  const firstAgentMessageId = answerItems[0]?.id;
   const fileChangeItems = items.filter((item): item is Extract<ThreadItem, { type: "fileChange" }> => item.type === "fileChange");
 
   useEffect(() => {
@@ -67,21 +71,29 @@ export function ConversationTurn({
 
   return (
     <section className="conversation-turn" data-status={turn.status}>
-      {plan && <TurnPlanView plan={plan} />}
-      {items.map((item) => item.type === "userMessage" ? (
+      {items.filter((item) => item.type === "userMessage").map((item) => item.type === "userMessage" ? (
         <div className="user-message-group" key={item.id}>
           <div className="user-message">{userMessageText(item)}</div>
           {item.id === lastUserMessageId && sentTiming && (
             <div className="message-timing user-message-timing">{sentTiming}</div>
           )}
         </div>
-      ) : item.type === "agentMessage" ? (
+      ) : null)}
+      {plan && <TurnPlanView plan={plan} />}
+      <TurnActivityGroup
+        items={activityItems}
+        active={active}
+        turnId={turn.id}
+        activeItemTurnIds={activeItemTurnIds}
+        mcpProgressByItemId={mcpProgressByItemId}
+      />
+      {answerItems.map((item) => (
         <div className={`agent-block${item.id === firstAgentMessageId ? "" : " agent-block-continuation"}`} key={item.id}>
           {item.id === firstAgentMessageId && <div className="agent-accent" aria-hidden="true" />}
           <div className="agent-content">
-            <p className={item.text ? "agent-response" : "agent-response pending"}>
+            <MarkdownContent className={item.text ? "agent-response" : "agent-response pending"}>
               {item.text || "正在等待模型响应…"}
-            </p>
+            </MarkdownContent>
             {item.id === lastAgentMessageId && answerTiming && (
               <div className="message-timing agent-message-timing">{answerTiming}</div>
             )}
@@ -97,21 +109,15 @@ export function ConversationTurn({
             )}
           </div>
         </div>
-      ) : item.type !== "fileChange" ? (
-        <TurnActivityItem
-          item={item}
-          key={item.id}
-          active={activeItemTurnIds[item.id] === turn.id}
-        />
-      ) : null)}
-      {active && (
+      ))}
+      {active && activityItems.length === 0 && (
         <TurnProgressIndicator
           turn={turn}
           activeItemTurnIds={activeItemTurnIds}
           mcpProgressByItemId={mcpProgressByItemId}
         />
       )}
-      {active && !hasAgentItem && (
+      {active && answerItems.length === 0 && activityItems.length === 0 && (
         <div className="agent-block">
           <div className="agent-accent" aria-hidden="true" />
           <div className="agent-content">
