@@ -10,7 +10,7 @@ Codex Shell 是面向个人开发者的 Windows 桌面智能体工作台。产�
 - Tauri/Rust 负责进程生命周期、本地配置、Windows Credential Manager 和系统能力。
 - `codex app-server` 是唯一智能体执行核心；stdout 只承载协议消息，stderr 只承载日志。
 - API Key 不得写入源码、日志、状态文档或普通配置文件，也不得通过 Tauri 命令回读到前端。
-- 模型 ID 与能力模板必须解耦。只有模板明确声明支持的参数才可发送给模型。
+- 模型 ID 与模型参数必须解耦。优先使用 app-server 原生模型元数据决定可选参数；第三方模型的专属参数应限制在高级 Provider 适配层，不得硬编码到通用对话流程。
 - 默认只使用稳定 app-server v2 API；实验字段必须由明确的产品需求驱动，限制在最小协议适配层内，并同时提供能力声明、序列化测试和真实 app-server 验证证据。
 
 ## 代码改动规范

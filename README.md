@@ -2,7 +2,7 @@
 
 Codex Shell 是一个以原版 `codex app-server` 为执行核心的 Windows 个人智能体桌面工作台。项目使用 Tauri 2、React、TypeScript 与 Rust，不修改 Codex Core；用户自行填写 OpenAI 兼容的 Base URL、API Key 和模型 ID，API Key 仅保存在 Windows Credential Manager。
 
-当前处于 Milestone 2：已经接通真实 app-server、多轮 Thread/Turn/Item 时间线、执行计划与命令/工具活动、实时 Diff、用户工作区与 `@文件`、完整本地线程管理、审批队列、模型能力模板，以及推理强度和回答冗余度设置。
+当前处于 Milestone 2：已经接通真实 app-server、多轮 Thread/Turn/Item 时间线、执行计划与命令/工具活动、实时 Diff、用户工作区与 `@文件`、完整本地线程管理、审批队列，以及基于原生模型目录的模型、推理强度和高级 Provider 设置。
 
 ## 数据隔离
 

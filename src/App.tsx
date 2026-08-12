@@ -20,6 +20,7 @@ import {
 } from "./features/commands/slashCommands";
 import { DiffInspector } from "./features/diff/DiffInspector";
 import { ModelSettingsPanel } from "./features/models/ModelSettingsPanel";
+import { ModelQuickPicker } from "./features/models/ModelQuickPicker";
 import type { ModelSettings } from "./features/models/types";
 import { RuntimeLogPanel } from "./features/runtime/RuntimeLogPanel";
 import { RuntimeNoticeBanner } from "./features/runtime/RuntimeNoticeBanner";
@@ -52,14 +53,15 @@ import {
 const initialSettings: ModelSettings = {
   baseUrl: "https://api.openai.com/v1",
   modelId: "gpt-5.6-sol",
-  capabilityTemplate: "gpt-5.6-sol",
   reasoningEffort: "low",
   verbosity: "low",
 };
 
 function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [modelPickerOpen, setModelPickerOpen] = useState(false);
   const [settings, setSettings] = useState(initialSettings);
+  const [modelDisplayName, setModelDisplayName] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [permissionMode, setPermissionMode] = useState<PermissionMode>(DEFAULT_PERMISSION_MODE);
   const [workspacePath, setWorkspacePath] = useState<string | null>(loadWorkspacePath);
@@ -109,6 +111,13 @@ function App() {
   const mentionQuery = activeFileMentionQuery(draft);
   const typedSlashQuery = activeSlashCommandQuery(draft);
   const slashQuery = slashMenuForced ? "" : slashMenuDismissed ? null : typedSlashQuery;
+
+  function changeModelSettings(next: ModelSettings) {
+    setSettings(next);
+    if ("__TAURI_INTERNALS__" in window) {
+      void invoke("save_model_settings", { settings: next }).catch((error) => setUiError(errorMessage(error)));
+    }
+  }
   const slashCommands = slashQuery === null ? [] : matchingSlashCommands(slashQuery);
   const slashMenuVisible = commandPanel === null && slashQuery !== null;
   const currentDiff = useMemo(() => {
@@ -431,7 +440,10 @@ function App() {
                 <div className="composer-tools">
                   <button className={`command-button ${slashMenuVisible || commandPanel ? "active" : ""}`} onClick={() => { setCommandPanel(null); setSlashMenuDismissed(false); setSlashMenuForced((current) => !current); setSlashSelectedIndex(0); }} title="Skills、MCP、计划、压缩与目标">/</button>
                   {collaborationMode === "plan" && <button className="plan-mode-button" onClick={() => { setCollaborationMode("default"); setCommandNotice("已退出计划模式，下一条消息将按默认模式执行。"); }} title="退出计划模式"><span>☷</span>计划模式<i>×</i></button>}
-                  <button className="model-button" disabled={session.submitting || session.runningThreadCount > 0} onClick={() => setSettingsOpen(true)} title={session.submitting || session.runningThreadCount > 0 ? "任务运行期间不能重启模型连接" : "配置模型"}>{settings.modelId}⌄</button>
+                  <div className="model-picker-anchor">
+                    <button className="model-button" onClick={() => setModelPickerOpen((open) => !open)} title="选择模型与推理强度">{modelDisplayName ?? settings.modelId}⌄</button>
+                    {modelPickerOpen && <ModelQuickPicker settings={settings} loadModels={session.listModels} onChange={changeModelSettings} onDisplayName={setModelDisplayName} onAdvanced={() => { setModelPickerOpen(false); setSettingsOpen(true); }} onClose={() => setModelPickerOpen(false)} />}
+                  </div>
                   <PermissionModeSelector value={permissionMode} disabled={session.running} onChange={changePermissionMode} />
                 </div>
                 <div className="composer-actions">
@@ -486,7 +498,7 @@ function App() {
         </aside>
       </section>
 
-      {settingsOpen && <ModelSettingsPanel settings={settings} loadModels={session.listModels} loadProviderCapabilities={session.readModelProviderCapabilities} onClose={() => setSettingsOpen(false)} onSave={(next, requiresRestart = false) => { setSettings(next); setSettingsOpen(false); if (requiresRestart) void session.restart(); }} />}
+      {settingsOpen && <ModelSettingsPanel settings={settings} loadProviderCapabilities={session.readModelProviderCapabilities} onClose={() => setSettingsOpen(false)} onSave={(next, requiresRestart = false) => { setSettings(next); setModelDisplayName(null); setSettingsOpen(false); if (requiresRestart) void session.restart(); }} />}
       <ServerInteractionDialog store={session.interactionStore} />
       {workspaceExplorerOpen && currentWorkspacePath && <WorkspaceExplorer rootPath={currentWorkspacePath} initialFilePath={workspaceExplorerInitialPath} onClose={() => setWorkspaceExplorerOpen(false)} readDirectory={session.readWorkspaceDirectory} readFile={session.readWorkspaceFile} watchPath={session.watchWorkspacePath} />}
     </main>

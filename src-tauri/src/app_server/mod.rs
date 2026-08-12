@@ -57,18 +57,7 @@ pub fn app_server_start(app: AppHandle, state: State<'_, AppServerState>) -> Res
     let default_workspace = resolve_default_workspace(&app)?.path;
     let model = serde_json::to_string(&settings.model_id)
         .map_err(|error| format!("模型 ID 编码失败：{error}"))?;
-    let mut arguments = app_server_arguments(&settings, &model)?;
-    if settings.capability_template != "openai-compatible-basic" {
-        if let Some(reasoning_effort) = settings.reasoning_effort {
-            arguments.extend([
-                "-c".to_string(),
-                format!("model_reasoning_effort={reasoning_effort}"),
-            ]);
-        }
-        if let Some(verbosity) = settings.verbosity {
-            arguments.extend(["-c".to_string(), format!("model_verbosity={verbosity}")]);
-        }
-    }
+    let arguments = app_server_arguments(&settings, &model)?;
 
     let mut command = Command::new(&executable);
     command
@@ -125,7 +114,7 @@ fn app_server_arguments(
     const PROVIDER_ID: &str = "codex_shell_gateway";
     let base_url = serde_json::to_string(&settings.base_url)
         .map_err(|error| format!("Base URL 编码失败：{error}"))?;
-    Ok(vec![
+    let mut arguments = vec![
         "app-server".to_string(),
         "--stdio".to_string(),
         "-c".to_string(),
@@ -142,7 +131,17 @@ fn app_server_arguments(
         format!("model_providers.{PROVIDER_ID}.env_key=\"OPENAI_API_KEY\""),
         "-c".to_string(),
         format!("model_providers.{PROVIDER_ID}.requires_openai_auth=false"),
-    ])
+    ];
+    if let Some(reasoning_effort) = &settings.reasoning_effort {
+        arguments.extend([
+            "-c".to_string(),
+            format!("model_reasoning_effort={reasoning_effort}"),
+        ]);
+    }
+    if let Some(verbosity) = &settings.verbosity {
+        arguments.extend(["-c".to_string(), format!("model_verbosity={verbosity}")]);
+    }
+    Ok(arguments)
 }
 
 #[tauri::command]

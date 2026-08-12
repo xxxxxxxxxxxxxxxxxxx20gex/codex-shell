@@ -10,17 +10,22 @@ const CONFIG_FILE_NAME: &str = "settings.json";
 pub struct ModelSettings {
     pub base_url: String,
     pub model_id: String,
-    pub capability_template: String,
+    #[serde(default, rename = "capabilityTemplate", skip_serializing)]
+    pub(crate) legacy_capability_template: Option<String>,
     pub reasoning_effort: Option<String>,
     pub verbosity: Option<String>,
 }
+
+#[cfg(test)]
+#[path = "config_tests.rs"]
+mod tests;
 
 impl Default for ModelSettings {
     fn default() -> Self {
         Self {
             base_url: "https://api.openai.com/v1".to_string(),
             model_id: "gpt-5.6-sol".to_string(),
-            capability_template: "gpt-5.6-sol".to_string(),
+            legacy_capability_template: None,
             reasoning_effort: Some("low".to_string()),
             verbosity: Some("low".to_string()),
         }
@@ -41,7 +46,17 @@ pub fn read_settings(app: &AppHandle) -> Result<ModelSettings, String> {
     }
     let contents = fs::read_to_string(&path)
         .map_err(|error| format!("读取模型配置失败（{}）：{error}", path.display()))?;
-    serde_json::from_str(&contents).map_err(|error| format!("模型配置格式无效：{error}"))
+    let settings: ModelSettings =
+        serde_json::from_str(&contents).map_err(|error| format!("模型配置格式无效：{error}"))?;
+    Ok(normalize_legacy_settings(settings))
+}
+
+fn normalize_legacy_settings(mut settings: ModelSettings) -> ModelSettings {
+    if settings.legacy_capability_template.as_deref() == Some("openai-compatible-basic") {
+        settings.reasoning_effort = None;
+        settings.verbosity = None;
+    }
+    settings
 }
 
 #[tauri::command]

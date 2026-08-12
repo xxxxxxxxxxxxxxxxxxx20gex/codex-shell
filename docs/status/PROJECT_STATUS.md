@@ -59,6 +59,7 @@
 - GitHub 交付已切换为 GitHub CLI 非交互凭据助手，并为本仓库固定本机 `7897` HTTP(S) 代理；完成并验证用户要求的改动后默认提交、推送，不再触发 GCM 图形确认。
 - 已修复模型启动配置切换导致当前 Session 丢失：必要的 app-server 重启会保存当前 Thread ID，重连后通过原生 `thread/read` 恢复，下一轮继续在同一 Session 使用新模型。
 - 模型原生目录已收敛为单一名称展示，不再重复显示相同名称和 ID；助手回答移除模型侧头像与名称，改为左侧短高亮竖线，减少重复信息和横向占用。
+- 模型入口已改为 Codex 风格两层结构：输入框旁即时选择 app-server 原生模型与推理强度，高级设置管理网关、Key、自定义模型和扩展参数；能力模板及静态模板目录已移除，所有参数变化均保持当前 Session。
 
 ## 当前数据流
 
@@ -81,8 +82,8 @@
 ## 验证证据
 
 - `pnpm typecheck`：通过。
-- `pnpm test`：36 个测试文件、126 项测试全部通过，包含连续回答流、命令折叠、文件变更汇总、模型切换与连接重启后同 Session 恢复、每 Turn 完全访问权限覆盖、活动/归档分叉祖先隔离、时间线滚动/导航、Diff 状态/跳转、工作区 watch 生命周期、统一反向交互、Thread 读写/退订时序、Review、MCP schema 与第二阶段 RPC 覆盖。
-- Rust 单元测试：9 项全部通过，覆盖动态 Runtime、每日默认工作区、独立 provider 参数、旧 CODEX_HOME 迁移、双目录冲突和官方目录防重叠校验。
+- `pnpm test`：37 个测试文件、126 项测试全部通过，包含轻量模型/推理强度选择、连续回答流、命令折叠、文件变更汇总、模型切换与连接重启后同 Session 恢复、每 Turn 完全访问权限覆盖、活动/归档分叉祖先隔离、时间线滚动/导航、Diff 状态/跳转、工作区 watch 生命周期、统一反向交互、Thread 读写/退订时序、Review、MCP schema 与第二阶段 RPC 覆盖。
+- Rust 单元测试：11 项全部通过，覆盖显式模型参数、旧模板配置兼容归一化、动态 Runtime、每日默认工作区、独立 provider 参数、旧 CODEX_HOME 迁移、双目录冲突和官方目录防重叠校验。
 - `pnpm rust:check`：从 clean target 完整重编译后通过。
 - `pnpm build`：包含虚拟时间线、目录 watch、目录选择插件和 P0 工作台 UI 的生产构建通过。
 - Tauri debug build：构建通过，产物为 `src-tauri/target/debug/codex-shell.exe`；同目录三个 Runtime 文件名正确且 SHA-256 与 manifest 一致，此前从项目目录之外调用脚本的动态路径证据继续有效。

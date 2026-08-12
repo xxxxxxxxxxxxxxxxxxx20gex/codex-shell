@@ -86,7 +86,6 @@ function setup() {
     settings: {
       baseUrl: "https://example.test/v1",
       modelId: "gpt-test",
-      capabilityTemplate: "openai-compatible-basic",
       reasoningEffort: "none" as const,
       verbosity: "low" as const,
     },
