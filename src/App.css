@@ -222,9 +222,7 @@ code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 .thread-row.running .thread-main small::before { display: inline-block; width: 5px; height: 5px; margin-right: 4px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 7px rgba(194,232,92,.42); content: ""; }
 .thread-list .thread-main { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 5px; padding-right: 10px; }
 .thread-main span i { margin-right: 5px; color: #9ebc50; font-size: 7px; font-style: normal; }
-.thread-row:hover, .thread-row:focus-within { padding-bottom: 25px; }
-.thread-row:hover .thread-main, .thread-row:focus-within .thread-main { padding-bottom: 9px; }
-.thread-actions { position: absolute; z-index: 2; bottom: 4px; left: 7px; display: none; gap: 3px; }
+.thread-actions { display: none; grid-column: 1; align-items: center; gap: 3px; min-height: 22px; padding: 0 0 4px 7px; }
 .thread-row:hover .thread-actions, .thread-row:focus-within .thread-actions { display: flex; }
 .thread-list .thread-actions button { position: relative; display: flex; width: 21px; height: 18px; flex: none; align-items: center; justify-content: center; padding: 0; color: #a2a19a; line-height: 0; }
 .thread-list .thread-actions button:hover { color: var(--accent); background: #2a2a23; }
