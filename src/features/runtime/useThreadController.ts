@@ -162,6 +162,7 @@ export function useThreadController(props: Props) {
       }
 
       const input = buildUserInput(message, mentions, skills);
+      const permissions = getPermissionMode(props.permissionMode);
       const collaboration = collaborationMode === "plan" ? {
         mode: collaborationMode,
         settings: {
@@ -175,6 +176,9 @@ export function useThreadController(props: Props) {
         input,
         model: props.settings.modelId,
         effort: props.settings.reasoningEffort,
+        approvalPolicy: permissions.approvalPolicy,
+        approvalsReviewer: permissions.approvalsReviewer,
+        ...(permissions.sandbox === "danger-full-access" ? { sandboxPolicy: { type: "dangerFullAccess" as const } } : {}),
       }, collaboration);
       props.markThreadRunning(threadId, response.turn.id);
       props.dispatch({ type: "turnSubmitted", turn: response.turn, userText: message });

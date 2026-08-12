@@ -17,7 +17,7 @@ function thread(id: string, path: string | null) {
 }
 
 describe("ThreadHistoryList", () => {
-  it("renders display-only numbers and accessible action descriptions", () => {
+  it("renders stable session names and accessible action descriptions", () => {
     const markup = renderToStaticMarkup(
       <ThreadHistoryList
         threads={[thread("real-thread-a", "C:\\sessions\\a.jsonl"), thread("real-thread-b", null)]}
@@ -41,8 +41,8 @@ describe("ThreadHistoryList", () => {
       />,
     );
 
-    expect(markup).toContain("#01");
-    expect(markup).toContain("#02");
+    expect(markup).not.toContain("#01");
+    expect(markup).not.toContain("#02");
     expect(markup).toContain('aria-label="复制 Session 路径"');
     expect(markup).toContain('aria-label="复制 Session ID"');
     expect(markup).toContain('class="thread-action-button"');

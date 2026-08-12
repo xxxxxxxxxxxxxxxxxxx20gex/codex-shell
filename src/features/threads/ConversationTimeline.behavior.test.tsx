@@ -51,7 +51,7 @@ describe("ConversationTimeline navigation", () => {
   });
 
   it("navigates directly between user turns", () => {
-    render(<ConversationTimeline turns={[turn("1", "第一问"), turn("2", "第二问")]} running={false} modelId="gpt-test" />);
+    render(<ConversationTimeline turns={[turn("1", "第一问"), turn("2", "第二问")]} running={false} />);
 
     fireEvent.click(screen.getByRole("button", { name: "跳到用户消息 1：第一问" }));
 
@@ -60,12 +60,12 @@ describe("ConversationTimeline navigation", () => {
 
   it("does not pull the reader away from history and surfaces new activity", () => {
     const initialTurns = [turn("1", "第一问"), turn("2", "第二问")];
-    const view = render(<ConversationTimeline turns={initialTurns} running={false} modelId="gpt-test" />);
+    const view = render(<ConversationTimeline turns={initialTurns} running={false} />);
 
     act(() => virtuoso.atBottomStateChange?.(false));
     expect(screen.getByRole("button", { name: "返回最新" })).toBeTruthy();
 
-    view.rerender(<ConversationTimeline turns={[...initialTurns, turn("3", "第三问")]} running modelId="gpt-test" />);
+    view.rerender(<ConversationTimeline turns={[...initialTurns, turn("3", "第三问")]} running />);
     fireEvent.click(screen.getByRole("button", { name: "有新内容 · 返回最新" }));
 
     expect(virtuoso.scrollToIndex).toHaveBeenLastCalledWith({ index: 2, align: "start", behavior: "smooth" });

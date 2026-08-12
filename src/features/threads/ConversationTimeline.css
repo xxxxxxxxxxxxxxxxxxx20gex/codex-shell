@@ -9,7 +9,7 @@
 .user-message-navigation::-webkit-scrollbar { display: none; }
 .user-message-navigation button { width: 5px; min-height: 5px; padding: 0; border: 0; border-radius: 999px; background: #4b4a43; cursor: pointer; transition: background .15s ease, transform .15s ease; }
 .user-message-navigation button:hover, .user-message-navigation button:focus-visible { background: #9e9b8d; transform: scale(1.45); outline: none; }
-.timeline-latest-button { position: absolute; z-index: 3; right: 22px; bottom: 16px; padding: 7px 11px; border: 1px solid #47463f; border-radius: 999px; color: #d1cfc5; background: rgba(37,37,32,.96); box-shadow: 0 8px 24px rgba(0,0,0,.3); font-size: 9px; cursor: pointer; backdrop-filter: blur(8px); }
+.timeline-latest-button { position: absolute; z-index: 3; right: 22px; bottom: 16px; padding: 7px 11px; border: 1px solid #47463f; border-radius: 999px; color: var(--text-primary); background: rgba(37,37,32,.96); box-shadow: 0 8px 24px rgba(0,0,0,.3); font-size: 9px; cursor: pointer; backdrop-filter: blur(8px); }
 .timeline-latest-button:hover { border-color: #66645a; background: #303029; }
 
 @media (max-width: 720px) {

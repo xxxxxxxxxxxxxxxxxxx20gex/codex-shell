@@ -36,7 +36,6 @@ function renderTurn(turn: Turn, active = false) {
     <ConversationTurn
       turn={turn}
       active={active}
-      modelId="gpt-test"
       canFork={!active}
       onFork={vi.fn()}
       activeItemTurnIds={{}}
@@ -72,7 +71,6 @@ describe("conversation timing", () => {
       <ConversationTurn
         turn={completedTurn()}
         active={false}
-        modelId="gpt-test"
         canFork
         onFork={vi.fn()}
         activeItemTurnIds={{}}
@@ -113,6 +111,60 @@ describe("conversation timing", () => {
     expect(markup).toContain("运行命令");
     expect(markup).toContain("pnpm test");
     expect(markup).toContain("16 tests passed");
+    expect(markup).toContain('class="activity-card activity-command-card"');
+    expect(markup).not.toContain('class="activity-card activity-command-card" open=""');
+  });
+
+  it("expands an active command while it is running", () => {
+    const command: ThreadItem = {
+      type: "commandExecution",
+      id: "command-active",
+      pluginId: null,
+      scriptPath: null,
+      command: "pnpm build",
+      cwd: "C:\\work",
+      processId: "123",
+      source: "agent",
+      status: "inProgress",
+      commandActions: [],
+      aggregatedOutput: null,
+      exitCode: null,
+      durationMs: null,
+    };
+    const turn = { ...completedTurn(), items: [command], status: "inProgress" } as Turn;
+    const markup = renderToStaticMarkup(
+      <ConversationTurn
+        turn={turn}
+        active
+        canFork={false}
+        activeItemTurnIds={{ "command-active": turn.id }}
+        mcpProgressByItemId={{}}
+      />,
+    );
+
+    expect(markup).toContain('class="activity-card activity-command-card" open=""');
+  });
+
+  it("keeps one assistant header and summarizes file changes at the end", () => {
+    const firstAgent: ThreadItem = { type: "agentMessage", id: "agent-1", text: "第一段", phase: null, memoryCitation: null };
+    const secondAgent: ThreadItem = { type: "agentMessage", id: "agent-2", text: "第二段", phase: null, memoryCitation: null };
+    const fileChange: ThreadItem = {
+      type: "fileChange",
+      id: "file-1",
+      status: "completed",
+      changes: [{
+        path: "src/App.tsx",
+        kind: { type: "update", move_path: null },
+        diff: "@@ -1 +1 @@\n-old\n+new",
+      }],
+    };
+    const markup = renderTurn({ ...completedTurn(), items: [firstAgent, fileChange, secondAgent] });
+
+    expect((markup.match(/class="agent-meta"/g) ?? []).length).toBe(1);
+    expect(markup).toContain("已编辑 1 个文件");
+    expect(markup).toContain("修改");
+    expect(markup.indexOf("已编辑 1 个文件")).toBeGreaterThan(markup.indexOf("第二段"));
+    expect(markup).not.toContain("修改文件 · 1");
   });
 
   it("surfaces the native active item and MCP progress in the conversation", () => {
@@ -146,7 +198,6 @@ describe("conversation timing", () => {
       <ConversationTurn
         turn={turn}
         active
-        modelId="gpt-test"
         activeItemTurnIds={{ "mcp-1": "turn-1" }}
         mcpProgressByItemId={{ "mcp-1": progress }}
         canFork={false}

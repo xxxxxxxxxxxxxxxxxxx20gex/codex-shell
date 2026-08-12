@@ -15,6 +15,23 @@ function mergeThread(threads: Thread[], thread: Thread) {
   return [thread, ...threads.filter((item) => item.id !== thread.id)];
 }
 
+function retainBranchAncestors(listedThreads: Thread[], currentThreads: Thread[]) {
+  const currentById = new Map(currentThreads.map((thread) => [thread.id, thread]));
+  const retained = new Map(listedThreads.map((thread) => [thread.id, thread]));
+  for (const thread of listedThreads) {
+    let parentId = thread.forkedFromId;
+    const visited = new Set<string>();
+    while (parentId && !visited.has(parentId)) {
+      visited.add(parentId);
+      const parent = currentById.get(parentId);
+      if (!parent) break;
+      retained.set(parent.id, parent);
+      parentId = parent.forkedFromId;
+    }
+  }
+  return [...retained.values()];
+}
+
 export function useThreadHistory({ ensureConnected, dispatch, currentThreadId }: Props) {
   const initialLoadStartedRef = useRef(false);
   const requestSequenceRef = useRef(0);
@@ -50,8 +67,11 @@ export function useThreadHistory({ ensureConnected, dispatch, currentThreadId }:
           return [...byId.values()];
         }
         if (archivedView) return listedThreads;
+        const withAncestors = retainBranchAncestors(listedThreads, current);
         const currentActive = current.find((thread) => thread.id === currentThreadId());
-        return currentActive && !active ? [currentActive, ...listedThreads] : listedThreads;
+        return currentActive && !active
+          ? [currentActive, ...withAncestors.filter((thread) => thread.id !== currentActive.id)]
+          : withAncestors;
       });
       nextCursorRef.current = response.nextCursor;
       setHasMore(response.nextCursor !== null);

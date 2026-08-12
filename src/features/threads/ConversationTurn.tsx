@@ -6,6 +6,7 @@ import type { TurnPlanUpdatedNotification } from "../../generated/app-server/v2/
 import { userMessageText } from "../runtime/sessionState";
 import { agentMessageTiming, userMessageTiming } from "./conversationTiming";
 import { TurnActivityItem } from "./TurnActivityItem";
+import { TurnFileChanges } from "./TurnFileChanges";
 import { TurnPlanView } from "./TurnPlanView";
 import { TurnProgressIndicator } from "./TurnProgressIndicator";
 import { writeClipboardText } from "./clipboard";
@@ -13,7 +14,6 @@ import { writeClipboardText } from "./clipboard";
 interface Props {
   turn: Turn;
   active: boolean;
-  modelId: string;
   canFork: boolean;
   onFork?: () => void;
   plan?: TurnPlanUpdatedNotification;
@@ -31,7 +31,6 @@ function lastItemId(items: ThreadItem[], type: "userMessage" | "agentMessage") {
 export function ConversationTurn({
   turn,
   active,
-  modelId,
   canFork,
   onFork,
   plan,
@@ -48,6 +47,8 @@ export function ConversationTurn({
   const answerTiming = agentMessageTiming(turn, active);
   const [copyFeedback, setCopyFeedback] = useState(false);
   const agentText = items.filter((item) => item.type === "agentMessage").map((item) => item.text).join("\n\n");
+  const firstAgentMessageId = items.find((item) => item.type === "agentMessage")?.id;
+  const fileChangeItems = items.filter((item): item is Extract<ThreadItem, { type: "fileChange" }> => item.type === "fileChange");
 
   useEffect(() => {
     if (!copyFeedback) return;
@@ -75,10 +76,10 @@ export function ConversationTurn({
           )}
         </div>
       ) : item.type === "agentMessage" ? (
-        <div className="agent-block" key={item.id}>
-          <div className="agent-avatar">C</div>
+        <div className={`agent-block${item.id === firstAgentMessageId ? "" : " agent-block-continuation"}`} key={item.id}>
+          {item.id === firstAgentMessageId && <div className="agent-avatar">C</div>}
           <div className="agent-content">
-            <div className="agent-meta"><strong>Codex</strong><span>{modelId}</span></div>
+            {item.id === firstAgentMessageId && <div className="agent-meta"><strong>Codex</strong></div>}
             <p className={item.text ? "agent-response" : "agent-response pending"}>
               {item.text || "正在等待模型响应…"}
             </p>
@@ -97,13 +98,13 @@ export function ConversationTurn({
             )}
           </div>
         </div>
-      ) : (
+      ) : item.type !== "fileChange" ? (
         <TurnActivityItem
           item={item}
           key={item.id}
           active={activeItemTurnIds[item.id] === turn.id}
         />
-      ))}
+      ) : null)}
       {active && (
         <TurnProgressIndicator
           turn={turn}
@@ -115,7 +116,7 @@ export function ConversationTurn({
         <div className="agent-block">
           <div className="agent-avatar">C</div>
           <div className="agent-content">
-            <div className="agent-meta"><strong>Codex</strong><span>{modelId}</span></div>
+            <div className="agent-meta"><strong>Codex</strong></div>
             <p className="agent-response pending">
               {hasActiveProcess ? "Codex 正在处理任务…" : "正在等待模型响应…"}
             </p>
@@ -125,6 +126,7 @@ export function ConversationTurn({
           </div>
         </div>
       )}
+      {fileChangeItems.length > 0 && <TurnFileChanges items={fileChangeItems} />}
       {turn.error && <div className="turn-error">{turn.error.message}</div>}
     </section>
   );

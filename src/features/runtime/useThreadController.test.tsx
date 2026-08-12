@@ -4,6 +4,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Thread } from "../../generated/app-server/v2/Thread";
 import type { Turn } from "../../generated/app-server/v2/Turn";
+import type { PermissionMode } from "../approvals/permissionModes";
 import type { AppServerClient } from "./appServerClient";
 import { useThreadController } from "./useThreadController";
 
@@ -20,7 +21,7 @@ function turn(id: string, status: Turn["status"] = "inProgress"): Turn {
   };
 }
 
-function thread(id: string): Thread {
+function thread(id: string, overrides: Partial<Thread> = {}): Thread {
   return {
     id,
     sessionId: id,
@@ -44,6 +45,7 @@ function thread(id: string): Thread {
     gitInfo: null,
     name: null,
     turns: [],
+    ...overrides,
   };
 }
 
@@ -88,7 +90,7 @@ function setup() {
       reasoningEffort: "none" as const,
       verbosity: "low" as const,
     },
-    permissionMode: "ask" as const,
+    permissionMode: "ask" as PermissionMode,
     workspacePath: "C:\\work",
     dispatch,
     submitting: false,
@@ -119,8 +121,29 @@ describe("useThreadController", () => {
       expect(await result.current.send("continue")).toBe(true);
     });
     expect(client.resumeThread).toHaveBeenCalledWith(expect.objectContaining({ threadId: "thread-a" }));
-    expect(client.startTurn).toHaveBeenCalledWith(expect.objectContaining({ threadId: "thread-a" }), undefined);
+    expect(client.startTurn).toHaveBeenCalledWith(expect.objectContaining({
+      threadId: "thread-a",
+      approvalPolicy: "on-request",
+      approvalsReviewer: "user",
+    }), undefined);
     expect(client.resumeThread.mock.invocationCallOrder[0]).toBeLessThan(client.startTurn.mock.invocationCallOrder[0]);
+  });
+
+  it("keeps full access overrides on every Turn", async () => {
+    const { client, props } = setup();
+    props.permissionMode = "full";
+    const { result } = renderHook(() => useThreadController(props));
+    await waitFor(() => expect(client.listThreads).toHaveBeenCalled());
+
+    await act(async () => {
+      expect(await result.current.send("run unrestricted")).toBe(true);
+    });
+
+    expect(client.startTurn).toHaveBeenCalledWith(expect.objectContaining({
+      approvalPolicy: "never",
+      approvalsReviewer: "user",
+      sandboxPolicy: { type: "dangerFullAccess" },
+    }), undefined);
   });
 
   it("keeps a background running subscription until its Turn completes", async () => {
@@ -143,6 +166,40 @@ describe("useThreadController", () => {
       });
     });
     await waitFor(() => expect(client.unsubscribeThread).toHaveBeenCalledWith({ threadId: "thread-a" }));
+  });
+
+  it("retains a known fork parent when a refresh page only returns the child", async () => {
+    const { client, props } = setup();
+    const parent = thread("parent");
+    const child = thread("child", { forkedFromId: parent.id, sessionId: parent.sessionId });
+    client.listThreads
+      .mockResolvedValueOnce({ data: [child, parent], nextCursor: null })
+      .mockResolvedValueOnce({ data: [child], nextCursor: null });
+    const { result } = renderHook(() => useThreadController(props));
+    await waitFor(() => expect(result.current.history.map((item) => item.id)).toEqual(["child", "parent"]));
+
+    await act(async () => {
+      await result.current.refreshHistory();
+    });
+
+    expect(result.current.history.map((item) => item.id)).toEqual(["child", "parent"]);
+  });
+
+  it("does not retain active branch ancestors in the archived view", async () => {
+    const { client, props } = setup();
+    const parent = thread("parent");
+    const archivedChild = thread("archived-child", {
+      forkedFromId: parent.id,
+      sessionId: parent.sessionId,
+    });
+    client.listThreads
+      .mockResolvedValueOnce({ data: [parent], nextCursor: null })
+      .mockResolvedValueOnce({ data: [archivedChild], nextCursor: null });
+    const { result } = renderHook(() => useThreadController(props));
+    await waitFor(() => expect(result.current.history.map((item) => item.id)).toEqual(["parent"]));
+
+    act(() => result.current.showArchivedHistory(true));
+    await waitFor(() => expect(result.current.history.map((item) => item.id)).toEqual(["archived-child"]));
   });
 
   it("falls back to resume when a paginated rollout cannot be read with turns", async () => {

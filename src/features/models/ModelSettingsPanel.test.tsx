@@ -82,6 +82,57 @@ describe("ModelSettingsPanel", () => {
       modelId: "native-model",
       reasoningEffort: "high",
     })));
+    expect(onSave.mock.calls[0]).toHaveLength(1);
+  });
+
+  it("requests a runtime restart when the Base URL changes", async () => {
+    const onSave = vi.fn();
+    render(
+      <ModelSettingsPanel
+        settings={settings}
+        loadModels={vi.fn(async () => [])}
+        loadProviderCapabilities={vi.fn(async () => ({
+          namespaceTools: false,
+          imageGeneration: false,
+          webSearch: false,
+        }))}
+        onClose={vi.fn()}
+        onSave={onSave}
+      />,
+    );
+
+    fireEvent.change(screen.getByDisplayValue(settings.baseUrl), {
+      target: { value: "https://next.example.test/v1" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "保存配置" }));
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith(expect.objectContaining({
+      baseUrl: "https://next.example.test/v1",
+    }), true));
+  });
+
+  it("requests a runtime restart when the capability template changes", async () => {
+    const onSave = vi.fn();
+    render(
+      <ModelSettingsPanel
+        settings={settings}
+        loadModels={vi.fn(async () => [])}
+        loadProviderCapabilities={vi.fn(async () => ({
+          namespaceTools: false,
+          imageGeneration: false,
+          webSearch: false,
+        }))}
+        onClose={vi.fn()}
+        onSave={onSave}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /GPT-5.6 Sol/ }));
+    fireEvent.click(screen.getByRole("button", { name: "保存配置" }));
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith(expect.objectContaining({
+      capabilityTemplate: "gpt-5.6-sol",
+    }), true));
   });
 
   it("preserves custom reasoning efforts declared by the native catalog", async () => {

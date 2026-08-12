@@ -27,9 +27,10 @@
 - 已用 `turn/diff/updated` 建立实时文件 Diff 面板，并从持久化 `fileChange` item 重建历史 Diff。
 - 已接入系统目录选择器，新线程把用户工作区作为 `thread/start.cwd`；输入框通过稳定 `fuzzyFileSearch` 搜索，并以原生 `mention` 输入发送文件引用。
 - 已完成游标分页、固定、重命名、单 Session 归档和永久删除。
-- 左侧 Session 增加随当前列表动态重排的展示编号，中央区同步显示当前 Session 编号与名称；所有打开、修改与删除仍只使用真实 Thread ID，展示编号不进入路由。
+- 左侧 Session 与中央对话区只展示稳定的 Session 名称；打开、修改、删除、分叉和复制仍只使用真实 Thread ID 或 rollout 路径，不使用会因列表变化而漂移的展示编号。
 - 每个 Session 可复制 rollout 路径供其他智能体读取，路径缺失时回退真实 Thread ID；操作按钮统一使用居中 SVG 与 0.3 秒延迟说明。
 - Session 历史列表继续提供 rollout 路径/ID 复制；“分叉 Session”与“复制回答”移动到当前已完成回答底部，避免把会话级操作混在历史列表中。
+- Session 历史使用 app-server 原生 `forkedFromId` 建立真实父子层级：分叉会话自动排在父会话下方并以缩进、连接线和当前项指示线区分；欢迎空状态仅保留 Codex Shell 品牌展示，荧光黄绿色已统一降饱和。全局正文、输入内容、菜单和活动信息已提升为白色/近白色，辅助时间与路径保留更亮的灰色层级。
 - 已将运行态从全局锁改为按 Thread 跟踪：一个 Session 等待回答时仍可新建、打开和操作其他 Session，并可同时运行多个 Turn；左栏和顶部显示并行运行状态，停止操作只作用于当前 Session。
 - 已增加从左侧展开的工作区文件浏览器：目录懒加载、已展开文件筛选、单击文本/图片预览、二进制提示和大文本截断；工作区浏览与“选择工作区”改为两个独立入口。
 - 已增加 Codex 风格 `/` 命令菜单，接入稳定 `skills/list`、`mcpServerStatus/list`、`thread/compact/start` 和 `thread/goal/*`；Skill 作为原生输入发送，MCP/Goal 使用面板管理。
@@ -40,6 +41,7 @@
 - 已加固 CODEX_HOME 升级迁移：空的新默认目录仍迁移旧历史，双非空目录无损拒绝，默认真实路径同样禁止绕回官方 `.codex`。
 - 已把 app-server 原生 Item 生命周期接入对话窗口：实时显示当前分析、命令、文件、MCP、工具和子智能体活动；Plan delta 与 MCP progress 流式更新，未引入轮询或自定义提示词。
 - 已对齐官方桌面壳的默认工作区方式：使用系统文档目录下独立的 `Codex-Shell/YYYY-MM-DD` 每日目录；左侧只展示用户选择的项目，默认路径集中到右侧状态区。
+- 已修复四项对话运行问题：用户消息气泡改为 `fit-content` 自适应并保留最大可读宽度；仅切换模型/推理参数不再重启 app-server，下一轮通过原生 `turn/start` 覆盖生效；权限模式随每轮 Turn 持续传给 app-server，避免完全访问模式在后续回合降级；历史分页刷新保留已知分叉祖先，避免父子缩进暂时消失。
 - 归档和永久删除 Session 均增加产品内二次确认窗口，清楚说明可恢复性差异，并提供安全取消焦点、Escape 与遮罩关闭。
 - 已确认原版 app-server 在隔离 CODEX_HOME 中原生记录 SQLite tracing 日志和 rollout 事件；一次 33.5 秒回合中壳层与 app-server 提交开销不足 1 秒，约 28 秒消耗在网关首个可见增量等待，后续回合另出现上游 overloaded 与 Core 原生重试。
 - 已消费 Tauri `app-server://log`：右侧新增实时日志页，使用 200 条/单行 4000 字符硬上限和 150ms 批量刷新控制内存及渲染开销，并标注日志的敏感数据属性。
@@ -52,6 +54,7 @@
 - 已修复归档/活动历史串列、归档 Session 误打开、inline Review 合成 Turn 丢失和 detached Review 父线程订阅残留；`openai/form` 已通过 initialize 显式协商，typed form 按 schema 校验并省略未填写的可选字段。
 - Thread 历史与 Review 生命周期已从主控制器拆为独立 Hook；通知路由测试也从 JSON-RPC 客户端测试中拆出，核心手写模块保持在约 500 行目标内。
 - 已参考官方桌面壳完成 P0 对话体验优化：Turn 使用可变高度虚拟列表，流式输出仅在底部智能跟随，离开底部后显示新内容提示，并提供用户消息快速导航。
+- 对话渲染已对齐 Codex 的连续流布局：同一回合连续助手消息不重复模型头部；命令活动保留 app-server 原生详情并改为轻量折叠行；文件修改项从中间活动流移动到回答末尾，按路径去重并显示文件类型及增删行统计。
 - Diff 已支持新增、删除、重命名和修改的文件级摘要，非删除文件可直接在工作区浏览器定位预览；工作区通过稳定 `fs/watch/fs/changed/fs/unwatch` 自动刷新展开目录和当前文件，并完整清理订阅、listener 与防抖 timer。
 
 ## 当前数据流
@@ -75,7 +78,7 @@
 ## 验证证据
 
 - `pnpm typecheck`：通过。
-- `pnpm test`：36 个测试文件、117 项测试全部通过，新增默认完全访问权限、右栏默认收起和 elevated Sandbox 调用覆盖，并包含时间线滚动/导航、Diff 状态/跳转、工作区 watch 生命周期、真实 DOM 行为、统一反向交互、Thread 读写/退订时序、Review/模型设置、MCP schema 与第二阶段 RPC 覆盖。
+- `pnpm test`：36 个测试文件、125 项测试全部通过，包含连续回答流、命令折叠、文件变更汇总、模型切换与连接重启边界、每 Turn 完全访问权限覆盖、活动/归档分叉祖先隔离、时间线滚动/导航、Diff 状态/跳转、工作区 watch 生命周期、统一反向交互、Thread 读写/退订时序、Review、MCP schema 与第二阶段 RPC 覆盖。
 - Rust 单元测试：9 项全部通过，覆盖动态 Runtime、每日默认工作区、独立 provider 参数、旧 CODEX_HOME 迁移、双目录冲突和官方目录防重叠校验。
 - `pnpm rust:check`：从 clean target 完整重编译后通过。
 - `pnpm build`：包含虚拟时间线、目录 watch、目录选择插件和 P0 工作台 UI 的生产构建通过。

@@ -11,5 +11,5 @@
 .runtime-log-entries article[data-level="warning"] { border-left-color: #b99a4e; }
 .runtime-log-entries article[data-level="error"] { border-left-color: var(--red); }
 .runtime-log-entries article[data-level="debug"], .runtime-log-entries article[data-level="trace"] { opacity: .72; }
-.runtime-log-entries time { display: block; margin-bottom: 4px; color: #67655e; font: 7px "Cascadia Code", Consolas, monospace; }
-.runtime-log-entries pre { overflow-wrap: anywhere; margin: 0; color: #aaa89f; font: 8px/1.55 "Cascadia Code", Consolas, monospace; white-space: pre-wrap; }
+.runtime-log-entries time { display: block; margin-bottom: 4px; color: var(--text-quiet); font: 7px "Cascadia Code", Consolas, monospace; }
+.runtime-log-entries pre { overflow-wrap: anywhere; margin: 0; color: var(--text-secondary); font: 8px/1.55 "Cascadia Code", Consolas, monospace; white-space: pre-wrap; }

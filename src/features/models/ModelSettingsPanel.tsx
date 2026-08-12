@@ -11,7 +11,7 @@ interface Props {
   loadModels: () => Promise<Model[]>;
   loadProviderCapabilities: () => Promise<ModelProviderCapabilitiesReadResponse>;
   onClose: () => void;
-  onSave: (settings: ModelSettings) => void;
+  onSave: (settings: ModelSettings, requiresRestart?: boolean) => void;
 }
 
 function isTauri() {
@@ -96,7 +96,14 @@ export function ModelSettingsPanel({
         if (apiKey) await invoke("save_api_key", { apiKey });
       }
       setApiKey("");
-      onSave(draft);
+      const requiresRestart = Boolean(
+        apiKey
+        || draft.baseUrl !== settings.baseUrl
+        || draft.capabilityTemplate !== settings.capabilityTemplate
+        || draft.verbosity !== settings.verbosity,
+      );
+      if (requiresRestart) onSave(draft, true);
+      else onSave(draft);
     } catch (error) {
       setStatus(errorMessage(error));
     }

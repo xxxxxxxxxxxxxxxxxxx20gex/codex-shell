@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import type { Thread } from "../../generated/app-server/v2/Thread";
 import { writeClipboardText } from "./clipboard";
 import {
@@ -6,11 +6,11 @@ import {
   type SessionDestructiveAction,
 } from "./SessionActionConfirmDialog";
 import {
-  buildThreadNumbers,
-  formatThreadNumber,
   threadReference,
   threadReferenceKind,
   threadTitle,
+  orderThreadsByBranch,
+  threadBranchDepth,
 } from "./threadPresentation";
 
 interface Props {
@@ -88,7 +88,7 @@ function DeleteIcon() {
 }
 
 export function ThreadHistoryList(props: Props) {
-  const threadNumbers = useMemo(() => buildThreadNumbers(props.threads), [props.threads]);
+  const orderedThreads = useMemo(() => orderThreadsByBranch(props.threads), [props.threads]);
   const [copyFeedback, setCopyFeedback] = useState<{ threadId: string; label: string } | null>(null);
   const [pendingAction, setPendingAction] = useState<{
     action: SessionDestructiveAction;
@@ -135,16 +135,15 @@ export function ThreadHistoryList(props: Props) {
         {!props.error && !props.loading && props.threads.length === 0 && (
           <p className="sidebar-empty">{props.archived ? "当前没有已归档 Session。" : "本机还没有 Codex Shell 历史会话。"}</p>
         )}
-        {props.threads.map((thread) => {
+        {orderedThreads.map((thread) => {
           const busy = props.disabled || props.actionThreadId === thread.id;
           const running = props.runningThreadIds.has(thread.id);
-          const number = threadNumbers.get(thread.id);
           const referenceKind = threadReferenceKind(thread);
           const copyLabel = copyFeedback?.threadId === thread.id
             ? copyFeedback.label
             : `复制 Session ${referenceKind}`;
           return (
-            <div className={`thread-row ${thread.id === props.activeThreadId ? "active" : ""} ${running ? "running" : ""}`} key={thread.id}>
+            <div className={`thread-row ${thread.id === props.activeThreadId ? "active" : ""} ${running ? "running" : ""} ${thread.forkedFromId ? "branched" : ""}`} style={{ "--thread-depth": threadBranchDepth(thread, props.threads) } as CSSProperties} key={thread.id}>
               <button
                 className="thread-main"
                 disabled={busy || props.archived}
@@ -153,7 +152,7 @@ export function ThreadHistoryList(props: Props) {
                   ? `${threadTitle(thread)}\n恢复 Session 后可打开`
                   : `${threadTitle(thread)}\n${thread.cwd}`}
               >
-                <span><b className="thread-number">{number ? formatThreadNumber(number) : "#--"}</b>{thread.isPinned && <i>◆</i>}{threadTitle(thread)}</span>
+                <span>{thread.isPinned && <i>◆</i>}{threadTitle(thread)}</span>
                 <small>{running ? "运行中" : dateFormatter.format(new Date(thread.updatedAt * 1000))}</small>
               </button>
               <div className="thread-actions">

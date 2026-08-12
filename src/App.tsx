@@ -34,7 +34,7 @@ import { ServerInteractionDialog } from "./features/interactions/ServerInteracti
 import { ConversationTimeline } from "./features/threads/ConversationTimeline";
 import { ContextHeatBar } from "./features/threads/ContextHeatBar";
 import { ThreadHistoryList } from "./features/threads/ThreadHistoryList";
-import { buildThreadNumbers, formatThreadNumber, threadTitle } from "./features/threads/threadPresentation";
+import { threadTitle } from "./features/threads/threadPresentation";
 import { FileMentionMenu } from "./features/workspaces/FileMentionMenu";
 import { WorkspaceExplorer } from "./features/workspaces/WorkspaceExplorer";
 import { WorkspaceSelector } from "./features/workspaces/WorkspaceSelector";
@@ -118,8 +118,6 @@ function App() {
     }
     return "";
   }, [session.diffsByTurnId, session.turns]);
-  const threadNumbers = useMemo(() => buildThreadNumbers(session.history), [session.history]);
-  const activeThreadNumber = session.thread ? threadNumbers.get(session.thread.id) : undefined;
 
   useEffect(() => {
     if (!("__TAURI_INTERNALS__" in window)) return;
@@ -389,7 +387,6 @@ function App() {
         <section className="conversation panel">
           {session.thread && (
             <div className="conversation-session-heading" title={session.thread.id}>
-              <span>{activeThreadNumber ? formatThreadNumber(activeThreadNumber) : "#--"}</span>
               <strong>{threadTitle(session.thread)}</strong>
             </div>
           )}
@@ -398,7 +395,6 @@ function App() {
               key={session.thread?.id ?? "new"}
               turns={session.turns}
               running={session.running}
-              modelId={settings.modelId}
               threadId={session.thread?.id}
               onFork={(threadId) => void session.forkThread(threadId)}
               plansByTurnId={session.plansByTurnId}
@@ -406,7 +402,7 @@ function App() {
               mcpProgressByItemId={session.mcpProgressByItemId}
             />
           ) : (
-            <div className="timeline"><div className="conversation-empty"><div className="agent-avatar">C</div><h2>开始一个新对话</h2><p>今日默认工作区会自动准备，也可以选择已有项目目录，然后描述需要 Codex 完成的工作。</p></div></div>
+            <div className="timeline"><div className="conversation-empty"><div className="agent-avatar">CS</div><h2>Codex Shell</h2><p>原生 Codex app-server 工作台</p></div></div>
           )}
           <div className="composer-wrap">
             <RuntimeNoticeBanner
@@ -490,7 +486,7 @@ function App() {
         </aside>
       </section>
 
-      {settingsOpen && <ModelSettingsPanel settings={settings} loadModels={session.listModels} loadProviderCapabilities={session.readModelProviderCapabilities} onClose={() => setSettingsOpen(false)} onSave={(next) => { setSettings(next); setSettingsOpen(false); void session.restart(); }} />}
+      {settingsOpen && <ModelSettingsPanel settings={settings} loadModels={session.listModels} loadProviderCapabilities={session.readModelProviderCapabilities} onClose={() => setSettingsOpen(false)} onSave={(next, requiresRestart = false) => { setSettings(next); setSettingsOpen(false); if (requiresRestart) void session.restart(); }} />}
       <ServerInteractionDialog store={session.interactionStore} />
       {workspaceExplorerOpen && currentWorkspacePath && <WorkspaceExplorer rootPath={currentWorkspacePath} initialFilePath={workspaceExplorerInitialPath} onClose={() => setWorkspaceExplorerOpen(false)} readDirectory={session.readWorkspaceDirectory} readFile={session.readWorkspaceFile} watchPath={session.watchWorkspacePath} />}
     </main>

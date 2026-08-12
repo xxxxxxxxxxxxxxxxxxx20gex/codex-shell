@@ -144,7 +144,7 @@ export function TurnActivityItem({ item, active = false }: Props) {
     return <div className="activity-note"><span>{activityIcon(item)}</span>{activityTitle(item)}</div>;
   }
   return (
-    <details className="activity-card" open={active || item.type === "plan" || item.type === "fileChange"}>
+    <details className={`activity-card${item.type === "commandExecution" ? " activity-command-card" : ""}`} open={active || item.type === "plan"}>
       <summary>
         <span className="activity-icon">{activityIcon(item)}</span>
         <strong>{activityTitle(item)}</strong>
