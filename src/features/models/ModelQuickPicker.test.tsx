@@ -44,6 +44,7 @@ describe("ModelQuickPicker", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Next Model" }));
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ modelId: "gpt-next", reasoningEffort: "low" }));
     expect(onDisplayName).toHaveBeenLastCalledWith("Next Model");
+    expect(screen.getByRole("dialog").querySelectorAll(".chevron-icon").length).toBe(0);
 
     expect(screen.getByRole("button", { name: /高级设置/ })).toBeTruthy();
     expect(screen.queryByText("能力模板")).toBeNull();

@@ -51,6 +51,8 @@ button:disabled { cursor: not-allowed; }
 .folder-icon { display: grid; place-items: center; width: 25px; height: 25px; border: 1px solid #38372f; border-radius: 6px; color: var(--accent); }
 .section-heading { display: flex; align-items: center; justify-content: space-between; margin: 22px 10px 7px; color: #999890; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .section-heading button { border: 0; color: #aaa9a2; background: transparent; cursor: pointer; }
+.history-view-toggle { display: inline-flex; align-items: center; gap: 5px; }
+.chevron-icon { width: 12px; height: 12px; flex: 0 0 12px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.35; }
 .thread-list { display: flex; min-height: 0; flex: 1; flex-direction: column; gap: 3px; overflow-y: auto; }
 .thread-list button { justify-content: space-between; min-height: 36px; padding: 9px 10px; color: var(--text-secondary); font-size: 12px; }
 .thread-list button:disabled { cursor: default; }
@@ -101,7 +103,8 @@ code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 .plan-mode-button { display: flex; height: 31px; align-items: center; gap: 5px; padding: 0 9px; border: 1px solid #526635; border-radius: 8px; color: #c1d49a; background: #202719; font-size: 11px; cursor: pointer; }
 .plan-mode-button:hover { border-color: #78934b; color: #d5e7ae; background: #29331f; }
 .plan-mode-button span { color: var(--accent); font-size: 10px; }.plan-mode-button i { color: #7f9561; font-size: 11px; font-style: normal; }
-.model-button { display: flex; height: 31px; align-items: center; padding: 0 10px; border: 1px solid #3b3a34; border-radius: 8px; color: #d0cfc8; background: #191916; font-size: 11px; cursor: pointer; }
+.model-button { display: inline-flex; height: 31px; align-items: center; gap: 5px; padding: 0 10px; border: 1px solid #3b3a34; border-radius: 8px; color: #d0cfc8; background: #191916; font-size: 11px; cursor: pointer; }
+.model-button > span { overflow: hidden; max-width: 180px; text-overflow: ellipsis; white-space: nowrap; }
 .model-button:hover { border-color: #4b4a41; color: #c9c6bc; background: #22221e; }
 .model-button:disabled { border-color: #2d2c27; color: #55534d; background: #171714; cursor: not-allowed; }
 .model-picker-anchor { position: relative; }
@@ -124,7 +127,7 @@ code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 .send-button:disabled { color: #69685f; background: #2c2b26; cursor: default; }
 .permission-selector { position: relative; }
 .permission-trigger { display: flex; min-height: 31px; align-items: center; gap: 6px; padding: 5px 9px; border: 1px solid #3b3a34; border-radius: 8px; color: #d0cfc8; background: #191916; cursor: pointer; }
-.permission-trigger span { font-size: 11px; }.permission-trigger strong { font-size: 10px; font-weight: 600; }.permission-trigger i { color: #65645d; font-size: 10px; font-style: normal; }
+.permission-trigger span { font-size: 11px; }.permission-trigger strong { font-size: 10px; font-weight: 600; }.permission-trigger .chevron-icon { color: #65645d; }
 .permission-trigger.danger { border-color: #704126; color: #e88f4d; background: #251b14; }
 .permission-menu { position: absolute; z-index: 12; bottom: calc(100% + 7px); left: 0; width: 330px; overflow: hidden; border: 1px solid #3b3931; border-radius: 11px; background: #20201c; box-shadow: 0 18px 55px rgba(0,0,0,.55); }
 .permission-menu button { display: grid; width: 100%; grid-template-columns: 24px 1fr 16px; align-items: center; gap: 7px; padding: 11px 12px; border: 0; border-bottom: 1px solid #2d2c26; color: var(--text-primary); text-align: left; background: transparent; cursor: pointer; }
@@ -219,15 +222,15 @@ code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 .thread-row.running .thread-main small::before { display: inline-block; width: 5px; height: 5px; margin-right: 4px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 7px rgba(194,232,92,.42); content: ""; }
 .thread-list .thread-main { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 5px; padding-right: 10px; }
 .thread-main span i { margin-right: 5px; color: #9ebc50; font-size: 7px; font-style: normal; }
-.thread-row:hover .thread-main { padding-bottom: 27px; }
-.thread-actions { position: absolute; z-index: 2; bottom: 3px; left: 7px; display: none; gap: 2px; }
+.thread-row:hover .thread-main, .thread-row:focus-within .thread-main { padding-bottom: 33px; }
+.thread-actions { position: absolute; z-index: 2; bottom: 4px; left: 7px; display: none; gap: 3px; }
 .thread-row:hover .thread-actions, .thread-row:focus-within .thread-actions { display: flex; }
-.thread-list .thread-actions button { position: relative; display: flex; width: 23px; height: 21px; flex: none; align-items: center; justify-content: center; padding: 0; color: #a2a19a; line-height: 0; }
+.thread-list .thread-actions button { position: relative; display: flex; width: 21px; height: 18px; flex: none; align-items: center; justify-content: center; padding: 0; color: #a2a19a; line-height: 0; }
 .thread-list .thread-actions button:hover { color: var(--accent); background: #2a2a23; }
 .thread-list .thread-actions button:disabled { color: #4f4e48; }
 .thread-action-button svg { display: block; width: 12px; height: 12px; overflow: visible; fill: none; stroke: currentColor; stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; }
 .thread-action-button svg .filled { fill: currentColor; }
-.thread-action-button::after { position: absolute; z-index: 20; top: calc(100% + 5px); left: 50%; width: max-content; padding: 5px 7px; pointer-events: none; border: 1px solid #424139; border-radius: 5px; color: #c7c5bc; background: #181815; box-shadow: 0 7px 20px rgba(0,0,0,.45); content: attr(data-tooltip); font-size: 8px; line-height: 1.2; white-space: nowrap; opacity: 0; visibility: hidden; transform: translateX(-50%); transition: opacity .1s ease, visibility 0s linear .1s; }
+.thread-action-button::after { position: absolute; z-index: 20; top: calc(100% + 7px); left: 0; width: max-content; padding: 4px 6px; pointer-events: none; border: 1px solid #424139; border-radius: 5px; color: #c7c5bc; background: #181815; box-shadow: 0 7px 20px rgba(0,0,0,.45); content: attr(data-tooltip); font-size: 9px; line-height: 1.2; white-space: nowrap; opacity: 0; visibility: hidden; transform: none; transition: opacity .1s ease, visibility 0s linear .1s; }
 .thread-action-button:hover::after, .thread-action-button:focus-visible::after { opacity: 1; visibility: visible; transition-delay: .3s; }
 .thread-list .load-more { display: block; width: calc(100% - 12px); margin: 7px 6px; padding: 7px; border: 1px solid #302f29; color: #85837b; text-align: center; background: #191916; }
 

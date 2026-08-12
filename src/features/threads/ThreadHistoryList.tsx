@@ -127,7 +127,7 @@ export function ThreadHistoryList(props: Props) {
   return (
     <>
       <div className="section-heading">
-        <button className="history-view-toggle" onClick={() => props.onShowArchived(!props.archived)}>{props.archived ? "已归档" : "本地历史"}<i>⌄</i></button>
+        <button className="history-view-toggle" onClick={() => props.onShowArchived(!props.archived)}>{props.archived ? "已归档" : "本地历史"}<svg className="chevron-icon" aria-hidden="true" viewBox="0 0 12 12"><path d="m3.5 4.5 2.5 2.5 2.5-2.5" /></svg></button>
         <button onClick={props.onRefresh} disabled={props.loading} aria-label="刷新本地历史">{props.loading ? "…" : "↻"}</button>
       </div>
       <nav className="thread-list" aria-label="本地历史会话">

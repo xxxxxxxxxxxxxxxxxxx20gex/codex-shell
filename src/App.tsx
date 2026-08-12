@@ -441,7 +441,7 @@ function App() {
                   <button className={`command-button ${slashMenuVisible || commandPanel ? "active" : ""}`} onClick={() => { setCommandPanel(null); setSlashMenuDismissed(false); setSlashMenuForced((current) => !current); setSlashSelectedIndex(0); }} title="Skills、MCP、计划、压缩与目标">/</button>
                   {collaborationMode === "plan" && <button className="plan-mode-button" onClick={() => { setCollaborationMode("default"); setCommandNotice("已退出计划模式，下一条消息将按默认模式执行。"); }} title="退出计划模式"><span>☷</span>计划模式<i>×</i></button>}
                   <div className="model-picker-anchor">
-                    <button className="model-button" onClick={() => setModelPickerOpen((open) => !open)} title="选择模型与推理强度">{modelDisplayName ?? settings.modelId}⌄</button>
+                    <button className="model-button" onClick={() => setModelPickerOpen((open) => !open)} title="选择模型与推理强度"><span>{modelDisplayName ?? settings.modelId}</span><svg className="chevron-icon" aria-hidden="true" viewBox="0 0 12 12"><path d="m3.5 4.5 2.5 2.5 2.5-2.5" /></svg></button>
                     {modelPickerOpen && <ModelQuickPicker settings={settings} loadModels={session.listModels} onChange={changeModelSettings} onDisplayName={setModelDisplayName} onAdvanced={() => { setModelPickerOpen(false); setSettingsOpen(true); }} onClose={() => setModelPickerOpen(false)} />}
                   </div>
                   <PermissionModeSelector value={permissionMode} disabled={session.running} onChange={changePermissionMode} />

@@ -52,6 +52,8 @@ describe("ThreadHistoryList behavior", () => {
     fireEvent.click(screen.getByRole("button", { name: /^本地历史/ }));
 
     expect(values.onShowArchived).toHaveBeenCalledWith(true);
+    expect(screen.getByRole("button", { name: /^本地历史/ }).querySelector(".chevron-icon")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^本地历史/ }).textContent).not.toContain("⌄");
     expect(screen.queryByRole("button", { name: "分叉 Session" })).toBeNull();
   });
 

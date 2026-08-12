@@ -27,7 +27,7 @@ export function PermissionModeSelector({ value, disabled, onChange }: Props) {
       >
         <span>{selected.icon}</span>
         <strong>{selected.label}</strong>
-        <i>⌄</i>
+        <svg className="chevron-icon" aria-hidden="true" viewBox="0 0 12 12"><path d="m3.5 4.5 2.5 2.5 2.5-2.5" /></svg>
       </button>
       {open && (
         <div className="permission-menu" role="listbox" aria-label="权限模式">
