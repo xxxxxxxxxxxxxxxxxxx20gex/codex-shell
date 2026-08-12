@@ -2,9 +2,9 @@
 
 - 模块职责：提供 Windows 桌面三栏智能体工作台和响应式布局。
 - 当前状态：P0 三栏工作台已接入完整执行时间线、统一服务端交互、Diff、原生 Review、模型目录、多 Session 并行和工作区实时刷新。
-- 最近变更：右侧功能区改为启动时默认收起，左侧 Session/工作区栏仍默认展开；分隔线按钮可随时恢复右栏。权限入口默认展示“完全访问权限”，Windows Sandbox 设置按钮明确使用管理员权限配置。
+- 最近变更：右侧功能区改为启动时默认收起，左侧 Session/工作区栏仍默认展开；分隔线按钮可随时恢复右栏。权限入口默认展示“完全访问权限”，Windows Sandbox 设置按钮明确使用管理员权限配置。Session 历史保留路径/ID 复制，分叉入口移到当前已完成回答底部，并新增复制回答按钮，沿用统一剪贴板回退。
 - 当前接口：`App`、三栏布局、`StatusInspector`、Runtime Log/Notice、`ServerInteractionDialog`、工作区浏览器、slash/Skill/MCP/Goal/Review 面板、时间线、Diff 和模型设置。
 - 已知问题：文件搜索和会话操作尚未完成全键盘导航；移动宽度仍隐藏侧栏与检查器；`App.css` 仍集中承载多个 feature 的样式，后续应随功能改动逐块迁移，避免继续扩大共享样式耦合。
 - 下一步：补齐拖拽分隔线的键盘宽度调节、文件/会话键盘导航和无障碍状态播报。
-- 验证证据：新增布局 Hook 测试覆盖左栏展开、右栏收起及 CSS 宽度变量；Sandbox 状态卡 DOM 测试覆盖按钮向 app-server 传递 `elevated`。完整门禁结果记录于测试状态文档。
+- 验证证据：新增布局 Hook 测试覆盖左栏展开、右栏收起及 CSS 宽度变量；Sandbox 状态卡 DOM 测试覆盖按钮向 app-server 传递 `elevated`；ConversationTimeline 测试覆盖回答复制与分叉按钮，ThreadHistoryList 测试确认历史列表不再显示分叉入口。完整门禁结果记录于测试状态文档。
 - 最后更新：2026-08-12

@@ -11,6 +11,8 @@ interface Props {
   turns: Turn[];
   running: boolean;
   modelId: string;
+  threadId?: string | null;
+  onFork?: (threadId: string) => void;
   plansByTurnId?: Record<string, TurnPlanUpdatedNotification>;
   activeItemTurnIds?: Record<string, string>;
   mcpProgressByItemId?: Record<string, McpToolCallProgressNotification>;
@@ -34,6 +36,8 @@ export function ConversationTimeline({
   turns,
   running,
   modelId,
+  threadId = null,
+  onFork,
   plansByTurnId = {},
   activeItemTurnIds = {},
   mcpProgressByItemId = {},
@@ -79,6 +83,8 @@ export function ConversationTimeline({
               turn={turn}
               active={running && turnIndex === turns.length - 1}
               modelId={modelId}
+              canFork={Boolean(onFork && threadId && !running && turnIndex === turns.length - 1)}
+              onFork={threadId && onFork ? () => onFork(threadId) : undefined}
               plan={plansByTurnId[turn.id]}
               activeItemTurnIds={activeItemTurnIds}
               mcpProgressByItemId={mcpProgressByItemId}

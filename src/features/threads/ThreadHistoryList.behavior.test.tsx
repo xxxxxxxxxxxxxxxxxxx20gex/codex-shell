@@ -36,7 +36,6 @@ function props(overrides: Partial<ComponentProps<typeof ThreadHistoryList>> = {}
     onTogglePin: vi.fn(),
     onArchive: vi.fn(),
     onUnarchive: vi.fn(),
-    onFork: vi.fn(),
     onDelete: vi.fn(),
     onShowArchived: vi.fn(),
     onRefresh: vi.fn(),
@@ -46,15 +45,14 @@ function props(overrides: Partial<ComponentProps<typeof ThreadHistoryList>> = {}
 }
 
 describe("ThreadHistoryList behavior", () => {
-  it("switches to archived history and forks an idle Session", () => {
+  it("switches to archived history without exposing fork actions in history", () => {
     const values = props();
     render(<ThreadHistoryList {...values} />);
 
     fireEvent.click(screen.getByRole("button", { name: /^本地历史/ }));
-    fireEvent.click(screen.getByRole("button", { name: "分叉 Session" }));
 
     expect(values.onShowArchived).toHaveBeenCalledWith(true);
-    expect(values.onFork).toHaveBeenCalledWith("thread-1");
+    expect(screen.queryByRole("button", { name: "分叉 Session" })).toBeNull();
   });
 
   it("disables Fork while running and restores from the archived view", () => {
@@ -63,8 +61,6 @@ describe("ThreadHistoryList behavior", () => {
     const { rerender } = render(<ThreadHistoryList {...props({
       runningThreadIds: new Set(["thread-1"]),
     })} />);
-    expect(screen.getByRole("button", { name: "运行中无法分叉" }).hasAttribute("disabled")).toBe(true);
-
     rerender(<ThreadHistoryList {...props({ archived: true, onOpen, onUnarchive })} />);
     expect(screen.getByRole("button", { name: /thread-1/ }).hasAttribute("disabled")).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "恢复 Session" }));

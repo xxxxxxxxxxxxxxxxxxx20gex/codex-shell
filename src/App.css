@@ -78,6 +78,10 @@ button:disabled { cursor: not-allowed; }
 .message-timing { color: #77746b; font: 9px/1.45 "Cascadia Code", Consolas, monospace; letter-spacing: .01em; }
 .user-message-timing { margin: 6px 3px 0; text-align: right; }
 .agent-message-timing { margin-top: -5px; }
+.message-actions { display: flex; gap: 4px; margin-top: 7px; }
+.message-actions button { display: inline-flex; width: 24px; height: 22px; align-items: center; justify-content: center; padding: 0; border: 1px solid transparent; border-radius: 5px; color: #77746b; background: transparent; cursor: pointer; }
+.message-actions button:hover, .message-actions button:focus-visible { border-color: #47463f; color: var(--accent); background: #24241f; outline: none; }
+.message-actions svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.2; }
 .turn-error { margin: 12px 0 0 38px; color: var(--red); font-size: 9px; }
 code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 .composer-wrap { position: relative; z-index: 4; flex: none; padding: 0 clamp(24px, 7vw, 90px) 13px; background: linear-gradient(180deg, rgba(17,17,15,0), rgba(17,17,15,.98) 14px); }

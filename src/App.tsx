@@ -353,7 +353,6 @@ function App() {
             onTogglePin={(thread) => void session.toggleThreadPin(thread)}
             onArchive={(threadId) => void session.archiveThread(threadId)}
             onUnarchive={(threadId) => void session.unarchiveThread(threadId)}
-            onFork={(threadId) => void session.forkThread(threadId)}
             onDelete={(threadId) => void session.deleteThread(threadId)}
             onShowArchived={session.showArchivedHistory}
             onRefresh={() => void session.refreshHistory()}
@@ -400,6 +399,8 @@ function App() {
               turns={session.turns}
               running={session.running}
               modelId={settings.modelId}
+              threadId={session.thread?.id}
+              onFork={(threadId) => void session.forkThread(threadId)}
               plansByTurnId={session.plansByTurnId}
               activeItemTurnIds={session.activeItemTurnIds}
               mcpProgressByItemId={session.mcpProgressByItemId}

@@ -29,6 +29,7 @@
 - 已完成游标分页、固定、重命名、单 Session 归档和永久删除。
 - 左侧 Session 增加随当前列表动态重排的展示编号，中央区同步显示当前 Session 编号与名称；所有打开、修改与删除仍只使用真实 Thread ID，展示编号不进入路由。
 - 每个 Session 可复制 rollout 路径供其他智能体读取，路径缺失时回退真实 Thread ID；操作按钮统一使用居中 SVG 与 0.3 秒延迟说明。
+- Session 历史列表继续提供 rollout 路径/ID 复制；“分叉 Session”与“复制回答”移动到当前已完成回答底部，避免把会话级操作混在历史列表中。
 - 已将运行态从全局锁改为按 Thread 跟踪：一个 Session 等待回答时仍可新建、打开和操作其他 Session，并可同时运行多个 Turn；左栏和顶部显示并行运行状态，停止操作只作用于当前 Session。
 - 已增加从左侧展开的工作区文件浏览器：目录懒加载、已展开文件筛选、单击文本/图片预览、二进制提示和大文本截断；工作区浏览与“选择工作区”改为两个独立入口。
 - 已增加 Codex 风格 `/` 命令菜单，接入稳定 `skills/list`、`mcpServerStatus/list`、`thread/compact/start` 和 `thread/goal/*`；Skill 作为原生输入发送，MCP/Goal 使用面板管理。

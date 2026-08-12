@@ -26,7 +26,6 @@ interface Props {
   onOpen: (threadId: string) => void;
   onRename: (threadId: string, name: string) => void;
   onTogglePin: (thread: Thread) => void;
-  onFork: (threadId: string) => void;
   onArchive: (threadId: string) => void;
   onUnarchive: (threadId: string) => void;
   onDelete: (threadId: string) => void;
@@ -78,10 +77,6 @@ function RenameIcon() {
 
 function ArchiveIcon() {
   return <svg aria-hidden="true" viewBox="0 0 16 16"><path d="M3 5.5h10V13H3z" /><path d="M2.5 3h11v2.5h-11zM6 8h4" /></svg>;
-}
-
-function ForkIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 16 16"><circle cx="5" cy="3" r="1.5" /><circle cx="11" cy="7" r="1.5" /><circle cx="5" cy="13" r="1.5" /><path d="M5 4.5v7M6.5 7h3" /></svg>;
 }
 
 function RestoreIcon() {
@@ -167,7 +162,6 @@ export function ThreadHistoryList(props: Props) {
                   <ThreadActionButton disabled={busy} onClick={() => props.onUnarchive(thread.id)} label="恢复 Session"><RestoreIcon /></ThreadActionButton>
                 ) : <>
                   <ThreadActionButton disabled={busy} onClick={() => props.onTogglePin(thread)} label={thread.isPinned ? "取消固定" : "固定"}><PinIcon pinned={thread.isPinned} /></ThreadActionButton>
-                  <ThreadActionButton disabled={busy || running} onClick={() => props.onFork(thread.id)} label={running ? "运行中无法分叉" : "分叉 Session"}><ForkIcon /></ThreadActionButton>
                   <ThreadActionButton disabled={busy} onClick={() => rename(thread)} label="重命名"><RenameIcon /></ThreadActionButton>
                   <ThreadActionButton disabled={busy || running} onClick={() => setPendingAction({ action: "archive", thread })} label={running ? "运行中无法归档" : "归档"}><ArchiveIcon /></ThreadActionButton>
                 </>}

@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import type { Turn } from "../../generated/app-server/v2/Turn";
 import { ConversationTurn } from "./ConversationTurn";
@@ -37,6 +37,8 @@ function renderTurn(turn: Turn, active = false) {
       turn={turn}
       active={active}
       modelId="gpt-test"
+      canFork={!active}
+      onFork={vi.fn()}
       activeItemTurnIds={{}}
       mcpProgressByItemId={{}}
     />,
@@ -63,6 +65,23 @@ describe("conversation timing", () => {
     expect(markup).not.toContain("发送于");
     expect(markup).not.toContain("回答于");
     expect(markup).not.toContain("耗时");
+  });
+
+  it("renders copy and fork actions below a completed answer", () => {
+    const markup = renderToStaticMarkup(
+      <ConversationTurn
+        turn={completedTurn()}
+        active={false}
+        modelId="gpt-test"
+        canFork
+        onFork={vi.fn()}
+        activeItemTurnIds={{}}
+        mcpProgressByItemId={{}}
+      />,
+    );
+
+    expect(markup).toContain('aria-label="复制回答"');
+    expect(markup).toContain('aria-label="分叉 Session"');
   });
 
   it("shows an in-progress answer label", () => {
@@ -130,6 +149,7 @@ describe("conversation timing", () => {
         modelId="gpt-test"
         activeItemTurnIds={{ "mcp-1": "turn-1" }}
         mcpProgressByItemId={{ "mcp-1": progress }}
+        canFork={false}
       />,
     );
 
