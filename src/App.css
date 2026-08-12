@@ -214,13 +214,16 @@ code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 .workspace-expand { margin-left: auto; color: #6e6c63; font-size: 18px; font-style: normal; }
 .choose-workspace-button { margin: 0 8px; min-height: 34px; padding: 7px 9px; border: 1px solid #3f3e37; border-radius: 7px; color: var(--text-secondary); background: #1c1c18; font-size: 11px; cursor: pointer; }
 .choose-workspace-button:hover { border-color: #4b4d34; color: #c5c8a5; background: #22231c; }
-.thread-row { position: relative; display: grid; grid-template-columns: minmax(0,1fr); margin-left: calc(var(--thread-depth, 0) * 14px); border-radius: 8px; }
+.thread-row { position: relative; display: grid; grid-template-columns: minmax(0,1fr); margin-left: calc(var(--thread-depth, 0) * 14px); border-radius: 8px; transition: background-color .16s ease, box-shadow .16s ease; }
 .thread-row.branched::before { position: absolute; top: 0; bottom: 0; left: -8px; width: 1px; background: #3d4930; content: ""; }
 .thread-row.branched::after { position: absolute; top: 18px; left: -8px; width: 8px; height: 1px; background: #3d4930; content: ""; }
 .thread-row.active { background: #20221c; box-shadow: inset 2px 0 0 #9ec44c; }
+.thread-row:hover, .thread-row:focus-within { background: #252720; box-shadow: inset 2px 0 0 #829e43, 0 0 0 1px rgba(158,188,80,.14); }
+.thread-row.active:hover, .thread-row.active:focus-within { background: #2a2d22; box-shadow: inset 3px 0 0 #b4d95a, 0 0 0 1px rgba(180,217,90,.2); }
 .thread-row.running .thread-main small { color: #a8c765; }
 .thread-row.running .thread-main small::before { display: inline-block; width: 5px; height: 5px; margin-right: 4px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 7px rgba(194,232,92,.42); content: ""; }
-.thread-list .thread-main { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 5px; padding-right: 10px; }
+.thread-list .thread-main { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 5px; padding-right: 10px; transition: color .16s ease, background-color .16s ease; }
+.thread-row:hover .thread-main, .thread-row:focus-within .thread-main { color: #eeeede; }
 .thread-main span i { margin-right: 5px; color: #9ebc50; font-size: 7px; font-style: normal; }
 .thread-actions { display: none; grid-column: 1; align-items: center; gap: 3px; min-height: 22px; padding: 0 0 4px 7px; }
 .thread-row:hover .thread-actions, .thread-row:focus-within .thread-actions { display: flex; }
