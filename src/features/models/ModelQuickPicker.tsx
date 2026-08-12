@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Model } from "../../generated/app-server/v2/Model";
 import type { ModelSettings } from "./types";
 
@@ -13,6 +13,16 @@ interface Props {
 
 export function ModelQuickPicker({ settings, loadModels, onChange, onDisplayName, onAdvanced, onClose }: Props) {
   const [models, setModels] = useState<Model[]>([]);
+  const rootRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function dismissOnOutsidePointer(event: PointerEvent) {
+      const target = event.target;
+      if (!(target instanceof Node) || rootRef.current?.contains(target)) return;
+      onClose();
+    }
+    document.addEventListener("pointerdown", dismissOnOutsidePointer, true);
+    return () => document.removeEventListener("pointerdown", dismissOnOutsidePointer, true);
+  }, [onClose]);
   useEffect(() => {
     let active = true;
     void loadModels().then((items) => {
@@ -30,7 +40,7 @@ export function ModelQuickPicker({ settings, loadModels, onChange, onDisplayName
     ?? (settings.reasoningEffort ? [settings.reasoningEffort] : []);
 
   return (
-    <div className="model-picker-popover" role="dialog" aria-label="模型选择">
+    <div ref={rootRef} className="model-picker-popover" role="dialog" aria-label="模型选择">
       <div className="model-picker-section">
         <span className="model-picker-label">模型</span>
         <div className="model-picker-options">

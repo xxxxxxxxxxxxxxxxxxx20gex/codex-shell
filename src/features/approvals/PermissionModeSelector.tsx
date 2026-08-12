@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getPermissionMode, PERMISSION_MODES, type PermissionMode } from "./permissionModes";
 
 interface Props {
@@ -9,7 +9,19 @@ interface Props {
 
 export function PermissionModeSelector({ value, disabled, onChange }: Props) {
   const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
   const selected = getPermissionMode(value);
+
+  useEffect(() => {
+    if (!open) return;
+    function dismissOnOutsidePointer(event: PointerEvent) {
+      const target = event.target;
+      if (!(target instanceof Node) || rootRef.current?.contains(target)) return;
+      setOpen(false);
+    }
+    document.addEventListener("pointerdown", dismissOnOutsidePointer, true);
+    return () => document.removeEventListener("pointerdown", dismissOnOutsidePointer, true);
+  }, [open]);
 
   function select(mode: PermissionMode) {
     onChange(mode);
@@ -17,7 +29,7 @@ export function PermissionModeSelector({ value, disabled, onChange }: Props) {
   }
 
   return (
-    <div className="permission-selector">
+    <div ref={rootRef} className="permission-selector">
       <button
         className={`permission-trigger ${value === "full" ? "danger" : ""}`}
         disabled={disabled}
