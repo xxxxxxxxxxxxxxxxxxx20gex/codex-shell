@@ -2,12 +2,13 @@
 
 - 当前阶段：Milestone 2 — P0 桌面编程工作台
 - 总体状态：P0 工作台与第一、第二阶段 app-server 原生能力接入已完成
-- 最后更新：2026-08-11
+- 最后更新：2026-08-12
 
 ## 已完成
 
 - 已创建独立 Tauri 2 + React + TypeScript 项目，不修改 Codex Core。
 - 已固定 `codex-cli 0.146.0-alpha.9.2` Runtime，并由同一二进制生成稳定 app-server v2 类型。
+- Windows Sandbox 默认设置路径采用官方首选 `elevated` 模式；固定 Runtime 的 setup helper 与 command runner 会被动态发现、hash 记录并作为 Tauri sidecar 同目录分发。
 - 已接通 `initialize → thread/start/resume/list → turn/start → item 通知 → turn/completed`。
 - 已将会话状态建模为可增量合并的 `Thread → Turn → Item`，支持多轮发送、历史加载和失败状态。
 - 已实现左侧最近 50 个非临时本地线程、线程切换与重启恢复。
@@ -20,6 +21,7 @@
 - 对话时间线已展示每轮发送时间、回答完成时间和回答耗时，生成过程中显示明确状态。
 - 已压缩桌面纵向占用：移除无功能的应用品牌栏、会话标题栏和输入框底部提示，时间线显示区域扩大；模型入口统一为工具栏按钮，上下文热力条改为自下而上增长。
 - 左右功能区均支持拖拽调整宽度和独立隐藏/恢复，中央对话区会自动占用释放的空间，并受最小可用宽度保护。
+- UI 默认展开左侧 Session/工作区栏、收起右侧功能区，并默认选择“完全访问权限”；用户仍可从分隔线和输入框工具栏随时调整。
 - 右侧状态区已删除重复的 app-server 与审批策略卡片；CODEX_HOME 卡片支持选择自定义目录和恢复默认目录，切换时安全重启 app-server。
 - 已消费稳定 v2 item/turn 通知，展示计划、推理、命令输出、文件变更、MCP、Web 搜索、图片与子智能体活动。
 - 已用 `turn/diff/updated` 建立实时文件 Diff 面板，并从持久化 `fileChange` item 重建历史 Diff。
@@ -41,6 +43,7 @@
 - 已确认原版 app-server 在隔离 CODEX_HOME 中原生记录 SQLite tracing 日志和 rollout 事件；一次 33.5 秒回合中壳层与 app-server 提交开销不足 1 秒，约 28 秒消耗在网关首个可见增量等待，后续回合另出现上游 overloaded 与 Core 原生重试。
 - 已消费 Tauri `app-server://log`：右侧新增实时日志页，使用 200 条/单行 4000 字符硬上限和 150ms 批量刷新控制内存及渲染开销，并标注日志的敏感数据属性。
 - 已完成阶段性代码健康审查：53 个非生成源码文件未发现达到阈值的复制代码，Knip 未发现无效文件、导出或依赖；Runtime 日志迁移到独立外部 Store，关闭日志页时不再带动最多 200 个 Turn 的主界面刷新；三栏缩放逻辑和日志样式从 `App` 拆出，并统一跨模块错误消息转换。
+- 已完成本轮保持行为的代码健康审查：未发现可安全删除的业务死代码；Knip 无未使用项，事件监听、定时器、Store 和 app-server transport 均有释放路径。修复 Runtime staging 默认采用 PATH 最新版本导致固定协议漂移的问题，并改为临时目录校验完成后再替换 sidecar。
 - 已完成第一阶段服务端交互与运行态接入：三类审批、结构化工具问答和 MCP elicitation 进入统一有界队列；真实 JSON-RPC request ID、服务端撤销、Thread 完整生命周期、通用/配置/Guardian/Windows 安全提示和 Sandbox setup 均复用 app-server 原生协议。
 - 已完成第二阶段生产能力接入：原生模型目录与 Provider capabilities、Review、运行中 Steer、Thread Fork、活动/归档历史与恢复、`thread/read` 只读打开、按需 Resume 和空闲 Unsubscribe 已接入。
 - MCP 面板已补齐 OAuth 登录、配置重载、工具与资源清单、资源读取预览；OAuth 和启动状态由原生通知反馈。未增加自定义 system/developer prompt，也未修改 Codex Core。
@@ -71,11 +74,11 @@
 ## 验证证据
 
 - `pnpm typecheck`：通过。
-- `pnpm test`：33 个测试文件、114 项测试全部通过，包含时间线滚动/导航、Diff 状态/跳转、工作区 watch 生命周期、真实 DOM 行为、统一反向交互、Thread 读写/退订时序、Review/模型设置、MCP schema 与第二阶段 RPC 覆盖。
+- `pnpm test`：36 个测试文件、117 项测试全部通过，新增默认完全访问权限、右栏默认收起和 elevated Sandbox 调用覆盖，并包含时间线滚动/导航、Diff 状态/跳转、工作区 watch 生命周期、真实 DOM 行为、统一反向交互、Thread 读写/退订时序、Review/模型设置、MCP schema 与第二阶段 RPC 覆盖。
 - Rust 单元测试：9 项全部通过，覆盖动态 Runtime、每日默认工作区、独立 provider 参数、旧 CODEX_HOME 迁移、双目录冲突和官方目录防重叠校验。
 - `pnpm rust:check`：从 clean target 完整重编译后通过。
 - `pnpm build`：包含虚拟时间线、目录 watch、目录选择插件和 P0 工作台 UI 的生产构建通过。
-- Tauri debug build：P0 优化后构建通过，产物为 `src-tauri/target/debug/codex-shell.exe`；此前从项目目录之外调用脚本的动态路径证据继续有效。
+- Tauri debug build：构建通过，产物为 `src-tauri/target/debug/codex-shell.exe`；同目录三个 Runtime 文件名正确且 SHA-256 与 manifest 一致，此前从项目目录之外调用脚本的动态路径证据继续有效。
 - 后台 app-server smoke：创建两个真实 turn、停止并重启 app-server、`thread/list` 找到线程、`thread/resume` 恢复 2 个 turn，独立 CODEX_HOME 通过断言。
 - 后台并行 smoke：同一 app-server 中启动两个独立 Thread/Turn，观测到最大并发数 2 且两个 Turn 均完成；使用临时独立 CODEX_HOME，测试后自动清理。
 - 后台文件 smoke：真实 `fs/readDirectory` 能列出临时工作区文件，`fs/readFile` 返回内容与源文件一致；临时目录测试后自动清理。

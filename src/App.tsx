@@ -5,7 +5,7 @@ import type { ModeKind } from "./generated/app-server/ModeKind";
 import { errorMessage } from "./shared/errors";
 import "./App.css";
 import { PermissionModeSelector } from "./features/approvals/PermissionModeSelector";
-import type { PermissionMode } from "./features/approvals/permissionModes";
+import { DEFAULT_PERMISSION_MODE, type PermissionMode } from "./features/approvals/permissionModes";
 import { GoalPanel } from "./features/commands/GoalPanel";
 import { McpStatusPanel } from "./features/commands/McpStatusPanel";
 import { ReviewPanel } from "./features/commands/ReviewPanel";
@@ -61,7 +61,7 @@ function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settings, setSettings] = useState(initialSettings);
   const [draft, setDraft] = useState("");
-  const [permissionMode, setPermissionMode] = useState<PermissionMode>("ask");
+  const [permissionMode, setPermissionMode] = useState<PermissionMode>(DEFAULT_PERMISSION_MODE);
   const [workspacePath, setWorkspacePath] = useState<string | null>(loadWorkspacePath);
   const [defaultWorkspace, setDefaultWorkspace] = useState<DefaultWorkspace | null>(null);
   const [workspaceExplorerOpen, setWorkspaceExplorerOpen] = useState(false);
@@ -484,7 +484,7 @@ function App() {
           } : undefined} /> : inspectorTab === "logs" ? (
             <RuntimeLogPanel store={session.runtimeLogStore} />
           ) : (
-            <StatusInspector turnCount={session.turns.length} threadId={session.thread?.id ?? null} workspacePath={currentWorkspacePath} workspaceKind={workspaceStatusKind} usingManagedWorkspace={usingManagedWorkspace} canUseDefaultWorkspace={Boolean(defaultWorkspace)} codexHome={session.codexHome} codexHomeDisabled={session.runningThreadCount > 0 || session.submitting} noticeStore={session.runtimeNoticeStore} windowsSandboxReadiness={session.windowsSandboxReadiness} onBrowseWorkspace={() => openWorkspaceExplorer()} onUseDefaultWorkspace={() => changeWorkspace(null)} onSetupWindowsSandbox={() => session.setupWindowsSandbox("unelevated")} onRestart={session.restart} />
+            <StatusInspector turnCount={session.turns.length} threadId={session.thread?.id ?? null} workspacePath={currentWorkspacePath} workspaceKind={workspaceStatusKind} usingManagedWorkspace={usingManagedWorkspace} canUseDefaultWorkspace={Boolean(defaultWorkspace)} codexHome={session.codexHome} codexHomeDisabled={session.runningThreadCount > 0 || session.submitting} noticeStore={session.runtimeNoticeStore} windowsSandboxReadiness={session.windowsSandboxReadiness} onBrowseWorkspace={() => openWorkspaceExplorer()} onUseDefaultWorkspace={() => changeWorkspace(null)} onSetupWindowsSandbox={session.setupWindowsSandbox} onRestart={session.restart} />
           )}
         </aside>
       </section>

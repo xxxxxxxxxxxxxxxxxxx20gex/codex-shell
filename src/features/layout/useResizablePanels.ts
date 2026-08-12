@@ -13,7 +13,7 @@ type WorkspaceGridStyle = CSSProperties & {
 
 export function useResizablePanels() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [inspectorOpen, setInspectorOpen] = useState(true);
+  const [inspectorOpen, setInspectorOpen] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH);
   const [inspectorWidth, setInspectorWidth] = useState(DEFAULT_INSPECTOR_WIDTH);
   const [resizingPanel, setResizingPanel] = useState<ResizablePanel | null>(null);

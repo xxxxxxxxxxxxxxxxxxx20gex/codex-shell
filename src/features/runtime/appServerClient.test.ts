@@ -262,9 +262,9 @@ describe("AppServerClient", () => {
     transport.emit({ id: request.id, result: { status: "ready" } });
     await readiness;
 
-    const setup = client.startWindowsSandboxSetup({ mode: "unelevated", cwd: "C:\\work" });
+    const setup = client.startWindowsSandboxSetup({ mode: "elevated", cwd: "C:\\work" });
     request = transport.sent[transport.sent.length - 1];
-    expect(request).toMatchObject({ method: "windowsSandbox/setupStart", params: { mode: "unelevated", cwd: "C:\\work" } });
+    expect(request).toMatchObject({ method: "windowsSandbox/setupStart", params: { mode: "elevated", cwd: "C:\\work" } });
     transport.emit({ id: request.id, result: { started: true } });
     await setup;
   });

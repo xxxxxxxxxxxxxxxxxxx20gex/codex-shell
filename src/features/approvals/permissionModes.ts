@@ -4,6 +4,8 @@ import type { SandboxMode } from "../../generated/app-server/v2/SandboxMode";
 
 export type PermissionMode = "ask" | "auto" | "full";
 
+export const DEFAULT_PERMISSION_MODE: PermissionMode = "full";
+
 export interface PermissionModeConfig {
   id: PermissionMode;
   label: string;
