@@ -39,6 +39,7 @@ import { threadTitle } from "./features/threads/threadPresentation";
 import { FileMentionMenu } from "./features/workspaces/FileMentionMenu";
 import { WorkspaceExplorer } from "./features/workspaces/WorkspaceExplorer";
 import { WorkspaceSelector } from "./features/workspaces/WorkspaceSelector";
+import "./styles/tokens.css";
 import {
   activeFileMentionQuery,
   type DefaultWorkspace,
@@ -81,6 +82,7 @@ function App() {
   const [slashSelectedIndex, setSlashSelectedIndex] = useState(0);
   const [inspectorTab, setInspectorTab] = useState<"changes" | "status" | "logs">("changes");
   const mentionRequestRef = useRef(0);
+  const commandButtonRef = useRef<HTMLButtonElement>(null);
   const {
     workspaceGridRef,
     workspaceGridStyle,
@@ -180,8 +182,20 @@ function App() {
       setSlashMenuDismissed(true);
       setCommandPanel(null);
     }
+    function dismissOnEscape(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      setSlashMenuForced(false);
+      setSlashMenuDismissed(true);
+      setCommandPanel(null);
+      commandButtonRef.current?.focus();
+    }
     document.addEventListener("pointerdown", dismissOnOutsidePointer, true);
-    return () => document.removeEventListener("pointerdown", dismissOnOutsidePointer, true);
+    document.addEventListener("keydown", dismissOnEscape, true);
+    return () => {
+      document.removeEventListener("pointerdown", dismissOnOutsidePointer, true);
+      document.removeEventListener("keydown", dismissOnEscape, true);
+    };
   }, [commandPanel, slashMenuVisible]);
 
   async function runSlashCommand(id: SlashCommandId, args = "", clearDraft = true) {
@@ -438,7 +452,7 @@ function App() {
               {commandPanel === "review" && <ReviewPanel startReview={session.startReview} onStarted={(delivery) => { setCommandPanel(null); setCommandNotice(delivery === "detached" ? "已打开独立 Review Session。" : "原生代码审查已在当前 Session 启动。"); }} onClose={() => setCommandPanel(null)} />}
               <div className="composer-toolbar">
                 <div className="composer-tools">
-                  <button className={`command-button ${slashMenuVisible || commandPanel ? "active" : ""}`} onClick={() => { setCommandPanel(null); setSlashMenuDismissed(false); setSlashMenuForced((current) => !current); setSlashSelectedIndex(0); }} title="Skills、MCP、计划、压缩与目标">/</button>
+                  <button ref={commandButtonRef} className={`command-button ${slashMenuVisible || commandPanel ? "active" : ""}`} onClick={() => { setCommandPanel(null); setSlashMenuDismissed(false); setSlashMenuForced((current) => !current); setSlashSelectedIndex(0); }} title="Skills、MCP、计划、压缩与目标">/</button>
                   {collaborationMode === "plan" && <button className="plan-mode-button" onClick={() => { setCollaborationMode("default"); setCommandNotice("已退出计划模式，下一条消息将按默认模式执行。"); }} title="退出计划模式"><span>☷</span>计划模式<i>×</i></button>}
                   <div className="model-picker-anchor">
                     <button className="model-button" onClick={() => setModelPickerOpen((open) => !open)} title="选择模型与推理强度"><span>{modelDisplayName ?? settings.modelId}</span><svg className="chevron-icon" aria-hidden="true" viewBox="0 0 12 12"><path d="m3.5 4.5 2.5 2.5 2.5-2.5" /></svg></button>

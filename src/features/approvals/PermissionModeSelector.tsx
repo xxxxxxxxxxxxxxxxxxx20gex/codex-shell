@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { getPermissionMode, PERMISSION_MODES, type PermissionMode } from "./permissionModes";
+import { useDismissiblePopover } from "../../shared/useDismissiblePopover";
 
 interface Props {
   value: PermissionMode;
@@ -9,19 +10,8 @@ interface Props {
 
 export function PermissionModeSelector({ value, disabled, onChange }: Props) {
   const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const rootRef = useDismissiblePopover<HTMLDivElement>({ open, onClose: () => setOpen(false) });
   const selected = getPermissionMode(value);
-
-  useEffect(() => {
-    if (!open) return;
-    function dismissOnOutsidePointer(event: PointerEvent) {
-      const target = event.target;
-      if (!(target instanceof Node) || rootRef.current?.contains(target)) return;
-      setOpen(false);
-    }
-    document.addEventListener("pointerdown", dismissOnOutsidePointer, true);
-    return () => document.removeEventListener("pointerdown", dismissOnOutsidePointer, true);
-  }, [open]);
 
   function select(mode: PermissionMode) {
     onChange(mode);
