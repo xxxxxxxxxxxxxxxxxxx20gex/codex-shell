@@ -129,6 +129,27 @@ describe("useThreadController", () => {
     expect(client.resumeThread.mock.invocationCallOrder[0]).toBeLessThan(client.startTurn.mock.invocationCallOrder[0]);
   });
 
+  it("continues the same Session after a runtime reset", async () => {
+    const { client, props } = setup();
+    const { result } = renderHook(() => useThreadController(props));
+    await waitFor(() => expect(client.listThreads).toHaveBeenCalled());
+
+    await act(async () => {
+      await result.current.openThread("thread-a");
+    });
+    act(() => result.current.reset());
+    await act(async () => {
+      await result.current.openThread("thread-a");
+      expect(await result.current.send("continue with another model")).toBe(true);
+    });
+
+    expect(client.startThread).not.toHaveBeenCalled();
+    expect(client.startTurn).toHaveBeenCalledWith(expect.objectContaining({
+      threadId: "thread-a",
+      model: "gpt-test",
+    }), undefined);
+  });
+
   it("keeps full access overrides on every Turn", async () => {
     const { client, props } = setup();
     props.permissionMode = "full";

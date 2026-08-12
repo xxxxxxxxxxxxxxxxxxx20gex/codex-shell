@@ -108,6 +108,7 @@ export function useAgentSession(
     removeThread,
     onThreadUnarchived,
     onThreadClosed,
+    openThread,
     reset: resetThreads,
     refreshHistory,
   } = threads;
@@ -275,19 +276,20 @@ export function useAgentSession(
   }, [activeWorkspacePath, ensureConnected, runtimeNoticeStore]);
 
   const restart = useCallback(async () => {
+    const threadIdToRestore = currentThreadId();
     setSubmitting(false);
     clearRunningTurns();
     interactionStore.clear();
-    resetThreads();
     sandboxReadinessCheckedRef.current = false;
     setWindowsSandboxReadiness(null);
     try {
       await clientRef.current?.stop();
       await refreshHistory();
+      if (threadIdToRestore) await openThread(threadIdToRestore);
     } catch (restartError) {
       setError(errorMessage(restartError));
     }
-  }, [clearRunningTurns, interactionStore, refreshHistory, resetThreads]);
+  }, [clearRunningTurns, currentThreadId, interactionStore, openThread, refreshHistory]);
 
   const running = submitting || Boolean(
     sessionState.thread && runningThreadIds.has(sessionState.thread.id),
