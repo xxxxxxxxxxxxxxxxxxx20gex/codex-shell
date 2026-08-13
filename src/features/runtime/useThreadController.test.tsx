@@ -135,11 +135,18 @@ describe("useThreadController", () => {
     await act(async () => {
       expect(await result.current.send("continue")).toBe(true);
     });
-    expect(client.resumeThread).toHaveBeenCalledWith(expect.objectContaining({ threadId: "thread-a" }));
+    expect(client.resumeThread).toHaveBeenCalledWith({ threadId: "thread-a" });
     expect(client.startTurn).toHaveBeenCalledWith(expect.objectContaining({
       threadId: "thread-a",
       approvalPolicy: "on-request",
       approvalsReviewer: "user",
+      sandboxPolicy: {
+        type: "workspaceWrite",
+        writableRoots: [],
+        networkAccess: false,
+        excludeTmpdirEnvVar: false,
+        excludeSlashTmp: false,
+      },
     }), undefined);
     expect(props.markThreadRunning).toHaveBeenCalledWith("thread-a", "turn-a", "regular");
     expect(client.resumeThread.mock.invocationCallOrder[0]).toBeLessThan(client.startTurn.mock.invocationCallOrder[0]);
@@ -181,6 +188,25 @@ describe("useThreadController", () => {
       approvalsReviewer: "user",
       sandboxPolicy: { type: "dangerFullAccess" },
     }), undefined);
+  });
+
+  it("explicitly tightens the Turn sandbox after leaving full access", async () => {
+    const { client, props } = setup();
+    props.permissionMode = "ask";
+    const { result } = renderHook(() => useThreadController(props));
+    await waitFor(() => expect(client.listThreads).toHaveBeenCalled());
+
+    await act(async () => {
+      await result.current.openThread("thread-a");
+      expect(await result.current.send("continue with workspace access")).toBe(true);
+    });
+
+    expect(client.startTurn).toHaveBeenCalledWith(expect.objectContaining({
+      threadId: "thread-a",
+      approvalPolicy: "on-request",
+      sandboxPolicy: expect.objectContaining({ type: "workspaceWrite" }),
+    }), undefined);
+    expect(client.startThread).not.toHaveBeenCalled();
   });
 
   it("keeps explicit same-Turn steering available", async () => {
@@ -339,7 +365,7 @@ describe("useThreadController", () => {
       await result.current.openThread("thread-a");
     });
 
-    expect(client.resumeThread).toHaveBeenCalledWith(expect.objectContaining({ threadId: "thread-a" }));
+    expect(client.resumeThread).toHaveBeenCalledWith({ threadId: "thread-a" });
     expect(dispatch).toHaveBeenCalledWith(expect.objectContaining({ type: "loadThread" }));
   });
 

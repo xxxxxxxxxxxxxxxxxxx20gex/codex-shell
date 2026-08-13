@@ -134,6 +134,7 @@ export function ConversationTurn({
               items={block.items}
               active={active && (blockIndex === finalActivityBlockIndex || block.items.some((item) => activeItemTurnIds[item.id] === turn.id))}
               turnActive={active}
+              startedAt={turn.startedAt}
               durationMs={turn.durationMs}
               showHeader={blockIndex === firstActivityBlockIndex}
               turnId={turn.id}

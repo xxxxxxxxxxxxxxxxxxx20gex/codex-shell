@@ -334,6 +334,7 @@ export class AppServerClient {
         clientInfo: { name: "codex-shell", title: "Codex Shell", version: "0.1.0" },
         capabilities: {
           experimentalApi: true,
+          requestAttestation: false,
           mcpServerOpenaiFormElicitation: true,
         },
       });

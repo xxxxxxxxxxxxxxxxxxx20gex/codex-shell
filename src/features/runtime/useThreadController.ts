@@ -14,7 +14,7 @@ import type { ThreadStatusChangedNotification } from "../../generated/app-server
 import type { TurnCompletedNotification } from "../../generated/app-server/v2/TurnCompletedNotification";
 import type { TurnStartedNotification } from "../../generated/app-server/v2/TurnStartedNotification";
 import { errorMessage } from "../../shared/errors";
-import { getPermissionMode, type PermissionMode } from "../approvals/permissionModes";
+import type { PermissionMode } from "../approvals/permissionModes";
 import type { ModelSettings } from "../models/types";
 import type { AppServerClient } from "./appServerClient";
 import type { AgentSessionAction } from "./sessionState";
@@ -111,20 +111,13 @@ export function useThreadController(props: Props) {
     if (!threadId) throw new Error("请先发送一条消息创建 Session");
     const client = await props.ensureConnected();
     if (!subscribedThreadIdsRef.current.has(threadId)) {
-      const permissions = getPermissionMode(props.permissionMode);
-      const response = await client.resumeThread({
-        threadId,
-        model: props.settings.modelId,
-        approvalPolicy: permissions.approvalPolicy,
-        approvalsReviewer: permissions.approvalsReviewer,
-        sandbox: permissions.sandbox,
-      });
+      const response = await client.resumeThread({ threadId });
       subscribedThreadIdsRef.current.add(threadId);
       props.dispatch({ type: "loadThread", thread: response.thread });
       applyThreadRuntimeState(response.thread);
     }
     return { client, threadId };
-  }, [applyThreadRuntimeState, props.dispatch, props.ensureConnected, props.permissionMode, props.settings.modelId]);
+  }, [applyThreadRuntimeState, props.dispatch, props.ensureConnected]);
 
   const { send, sendQueued, steer, interrupt } = useTurnExecution({
     clientRef: props.clientRef,
@@ -190,14 +183,7 @@ export function useThreadController(props: Props) {
         openedThread = (await client.readThread({ threadId, includeTurns: true })).thread;
       } catch (readError) {
         if (!canResumeAfterReadError(readError)) throw readError;
-        const permissions = getPermissionMode(props.permissionMode);
-        openedThread = (await client.resumeThread({
-          threadId,
-          model: props.settings.modelId,
-          approvalPolicy: permissions.approvalPolicy,
-          approvalsReviewer: permissions.approvalsReviewer,
-          sandbox: permissions.sandbox,
-        })).thread;
+        openedThread = (await client.resumeThread({ threadId })).thread;
         subscribedThreadIdsRef.current.add(threadId);
       }
       threadIdRef.current = openedThread.id;
@@ -214,10 +200,8 @@ export function useThreadController(props: Props) {
     applyThreadRuntimeState,
     props.dispatch,
     props.ensureConnected,
-    props.permissionMode,
     props.setError,
     props.setSubmitting,
-    props.settings.modelId,
     unsubscribeIfIdle,
   ]);
 

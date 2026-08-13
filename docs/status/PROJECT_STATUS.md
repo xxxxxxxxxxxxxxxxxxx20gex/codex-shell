@@ -62,6 +62,7 @@
 - Diff 已支持新增、删除、重命名和修改的文件级摘要，非删除文件可直接在工作区浏览器定位预览；工作区通过稳定 `fs/watch/fs/changed/fs/unwatch` 自动刷新展开目录和当前文件，并完整清理订阅、listener 与防抖 timer。
 - GitHub 交付已切换为 GitHub CLI 非交互凭据助手，并为本仓库固定本机 `7897` HTTP(S) 代理；完成并验证用户要求的改动后默认提交、推送，不再触发 GCM 图形确认。
 - 已修复模型启动配置切换导致当前 Session 丢失：必要的 app-server 重启会保存当前 Thread ID，重连后通过原生 `thread/read` 恢复，下一轮继续在同一 Session 使用新模型。
+- 已完成一轮 app-server 语义对齐审计：权限切换不再新建 Session；从完全访问降权时显式发送 `workspaceWrite`，避免沿用旧沙盒；历史 Resume 不再提前改写模型和权限，下一 Turn 的模型、推理与权限由 `turn/start` 原子生效；initialize 能力声明补齐显式 attestation 选择。Queue 明确为 Shell 当前进程内的有界队列，Steer 保持原生 `turn/steer`。
 - 模型原生目录已收敛为单一名称展示，不再重复显示相同名称和 ID；助手回答移除模型侧头像与名称，改为左侧短高亮竖线，减少重复信息和横向占用。
 - 模型入口已改为 Codex 风格两层结构：输入框旁即时选择 app-server 原生模型与推理强度，高级设置管理网关、Key、自定义模型和扩展参数；能力模板及静态模板目录已移除，所有参数变化均保持当前 Session。
 - 对话执行体验进一步对齐 Codex 桌面端：同一 Turn 的 commentary、reasoning、命令与工具事件按原始顺序组成连续过程流，运行中显示 app-server 原生活动或 MCP progress，完成后使用稳定 `Turn.durationMs` 展示耗时；命令与工具逐项折叠，文件修改在回答末尾汇总，不生成服务端未提供的过程内容。消息轨道不再根据点击索引误判滚动到底，运行项展开和新输出不会把正在阅读历史的视口拉回。
@@ -75,7 +76,7 @@
 
 ## 当前风险
 
-- app-server 崩溃后的当前 Session 自动恢复、超大文件预览/超大 Diff 的源端截断和二进制文件变更提示尚未完成；单个超长 Turn 内部活动尚未二次虚拟化。
+- app-server 崩溃后的当前 Session 自动恢复、Shell Queue 跨重启持久化、超大文件预览/超大 Diff 的源端截断和二进制文件变更提示尚未完成；单个超长 Turn 内部活动尚未二次虚拟化。
 - `useThreadController` 已拆出历史、Review 和普通 Turn 执行生命周期；Thread 元数据操作仍集中，继续扩充前应按操作族拆分。`App.tsx` 仍约 510 行，Composer 状态和面板编排是下一处明确拆分边界；`App.css` 仍包含多个 feature 的集中样式，应按实际功能改动渐进迁移。
 - PATH Runtime 尚未校验与生成协议的版本/hash；旧进程无代际 `stopped` 事件、跨卷 CODEX_HOME 迁移和旧应用标识/凭据迁移仍存在兼容风险。
 - 用户文本、Steer、Review、Goal 和结构化问答已在 Shell 边界限制为 8000 UTF-8 bytes；多 Skill 聚合、全局 `AGENTS.md` 和 Runtime Goal continuation 仍缺少统一硬预算，应优先在 app-server/Runtime 中建立不可绕过的中央边界。
@@ -90,7 +91,7 @@
 ## 验证证据
 
 - `pnpm typecheck`：通过。
-- `pnpm test`：40 个测试文件、151 项测试全部通过，覆盖项目目录/Thread `cwd`、默认项目目录、文件浏览与 watch、执行过程、Queue/Steer、模型/权限热切换、分叉祖先、统一反向交互、Review 和 MCP。
+- `pnpm test`：40 个测试文件、153 项测试全部通过，覆盖项目目录/Thread `cwd`、默认项目目录、文件浏览与 watch、执行过程、Queue/Steer、模型/权限热切换与降权、Resume 无覆盖、分叉祖先、统一反向交互、Review 和 MCP。
 - Rust 单元测试：11 项全部通过，覆盖显式模型参数、旧模板配置兼容归一化、动态 Runtime、每日默认项目目录、独立 provider 参数、旧 CODEX_HOME 迁移、双目录冲突和官方目录防重叠校验。
 - `pnpm rust:check`：从 clean target 完整重编译后通过。
 - `pnpm build`：包含虚拟时间线、目录 watch、目录选择插件和 P0 工作台 UI 的生产构建通过。

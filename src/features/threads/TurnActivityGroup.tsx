@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import type { McpToolCallProgressNotification } from "../../generated/app-server/v2/McpToolCallProgressNotification";
 import { formatTurnDuration } from "./conversationTiming";
@@ -8,6 +9,7 @@ interface Props {
   items: ThreadItem[];
   active: boolean;
   turnActive: boolean;
+  startedAt: number | null;
   durationMs: number | null;
   showHeader: boolean;
   turnId: string;
@@ -15,9 +17,20 @@ interface Props {
   mcpProgressByItemId: Record<string, McpToolCallProgressNotification>;
 }
 
-export function TurnActivityGroup({ items, active, turnActive, durationMs, showHeader, turnId, activeItemTurnIds, mcpProgressByItemId }: Props) {
+export function TurnActivityGroup({ items, active, turnActive, startedAt, durationMs, showHeader, turnId, activeItemTurnIds, mcpProgressByItemId }: Props) {
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    if (!turnActive || startedAt === null) return;
+    setNow(Date.now());
+    const interval = window.setInterval(() => setNow(Date.now()), 1_000);
+    return () => window.clearInterval(interval);
+  }, [startedAt, turnActive]);
+
   if (items.length === 0) return null;
-  const duration = durationMs === null ? "" : ` ${formatTurnDuration(durationMs)}`;
+  const elapsedMs = turnActive && startedAt !== null
+    ? Math.max(0, now - startedAt * 1_000)
+    : durationMs;
+  const duration = elapsedMs === null ? "" : ` ${formatTurnDuration(elapsedMs)}`;
   const activeItem = [...items].reverse().find((item) => activeItemTurnIds[item.id] === turnId);
   const activeProgress = activeItem ? mcpProgressByItemId[activeItem.id]?.message : null;
 
@@ -25,7 +38,7 @@ export function TurnActivityGroup({ items, active, turnActive, durationMs, showH
     <section className="turn-activity-stream" role={active ? "status" : undefined} aria-live={active ? "polite" : undefined}>
       {showHeader && <div className="turn-work-status">
         <span className={`turn-activity-indicator${turnActive ? " active" : ""}`} aria-hidden="true" />
-        <strong>{turnActive ? "正在处理" : `已处理${duration}`}</strong>
+        <strong>{`已处理${duration}`}</strong>
       </div>}
       <div className="turn-activity-list">
         {items.map((item) => item.type === "agentMessage" ? (

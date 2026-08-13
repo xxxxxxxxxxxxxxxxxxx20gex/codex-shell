@@ -15,6 +15,7 @@ describe("AppServerClient", () => {
         params: expect.objectContaining({
           capabilities: {
             experimentalApi: true,
+            requestAttestation: false,
             mcpServerOpenaiFormElicitation: true,
           },
         }),

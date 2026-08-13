@@ -188,7 +188,7 @@ describe("conversation timing", () => {
       />,
     );
 
-    expect(markup).toContain("正在处理");
+    expect(markup).toContain("已处理");
     expect(markup).toContain("运行命令");
     expect(markup).not.toContain('class="turn-activity-group" open=""');
   });
@@ -233,8 +233,7 @@ describe("conversation timing", () => {
       />,
     );
 
-    expect((markup.match(/正在处理/g) ?? []).length).toBe(1);
-    expect(markup).not.toContain("已处理");
+    expect((markup.match(/已处理/g) ?? []).length).toBe(1);
     expect((markup.match(/class="turn-activity-stream/g) ?? []).length).toBe(2);
   });
 
@@ -409,7 +408,7 @@ describe("conversation timing", () => {
     );
 
     expect(markup).toContain("正在读取接口文档");
-    expect(markup).toContain("正在处理");
+    expect(markup).toContain("已处理");
     expect(markup).not.toContain("正在处理任务…");
     expect(markup).not.toContain("Codex 正在处理任务…");
     expect(markup).toContain("role=\"status\"");

@@ -260,7 +260,7 @@ code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 .thread-row.active:hover, .thread-row.active:focus-within { background: #2a2d22; box-shadow: inset 3px 0 0 #b4d95a, 0 0 0 1px rgba(180,217,90,.2); }
 .thread-row.running .thread-main small { color: #a8c765; }
 .thread-row.running .thread-main small::before { display: inline-block; width: 5px; height: 5px; margin-right: 4px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 7px rgba(194,232,92,.42); content: ""; }
-.thread-list .thread-main { display: grid; min-height: 36px; grid-template-columns: minmax(0,1fr) auto; gap: 5px; padding-right: 118px; transition: color .16s ease, background-color .16s ease; }
+.thread-list .thread-main { display: grid; min-height: 36px; grid-template-columns: minmax(0,1fr) auto; gap: 5px; padding-right: 10px; transition: color .16s ease, background-color .16s ease; }
 .thread-list .thread-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .thread-row:hover .thread-main, .thread-row:focus-within .thread-main { color: #eeeede; }
 .thread-main span i { margin-right: 5px; color: #9ebc50; font-size: 7px; font-style: normal; }

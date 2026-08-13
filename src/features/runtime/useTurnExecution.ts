@@ -3,7 +3,11 @@ import type { ModeKind } from "../../generated/app-server/ModeKind";
 import type { Thread } from "../../generated/app-server/v2/Thread";
 import { errorMessage } from "../../shared/errors";
 import { assertModelVisibleInput } from "../../shared/modelVisibleInput";
-import { getPermissionMode, type PermissionMode } from "../approvals/permissionModes";
+import {
+  getPermissionMode,
+  getTurnSandboxPolicy,
+  type PermissionMode,
+} from "../approvals/permissionModes";
 import type { ModelSettings } from "../models/types";
 import type { AppServerClient } from "./appServerClient";
 import { buildUserInput, type FileMention, type SkillMention } from "./sessionInput";
@@ -58,9 +62,7 @@ function startTurn(
     effort: settings.reasoningEffort,
     approvalPolicy: permissions.approvalPolicy,
     approvalsReviewer: permissions.approvalsReviewer,
-    ...(permissions.sandbox === "danger-full-access"
-      ? { sandboxPolicy: { type: "dangerFullAccess" as const } }
-      : {}),
+    sandboxPolicy: getTurnSandboxPolicy(permissionMode),
   }, collaboration);
 }
 
@@ -163,14 +165,7 @@ export function useTurnExecution(props: Props) {
     try {
       const client = await props.ensureConnected();
       if (!props.subscribedThreadIdsRef.current.has(threadId)) {
-        const permissions = getPermissionMode(queued.permissionMode);
-        await client.resumeThread({
-          threadId,
-          model: queued.settings.modelId,
-          approvalPolicy: permissions.approvalPolicy,
-          approvalsReviewer: permissions.approvalsReviewer,
-          sandbox: permissions.sandbox,
-        });
+        await client.resumeThread({ threadId });
         props.subscribedThreadIdsRef.current.add(threadId);
       }
       const response = await startTurn(

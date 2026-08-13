@@ -287,8 +287,8 @@ function App() {
 
   function changePermissionMode(next: PermissionMode) {
     if (next === permissionMode) return;
-    startNewTask();
     setPermissionMode(next);
+    setCommandNotice("权限设置将在当前 Session 的下一条消息生效。");
   }
 
   function changeProject(path: string | null) {
@@ -476,7 +476,7 @@ function App() {
                     <button className="model-button" onClick={() => setModelPickerOpen((open) => !open)} title="选择模型与推理强度"><span>{modelDisplayName ?? settings.modelId}</span><svg className="chevron-icon" aria-hidden="true" viewBox="0 0 12 12"><path d="m3.5 4.5 2.5 2.5 2.5-2.5" /></svg></button>
                     {modelPickerOpen && <ModelQuickPicker settings={settings} loadModels={session.listModels} onChange={changeModelSettings} onDisplayName={setModelDisplayName} onAdvanced={() => { setModelPickerOpen(false); setSettingsOpen(true); }} onClose={() => setModelPickerOpen(false)} />}
                   </div>
-                  <PermissionModeSelector value={permissionMode} disabled={session.running} onChange={changePermissionMode} />
+                  <PermissionModeSelector value={permissionMode} onChange={changePermissionMode} />
                 </div>
                 <div className="composer-actions">
                   <div className="send-mode-anchor">

@@ -1,6 +1,7 @@
 import type { ApprovalsReviewer } from "../../generated/app-server/v2/ApprovalsReviewer";
 import type { AskForApproval } from "../../generated/app-server/v2/AskForApproval";
 import type { SandboxMode } from "../../generated/app-server/v2/SandboxMode";
+import type { SandboxPolicy } from "../../generated/app-server/v2/SandboxPolicy";
 
 export type PermissionMode = "ask" | "auto" | "full";
 
@@ -48,4 +49,16 @@ export const PERMISSION_MODES: PermissionModeConfig[] = [
 
 export function getPermissionMode(id: PermissionMode) {
   return PERMISSION_MODES.find((mode) => mode.id === id) ?? PERMISSION_MODES[0];
+}
+
+export function getTurnSandboxPolicy(id: PermissionMode): SandboxPolicy {
+  return id === "full"
+    ? { type: "dangerFullAccess" }
+    : {
+        type: "workspaceWrite",
+        writableRoots: [],
+        networkAccess: false,
+        excludeTmpdirEnvVar: false,
+        excludeSlashTmp: false,
+      };
 }
