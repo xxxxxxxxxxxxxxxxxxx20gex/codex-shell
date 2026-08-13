@@ -18,7 +18,7 @@ import type { PermissionMode } from "../approvals/permissionModes";
 import type { ModelSettings } from "../models/types";
 import type { AppServerClient } from "./appServerClient";
 import type { AgentSessionAction } from "./sessionState";
-import type { FileMention, SkillMention } from "./sessionInput";
+import type { FileMention, ImageAttachment, SkillMention } from "./sessionInput";
 import { useQueuedTurns } from "./useQueuedTurns";
 import type { RunningTurn, RunningTurnKind } from "./useRunningTurns";
 import { useThreadHistory } from "./useThreadHistory";
@@ -145,6 +145,7 @@ export function useThreadController(props: Props) {
     mentions: FileMention[] = [],
     skills: SkillMention[] = [],
     collaborationMode: ModeKind = "default",
+    images: ImageAttachment[] = [],
   ) => {
     const message = text.trim();
     const threadId = threadIdRef.current;
@@ -154,6 +155,7 @@ export function useThreadController(props: Props) {
       mentions: [...mentions],
       skills: [...skills],
       collaborationMode,
+      images: [...images],
       settings: { ...props.settings },
       permissionMode: props.permissionMode,
     });

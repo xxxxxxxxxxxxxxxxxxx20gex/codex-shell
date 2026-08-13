@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import type { ModeKind } from "../../generated/app-server/ModeKind";
 import type { PermissionMode } from "../approvals/permissionModes";
 import type { ModelSettings } from "../models/types";
-import type { FileMention, SkillMention } from "./sessionInput";
+import type { FileMention, ImageAttachment, SkillMention } from "./sessionInput";
 
 export const MAX_QUEUED_TURNS_PER_THREAD = 10;
 
@@ -11,6 +11,7 @@ export interface QueuedTurnInput {
   text: string;
   mentions: FileMention[];
   skills: SkillMention[];
+  images?: ImageAttachment[];
   collaborationMode: ModeKind;
   settings: ModelSettings;
   permissionMode: PermissionMode;

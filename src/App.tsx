@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { invoke } from "@tauri-apps/api/core";
 import type { FuzzyFileSearchResult } from "./generated/app-server/FuzzyFileSearchResult";
 import type { ModeKind } from "./generated/app-server/ModeKind";
@@ -11,6 +12,7 @@ import { McpStatusPanel } from "./features/commands/McpStatusPanel";
 import { ReviewPanel } from "./features/commands/ReviewPanel";
 import { SkillPicker } from "./features/commands/SkillPicker";
 import { composerSubmitAction, SendModeControl } from "./features/composer/SendModeControl";
+import { AttachmentMenu } from "./features/composer/AttachmentMenu";
 import { commandDisabled, SlashCommandMenu } from "./features/commands/SlashCommandMenu";
 import { useResizablePanels } from "./features/layout/useResizablePanels";
 import {
@@ -29,6 +31,7 @@ import { StatusInspector } from "./features/runtime/StatusInspector";
 import {
   sendOrQueue,
   type FileMention,
+  type ImageAttachment,
   type SkillMention,
   useAgentSession,
 } from "./features/runtime/useAgentSession";
@@ -72,6 +75,7 @@ function App() {
   const [workspaceExplorerOpen, setWorkspaceExplorerOpen] = useState(false);
   const [workspaceExplorerInitialPath, setWorkspaceExplorerInitialPath] = useState<string | null>(null);
   const [mentions, setMentions] = useState<FileMention[]>([]);
+  const [images, setImages] = useState<ImageAttachment[]>([]);
   const [skills, setSkills] = useState<SkillMention[]>([]);
   const [mentionResults, setMentionResults] = useState<FuzzyFileSearchResult[]>([]);
   const [mentionLoading, setMentionLoading] = useState(false);
@@ -84,6 +88,7 @@ function App() {
   const [slashSelectedIndex, setSlashSelectedIndex] = useState(0);
   const [inspectorTab, setInspectorTab] = useState<"changes" | "status" | "logs">("changes");
   const mentionRequestRef = useRef(0);
+  const composerRef = useRef<HTMLDivElement>(null);
   const commandButtonRef = useRef<HTMLButtonElement>(null);
   const {
     workspaceGridRef,
@@ -196,9 +201,10 @@ function App() {
           setCommandNotice("计划模式已开启。下一条消息会让 Codex 先分析需求并制定计划；点击工具栏中的计划模式可退出。");
           return;
         }
-        if (await session.send(args, mentions, skills, "plan")) {
+        if (await session.send(args, mentions, skills, "plan", images)) {
           setMentions([]);
           setSkills([]);
+          setImages([]);
           setMentionResults([]);
           setCommandNotice("计划请求已发送，Codex 将先输出计划而不是直接实施。");
         }
@@ -232,10 +238,11 @@ function App() {
       await runSlashCommand(command.id, command.args);
       return;
     }
-    if (await sendOrQueue(session, message, mentions, skills, collaborationMode)) {
+    if (await sendOrQueue(session, message, mentions, skills, collaborationMode, images)) {
       setDraft("");
       setMentions([]);
       setSkills([]);
+      setImages([]);
       setMentionResults([]);
       setCommandNotice("");
     } else if (session.running) {
@@ -246,10 +253,11 @@ function App() {
   async function steerCurrentTurn() {
     const message = draft.trim();
     if (!message || !session.canSteer) return;
-    if (await session.steer(message, mentions, skills)) {
+    if (await session.steer(message, mentions, skills, images)) {
       setDraft("");
       setMentions([]);
       setSkills([]);
+      setImages([]);
       setMentionResults([]);
       setCommandNotice("");
     }
@@ -257,7 +265,7 @@ function App() {
 
   async function steerQueuedTurn(queued: (typeof session.queuedTurns)[number]) {
     if (!session.canSteer) return;
-    if (await session.steer(queued.text, queued.mentions, queued.skills)) {
+      if (await session.steer(queued.text, queued.mentions, queued.skills, queued.images)) {
       session.removeQueued(queued.id);
     }
   }
@@ -278,6 +286,7 @@ function App() {
     setDraft("");
     setMentions([]);
     setSkills([]);
+    setImages([]);
     setCommandPanel(null);
     setSlashMenuForced(false);
     setSlashMenuDismissed(false);
@@ -316,6 +325,55 @@ function App() {
     setDraft((current) => replaceActiveFileMention(current, result.file_name));
     setMentionResults([]);
   }
+
+  function addImages(paths: string[]) {
+    setImages((current) => [...current, ...paths.filter((path) => !current.some((item) => item.path === path)).map((path) => ({ name: path.split(/[\\/]/).pop() || path, path }))]);
+    setUiError("");
+  }
+
+  async function handleComposerPaste(event: React.ClipboardEvent<HTMLTextAreaElement>) {
+    const item = Array.from(event.clipboardData.items).find((entry) => entry.type.startsWith("image/"));
+    const file = item?.getAsFile();
+    if (!file) return;
+    event.preventDefault();
+    try {
+      const url = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("无法读取剪贴板图片"));
+        reader.onerror = () => reject(reader.error ?? new Error("无法读取剪贴板图片"));
+        reader.readAsDataURL(file);
+      });
+      setImages((current) => [...current, { name: `粘贴图片 ${current.length + 1}`, url }]);
+      setUiError("");
+    } catch (error) {
+      setUiError(errorMessage(error));
+    }
+  }
+
+  function addFiles(paths: string[]) {
+    setMentions((current) => [...current, ...paths.filter((path) => !current.some((item) => item.path === path)).map((path) => ({ name: path.split(/[\\/]/).pop() || path, path }))]);
+    setUiError("");
+  }
+
+  function addDroppedPaths(paths: string[]) {
+    const imagePaths = paths.filter((path) => /\.(png|jpe?g|gif|webp|bmp)$/i.test(path));
+    const filePaths = paths.filter((path) => !imagePaths.includes(path));
+    addImages(imagePaths);
+    addFiles(filePaths);
+  }
+
+  useEffect(() => {
+    if (!("__TAURI_INTERNALS__" in window)) return;
+    let unlisten: (() => void) | undefined;
+    void getCurrentWebview().onDragDropEvent((event) => {
+      if (event.payload.type === "drop") {
+        const scale = window.devicePixelRatio || 1;
+        const target = document.elementFromPoint(event.payload.position.x / scale, event.payload.position.y / scale);
+        if (composerRef.current?.contains(target)) addDroppedPaths(event.payload.paths);
+      }
+    }).then((cleanup) => { unlisten = cleanup; });
+    return () => unlisten?.();
+  }, []);
 
   function handleComposerKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (event.nativeEvent.isComposing) return;
@@ -453,11 +511,12 @@ function App() {
             />
             {(session.error || uiError) && <div className="composer-error">{session.error || uiError}</div>}
             {commandNotice && <div className="composer-notice">{commandNotice}</div>}
-            <div className="composer has-context-heatbar">
+            <div ref={composerRef} className="composer has-context-heatbar">
               <ContextHeatBar usage={session.tokenUsage} hasThread={Boolean(session.thread)} running={session.running} onCompact={() => runSlashCommand("compact", "", false)} />
-              {(mentions.length > 0 || skills.length > 0) && <div className="mention-chips">
+              {(mentions.length > 0 || skills.length > 0 || images.length > 0) && <div className="mention-chips">
                 {skills.map((skill) => <span className="skill-chip" key={skill.path} title={skill.path}>✦ {skill.name}<button onClick={() => toggleSkill(skill)}>×</button></span>)}
                 {mentions.map((mention) => <span key={mention.path} title={mention.path}>@{mention.name}<button onClick={() => setMentions((current) => current.filter((item) => item.path !== mention.path))}>×</button></span>)}
+                {images.map((image, index) => <span className="image-chip" key={image.path ?? image.url ?? index} title={image.path ?? "剪贴板图片"}>▧ {image.name}<button onClick={() => setImages((current) => current.filter((_, itemIndex) => itemIndex !== index))}>×</button></span>)}
               </div>}
               {session.queuedTurns.length > 0 && <div className="queued-turns" aria-label="待发送消息">
                 <div className="queued-turns-heading"><span>待发送 · {session.queuedTurns.length}</span>{session.running
@@ -469,7 +528,7 @@ function App() {
                   <button type="button" onClick={() => session.removeQueued(queued.id)} aria-label={`取消待发送消息：${queued.text}`} title="取消待发送">×</button>
                 </div>)}
               </div>}
-              <textarea value={draft} onChange={(event) => { setDraft(event.target.value); setUiError(""); setCommandNotice(""); setSlashMenuForced(false); setSlashMenuDismissed(false); }} onKeyDown={handleComposerKeyDown} placeholder={session.running ? "输入下一条消息，当前回答完成后发送…" : collaborationMode === "plan" ? "描述需要分析和规划的任务…" : currentProjectPath ? "交给 Codex 一个任务，输入 / 使用命令，输入 @ 引用文件…" : "正在准备默认项目目录…"} />
+              <textarea value={draft} onChange={(event) => { setDraft(event.target.value); setUiError(""); setCommandNotice(""); setSlashMenuForced(false); setSlashMenuDismissed(false); }} onPaste={(event) => void handleComposerPaste(event)} onKeyDown={handleComposerKeyDown} placeholder={session.running ? "输入下一条消息，当前回答完成后发送…" : collaborationMode === "plan" ? "描述需要分析和规划的任务…" : currentProjectPath ? "交给 Codex 一个任务，输入 / 使用命令，输入 @ 引用文件…" : "正在准备默认项目目录…"} />
               {currentProjectPath && mentionQuery !== null && <FileMentionMenu query={mentionQuery} results={mentionResults} loading={mentionLoading} onSelect={selectMention} />}
               {slashMenuVisible && <SlashCommandMenu query={slashQuery ?? ""} selectedIndex={slashSelectedIndex} hasThread={Boolean(session.thread)} running={session.running} onSelect={(id) => void runSlashCommand(id, "", !slashMenuForced)} />}
               {commandPanel === "skills" && <SkillPicker selected={skills} loadSkills={session.listSkills} onToggle={toggleSkill} onClose={() => setCommandPanel(null)} />}
@@ -479,6 +538,7 @@ function App() {
               <div className="composer-toolbar">
                 <div className="composer-tools">
                   {session.activityLabel && <span className={`steer-mode-indicator ${session.canSteer ? "steerable" : ""}`}><i aria-hidden="true" />{session.activityLabel}</span>}
+                  <AttachmentMenu onSelectImages={addImages} onSelectFiles={addFiles} onError={setUiError} />
                   <button ref={commandButtonRef} className={`command-button ${slashMenuVisible || commandPanel ? "active" : ""}`} onClick={() => { setCommandPanel(null); setSlashMenuDismissed(false); setSlashMenuForced((current) => !current); setSlashSelectedIndex(0); }} title="Skills、MCP、计划、压缩与目标">/</button>
                   {collaborationMode === "plan" && <button className="plan-mode-button" onClick={() => { setCollaborationMode("default"); setCommandNotice("已退出计划模式，下一条消息将按默认模式执行。"); }} title="退出计划模式"><span>☷</span>计划模式<i>×</i></button>}
                   <div className="model-picker-anchor">

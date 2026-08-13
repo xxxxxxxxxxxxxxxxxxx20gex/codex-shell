@@ -10,7 +10,7 @@ import {
 } from "../approvals/permissionModes";
 import type { ModelSettings } from "../models/types";
 import type { AppServerClient } from "./appServerClient";
-import { buildUserInput, type FileMention, type SkillMention } from "./sessionInput";
+import { buildUserInput, type FileMention, type ImageAttachment, type SkillMention } from "./sessionInput";
 import type { AgentSessionAction } from "./sessionState";
 import type { QueuedTurnInput } from "./useQueuedTurns";
 import { canSteerRunningTurn, type RunningTurn, type RunningTurnKind } from "./useRunningTurns";
@@ -43,6 +43,7 @@ function startTurn(
   mentions: FileMention[],
   skills: SkillMention[],
   collaborationMode: ModeKind,
+  images: ImageAttachment[],
   settings: ModelSettings,
   permissionMode: PermissionMode,
 ) {
@@ -57,7 +58,7 @@ function startTurn(
   } : undefined;
   return client.startTurn({
     threadId,
-    input: buildUserInput(message, mentions, skills),
+    input: buildUserInput(message, mentions, skills, images),
     model: settings.modelId,
     effort: settings.reasoningEffort,
     approvalPolicy: permissions.approvalPolicy,
@@ -73,6 +74,7 @@ export function useTurnExecution(props: Props) {
     mentions: FileMention[] = [],
     skills: SkillMention[] = [],
     collaborationMode: ModeKind = "default",
+    images: ImageAttachment[] = [],
   ) => {
     const message = text.trim();
     const activeThreadId = props.threadIdRef.current;
@@ -113,6 +115,7 @@ export function useTurnExecution(props: Props) {
         mentions,
         skills,
         collaborationMode,
+        images,
         props.settings,
         props.permissionMode,
       );
@@ -132,6 +135,7 @@ export function useTurnExecution(props: Props) {
     text: string,
     mentions: FileMention[] = [],
     skills: SkillMention[] = [],
+    images: ImageAttachment[] = [],
   ) => {
     const message = text.trim();
     const threadId = props.threadIdRef.current;
@@ -146,7 +150,7 @@ export function useTurnExecution(props: Props) {
       await client.steerTurn({
         threadId,
         expectedTurnId: runningTurn.turnId,
-        input: buildUserInput(message, mentions, skills),
+        input: buildUserInput(message, mentions, skills, images),
       });
       return true;
     } catch (steerError) {
@@ -175,6 +179,7 @@ export function useTurnExecution(props: Props) {
         queued.mentions,
         queued.skills,
         queued.collaborationMode,
+        queued.images ?? [],
         queued.settings,
         queued.permissionMode,
       );

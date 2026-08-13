@@ -13,4 +13,15 @@ describe("buildUserInput", () => {
       { type: "mention", name: "App.tsx", path: "C:\\work\\App.tsx" },
     ]);
   });
+
+  it("sends selected images as native localImage inputs", () => {
+    expect(buildUserInput("inspect", [], [], [{ name: "screen.png", path: "C:\\work\\screen.png" }])).toEqual([
+      { type: "text", text: "inspect", text_elements: [] },
+      { type: "localImage", path: "C:\\work\\screen.png" },
+    ]);
+    expect(buildUserInput("inspect", [], [], [{ name: "pasted.png", url: "data:image/png;base64,AA==" }])).toEqual([
+      { type: "text", text: "inspect", text_elements: [] },
+      { type: "image", url: "data:image/png;base64,AA==" },
+    ]);
+  });
 });

@@ -11,14 +11,14 @@ import { AppServerClient } from "./appServerClient";
 import { RuntimeLogStore } from "./runtimeLogStore";
 import { RuntimeNoticeStore } from "./runtimeNoticeStore";
 import { agentSessionReducer, initialAgentSessionState } from "./sessionState";
-import type { FileMention, SkillMention } from "./sessionInput";
+import type { FileMention, ImageAttachment, SkillMention } from "./sessionInput";
 import { subscribeToSessionEvents } from "./sessionSubscriptions";
 import { useAgentCommands } from "./useAgentCommands";
 import { canSteerRunningTurn, runningTurnLabel, useRunningTurns } from "./useRunningTurns";
 import { useThreadController } from "./useThreadController";
 import { useWorkspaceFiles } from "./useWorkspaceFiles";
 
-export type { FileMention, SkillMention } from "./sessionInput";
+export type { FileMention, ImageAttachment, SkillMention } from "./sessionInput";
 
 function useStableStore<T>(create: () => T) {
   const storeRef = useRef<T | null>(null);
@@ -344,8 +344,14 @@ export async function sendOrQueue(
   mentions: FileMention[],
   skills: SkillMention[],
   collaborationMode: ModeKind,
+  images: ImageAttachment[] = [],
 ) {
+  if (images.length === 0) {
+    return session.running
+      ? session.queue(text, mentions, skills, collaborationMode)
+      : session.send(text, mentions, skills, collaborationMode);
+  }
   return session.running
-    ? session.queue(text, mentions, skills, collaborationMode)
-    : session.send(text, mentions, skills, collaborationMode);
+    ? session.queue(text, mentions, skills, collaborationMode, images)
+    : session.send(text, mentions, skills, collaborationMode, images);
 }
