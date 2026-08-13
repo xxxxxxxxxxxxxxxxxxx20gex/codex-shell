@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { errorMessage } from "../../shared/errors";
+import { useDismissiblePopover } from "../../shared/useDismissiblePopover";
 
 interface Props {
   onSelectPaths: (paths: string[]) => void;
@@ -9,6 +10,10 @@ interface Props {
 
 export function AttachmentMenu({ onSelectPaths, onError }: Props) {
   const [openState, setOpenState] = useState(false);
+  const rootRef = useDismissiblePopover<HTMLDivElement>({
+    open: openState,
+    onClose: () => setOpenState(false),
+  });
 
   async function choosePaths() {
     try {
@@ -22,7 +27,7 @@ export function AttachmentMenu({ onSelectPaths, onError }: Props) {
   }
 
   return (
-    <div className="attachment-menu-anchor">
+    <div ref={rootRef} className="attachment-menu-anchor">
       <button type="button" className={`attachment-button${openState ? " active" : ""}`} aria-label="添加附件" title="添加文件和文件夹" onClick={() => setOpenState((current) => !current)}>＋</button>
       {openState && <div className="attachment-menu" role="menu" aria-label="添加附件">
         <strong>添加</strong>

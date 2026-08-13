@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { invoke } from "@tauri-apps/api/core";
 import type { FuzzyFileSearchResult } from "./generated/app-server/FuzzyFileSearchResult";
 import type { ModeKind } from "./generated/app-server/ModeKind";
@@ -13,6 +12,7 @@ import { ReviewPanel } from "./features/commands/ReviewPanel";
 import { SkillPicker } from "./features/commands/SkillPicker";
 import { composerSubmitAction, SendModeControl } from "./features/composer/SendModeControl";
 import { AttachmentMenu } from "./features/composer/AttachmentMenu";
+import { useComposerDropPaths } from "./features/composer/useComposerDropPaths";
 import { commandDisabled, SlashCommandMenu } from "./features/commands/SlashCommandMenu";
 import { useResizablePanels } from "./features/layout/useResizablePanels";
 import {
@@ -265,7 +265,7 @@ function App() {
 
   async function steerQueuedTurn(queued: (typeof session.queuedTurns)[number]) {
     if (!session.canSteer) return;
-      if (await session.steer(queued.text, queued.mentions, queued.skills, queued.images)) {
+    if (await session.steer(queued.text, queued.mentions, queued.skills, queued.images)) {
       session.removeQueued(queued.id);
     }
   }
@@ -362,18 +362,7 @@ function App() {
     addFiles(filePaths);
   }
 
-  useEffect(() => {
-    if (!("__TAURI_INTERNALS__" in window)) return;
-    let unlisten: (() => void) | undefined;
-    void getCurrentWebview().onDragDropEvent((event) => {
-      if (event.payload.type === "drop") {
-        const scale = window.devicePixelRatio || 1;
-        const target = document.elementFromPoint(event.payload.position.x / scale, event.payload.position.y / scale);
-        if (composerRef.current?.contains(target)) addDroppedPaths(event.payload.paths);
-      }
-    }).then((cleanup) => { unlisten = cleanup; });
-    return () => unlisten?.();
-  }, []);
+  useComposerDropPaths(composerRef, addDroppedPaths, setUiError);
 
   function handleComposerKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (event.nativeEvent.isComposing) return;

@@ -50,6 +50,7 @@
 - 已消费 Tauri `app-server://log`：右侧新增实时日志页，使用 200 条/单行 4000 字符硬上限和 150ms 批量刷新控制内存及渲染开销，并标注日志的敏感数据属性。
 - 已完成阶段性代码健康审查：53 个非生成源码文件未发现达到阈值的复制代码，Knip 未发现无效文件、导出或依赖；Runtime 日志迁移到独立外部 Store，关闭日志页时不再带动最多 200 个 Turn 的主界面刷新；三栏缩放逻辑和日志样式从 `App` 拆出，并统一跨模块错误消息转换。
 - 已完成本轮保持行为的代码健康审查：未发现可安全删除的业务死代码；Knip 无未使用项，事件监听、定时器、Store 和 app-server transport 均有释放路径。修复 Runtime staging 默认采用 PATH 最新版本导致固定协议漂移的问题，并改为临时目录校验完成后再替换 sidecar。
+- 已完成最新一轮稳定性审查：继续固定 `codex-cli 0.146.0-alpha.9.2`，不升级 Runtime 或生成协议；修复 Composer 拖拽监听异步注册后的卸载清理竞态，附件菜单统一支持外部点击与 Escape 关闭，并清理 Queue 转 Steer 分支的缩进噪音。Knip、jscpd、依赖审计、敏感信息/绝对路径扫描、Rust Clippy 和完整回归均通过。
 - 独立测试与质量门禁脚本统一收纳到 `tests/scripts`，提供 Rust 校验与一键质量门禁入口；源码旁的 TypeScript/Vitest 和 Rust 模块测试保持就地维护，便于复用模块夹具且不混淆测试脚本与构建脚本。
 - 已完成第一阶段服务端交互与运行态接入：三类审批、结构化工具问答和 MCP elicitation 进入统一有界队列；真实 JSON-RPC request ID、服务端撤销、Thread 完整生命周期、通用/配置/Guardian/Windows 安全提示和 Sandbox setup 均复用 app-server 原生协议。
 - 已完成第二阶段生产能力接入：原生模型目录与 Provider capabilities、Review、运行中 Steer、Thread Fork、活动/归档历史与恢复、`thread/read` 只读打开、按需 Resume 和空闲 Unsubscribe 已接入。
@@ -78,7 +79,7 @@
 ## 当前风险
 
 - app-server 崩溃后的当前 Session 自动恢复、Shell Queue 跨重启持久化、超大文件预览/超大 Diff 的源端截断和二进制文件变更提示尚未完成；单个超长 Turn 内部活动尚未二次虚拟化。
-- `useThreadController` 已拆出历史、Review 和普通 Turn 执行生命周期；Thread 元数据操作仍集中，继续扩充前应按操作族拆分。`App.tsx` 仍约 510 行，Composer 状态和面板编排是下一处明确拆分边界；`App.css` 仍包含多个 feature 的集中样式，应按实际功能改动渐进迁移。
+- `useThreadController` 已拆出历史、Review 和普通 Turn 执行生命周期；Thread 元数据操作仍集中，继续扩充前应按操作族拆分。`App.tsx` 仍约 600 行，Composer 状态和面板编排是下一处明确拆分边界；`App.css` 仍包含多个 feature 的集中样式，应按实际功能改动渐进迁移。
 - PATH Runtime 尚未校验与生成协议的版本/hash；旧进程无代际 `stopped` 事件、跨卷 CODEX_HOME 迁移和旧应用标识/凭据迁移仍存在兼容风险。
 - 用户文本、Steer、Review、Goal 和结构化问答已在 Shell 边界限制为 8000 UTF-8 bytes；多 Skill 聚合、全局 `AGENTS.md` 和 Runtime Goal continuation 仍缺少统一硬预算，应优先在 app-server/Runtime 中建立不可绕过的中央边界。
 - 旧 CODEX_HOME 的跨卷迁移仍需可恢复复制方案；当前同卷迁移和双目录冲突已按保数据原则处理。
@@ -92,7 +93,7 @@
 ## 验证证据
 
 - `pnpm typecheck`：通过。
-- `pnpm test`：40 个测试文件、153 项测试全部通过，覆盖项目目录/Thread `cwd`、默认项目目录、文件浏览与 watch、执行过程、Queue/Steer、模型/权限热切换与降权、Resume 无覆盖、分叉祖先、统一反向交互、Review 和 MCP。
+- `pnpm test`：43 个测试文件、166 项测试全部通过，覆盖项目目录/Thread `cwd`、默认项目目录、文件浏览与 watch、附件拖拽生命周期、执行过程、Queue/Steer、模型/权限热切换与降权、Resume 无覆盖、分叉祖先、统一反向交互、Review 和 MCP。
 - Rust 单元测试：11 项全部通过，覆盖显式模型参数、旧模板配置兼容归一化、动态 Runtime、每日默认项目目录、独立 provider 参数、旧 CODEX_HOME 迁移、双目录冲突和官方目录防重叠校验。
 - `pnpm rust:check`：从 clean target 完整重编译后通过。
 - `pnpm build`：包含虚拟时间线、目录 watch、目录选择插件和 P0 工作台 UI 的生产构建通过。
