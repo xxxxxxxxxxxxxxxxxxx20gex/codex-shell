@@ -152,7 +152,7 @@ export function ThreadHistoryList(props: Props) {
                   ? `${threadTitle(thread)}\n恢复 Session 后可打开`
                   : `${threadTitle(thread)}\n${thread.cwd}`}
               >
-                <span>{thread.isPinned && <i>◆</i>}{threadTitle(thread)}</span>
+                <span className="thread-title">{thread.isPinned && <i>◆</i>}{threadTitle(thread)}</span>
                 <small>{running ? "运行中" : dateFormatter.format(new Date(thread.updatedAt * 1000))}</small>
               </button>
               <div className="thread-actions">

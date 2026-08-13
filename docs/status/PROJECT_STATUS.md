@@ -33,6 +33,7 @@
 - Session 历史使用 app-server 原生 `forkedFromId` 建立真实父子层级：分叉会话自动排在父会话下方并以缩进、连接线和当前项指示线区分；欢迎空状态仅保留 Codex Shell 品牌展示，荧光黄绿色已统一降饱和。全局正文、输入内容、菜单和活动信息已提升为白色/近白色，辅助时间与路径保留更亮的灰色层级。
 - 已将运行态从全局锁改为按 Thread 跟踪：一个 Session 等待回答时仍可新建、打开和操作其他 Session，并可同时运行多个 Turn；左栏和顶部显示并行运行状态，停止操作只作用于当前 Session。
 - 运行中的补充消息默认通过 Queue 等待当前 Turn 完成；发送按钮悬停菜单也提供 app-server 原生 Steer，已排队消息可以直接转为 Steer 并从队列移除。命令执行项默认折叠，避免长命令输出在出现瞬间撑开对话区。
+- 历史 Session 操作按钮固定在条目右侧的上层，不再悬停时向下扩展列表；长 Session 名称在操作区前截断并渐隐，保持文字与复制、固定、重命名、归档、删除按钮可读且不重叠。
 - 已增加从左侧展开的工作区文件浏览器：目录懒加载、已展开文件筛选、单击文本/图片预览、二进制提示和大文本截断；工作区浏览与“选择工作区”改为两个独立入口。
 - 已增加 Codex 风格 `/` 命令菜单，接入稳定 `skills/list`、`mcpServerStatus/list`、`thread/compact/start` 和 `thread/goal/*`；Skill 作为原生输入发送，MCP/Goal 使用面板管理。
 - 已消费 `thread/tokenUsage/updated`，在对话框左侧显示当前上下文蓝红热力条；悬停区分当前上下文与 Session 累计 Token，点击复用 `thread/compact/start`，自动压缩阈值仍完全由 Codex Core 根据模型元数据动态决定。

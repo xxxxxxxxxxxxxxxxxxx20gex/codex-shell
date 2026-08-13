@@ -261,9 +261,11 @@ code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 .thread-row.running .thread-main small { color: #a8c765; }
 .thread-row.running .thread-main small::before { display: inline-block; width: 5px; height: 5px; margin-right: 4px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 7px rgba(194,232,92,.42); content: ""; }
 .thread-list .thread-main { display: grid; min-height: 36px; grid-template-columns: minmax(0,1fr) auto; gap: 5px; padding-right: 118px; transition: color .16s ease, background-color .16s ease; }
+.thread-list .thread-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .thread-row:hover .thread-main, .thread-row:focus-within .thread-main { color: #eeeede; }
 .thread-main span i { margin-right: 5px; color: #9ebc50; font-size: 7px; font-style: normal; }
-.thread-actions { position: absolute; z-index: 2; top: 50%; right: 7px; display: flex; align-items: center; gap: 3px; opacity: 0; visibility: hidden; transform: translateY(-50%); transition: opacity .12s ease, visibility 0s linear .12s; }
+.thread-actions { position: absolute; z-index: 2; top: 50%; right: 7px; display: flex; align-items: center; gap: 3px; padding-left: 18px; background: linear-gradient(90deg, rgba(37,39,32,0), rgba(37,39,32,.88) 14px, #252720 22px); opacity: 0; visibility: hidden; transform: translateY(-50%); transition: opacity .12s ease, visibility 0s linear .12s; }
+.thread-row.active .thread-actions { background: linear-gradient(90deg, rgba(42,45,34,0), rgba(42,45,34,.88) 14px, #2a2d22 22px); }
 .thread-row:hover .thread-actions, .thread-row:focus-within .thread-actions { opacity: 1; visibility: visible; transition-delay: 0s; }
 .thread-list .thread-actions button { position: relative; display: flex; width: 21px; height: 18px; flex: none; align-items: center; justify-content: center; padding: 0; color: #a2a19a; line-height: 0; }
 .thread-list .thread-actions button:hover { color: var(--accent); background: #2a2a23; }
