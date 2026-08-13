@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import type { McpToolCallProgressNotification } from "../../generated/app-server/v2/McpToolCallProgressNotification";
 import { formatTurnDuration } from "./conversationTiming";
+import { CommandDrawer } from "./CommandDrawer";
 import { TurnActivityItem } from "./TurnActivityItem";
 import { MarkdownContent } from "./MarkdownContent";
 
@@ -33,6 +34,21 @@ export function TurnActivityGroup({ items, active, turnActive, startedAt, durati
   const duration = elapsedMs === null ? "" : ` ${formatTurnDuration(elapsedMs)}`;
   const activeItem = [...items].reverse().find((item) => activeItemTurnIds[item.id] === turnId);
   const activeProgress = activeItem ? mcpProgressByItemId[activeItem.id]?.message : null;
+  const activityBlocks: Array<ThreadItem | { type: "commandDrawer"; items: Extract<ThreadItem, { type: "commandExecution" }>[] }> = [];
+  let commandItems: Extract<ThreadItem, { type: "commandExecution" }>[] = [];
+  const flushCommands = () => {
+    if (commandItems.length === 0) return;
+    activityBlocks.push({ type: "commandDrawer", items: commandItems });
+    commandItems = [];
+  };
+  items.forEach((item) => {
+    if (item.type === "commandExecution") commandItems.push(item);
+    else {
+      flushCommands();
+      activityBlocks.push(item);
+    }
+  });
+  flushCommands();
 
   return (
     <section className="turn-activity-stream" role={active ? "status" : undefined} aria-live={active ? "polite" : undefined}>
@@ -41,7 +57,9 @@ export function TurnActivityGroup({ items, active, turnActive, startedAt, durati
         <strong>{`已处理${duration}`}</strong>
       </div>}
       <div className="turn-activity-list">
-        {items.map((item) => item.type === "agentMessage" ? (
+        {activityBlocks.map((item) => item.type === "commandDrawer" ? (
+          <CommandDrawer items={item.items} key={`command-drawer:${item.items[0].id}`} />
+        ) : item.type === "agentMessage" ? (
           <MarkdownContent className="turn-commentary" key={item.id}>{item.text}</MarkdownContent>
         ) : (
           <TurnActivityItem item={item} key={item.id} />

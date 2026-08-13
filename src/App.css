@@ -298,6 +298,16 @@ code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 .activity-command-card summary { padding-top: 6px; padding-bottom: 6px; }
 .activity-command-card summary:hover { background: #1b1b18; }
 .activity-command-card .activity-icon { height: 18px; color: #a9c5a2; background: #20271e; }
+.command-drawer { margin: 5px 0; overflow: hidden; border: 1px solid rgba(65,64,55,.72); border-radius: 8px; background: rgba(24,24,21,.58); }
+.command-drawer > summary { display: grid; grid-template-columns: 25px minmax(0,1fr) auto 14px; align-items: center; gap: 7px; padding: 8px 9px; color: var(--text-secondary); cursor: pointer; list-style: none; }
+.command-drawer > summary::-webkit-details-marker { display: none; }
+.command-drawer > summary:hover { background: rgba(40,40,34,.72); }
+.command-drawer > summary strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 550; }
+.command-drawer > summary small { color: var(--text-quiet); font-size: var(--conversation-font-size-meta); }
+.command-drawer > summary i { color: var(--text-quiet); font-size: var(--conversation-font-size-meta); font-style: normal; transition: transform .15s; }
+.command-drawer[open] > summary i { transform: rotate(180deg); }
+.command-drawer-list { padding: 2px 9px 7px; border-top: 1px solid rgba(65,64,55,.48); }
+.command-drawer-list .activity-command-card { margin: 2px 0; }
 .activity-card summary { display: grid; grid-template-columns: 25px minmax(0,1fr) auto 14px; align-items: center; gap: 7px; padding: 8px 3px; cursor: pointer; list-style: none; }.activity-card summary::-webkit-details-marker { display: none; }.activity-card summary strong { overflow: hidden; color: var(--text-secondary); font-size: 13px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }.activity-card summary small { color: var(--text-quiet); font-size: var(--conversation-font-size-meta); }.activity-card summary i { color: var(--text-quiet); font-size: var(--conversation-font-size-meta); font-style: normal; transition: transform .15s; }.activity-card[open] summary i { transform: rotate(180deg); }
 .activity-icon { display: grid; height: 21px; place-items: center; border-radius: 5px; color: var(--accent); background: #24261b; font: 8px "Cascadia Code", Consolas, monospace; }
 .activity-reasoning-card summary { grid-template-columns: minmax(0,1fr) auto 14px; }

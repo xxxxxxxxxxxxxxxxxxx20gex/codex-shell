@@ -151,6 +151,33 @@ describe("conversation timing", () => {
     expect(markup).not.toContain("<small>inProgress</small>");
   });
 
+  it("collects adjacent native commands into one collapsed drawer", () => {
+    const command = (id: string, status: "completed" | "inProgress"): ThreadItem => ({
+      type: "commandExecution",
+      id,
+      pluginId: null,
+      scriptPath: null,
+      command: `pnpm ${id}`,
+      cwd: "C:\\work",
+      processId: status === "inProgress" ? "123" : null,
+      source: "agent",
+      status,
+      commandActions: [],
+      aggregatedOutput: null,
+      exitCode: status === "completed" ? 0 : null,
+      durationMs: status === "completed" ? 1000 : null,
+    });
+    const turn = { ...completedTurn(), items: [command("one", "completed"), command("two", "inProgress")] } as Turn;
+    const markup = renderToStaticMarkup(
+      <ConversationTurn turn={turn} active canFork={false} activeItemTurnIds={{ two: turn.id }} mcpProgressByItemId={{}} />,
+    );
+
+    expect((markup.match(/class="command-drawer"/g) ?? []).length).toBe(1);
+    expect(markup).toContain("正在执行命令");
+    expect(markup).toContain("2 个命令");
+    expect(markup).not.toContain('class="command-drawer" open=""');
+  });
+
   it("renders multiple native process items as one continuous activity stream", () => {
     const reasoning: ThreadItem = {
       type: "reasoning",
