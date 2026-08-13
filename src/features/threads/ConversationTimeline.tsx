@@ -67,10 +67,7 @@ export function ConversationTimeline({
   const scrollToTurn = useCallback((index: number) => {
     virtuosoRef.current?.scrollToIndex({ index, align: "start", behavior: "smooth" });
     setVisibleStartIndex(index);
-    const scrollingToLatest = index === turns.length - 1;
-    setAtBottom(scrollingToLatest);
-    if (scrollingToLatest) setHasNewActivity(false);
-  }, [turns.length]);
+  }, []);
 
   const handleRangeChanged = useCallback((range: ListRange) => {
     setVisibleStartIndex(range.startIndex);
@@ -87,7 +84,7 @@ export function ConversationTimeline({
         ref={virtuosoRef}
         className="timeline"
         data={turns}
-        atBottomThreshold={96}
+        atBottomThreshold={8}
         atBottomStateChange={handleAtBottomChange}
         computeItemKey={(_index, turn) => turn.id}
         followOutput={(isAtBottom) => isAtBottom ? "auto" : false}

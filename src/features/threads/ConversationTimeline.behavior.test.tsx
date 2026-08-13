@@ -103,4 +103,16 @@ describe("ConversationTimeline navigation", () => {
 
     expect(virtuoso.scrollToIndex).toHaveBeenLastCalledWith({ index: 2, align: "start", behavior: "smooth" });
   });
+
+  it("does not infer that a tall latest Turn is at the bottom after navigation", () => {
+    const turns = [turn("1", "第一问"), turn("2", "第二问")];
+    const view = render(<ConversationTimeline turns={turns} running={false} />);
+    act(() => virtuoso.atBottomStateChange?.(false));
+
+    fireEvent.click(screen.getByRole("button", { name: "跳到消息：第二问" }));
+    view.rerender(<ConversationTimeline turns={turns} running />);
+
+    expect(screen.getByRole("button", { name: "有新内容 · 返回最新" })).toBeTruthy();
+    expect(virtuoso.scrollToIndex).toHaveBeenLastCalledWith({ index: 1, align: "start", behavior: "smooth" });
+  });
 });

@@ -111,8 +111,8 @@ describe("conversation timing", () => {
     expect(markup).toContain("运行命令");
     expect(markup).toContain("pnpm test");
     expect(markup).toContain("16 tests passed");
-    expect(markup).toContain("执行过程");
-    expect(markup).toContain("已完成 1 项活动");
+    expect(markup).toContain("已处理 8.4 秒");
+    expect(markup).toContain('class="turn-activity-stream"');
     expect(markup).toContain('class="activity-card activity-command-card"');
     expect(markup).not.toContain('class="activity-card activity-command-card" open=""');
   });
@@ -145,12 +145,12 @@ describe("conversation timing", () => {
     );
 
     expect(markup).toContain('class="activity-card activity-command-card" open=""');
-    expect(markup).toContain('class="turn-activity-group" open=""');
+    expect(markup).toContain('class="turn-activity-stream" role="status"');
     expect(markup).toContain("运行中");
     expect(markup).not.toContain("<small>inProgress</small>");
   });
 
-  it("keeps two or more active process items collapsed behind one summary", () => {
+  it("renders multiple native process items as one continuous activity stream", () => {
     const reasoning: ThreadItem = {
       type: "reasoning",
       id: "reasoning-active",
@@ -192,17 +192,62 @@ describe("conversation timing", () => {
     expect(markup).not.toContain('class="turn-activity-group" open=""');
   });
 
+  it("keeps the Turn status active when steer splits the activity stream", () => {
+    const firstReasoning: ThreadItem = { type: "reasoning", id: "reasoning-before-steer", summary: ["正在检查"], content: [] };
+    const steeredUser: ThreadItem = {
+      type: "userMessage",
+      id: "user-steer-active",
+      clientId: "client-steer-active",
+      content: [{ type: "text", text: "继续检查测试", text_elements: [] }],
+    };
+    const activeCommand: ThreadItem = {
+      type: "commandExecution",
+      id: "command-after-steer",
+      pluginId: null,
+      scriptPath: null,
+      command: "pnpm test",
+      cwd: "C:\\work",
+      processId: "123",
+      source: "agent",
+      status: "inProgress",
+      commandActions: [],
+      aggregatedOutput: null,
+      exitCode: null,
+      durationMs: null,
+    };
+    const turn = {
+      ...completedTurn(),
+      items: [firstReasoning, steeredUser, activeCommand],
+      status: "inProgress",
+      completedAt: null,
+      durationMs: null,
+    } as Turn;
+    const markup = renderToStaticMarkup(
+      <ConversationTurn
+        turn={turn}
+        active
+        canFork={false}
+        activeItemTurnIds={{ "command-after-steer": turn.id }}
+        mcpProgressByItemId={{}}
+      />,
+    );
+
+    expect((markup.match(/正在处理/g) ?? []).length).toBe(1);
+    expect(markup).not.toContain("已处理");
+    expect((markup.match(/class="turn-activity-stream/g) ?? []).length).toBe(2);
+  });
+
   it("groups commentary and reasoning outside the final answer", () => {
     const commentary: ThreadItem = { type: "agentMessage", id: "commentary-1", text: "我先检查项目结构。", phase: "commentary", memoryCitation: null };
     const reasoning: ThreadItem = { type: "reasoning", id: "reasoning-1", summary: ["定位核心模块"], content: [] };
     const answer: ThreadItem = { type: "agentMessage", id: "answer-1", text: "检查完成。", phase: "final_answer", memoryCitation: null };
     const markup = renderTurn({ ...completedTurn(), items: [commentary, reasoning, answer] });
 
-    expect(markup).toContain("执行过程");
+    expect(markup).toContain("已处理 8.4 秒");
     expect(markup).toContain('class="turn-commentary"');
     expect(markup).toContain("我先检查项目结构。");
-    expect(markup).toContain("分析过程");
-    expect(markup.indexOf("我先检查项目结构。")).toBeLessThan(markup.indexOf("分析过程"));
+    expect(markup).toContain('class="activity-reasoning-note"');
+    expect(markup.indexOf("我先检查项目结构。")).toBeLessThan(markup.indexOf("定位核心模块"));
     expect(markup).toContain('class="agent-response"');
     expect(markup).toContain("检查完成。");
     expect((markup.match(/class="agent-accent"/g) ?? []).length).toBe(1);
@@ -226,7 +271,7 @@ describe("conversation timing", () => {
 
     expect(markup).not.toContain("分析过程");
     expect(markup).toContain("正在核对实现。");
-    expect(markup).toContain("已完成 1 项活动");
+    expect(markup).toContain("已处理 8.4 秒");
   });
 
   it("keeps live progress for active reasoning even before it has content", () => {
@@ -281,7 +326,7 @@ describe("conversation timing", () => {
     expect(markup.indexOf("优先检查测试")).toBeLessThan(markup.indexOf("调整检查顺序"));
     expect(markup.indexOf("调整检查顺序")).toBeLessThan(markup.indexOf("检查完成"));
     expect((markup.match(/2026\/08\/07 10:20:30/g) ?? []).length).toBe(1);
-    expect((markup.match(/class="turn-activity-group"/g) ?? []).length).toBe(2);
+    expect((markup.match(/class="turn-activity-stream"/g) ?? []).length).toBe(2);
   });
 
   it("renders final answers as safe Markdown", () => {

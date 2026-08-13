@@ -90,6 +90,7 @@ export function ConversationTurn({
     && item.type !== "fileChange"
     && !(item.type === "agentMessage" && item.phase !== "commentary"));
   const firstUserBlockIndex = blocks.findIndex((block) => block.type === "user");
+  const firstActivityBlockIndex = blocks.findIndex((block) => block.type === "activity");
   const finalActivityBlockIndex = lastActivityBlockIndex(blocks);
   const lastAgentMessageId = answerItems[answerItems.length - 1]?.id;
   const sentTiming = userMessageTiming(turn);
@@ -132,6 +133,9 @@ export function ConversationTurn({
             <TurnActivityGroup
               items={block.items}
               active={active && (blockIndex === finalActivityBlockIndex || block.items.some((item) => activeItemTurnIds[item.id] === turn.id))}
+              turnActive={active}
+              durationMs={turn.durationMs}
+              showHeader={blockIndex === firstActivityBlockIndex}
               turnId={turn.id}
               activeItemTurnIds={activeItemTurnIds}
               mcpProgressByItemId={mcpProgressByItemId}

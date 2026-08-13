@@ -17,7 +17,7 @@ function jsonPreview(value: unknown) {
 
 function activityIcon(item: ThreadItem) {
   switch (item.type) {
-    case "reasoning": return "◌";
+    case "reasoning": return "";
     case "plan": return "☷";
     case "commandExecution": return ">_";
     case "fileChange": return "±";
@@ -38,9 +38,9 @@ function activityIcon(item: ThreadItem) {
   }
 }
 
-export function activityTitle(item: ThreadItem) {
+function activityTitle(item: ThreadItem) {
   switch (item.type) {
-    case "reasoning": return "分析过程";
+    case "reasoning": return item.summary.find((part) => part.trim()) ?? "分析过程";
     case "plan": return "执行计划";
     case "commandExecution": return "运行命令";
     case "fileChange": return `修改文件 · ${item.changes.length}`;
@@ -86,10 +86,7 @@ function statusText(item: ThreadItem) {
 function ActivityBody({ item }: Props) {
   switch (item.type) {
     case "reasoning":
-      return <>
-        {item.summary.map((part, index) => <p key={`summary-${index}`}>{part}</p>)}
-        {item.content.length > 0 && <pre>{item.content.join("\n")}</pre>}
-      </>;
+      return item.content.length > 0 ? <pre>{item.content.join("\n")}</pre> : null;
     case "plan":
       return <p>{item.text}</p>;
     case "commandExecution":
@@ -149,12 +146,18 @@ function ActivityBody({ item }: Props) {
 
 export function TurnActivityItem({ item, active = false }: Props) {
   if (item.type === "userMessage" || item.type === "agentMessage") return null;
+  if (item.type === "reasoning" && item.content.length === 0) {
+    return <div className="activity-reasoning-note">{item.summary.join("\n")}</div>;
+  }
   const expandable = item.type !== "contextCompaction";
   if (!expandable) {
     return <div className="activity-note"><span>{activityIcon(item)}</span>{activityTitle(item)}</div>;
   }
+  const itemClass = item.type === "commandExecution"
+    ? " activity-command-card"
+    : item.type === "reasoning" ? " activity-reasoning-card" : "";
   return (
-    <details className={`activity-card${item.type === "commandExecution" ? " activity-command-card" : ""}`} open={active}>
+    <details className={`activity-card${itemClass}`} open={active}>
       <summary>
         <span className="activity-icon">{activityIcon(item)}</span>
         <strong>{activityTitle(item)}</strong>
