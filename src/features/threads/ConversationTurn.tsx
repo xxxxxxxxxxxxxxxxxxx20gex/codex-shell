@@ -29,6 +29,12 @@ type TurnBlock =
   | { type: "answer"; item: AgentMessageItem }
   | { type: "activity"; items: ThreadItem[] };
 
+function hasVisibleContent(item: ThreadItem) {
+  return item.type !== "reasoning"
+    || item.summary.some((part) => part.trim().length > 0)
+    || item.content.some((part) => part.trim().length > 0);
+}
+
 function orderedTurnBlocks(items: ThreadItem[]) {
   const blocks: TurnBlock[] = [];
   let activityItems: ThreadItem[] = [];
@@ -39,6 +45,7 @@ function orderedTurnBlocks(items: ThreadItem[]) {
   };
 
   items.forEach((item) => {
+    if (!hasVisibleContent(item)) return;
     if (item.type === "fileChange") return;
     if (item.type === "userMessage") {
       flushActivity();
@@ -78,7 +85,8 @@ export function ConversationTurn({
     && item.type !== "userMessage" && item.type !== "agentMessage");
   const firstUserMessageId = items.find((item) => item.type === "userMessage")?.id;
   const answerItems = items.filter((item): item is Extract<ThreadItem, { type: "agentMessage" }> => item.type === "agentMessage" && item.phase !== "commentary");
-  const activityItems = items.filter((item) => item.type !== "userMessage"
+  const activityItems = items.filter((item) => hasVisibleContent(item)
+    && item.type !== "userMessage"
     && item.type !== "fileChange"
     && !(item.type === "agentMessage" && item.phase !== "commentary"));
   const firstUserBlockIndex = blocks.findIndex((block) => block.type === "user");

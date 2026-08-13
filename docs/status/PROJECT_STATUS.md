@@ -63,6 +63,7 @@
 - 对话执行体验进一步对齐 Codex 桌面端：同一 Turn 的 commentary、reasoning、命令与工具事件按原始顺序归并为可折叠执行过程，运行中显示当前原生活动或 MCP progress，完成后收起；最终回答使用禁用原始 HTML 的 Markdown/GFM 渲染。完整 `turn/completed` 结果会清除流式阶段遗留 Item，避免已完成活动错误停留在运行中。
 - 用户可在普通 Turn 执行期间继续编辑并发送补充信息：Shell 复用原生 `turn/steer`，输入框显示轻量插入态；steer 返回的用户 Item 按时间顺序穿插在执行过程之间，不新建 Turn 或 Session。对话区左缘新增 Codex 风格消息轨道，当前可视 Turn 高亮且可点击跳转，不显示动态编号。
 - 已修正前端壳对 app-server 运行状态的过度简化：按 Thread 区分普通、Review、Compact 和未知 active Turn，并消费等待批准/用户输入标志；只有普通 Turn 且有真实 Turn ID 时开放 `turn/steer`，其他阶段显示准确状态，不再出现“提示可插入、提交后才报错”的体验落差。普通 Turn 发送、Steer 与中断生命周期已从 `useThreadController` 拆到独立 Hook，主线程控制器回落到约 433 行。
+- 已清理空 reasoning 的无内容折叠入口，并将同一连续过程中的 2 项以上命令、分析和工具活动默认收进单一汇总；对话标题左边距收敛到 24px，中央对话正文、输入、过程标题和辅助文字按官方桌面端 16/14/12/11px 层级提升可读性。
 
 ## 当前数据流
 
@@ -85,7 +86,7 @@
 ## 验证证据
 
 - `pnpm typecheck`：通过。
-- `pnpm test`：39 个测试文件、140 项测试全部通过，新增普通/Review/Compact/未知 active 运行类型、等待标志保持、非 Steer 阶段拒绝发送、手动压缩标记及请求失败回滚覆盖；左侧消息轨道、原生 Steer 中途消息顺序、执行过程归并、安全 Markdown、模型/权限热切换、分叉祖先、工作区 watch、统一反向交互、Review 和 MCP 覆盖继续通过。
+- `pnpm test`：39 个测试文件、143 项测试全部通过，新增空 reasoning 隐藏、活跃空 reasoning 进度保留、两项以上过程默认折叠、普通/Review/Compact/未知 active 运行类型、等待标志保持、非 Steer 阶段拒绝发送、手动压缩标记及请求失败回滚覆盖；左侧消息轨道、原生 Steer 中途消息顺序、执行过程归并、安全 Markdown、模型/权限热切换、分叉祖先、工作区 watch、统一反向交互、Review 和 MCP 覆盖继续通过。
 - Rust 单元测试：11 项全部通过，覆盖显式模型参数、旧模板配置兼容归一化、动态 Runtime、每日默认工作区、独立 provider 参数、旧 CODEX_HOME 迁移、双目录冲突和官方目录防重叠校验。
 - `pnpm rust:check`：从 clean target 完整重编译后通过。
 - `pnpm build`：包含虚拟时间线、目录 watch、目录选择插件和 P0 工作台 UI 的生产构建通过。

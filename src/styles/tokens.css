@@ -19,6 +19,10 @@
   --ui-accent: #c2e85c;
   --ui-accent-ink: #182000;
   --ui-danger: #e48f86;
+  --conversation-font-size: 16px;
+  --conversation-font-size-secondary: 14px;
+  --conversation-font-size-small: 12px;
+  --conversation-font-size-meta: 11px;
   --ui-control-height: 31px;
   --ui-control-radius: 8px;
   --ui-panel-radius: 11px;

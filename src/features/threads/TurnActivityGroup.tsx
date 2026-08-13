@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import type { McpToolCallProgressNotification } from "../../generated/app-server/v2/McpToolCallProgressNotification";
 import { activityTitle, TurnActivityItem } from "./TurnActivityItem";
@@ -21,9 +22,20 @@ export function TurnActivityGroup({ items, active, turnId, activeItemTurnIds, mc
   const hasFailure = items.some(failed);
   const activeProgress = activeItem ? mcpProgressByItemId[activeItem.id]?.message : null;
   const status = activeProgress ?? (activeItem ? activityTitle(activeItem) : hasFailure ? "部分操作失败" : `已完成 ${items.length} 项活动`);
+  const [expanded, setExpanded] = useState(hasFailure || (active && items.length === 1));
+
+  useEffect(() => {
+    if (hasFailure) {
+      setExpanded(true);
+    } else if (items.length >= 2) {
+      setExpanded(false);
+    } else if (active) {
+      setExpanded(true);
+    }
+  }, [hasFailure, items.length]);
 
   return (
-    <details className="turn-activity-group" open={active || hasFailure} role={active ? "status" : undefined} aria-live={active ? "polite" : undefined}>
+    <details className="turn-activity-group" open={expanded} onToggle={(event) => setExpanded(event.currentTarget.open)} role={active ? "status" : undefined} aria-live={active ? "polite" : undefined}>
       <summary>
         <span className={`turn-activity-indicator${active ? " active" : hasFailure ? " failed" : ""}`} aria-hidden="true" />
         <strong>{active ? "正在处理" : "执行过程"}</strong>

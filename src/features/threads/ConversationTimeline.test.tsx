@@ -150,6 +150,48 @@ describe("conversation timing", () => {
     expect(markup).not.toContain("<small>inProgress</small>");
   });
 
+  it("keeps two or more active process items collapsed behind one summary", () => {
+    const reasoning: ThreadItem = {
+      type: "reasoning",
+      id: "reasoning-active",
+      summary: ["正在确定修改范围"],
+      content: [],
+    };
+    const command: ThreadItem = {
+      type: "commandExecution",
+      id: "command-active-grouped",
+      pluginId: null,
+      scriptPath: null,
+      command: "pnpm test",
+      cwd: "C:\\work",
+      processId: "123",
+      source: "agent",
+      status: "inProgress",
+      commandActions: [],
+      aggregatedOutput: null,
+      exitCode: null,
+      durationMs: null,
+    };
+    const turn = {
+      ...completedTurn(),
+      items: [reasoning, command],
+      status: "inProgress",
+    } as Turn;
+    const markup = renderToStaticMarkup(
+      <ConversationTurn
+        turn={turn}
+        active
+        canFork={false}
+        activeItemTurnIds={{ "command-active-grouped": turn.id }}
+        mcpProgressByItemId={{}}
+      />,
+    );
+
+    expect(markup).toContain("正在处理");
+    expect(markup).toContain("运行命令");
+    expect(markup).not.toContain('class="turn-activity-group" open=""');
+  });
+
   it("groups commentary and reasoning outside the final answer", () => {
     const commentary: ThreadItem = { type: "agentMessage", id: "commentary-1", text: "我先检查项目结构。", phase: "commentary", memoryCitation: null };
     const reasoning: ThreadItem = { type: "reasoning", id: "reasoning-1", summary: ["定位核心模块"], content: [] };
@@ -164,6 +206,56 @@ describe("conversation timing", () => {
     expect(markup).toContain('class="agent-response"');
     expect(markup).toContain("检查完成。");
     expect((markup.match(/class="agent-accent"/g) ?? []).length).toBe(1);
+  });
+
+  it("omits completed reasoning entries that contain no visible content", () => {
+    const emptyReasoning: ThreadItem = {
+      type: "reasoning",
+      id: "reasoning-empty",
+      summary: ["", "   "],
+      content: [],
+    };
+    const commentary: ThreadItem = {
+      type: "agentMessage",
+      id: "commentary-visible",
+      text: "正在核对实现。",
+      phase: "commentary",
+      memoryCitation: null,
+    };
+    const markup = renderTurn({ ...completedTurn(), items: [emptyReasoning, commentary] });
+
+    expect(markup).not.toContain("分析过程");
+    expect(markup).toContain("正在核对实现。");
+    expect(markup).toContain("已完成 1 项活动");
+  });
+
+  it("keeps live progress for active reasoning even before it has content", () => {
+    const emptyReasoning: ThreadItem = {
+      type: "reasoning",
+      id: "reasoning-active-empty",
+      summary: [],
+      content: [],
+    };
+    const turn = {
+      ...completedTurn(),
+      items: [emptyReasoning],
+      status: "inProgress",
+      completedAt: null,
+      durationMs: null,
+    } as Turn;
+    const markup = renderToStaticMarkup(
+      <ConversationTurn
+        turn={turn}
+        active
+        canFork={false}
+        activeItemTurnIds={{ "reasoning-active-empty": turn.id }}
+        mcpProgressByItemId={{}}
+      />,
+    );
+
+    expect(markup).toContain("正在分析问题");
+    expect(markup).not.toContain("分析过程");
+    expect(markup).not.toContain("turn-activity-group");
   });
 
   it("keeps steered user messages in their native item order", () => {
