@@ -30,6 +30,7 @@ pnpm tauri dev
 ```powershell
 pnpm typecheck
 pnpm test
+pnpm test:quality
 pnpm build
 pnpm rust:check
 pnpm desktop:build
@@ -45,3 +46,5 @@ pnpm protocol:generate
 ```
 
 项目规则与动态状态入口见 [AGENTS.md](AGENTS.md) 和 [docs/status/PROJECT_STATUS.md](docs/status/PROJECT_STATUS.md)。
+
+独立测试与质量门禁脚本统一放在 [tests/scripts](tests/scripts)；源码旁的 `*.test.*` 与 Rust `*_tests.rs` 保持就地维护，方便复用模块夹具和类型。

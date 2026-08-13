@@ -47,6 +47,7 @@
 - 已消费 Tauri `app-server://log`：右侧新增实时日志页，使用 200 条/单行 4000 字符硬上限和 150ms 批量刷新控制内存及渲染开销，并标注日志的敏感数据属性。
 - 已完成阶段性代码健康审查：53 个非生成源码文件未发现达到阈值的复制代码，Knip 未发现无效文件、导出或依赖；Runtime 日志迁移到独立外部 Store，关闭日志页时不再带动最多 200 个 Turn 的主界面刷新；三栏缩放逻辑和日志样式从 `App` 拆出，并统一跨模块错误消息转换。
 - 已完成本轮保持行为的代码健康审查：未发现可安全删除的业务死代码；Knip 无未使用项，事件监听、定时器、Store 和 app-server transport 均有释放路径。修复 Runtime staging 默认采用 PATH 最新版本导致固定协议漂移的问题，并改为临时目录校验完成后再替换 sidecar。
+- 独立测试与质量门禁脚本统一收纳到 `tests/scripts`，提供 Rust 校验与一键质量门禁入口；源码旁的 TypeScript/Vitest 和 Rust 模块测试保持就地维护，便于复用模块夹具且不混淆测试脚本与构建脚本。
 - 已完成第一阶段服务端交互与运行态接入：三类审批、结构化工具问答和 MCP elicitation 进入统一有界队列；真实 JSON-RPC request ID、服务端撤销、Thread 完整生命周期、通用/配置/Guardian/Windows 安全提示和 Sandbox setup 均复用 app-server 原生协议。
 - 已完成第二阶段生产能力接入：原生模型目录与 Provider capabilities、Review、运行中 Steer、Thread Fork、活动/归档历史与恢复、`thread/read` 只读打开、按需 Resume 和空闲 Unsubscribe 已接入。
 - 已对齐 Codex 桌面端的后续消息双路径：普通 Enter 按 Session 排队并在当前 Turn 成功完成后通过原生 `turn/start` 续发，显式 `Ctrl+Shift+Enter` 保留原生 `turn/steer`；队列可见、可取消、失败后可继续，且每 Session 有独立 10 条硬上限。

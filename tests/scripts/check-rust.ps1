@@ -10,7 +10,7 @@ $devShellModule = Join-Path $installationPath "Common7\Tools\Microsoft.VisualStu
 Import-Module $devShellModule
 Enter-VsDevShell -VsInstallPath $installationPath -SkipAutomaticLocation -DevCmdArguments "-arch=x64 -host_arch=x64"
 
-$projectRoot = Split-Path -Parent $PSScriptRoot
+$projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $cargoCommand = Get-Command cargo.exe -ErrorAction SilentlyContinue
 if ($cargoCommand) {
     $cargo = $cargoCommand.Source
