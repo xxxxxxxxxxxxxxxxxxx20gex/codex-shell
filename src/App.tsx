@@ -10,6 +10,7 @@ import { GoalPanel } from "./features/commands/GoalPanel";
 import { McpStatusPanel } from "./features/commands/McpStatusPanel";
 import { ReviewPanel } from "./features/commands/ReviewPanel";
 import { SkillPicker } from "./features/commands/SkillPicker";
+import { composerSubmitAction, SendModeControl } from "./features/composer/SendModeControl";
 import { commandDisabled, SlashCommandMenu } from "./features/commands/SlashCommandMenu";
 import { useResizablePanels } from "./features/layout/useResizablePanels";
 import {
@@ -343,10 +344,18 @@ function App() {
         return;
       }
     }
-    if (event.key !== "Enter" || (event.shiftKey && !event.ctrlKey && !event.metaKey)) return;
+    const action = composerSubmitAction(event, session.canSteer);
+    if (!action) return;
     event.preventDefault();
-    if ((event.ctrlKey || event.metaKey) && event.shiftKey && session.canSteer) void steerCurrentTurn();
-    else void submit();
+    if (action === "steerUnavailable") {
+      setUiError("当前阶段不可引导");
+      return;
+    }
+    if (action === "steer") {
+      void submitWithMode("steer");
+      return;
+    }
+    void submitWithMode("queue");
   }
 
   function toggleSkill(skill: SkillMention) {
@@ -479,13 +488,13 @@ function App() {
                   <PermissionModeSelector value={permissionMode} onChange={changePermissionMode} />
                 </div>
                 <div className="composer-actions">
-                  <div className="send-mode-anchor">
-                    {session.running && <div className="send-mode-menu" role="menu" aria-label="发送方式">
-                      <button type="button" role="menuitem" disabled={!draft.trim()} onClick={() => void submitWithMode("queue")}><strong>Queue</strong><small>等待当前任务完成后发送</small></button>
-                      <button type="button" role="menuitem" disabled={!draft.trim() || !session.canSteer} onClick={() => void submitWithMode("steer")}><strong>Steer</strong><small>{session.canSteer ? "立即引导当前任务" : "当前阶段不可引导"}</small></button>
-                    </div>}
-                    <button className="send-button" disabled={!draft.trim()} onClick={() => void submitWithMode("queue")} aria-label={session.running ? "排队发送" : "发送任务"}>↑</button>
-                  </div>
+                  <SendModeControl
+                    canSteer={session.canSteer}
+                    hasDraft={Boolean(draft.trim())}
+                    running={session.running}
+                    onQueue={() => void submitWithMode("queue")}
+                    onSteer={() => void submitWithMode("steer")}
+                  />
                   {session.canInterrupt && <button className="stop-button" onClick={() => void session.interrupt()} aria-label="停止任务">■</button>}
                 </div>
               </div>
