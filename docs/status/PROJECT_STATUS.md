@@ -49,6 +49,7 @@
 - 已完成本轮保持行为的代码健康审查：未发现可安全删除的业务死代码；Knip 无未使用项，事件监听、定时器、Store 和 app-server transport 均有释放路径。修复 Runtime staging 默认采用 PATH 最新版本导致固定协议漂移的问题，并改为临时目录校验完成后再替换 sidecar。
 - 已完成第一阶段服务端交互与运行态接入：三类审批、结构化工具问答和 MCP elicitation 进入统一有界队列；真实 JSON-RPC request ID、服务端撤销、Thread 完整生命周期、通用/配置/Guardian/Windows 安全提示和 Sandbox setup 均复用 app-server 原生协议。
 - 已完成第二阶段生产能力接入：原生模型目录与 Provider capabilities、Review、运行中 Steer、Thread Fork、活动/归档历史与恢复、`thread/read` 只读打开、按需 Resume 和空闲 Unsubscribe 已接入。
+- 已对齐 Codex 桌面端的后续消息双路径：普通 Enter 按 Session 排队并在当前 Turn 成功完成后通过原生 `turn/start` 续发，显式 `Ctrl+Shift+Enter` 保留原生 `turn/steer`；队列可见、可取消、失败后可继续，且每 Session 有独立 10 条硬上限。
 - MCP 面板已补齐 OAuth 登录、配置重载、工具与资源清单、资源读取预览；OAuth 和启动状态由原生通知反馈。未增加自定义 system/developer prompt，也未修改 Codex Core。
 - 已完成提交前兼容性加固：模型可见文本统一限制为 8000 UTF-8 bytes；Runtime Notice、MCP 资源预览和外部 URL 均有硬边界；旧 paginated rollout 在原生只读接口不支持时只对固定错误回退 Resume。
 - 已修复归档/活动历史串列、归档 Session 误打开、inline Review 合成 Turn 丢失和 detached Review 父线程订阅残留；`openai/form` 已通过 initialize 显式协商，typed form 按 schema 校验并省略未填写的可选字段。

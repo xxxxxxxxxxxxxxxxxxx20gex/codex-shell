@@ -70,7 +70,7 @@ export function runningTurnLabel(turn: RunningTurn | undefined) {
   if (!turn) return null;
   if (turn.activeFlags.includes("waitingOnApproval")) return "等待批准";
   if (turn.activeFlags.includes("waitingOnUserInput")) return "等待输入";
-  if (turn.kind === "regular" && turn.turnId) return "执行中 · Enter 插入";
+  if (turn.kind === "regular" && turn.turnId) return "执行中";
   if (turn.kind === "review") return "正在代码审查";
   if (turn.kind === "compact") return "正在压缩上下文";
   return "正在执行";

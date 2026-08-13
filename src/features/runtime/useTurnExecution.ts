@@ -1,4 +1,4 @@
-import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
+import { useCallback, useRef, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
 import type { ModeKind } from "../../generated/app-server/ModeKind";
 import type { Thread } from "../../generated/app-server/v2/Thread";
 import { errorMessage } from "../../shared/errors";
@@ -8,6 +8,7 @@ import type { ModelSettings } from "../models/types";
 import type { AppServerClient } from "./appServerClient";
 import { buildUserInput, type FileMention, type SkillMention } from "./sessionInput";
 import type { AgentSessionAction } from "./sessionState";
+import type { QueuedTurnInput } from "./useQueuedTurns";
 import { canSteerRunningTurn, type RunningTurn, type RunningTurnKind } from "./useRunningTurns";
 
 interface Props {
@@ -27,10 +28,44 @@ interface Props {
   getRunningTurn: (threadId: string) => RunningTurn | undefined;
   isThreadRunning: (threadId: string) => boolean;
   markThreadRunning: (threadId: string, turnId: string | null, kind: RunningTurnKind) => void;
+  markThreadStopped: (threadId: string) => void;
   showActiveWith: (thread: Thread) => void;
 }
 
+function startTurn(
+  client: AppServerClient,
+  threadId: string,
+  message: string,
+  mentions: FileMention[],
+  skills: SkillMention[],
+  collaborationMode: ModeKind,
+  settings: ModelSettings,
+  permissionMode: PermissionMode,
+) {
+  const permissions = getPermissionMode(permissionMode);
+  const collaboration = collaborationMode === "plan" ? {
+    mode: collaborationMode,
+    settings: {
+      model: settings.modelId,
+      reasoning_effort: settings.reasoningEffort,
+      developer_instructions: null,
+    },
+  } : undefined;
+  return client.startTurn({
+    threadId,
+    input: buildUserInput(message, mentions, skills),
+    model: settings.modelId,
+    effort: settings.reasoningEffort,
+    approvalPolicy: permissions.approvalPolicy,
+    approvalsReviewer: permissions.approvalsReviewer,
+    ...(permissions.sandbox === "danger-full-access"
+      ? { sandboxPolicy: { type: "dangerFullAccess" as const } }
+      : {}),
+  }, collaboration);
+}
+
 export function useTurnExecution(props: Props) {
+  const queuedTurnSendingRef = useRef(new Set<string>());
   const send = useCallback(async (
     text: string,
     mentions: FileMention[] = [],
@@ -69,27 +104,16 @@ export function useTurnExecution(props: Props) {
         await props.ensureActiveThread();
       }
 
-      const input = buildUserInput(message, mentions, skills);
-      const permissions = getPermissionMode(props.permissionMode);
-      const collaboration = collaborationMode === "plan" ? {
-        mode: collaborationMode,
-        settings: {
-          model: props.settings.modelId,
-          reasoning_effort: props.settings.reasoningEffort,
-          developer_instructions: null,
-        },
-      } : undefined;
-      const response = await client.startTurn({
+      const response = await startTurn(
+        client,
         threadId,
-        input,
-        model: props.settings.modelId,
-        effort: props.settings.reasoningEffort,
-        approvalPolicy: permissions.approvalPolicy,
-        approvalsReviewer: permissions.approvalsReviewer,
-        ...(permissions.sandbox === "danger-full-access"
-          ? { sandboxPolicy: { type: "dangerFullAccess" as const } }
-          : {}),
-      }, collaboration);
+        message,
+        mentions,
+        skills,
+        collaborationMode,
+        props.settings,
+        props.permissionMode,
+      );
       props.markThreadRunning(threadId, response.turn.id, "regular");
       props.dispatch({ type: "turnSubmitted", turn: response.turn, userText: message });
       return true;
@@ -131,6 +155,49 @@ export function useTurnExecution(props: Props) {
     }
   }, [props]);
 
+  const sendQueued = useCallback(async (threadId: string, queued: QueuedTurnInput) => {
+    if (queuedTurnSendingRef.current.has(threadId)) return false;
+    queuedTurnSendingRef.current.add(threadId);
+    if (props.threadIdRef.current === threadId) props.setSubmitting(true);
+    props.markThreadRunning(threadId, null, "regular");
+    try {
+      const client = await props.ensureConnected();
+      if (!props.subscribedThreadIdsRef.current.has(threadId)) {
+        const permissions = getPermissionMode(queued.permissionMode);
+        await client.resumeThread({
+          threadId,
+          model: queued.settings.modelId,
+          approvalPolicy: permissions.approvalPolicy,
+          approvalsReviewer: permissions.approvalsReviewer,
+          sandbox: permissions.sandbox,
+        });
+        props.subscribedThreadIdsRef.current.add(threadId);
+      }
+      const response = await startTurn(
+        client,
+        threadId,
+        queued.text,
+        queued.mentions,
+        queued.skills,
+        queued.collaborationMode,
+        queued.settings,
+        queued.permissionMode,
+      );
+      props.markThreadRunning(threadId, response.turn.id, "regular");
+      if (props.threadIdRef.current === threadId) {
+        props.dispatch({ type: "turnSubmitted", turn: response.turn, userText: queued.text });
+      }
+      return true;
+    } catch (sendError) {
+      props.markThreadStopped(threadId);
+      if (props.threadIdRef.current === threadId) props.setError(errorMessage(sendError));
+      return false;
+    } finally {
+      queuedTurnSendingRef.current.delete(threadId);
+      if (props.threadIdRef.current === threadId) props.setSubmitting(false);
+    }
+  }, [props]);
+
   const interrupt = useCallback(async () => {
     const threadId = props.threadIdRef.current;
     const runningTurn = threadId ? props.getRunningTurn(threadId) : undefined;
@@ -142,5 +209,5 @@ export function useTurnExecution(props: Props) {
     }
   }, [props]);
 
-  return { send, steer, interrupt };
+  return { send, sendQueued, steer, interrupt };
 }

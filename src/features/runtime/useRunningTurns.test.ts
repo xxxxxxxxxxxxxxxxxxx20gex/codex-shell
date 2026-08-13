@@ -108,6 +108,11 @@ describe("running Turn presentation", () => {
     expect(runningTurnLabel({
       turnId: "turn-a",
       kind: "regular",
+      activeFlags: [],
+    })).toBe("执行中");
+    expect(runningTurnLabel({
+      turnId: "turn-a",
+      kind: "regular",
       activeFlags: ["waitingOnApproval"],
     })).toBe("等待批准");
     expect(runningTurnLabel({

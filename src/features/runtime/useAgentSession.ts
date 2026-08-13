@@ -338,14 +338,14 @@ export function useAgentSession(
 
 export type AgentSession = ReturnType<typeof useAgentSession>;
 
-export async function sendOrSteer(
-  session: Pick<AgentSession, "running" | "canSteer" | "send" | "steer">,
+export async function sendOrQueue(
+  session: Pick<AgentSession, "running" | "send" | "queue">,
   text: string,
   mentions: FileMention[],
   skills: SkillMention[],
   collaborationMode: ModeKind,
 ) {
-  if (!session.running) return session.send(text, mentions, skills, collaborationMode);
-  if (session.canSteer) return session.steer(text, mentions, skills);
-  return false;
+  return session.running
+    ? session.queue(text, mentions, skills, collaborationMode)
+    : session.send(text, mentions, skills, collaborationMode);
 }

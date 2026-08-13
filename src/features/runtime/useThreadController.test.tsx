@@ -63,7 +63,8 @@ function setup() {
     resumeThread: vi.fn(async ({ threadId }: { threadId: string }) => ({ thread: threads.get(threadId)! })),
     unsubscribeThread: vi.fn(async () => ({})),
     startThread: vi.fn(async () => ({ thread: thread("thread-new") })),
-    startTurn: vi.fn(async () => ({ turn: turn("turn-a") })),
+    startTurn: vi.fn(async (_params: unknown, _collaboration?: unknown) => ({ turn: turn("turn-a") })),
+    steerTurn: vi.fn(async () => ({ turnId: "turn-a" })),
     startReview: vi.fn(async ({ delivery }: { delivery: "inline" | "detached" }) => ({
       reviewThreadId: delivery === "inline" ? "thread-a" : "review-thread",
       turn: {
@@ -182,6 +183,25 @@ describe("useThreadController", () => {
     }), undefined);
   });
 
+  it("keeps explicit same-Turn steering available", async () => {
+    const { client, props } = setup();
+    const { result } = renderHook(() => useThreadController(props));
+    await waitFor(() => expect(client.listThreads).toHaveBeenCalled());
+
+    await act(async () => {
+      await result.current.openThread("thread-a");
+      await result.current.send("检查项目");
+      expect(await result.current.steer("先检查测试")).toBe(true);
+    });
+
+    expect(client.steerTurn).toHaveBeenCalledWith(expect.objectContaining({
+      threadId: "thread-a",
+      expectedTurnId: "turn-a",
+      input: [{ type: "text", text: "先检查测试", text_elements: [] }],
+    }));
+    expect(client.startTurn).toHaveBeenCalledTimes(1);
+  });
+
   it("keeps a background running subscription until its Turn completes", async () => {
     const { client, props, running } = setup();
     const { result } = renderHook(() => useThreadController(props));
@@ -202,6 +222,75 @@ describe("useThreadController", () => {
       });
     });
     await waitFor(() => expect(client.unsubscribeThread).toHaveBeenCalledWith({ threadId: "thread-a" }));
+  });
+
+  it("queues follow-ups per Session and starts them only after the previous Turn completes", async () => {
+    const { client, props } = setup();
+    client.startTurn
+      .mockResolvedValueOnce({ turn: turn("turn-a") })
+      .mockResolvedValueOnce({ turn: turn("turn-b") })
+      .mockResolvedValueOnce({ turn: turn("turn-a-next") })
+      .mockResolvedValueOnce({ turn: turn("turn-b-next") });
+    const { result } = renderHook(() => useThreadController(props));
+    await waitFor(() => expect(client.listThreads).toHaveBeenCalled());
+
+    await act(async () => {
+      await result.current.openThread("thread-a");
+      await result.current.send("杭州");
+      expect(result.current.queue("上海")).toBe(true);
+      await result.current.openThread("thread-b");
+      await result.current.send("北京");
+      expect(result.current.queue("广州")).toBe(true);
+    });
+
+    expect(client.startTurn).toHaveBeenCalledTimes(2);
+    act(() => result.current.onTurnCompleted({
+      threadId: "thread-a",
+      turn: turn("turn-a", "completed"),
+    }));
+    await waitFor(() => expect(client.startTurn).toHaveBeenCalledTimes(3));
+    expect(client.startTurn.mock.calls[2][0]).toMatchObject({
+      threadId: "thread-a",
+      input: [{ type: "text", text: "上海" }],
+    });
+
+    act(() => result.current.onTurnCompleted({
+      threadId: "thread-b",
+      turn: turn("turn-b", "completed"),
+    }));
+    await waitFor(() => expect(client.startTurn).toHaveBeenCalledTimes(4));
+    expect(client.startTurn.mock.calls[3][0]).toMatchObject({
+      threadId: "thread-b",
+      input: [{ type: "text", text: "广州" }],
+    });
+  });
+
+  it("keeps queued messages after an interrupted Turn", async () => {
+    const { client, props } = setup();
+    const { result } = renderHook(() => useThreadController(props));
+    await waitFor(() => expect(client.listThreads).toHaveBeenCalled());
+
+    await act(async () => {
+      await result.current.openThread("thread-a");
+      await result.current.send("杭州");
+      expect(result.current.queue("上海")).toBe(true);
+    });
+    act(() => result.current.onTurnCompleted({
+      threadId: "thread-a",
+      turn: turn("turn-a", "interrupted"),
+    }));
+
+    await waitFor(() => expect(result.current.queuedTurns.map((input) => input.text)).toEqual(["上海"]));
+    expect(client.startTurn).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      expect(await result.current.resumeQueued()).toBe(true);
+    });
+    expect(client.startTurn).toHaveBeenCalledTimes(2);
+    expect(client.startTurn.mock.calls[1][0]).toMatchObject({
+      threadId: "thread-a",
+      input: [{ type: "text", text: "上海" }],
+    });
   });
 
   it("retains a known fork parent when a refresh page only returns the child", async () => {

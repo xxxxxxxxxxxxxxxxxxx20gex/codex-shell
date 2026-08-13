@@ -6,6 +6,7 @@ import {
   type MutableRefObject,
   type SetStateAction,
 } from "react";
+import type { ModeKind } from "../../generated/app-server/ModeKind";
 import type { Thread } from "../../generated/app-server/v2/Thread";
 import type { ThreadNameUpdatedNotification } from "../../generated/app-server/v2/ThreadNameUpdatedNotification";
 import type { ThreadStartedNotification } from "../../generated/app-server/v2/ThreadStartedNotification";
@@ -17,6 +18,8 @@ import { getPermissionMode, type PermissionMode } from "../approvals/permissionM
 import type { ModelSettings } from "../models/types";
 import type { AppServerClient } from "./appServerClient";
 import type { AgentSessionAction } from "./sessionState";
+import type { FileMention, SkillMention } from "./sessionInput";
+import { useQueuedTurns } from "./useQueuedTurns";
 import type { RunningTurn, RunningTurnKind } from "./useRunningTurns";
 import { useThreadHistory } from "./useThreadHistory";
 import { useThreadReview } from "./useThreadReview";
@@ -58,6 +61,7 @@ export function useThreadController(props: Props) {
   const subscribedThreadIdsRef = useRef(new Set<string>());
   const [openingThreadId, setOpeningThreadId] = useState<string | null>(null);
   const [threadActionId, setThreadActionId] = useState<string | null>(null);
+  const queued = useQueuedTurns();
 
   const currentThreadId = useCallback(() => threadIdRef.current, []);
   const threadHistory = useThreadHistory({
@@ -122,7 +126,7 @@ export function useThreadController(props: Props) {
     return { client, threadId };
   }, [applyThreadRuntimeState, props.dispatch, props.ensureConnected, props.permissionMode, props.settings.modelId]);
 
-  const { send, steer, interrupt } = useTurnExecution({
+  const { send, sendQueued, steer, interrupt } = useTurnExecution({
     clientRef: props.clientRef,
     threadIdRef,
     threadOperationRef,
@@ -139,8 +143,38 @@ export function useThreadController(props: Props) {
     getRunningTurn: props.getRunningTurn,
     isThreadRunning: props.isThreadRunning,
     markThreadRunning: props.markThreadRunning,
+    markThreadStopped: props.markThreadStopped,
     showActiveWith,
   });
+
+  const queue = useCallback((
+    text: string,
+    mentions: FileMention[] = [],
+    skills: SkillMention[] = [],
+    collaborationMode: ModeKind = "default",
+  ) => {
+    const message = text.trim();
+    const threadId = threadIdRef.current;
+    if (!message || !threadId || (!props.submitting && !props.isThreadRunning(threadId))) return false;
+    const accepted = queued.enqueue(threadId, {
+      text: message,
+      mentions: [...mentions],
+      skills: [...skills],
+      collaborationMode,
+      settings: { ...props.settings },
+      permissionMode: props.permissionMode,
+    });
+    if (!accepted) props.setError("当前 Session 最多排队 10 条消息");
+    return accepted;
+  }, [props.isThreadRunning, props.permissionMode, props.setError, props.settings, props.submitting, queued.enqueue]);
+
+  const sendNextQueued = useCallback(async (threadId: string) => {
+    const next = queued.shift(threadId);
+    if (!next) return false;
+    const sent = await sendQueued(threadId, next);
+    if (!sent) queued.restoreFront(threadId, next);
+    return sent;
+  }, [queued.restoreFront, queued.shift, sendQueued]);
 
   const openThread = useCallback(async (threadId: string) => {
     if (threadOperationRef.current || threadId === threadIdRef.current) return;
@@ -245,6 +279,7 @@ export function useThreadController(props: Props) {
     try {
       const client = await props.ensureConnected();
       await client.archiveThread({ threadId });
+      queued.clearThread(threadId);
       if (threadId === threadIdRef.current) startNewTask();
       removeFromHistory(threadId);
       return true;
@@ -254,7 +289,7 @@ export function useThreadController(props: Props) {
     } finally {
       setThreadActionId(null);
     }
-  }, [props.ensureConnected, props.isThreadRunning, props.setError, removeFromHistory, startNewTask, threadActionId]);
+  }, [props.ensureConnected, props.isThreadRunning, props.setError, queued.clearThread, removeFromHistory, startNewTask, threadActionId]);
 
   const unarchiveThread = useCallback(async (threadId: string) => {
     if (threadActionId) return false;
@@ -280,6 +315,7 @@ export function useThreadController(props: Props) {
     try {
       const client = await props.ensureConnected();
       await client.deleteThread({ threadId });
+      queued.clearThread(threadId);
       if (threadId === threadIdRef.current) startNewTask();
       removeFromHistory(threadId);
       return true;
@@ -289,7 +325,7 @@ export function useThreadController(props: Props) {
     } finally {
       setThreadActionId(null);
     }
-  }, [props.ensureConnected, props.isThreadRunning, props.setError, removeFromHistory, startNewTask, threadActionId]);
+  }, [props.ensureConnected, props.isThreadRunning, props.setError, queued.clearThread, removeFromHistory, startNewTask, threadActionId]);
 
   const forkThread = useCallback(async (threadId: string) => {
     if (threadActionId || props.isThreadRunning(threadId)) return false;
@@ -336,11 +372,14 @@ export function useThreadController(props: Props) {
       props.setSubmitting(false);
       props.dispatch({ type: "turnCompleted", notification });
       if (notification.turn.error) props.setError(notification.turn.error.message);
-    } else {
+    } else if (notification.turn.status !== "completed" || queued.get(notification.threadId).length === 0) {
       void unsubscribeIfIdle(notification.threadId);
     }
+    if (notification.turn.status === "completed" && queued.get(notification.threadId).length > 0) {
+      void sendNextQueued(notification.threadId);
+    }
     void refreshHistory();
-  }, [props.dispatch, props.markThreadStopped, props.setError, props.setSubmitting, refreshHistory, unsubscribeIfIdle]);
+  }, [props.dispatch, props.markThreadStopped, props.setError, props.setSubmitting, queued.get, refreshHistory, sendNextQueued, unsubscribeIfIdle]);
 
   const onThreadName = useCallback((notification: ThreadNameUpdatedNotification) => {
     renameInHistory(notification.threadId, notification.threadName ?? null);
@@ -372,9 +411,10 @@ export function useThreadController(props: Props) {
   const removeThread = useCallback((threadId: string) => {
     subscribedThreadIdsRef.current.delete(threadId);
     props.markThreadStopped(threadId);
+    queued.clearThread(threadId);
     removeFromHistory(threadId);
     if (threadId === threadIdRef.current) startNewTask();
-  }, [props.markThreadStopped, removeFromHistory, startNewTask]);
+  }, [props.markThreadStopped, queued.clearThread, removeFromHistory, startNewTask]);
 
   const onThreadUnarchived = useCallback((threadId: string) => {
     if (historyArchived) removeFromHistory(threadId);
@@ -383,17 +423,30 @@ export function useThreadController(props: Props) {
   const onThreadClosed = useCallback((threadId: string) => {
     subscribedThreadIdsRef.current.delete(threadId);
     props.markThreadStopped(threadId);
+    queued.clearThread(threadId);
     const status = { type: "notLoaded" } as const;
     updateHistoryStatus(threadId, status);
     props.dispatch({ type: "threadStatusChanged", threadId, status });
-  }, [props.dispatch, props.markThreadStopped, updateHistoryStatus]);
+  }, [props.dispatch, props.markThreadStopped, queued.clearThread, updateHistoryStatus]);
 
   const reset = useCallback(() => {
     threadIdRef.current = null;
     subscribedThreadIdsRef.current.clear();
+    queued.clear();
     props.setSubmitting(false);
     props.dispatch({ type: "clear" });
-  }, [props.dispatch, props.setSubmitting]);
+  }, [props.dispatch, props.setSubmitting, queued.clear]);
+
+  const removeQueued = useCallback((queuedTurnId: string) => {
+    const threadId = threadIdRef.current;
+    if (threadId) queued.remove(threadId, queuedTurnId);
+  }, [queued.remove]);
+
+  const resumeQueued = useCallback(async () => {
+    const threadId = threadIdRef.current;
+    if (!threadId || props.submitting || props.isThreadRunning(threadId)) return false;
+    return sendNextQueued(threadId);
+  }, [props.isThreadRunning, props.submitting, sendNextQueued]);
 
   return {
     currentThreadId,
@@ -409,6 +462,10 @@ export function useThreadController(props: Props) {
     showArchivedHistory,
     loadMoreHistory,
     send,
+    queue,
+    queuedTurns: threadIdRef.current ? queued.queuedTurns.get(threadIdRef.current) ?? [] : [],
+    removeQueued,
+    resumeQueued,
     steer,
     interrupt,
     openThread,

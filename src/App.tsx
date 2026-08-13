@@ -26,7 +26,7 @@ import { RuntimeLogPanel } from "./features/runtime/RuntimeLogPanel";
 import { RuntimeNoticeBanner } from "./features/runtime/RuntimeNoticeBanner";
 import { StatusInspector } from "./features/runtime/StatusInspector";
 import {
-  sendOrSteer,
+  sendOrQueue,
   type FileMention,
   type SkillMention,
   useAgentSession,
@@ -243,14 +243,26 @@ function App() {
       await runSlashCommand(command.id, command.args);
       return;
     }
-    if (await sendOrSteer(session, message, mentions, skills, collaborationMode)) {
+    if (await sendOrQueue(session, message, mentions, skills, collaborationMode)) {
       setDraft("");
       setMentions([]);
       setSkills([]);
       setMentionResults([]);
       setCommandNotice("");
-    } else if (session.running && !session.canSteer) {
-      setUiError(`${session.activityLabel ?? "当前阶段正在执行"}，完成后才能发送下一条消息`);
+    } else if (session.running) {
+      setUiError("当前消息未能加入发送队列");
+    }
+  }
+
+  async function steerCurrentTurn() {
+    const message = draft.trim();
+    if (!message || !session.canSteer) return;
+    if (await session.steer(message, mentions, skills)) {
+      setDraft("");
+      setMentions([]);
+      setSkills([]);
+      setMentionResults([]);
+      setCommandNotice("");
     }
   }
 
@@ -324,9 +336,10 @@ function App() {
         return;
       }
     }
-    if (event.key !== "Enter" || event.shiftKey) return;
+    if (event.key !== "Enter" || (event.shiftKey && !event.ctrlKey && !event.metaKey)) return;
     event.preventDefault();
-    void submit();
+    if ((event.ctrlKey || event.metaKey) && event.shiftKey && session.canSteer) void steerCurrentTurn();
+    else void submit();
   }
 
   function toggleSkill(skill: SkillMention) {
@@ -430,7 +443,16 @@ function App() {
                 {skills.map((skill) => <span className="skill-chip" key={skill.path} title={skill.path}>✦ {skill.name}<button onClick={() => toggleSkill(skill)}>×</button></span>)}
                 {mentions.map((mention) => <span key={mention.path} title={mention.path}>@{mention.name}<button onClick={() => setMentions((current) => current.filter((item) => item.path !== mention.path))}>×</button></span>)}
               </div>}
-              <textarea value={draft} onChange={(event) => { setDraft(event.target.value); setUiError(""); setCommandNotice(""); setSlashMenuForced(false); setSlashMenuDismissed(false); }} onKeyDown={handleComposerKeyDown} placeholder={session.canSteer ? "补充要求，Enter 插入当前执行…" : session.running ? `${session.activityLabel ?? "正在执行"}，可先编辑下一条消息…` : collaborationMode === "plan" ? "描述需要分析和规划的任务…" : currentWorkspacePath ? "交给 Codex 一个任务，输入 / 使用命令，输入 @ 引用文件…" : "正在准备默认工作区…"} />
+              {session.queuedTurns.length > 0 && <div className="queued-turns" aria-label="待发送消息">
+                <div className="queued-turns-heading"><span>待发送 · {session.queuedTurns.length}</span>{session.running
+                  ? <small>当前回答完成后依次发送</small>
+                  : <button type="button" onClick={() => void session.resumeQueued()} title="继续发送队列">继续发送</button>}</div>
+                {session.queuedTurns.map((queued, index) => <div className="queued-turn" key={queued.id}>
+                  <span><i>{index + 1}</i>{queued.text}</span>
+                  <button type="button" onClick={() => session.removeQueued(queued.id)} aria-label={`取消待发送消息：${queued.text}`} title="取消待发送">×</button>
+                </div>)}
+              </div>}
+              <textarea value={draft} onChange={(event) => { setDraft(event.target.value); setUiError(""); setCommandNotice(""); setSlashMenuForced(false); setSlashMenuDismissed(false); }} onKeyDown={handleComposerKeyDown} placeholder={session.running ? "输入下一条消息，当前回答完成后发送…" : collaborationMode === "plan" ? "描述需要分析和规划的任务…" : currentWorkspacePath ? "交给 Codex 一个任务，输入 / 使用命令，输入 @ 引用文件…" : "正在准备默认工作区…"} />
               {currentWorkspacePath && mentionQuery !== null && <FileMentionMenu query={mentionQuery} results={mentionResults} loading={mentionLoading} onSelect={selectMention} />}
               {slashMenuVisible && <SlashCommandMenu query={slashQuery ?? ""} selectedIndex={slashSelectedIndex} hasThread={Boolean(session.thread)} running={session.running} onSelect={(id) => void runSlashCommand(id, "", !slashMenuForced)} />}
               {commandPanel === "skills" && <SkillPicker selected={skills} loadSkills={session.listSkills} onToggle={toggleSkill} onClose={() => setCommandPanel(null)} />}
@@ -449,7 +471,7 @@ function App() {
                   <PermissionModeSelector value={permissionMode} disabled={session.running} onChange={changePermissionMode} />
                 </div>
                 <div className="composer-actions">
-                  <button className="send-button" disabled={!draft.trim() || (session.running && !session.canSteer)} onClick={() => void submit()} aria-label={session.canSteer ? "补充指令" : "发送任务"}>↑</button>
+                  <button className="send-button" disabled={!draft.trim()} onClick={() => void submit()} aria-label={session.running ? "排队发送" : "发送任务"}>↑</button>
                   {session.canInterrupt && <button className="stop-button" onClick={() => void session.interrupt()} aria-label="停止任务">■</button>}
                 </div>
               </div>
