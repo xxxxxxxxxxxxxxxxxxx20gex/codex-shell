@@ -178,6 +178,18 @@ describe("conversation timing", () => {
     expect(markup).not.toContain('class="command-drawer" open=""');
   });
 
+  it("collapses completed intermediate activity after the final answer", () => {
+    const reasoning: ThreadItem = { type: "reasoning", id: "reasoning-complete", summary: ["检查完成"], content: [] };
+    const answer: ThreadItem = { type: "agentMessage", id: "answer-complete", text: "最终回答", phase: "final_answer", memoryCitation: null };
+    const markup = renderTurn({ ...completedTurn(), items: [reasoning, answer] });
+
+    expect(markup).toContain('class="turn-process-disclosure"');
+    expect(markup).toContain("已处理 8.4 秒");
+    expect(markup).toContain("检查完成");
+    expect(markup).toContain("最终回答");
+    expect(markup).not.toContain('class="turn-process-disclosure" open=""');
+  });
+
   it("renders multiple native process items as one continuous activity stream", () => {
     const reasoning: ThreadItem = {
       type: "reasoning",

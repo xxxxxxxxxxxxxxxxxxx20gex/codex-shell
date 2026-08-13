@@ -4,7 +4,7 @@ import type { McpToolCallProgressNotification } from "../../generated/app-server
 import type { Turn } from "../../generated/app-server/v2/Turn";
 import type { TurnPlanUpdatedNotification } from "../../generated/app-server/v2/TurnPlanUpdatedNotification";
 import { userMessageText } from "../runtime/sessionState";
-import { agentMessageTiming, userMessageTiming } from "./conversationTiming";
+import { agentMessageTiming, formatTurnDuration, userMessageTiming } from "./conversationTiming";
 import { TurnActivityGroup } from "./TurnActivityGroup";
 import { TurnFileChanges } from "./TurnFileChanges";
 import { TurnPlanView } from "./TurnPlanView";
@@ -92,6 +92,12 @@ export function ConversationTurn({
   const firstUserBlockIndex = blocks.findIndex((block) => block.type === "user");
   const firstActivityBlockIndex = blocks.findIndex((block) => block.type === "activity");
   const finalActivityBlockIndex = lastActivityBlockIndex(blocks);
+  const finalAnswerBlockIndex = blocks.reduce((lastIndex, block, index) => block.type === "answer" ? index : lastIndex, -1);
+  const activityBlocks = blocks.filter((block): block is Extract<TurnBlock, { type: "activity" }> => block.type === "activity");
+  const userMessageCount = items.filter((item) => item.type === "userMessage").length;
+  const collapseCompletedProcess = !active && turn.status === "completed" && userMessageCount <= 1 && answerItems.length > 0
+    && activityBlocks.length > 0 && finalActivityBlockIndex < finalAnswerBlockIndex;
+  const completedProcessDuration = turn.durationMs === null ? "" : ` ${formatTurnDuration(turn.durationMs)}`;
   const lastAgentMessageId = answerItems[answerItems.length - 1]?.id;
   const sentTiming = userMessageTiming(turn);
   const answerTiming = agentMessageTiming(turn, active);
@@ -130,17 +136,43 @@ export function ConversationTurn({
           )}
           {plan && blockIndex === firstUserBlockIndex && <TurnPlanView plan={plan} />}
           {block.type === "activity" && (
-            <TurnActivityGroup
-              items={block.items}
-              active={active && (blockIndex === finalActivityBlockIndex || block.items.some((item) => activeItemTurnIds[item.id] === turn.id))}
-              turnActive={active}
-              startedAt={turn.startedAt}
-              durationMs={turn.durationMs}
-              showHeader={blockIndex === firstActivityBlockIndex}
-              turnId={turn.id}
-              activeItemTurnIds={activeItemTurnIds}
-              mcpProgressByItemId={mcpProgressByItemId}
-            />
+            collapseCompletedProcess
+              ? blockIndex === firstActivityBlockIndex && (
+                <details className="turn-process-disclosure">
+                  <summary>
+                    <span className="turn-activity-indicator" aria-hidden="true" />
+                    <strong>{`已处理${completedProcessDuration}`}</strong>
+                    <i aria-hidden="true">⌄</i>
+                  </summary>
+                  <div className="turn-process-content">
+                    {activityBlocks.map((activityBlock) => (
+                      <TurnActivityGroup
+                        key={`completed-activity:${activityBlock.items[0].id}`}
+                        items={activityBlock.items}
+                        active={false}
+                        turnActive={false}
+                        startedAt={turn.startedAt}
+                        durationMs={turn.durationMs}
+                        showHeader={false}
+                        turnId={turn.id}
+                        activeItemTurnIds={activeItemTurnIds}
+                        mcpProgressByItemId={mcpProgressByItemId}
+                      />
+                    ))}
+                  </div>
+                </details>
+              )
+              : <TurnActivityGroup
+                items={block.items}
+                active={active && (blockIndex === finalActivityBlockIndex || block.items.some((item) => activeItemTurnIds[item.id] === turn.id))}
+                turnActive={active}
+                startedAt={turn.startedAt}
+                durationMs={turn.durationMs}
+                showHeader={blockIndex === firstActivityBlockIndex}
+                turnId={turn.id}
+                activeItemTurnIds={activeItemTurnIds}
+                mcpProgressByItemId={mcpProgressByItemId}
+              />
           )}
           {block.type === "answer" && (
             <div className={`agent-block${block.item.id === firstAgentMessageId ? "" : " agent-block-continuation"}`}>

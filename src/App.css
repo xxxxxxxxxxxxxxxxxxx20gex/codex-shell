@@ -286,6 +286,17 @@ code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 .turn-activity-stream { margin: 15px 0 13px 38px; color: var(--text-secondary); }
 .turn-work-status { display: flex; min-height: 30px; align-items: center; gap: 9px; padding: 4px 3px 8px; border-bottom: 1px solid #302f29; }
 .turn-work-status strong { color: var(--text-muted); font-size: 13px; font-weight: 500; }
+.turn-process-disclosure { margin: 15px 0 13px 38px; color: var(--text-secondary); }
+.turn-process-disclosure > summary { display: grid; min-height: 30px; grid-template-columns: 6px minmax(0,1fr) 14px; align-items: center; gap: 9px; padding: 4px 3px 8px; border-bottom: 1px solid #302f29; color: var(--text-muted); cursor: pointer; list-style: none; }
+.turn-process-disclosure > summary::-webkit-details-marker { display: none; }
+.turn-process-disclosure > summary:hover { color: var(--text-primary); }
+.turn-process-disclosure > summary strong { font-size: 13px; font-weight: 500; }
+.turn-process-disclosure > summary i { color: var(--text-quiet); font-size: var(--conversation-font-size-meta); font-style: normal; transition: transform .15s; }
+.turn-process-disclosure[open] > summary i { transform: rotate(180deg); }
+.turn-process-content { padding-top: 2px; }
+.turn-process-content .turn-activity-stream { margin-top: 8px; margin-bottom: 8px; }
+.turn-process-content .turn-activity-stream:first-child { margin-top: 0; }
+.turn-process-content .turn-activity-list { padding-top: 5px; }
 .turn-activity-indicator { width: 6px; height: 6px; border-radius: 999px; background: #626159; }
 .turn-activity-indicator.active { background: var(--accent); box-shadow: 0 0 8px rgba(194,232,92,.42); animation: activity-pulse 1.4s ease-in-out infinite; }
 .turn-activity-list { padding: 12px 0 3px; }
