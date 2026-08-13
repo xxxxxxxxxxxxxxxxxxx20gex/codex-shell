@@ -31,7 +31,7 @@ export function TurnActivityGroup({ items, active, turnActive, durationMs, showH
         {items.map((item) => item.type === "agentMessage" ? (
           <MarkdownContent className="turn-commentary" key={item.id}>{item.text}</MarkdownContent>
         ) : (
-          <TurnActivityItem item={item} key={item.id} active={activeItemTurnIds[item.id] === turnId} />
+          <TurnActivityItem item={item} key={item.id} />
         ))}
         {activeProgress && <div className="turn-native-progress">{activeProgress}</div>}
       </div>

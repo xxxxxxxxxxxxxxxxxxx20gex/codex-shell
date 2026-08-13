@@ -266,6 +266,25 @@ function App() {
     }
   }
 
+  async function steerQueuedTurn(queued: (typeof session.queuedTurns)[number]) {
+    if (!session.canSteer) return;
+    if (await session.steer(queued.text, queued.mentions, queued.skills)) {
+      session.removeQueued(queued.id);
+    }
+  }
+
+  async function submitWithMode(mode: "queue" | "steer") {
+    if (mode === "steer") {
+      if (parseSlashCommand(draft.trim())) {
+        setUiError("Steer 只支持普通消息，不能直接引导斜杠命令");
+        return;
+      }
+      await steerCurrentTurn();
+      return;
+    }
+    await submit();
+  }
+
   function startNewTask() {
     setDraft("");
     setMentions([]);
@@ -449,6 +468,7 @@ function App() {
                   : <button type="button" onClick={() => void session.resumeQueued()} title="继续发送队列">继续发送</button>}</div>
                 {session.queuedTurns.map((queued, index) => <div className="queued-turn" key={queued.id}>
                   <span><i>{index + 1}</i>{queued.text}</span>
+                  {session.canSteer && <button type="button" onClick={() => void steerQueuedTurn(queued)} aria-label={`引导发送待发送消息：${queued.text}`} title="引导发送">↗</button>}
                   <button type="button" onClick={() => session.removeQueued(queued.id)} aria-label={`取消待发送消息：${queued.text}`} title="取消待发送">×</button>
                 </div>)}
               </div>}
@@ -471,7 +491,13 @@ function App() {
                   <PermissionModeSelector value={permissionMode} disabled={session.running} onChange={changePermissionMode} />
                 </div>
                 <div className="composer-actions">
-                  <button className="send-button" disabled={!draft.trim()} onClick={() => void submit()} aria-label={session.running ? "排队发送" : "发送任务"}>↑</button>
+                  <div className="send-mode-anchor">
+                    {session.running && <div className="send-mode-menu" role="menu" aria-label="发送方式">
+                      <button type="button" role="menuitem" disabled={!draft.trim()} onClick={() => void submitWithMode("queue")}><strong>Queue</strong><small>等待当前任务完成后发送</small></button>
+                      <button type="button" role="menuitem" disabled={!draft.trim() || !session.canSteer} onClick={() => void submitWithMode("steer")}><strong>Steer</strong><small>{session.canSteer ? "立即引导当前任务" : "当前阶段不可引导"}</small></button>
+                    </div>}
+                    <button className="send-button" disabled={!draft.trim()} onClick={() => void submitWithMode("queue")} aria-label={session.running ? "排队发送" : "发送任务"}>↑</button>
+                  </div>
                   {session.canInterrupt && <button className="stop-button" onClick={() => void session.interrupt()} aria-label="停止任务">■</button>}
                 </div>
               </div>

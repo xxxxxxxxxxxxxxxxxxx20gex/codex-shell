@@ -2,7 +2,6 @@ import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 
 interface Props {
   item: ThreadItem;
-  active?: boolean;
 }
 
 function durationLabel(durationMs: number | null) {
@@ -144,7 +143,7 @@ function ActivityBody({ item }: Props) {
   }
 }
 
-export function TurnActivityItem({ item, active = false }: Props) {
+export function TurnActivityItem({ item }: Props) {
   if (item.type === "userMessage" || item.type === "agentMessage") return null;
   if (item.type === "reasoning" && item.content.length === 0) {
     return <div className="activity-reasoning-note">{item.summary.join("\n")}</div>;
@@ -157,7 +156,7 @@ export function TurnActivityItem({ item, active = false }: Props) {
     ? " activity-command-card"
     : item.type === "reasoning" ? " activity-reasoning-card" : "";
   return (
-    <details className={`activity-card${itemClass}`} open={active}>
+    <details className={`activity-card${itemClass}`}>
       <summary>
         <span className="activity-icon">{activityIcon(item)}</span>
         <strong>{activityTitle(item)}</strong>

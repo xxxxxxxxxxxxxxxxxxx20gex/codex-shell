@@ -117,7 +117,7 @@ describe("conversation timing", () => {
     expect(markup).not.toContain('class="activity-card activity-command-card" open=""');
   });
 
-  it("expands an active command while it is running", () => {
+  it("keeps an active command collapsed while it is running", () => {
     const command: ThreadItem = {
       type: "commandExecution",
       id: "command-active",
@@ -144,7 +144,8 @@ describe("conversation timing", () => {
       />,
     );
 
-    expect(markup).toContain('class="activity-card activity-command-card" open=""');
+    expect(markup).toContain('class="activity-card activity-command-card"');
+    expect(markup).not.toContain('class="activity-card activity-command-card" open=""');
     expect(markup).toContain('class="turn-activity-stream" role="status"');
     expect(markup).toContain("运行中");
     expect(markup).not.toContain("<small>inProgress</small>");
