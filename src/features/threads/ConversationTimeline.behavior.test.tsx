@@ -67,10 +67,28 @@ describe("ConversationTimeline navigation", () => {
   it("marks the visible message on the Codex-style rail", () => {
     render(<ConversationTimeline turns={[turn("1", "第一问"), turn("2", "第二问")]} running={false} />);
 
-    act(() => virtuoso.rangeChanged?.({ startIndex: 0, endIndex: 0 }));
+    act(() => {
+      virtuoso.atBottomStateChange?.(false);
+      virtuoso.rangeChanged?.({ startIndex: 0, endIndex: 0 });
+    });
 
     expect(screen.getByRole("button", { name: "跳到消息：第一问" }).className).toBe("active");
     expect(screen.getByRole("button", { name: "跳到消息：第二问" }).className).toBe("");
+  });
+
+  it("marks the latest message when the reader reaches the bottom", () => {
+    render(<ConversationTimeline turns={[turn("1", "第一问"), turn("2", "第二问")]} running={false} />);
+
+    act(() => {
+      virtuoso.atBottomStateChange?.(false);
+      virtuoso.rangeChanged?.({ startIndex: 0, endIndex: 1 });
+    });
+    expect(screen.getByRole("button", { name: "跳到消息：第一问" }).className).toBe("active");
+
+    act(() => virtuoso.atBottomStateChange?.(true));
+
+    expect(screen.getByRole("button", { name: "跳到消息：第一问" }).className).toBe("");
+    expect(screen.getByRole("button", { name: "跳到消息：第二问" }).className).toBe("active");
   });
 
   it("does not pull the reader away from history and surfaces new activity", () => {

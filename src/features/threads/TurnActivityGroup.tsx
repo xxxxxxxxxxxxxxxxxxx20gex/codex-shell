@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import type { McpToolCallProgressNotification } from "../../generated/app-server/v2/McpToolCallProgressNotification";
 import { activityTitle, TurnActivityItem } from "./TurnActivityItem";
@@ -17,6 +17,7 @@ function failed(item: ThreadItem) {
 }
 
 export function TurnActivityGroup({ items, active, turnId, activeItemTurnIds, mcpProgressByItemId }: Props) {
+  const previousItemCountRef = useRef(items.length);
   if (items.length === 0) return null;
   const activeItem = [...items].reverse().find((item) => activeItemTurnIds[item.id] === turnId);
   const hasFailure = items.some(failed);
@@ -25,13 +26,13 @@ export function TurnActivityGroup({ items, active, turnId, activeItemTurnIds, mc
   const [expanded, setExpanded] = useState(hasFailure || (active && items.length === 1));
 
   useEffect(() => {
+    const crossedCollapseThreshold = previousItemCountRef.current < 2 && items.length >= 2;
     if (hasFailure) {
       setExpanded(true);
-    } else if (items.length >= 2) {
+    } else if (crossedCollapseThreshold) {
       setExpanded(false);
-    } else if (active) {
-      setExpanded(true);
     }
+    previousItemCountRef.current = items.length;
   }, [hasFailure, items.length]);
 
   return (

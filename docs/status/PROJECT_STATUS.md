@@ -86,7 +86,7 @@
 ## 验证证据
 
 - `pnpm typecheck`：通过。
-- `pnpm test`：39 个测试文件、143 项测试全部通过，新增空 reasoning 隐藏、活跃空 reasoning 进度保留、两项以上过程默认折叠、普通/Review/Compact/未知 active 运行类型、等待标志保持、非 Steer 阶段拒绝发送、手动压缩标记及请求失败回滚覆盖；左侧消息轨道、原生 Steer 中途消息顺序、执行过程归并、安全 Markdown、模型/权限热切换、分叉祖先、工作区 watch、统一反向交互、Review 和 MCP 覆盖继续通过。
+- `pnpm test`：39 个测试文件、145 项测试全部通过，新增 GPT-5.2 快捷模型过滤、滚动到底后消息轨道同步、空 reasoning 隐藏、活跃空 reasoning 进度保留、两项以上过程默认折叠、普通/Review/Compact/未知 active 运行类型、等待标志保持、非 Steer 阶段拒绝发送、手动压缩标记及请求失败回滚覆盖；原生 Steer 中途消息顺序、执行过程归并、安全 Markdown、模型/权限热切换、分叉祖先、工作区 watch、统一反向交互、Review 和 MCP 覆盖继续通过。
 - Rust 单元测试：11 项全部通过，覆盖显式模型参数、旧模板配置兼容归一化、动态 Runtime、每日默认工作区、独立 provider 参数、旧 CODEX_HOME 迁移、双目录冲突和官方目录防重叠校验。
 - `pnpm rust:check`：从 clean target 完整重编译后通过。
 - `pnpm build`：包含虚拟时间线、目录 watch、目录选择插件和 P0 工作台 UI 的生产构建通过。

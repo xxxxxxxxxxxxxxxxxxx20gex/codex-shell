@@ -47,12 +47,13 @@ export function ConversationTimeline({
   const links = useMemo(() => userTurnLinks(turns), [turns]);
 
   const activeLinkIndex = useMemo(() => {
+    if (atBottom) return Math.max(0, links.length - 1);
     let activeIndex = 0;
     links.forEach((link, index) => {
       if (link.index <= visibleStartIndex) activeIndex = index;
     });
     return activeIndex;
-  }, [links, visibleStartIndex]);
+  }, [atBottom, links, visibleStartIndex]);
 
   useEffect(() => {
     if (!atBottom) setHasNewActivity(true);
@@ -66,7 +67,9 @@ export function ConversationTimeline({
   const scrollToTurn = useCallback((index: number) => {
     virtuosoRef.current?.scrollToIndex({ index, align: "start", behavior: "smooth" });
     setVisibleStartIndex(index);
-    if (index === turns.length - 1) setHasNewActivity(false);
+    const scrollingToLatest = index === turns.length - 1;
+    setAtBottom(scrollingToLatest);
+    if (scrollingToLatest) setHasNewActivity(false);
   }, [turns.length]);
 
   const handleRangeChanged = useCallback((range: ListRange) => {

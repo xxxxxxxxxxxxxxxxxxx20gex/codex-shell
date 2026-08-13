@@ -12,6 +12,8 @@ interface Props {
   onClose: () => void;
 }
 
+const DESKTOP_HIDDEN_MODEL_ID = /^gpt-5[.-]2(?:$|[-_.])/i;
+
 export function ModelQuickPicker({ settings, loadModels, onChange, onDisplayName, onAdvanced, onClose }: Props) {
   const [models, setModels] = useState<Model[]>([]);
   const rootRef = useDismissiblePopover<HTMLDivElement>({
@@ -23,7 +25,9 @@ export function ModelQuickPicker({ settings, loadModels, onChange, onDisplayName
     let active = true;
     void loadModels().then((items) => {
       if (!active) return;
-      const visibleModels = items.filter((model) => !model.hidden);
+      const visibleModels = items.filter((model) => !model.hidden
+        && !DESKTOP_HIDDEN_MODEL_ID.test(model.model)
+        && !DESKTOP_HIDDEN_MODEL_ID.test(model.id));
       setModels(visibleModels);
       const selectedModel = visibleModels.find((model) => model.model === settings.modelId || model.id === settings.modelId);
       onDisplayName(selectedModel?.displayName || selectedModel?.model || null);

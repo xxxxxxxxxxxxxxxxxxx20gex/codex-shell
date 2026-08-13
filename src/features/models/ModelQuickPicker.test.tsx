@@ -21,7 +21,7 @@ function model(id: string): Model {
     upgrade: null,
     upgradeInfo: null,
     availabilityNux: null,
-    displayName: id === "gpt-next" ? "Next Model" : "Current Model",
+    displayName: id === "gpt-next" ? "Next Model" : id === "gpt-current" ? "Current Model" : id,
     description: "model",
     hidden: false,
     supportedReasoningEfforts: ["low", "high"].map((reasoningEffort) => ({ reasoningEffort, description: reasoningEffort })),
@@ -56,5 +56,26 @@ describe("ModelQuickPicker", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: "high" }));
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ modelId: "gpt-current", reasoningEffort: "high" }));
+  });
+
+  it("hides GPT-5.2 model variants from the desktop picker", async () => {
+    render(<ModelQuickPicker
+      settings={settings}
+      loadModels={vi.fn(async () => [
+        model("gpt-current"),
+        model("gpt-5.2"),
+        model("gpt-5.2-codex"),
+        model("gpt-5.20-custom"),
+      ])}
+      onChange={vi.fn()}
+      onDisplayName={vi.fn()}
+      onAdvanced={vi.fn()}
+      onClose={vi.fn()}
+    />);
+
+    expect(await screen.findByRole("button", { name: "Current Model" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "gpt-5.2" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "gpt-5.2-codex" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Current Model" })).toBeTruthy();
   });
 });
