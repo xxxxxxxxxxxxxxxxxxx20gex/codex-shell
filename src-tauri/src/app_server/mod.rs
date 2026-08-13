@@ -2,7 +2,7 @@ use crate::codex_home::resolve_codex_home;
 use crate::config::read_settings;
 use crate::credentials::read_api_key;
 use crate::runtime::resolve_codex_executable;
-use crate::workspace::resolve_default_workspace;
+use crate::workspace::resolve_default_project_directory;
 use std::io::{BufRead, BufReader, Write};
 use std::process::{Child, ChildStdin, Command, Stdio};
 use std::sync::Mutex;
@@ -54,7 +54,7 @@ pub fn app_server_start(app: AppHandle, state: State<'_, AppServerState>) -> Res
     let api_key = read_api_key()?;
     let executable = resolve_codex_executable()?;
     let codex_home = resolve_codex_home(&app)?;
-    let default_workspace = resolve_default_workspace(&app)?.path;
+    let default_project_directory = resolve_default_project_directory(&app)?.path;
     let model = serde_json::to_string(&settings.model_id)
         .map_err(|error| format!("模型 ID 编码失败：{error}"))?;
     let arguments = app_server_arguments(&settings, &model)?;
@@ -62,7 +62,7 @@ pub fn app_server_start(app: AppHandle, state: State<'_, AppServerState>) -> Res
     let mut command = Command::new(&executable);
     command
         .args(arguments)
-        .current_dir(&default_workspace)
+        .current_dir(&default_project_directory)
         .env("CODEX_HOME", &codex_home)
         .env("OPENAI_API_KEY", api_key)
         .stdin(Stdio::piped())

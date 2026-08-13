@@ -43,12 +43,12 @@ import { useDismissiblePopover } from "./shared/useDismissiblePopover";
 import "./styles/tokens.css";
 import {
   activeFileMentionQuery,
-  type DefaultWorkspace,
-  isManagedWorkspacePath,
+  type DefaultProjectDirectory,
+  isDefaultProjectPath,
   loadWorkspacePath,
   replaceActiveFileMention,
   resolveFileSearchPath,
-  resolveWorkspaceRelativePath,
+  resolveProjectRelativePath,
   saveWorkspacePath,
 } from "./features/workspaces/workspaceState";
 
@@ -66,8 +66,8 @@ function App() {
   const [modelDisplayName, setModelDisplayName] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [permissionMode, setPermissionMode] = useState<PermissionMode>(DEFAULT_PERMISSION_MODE);
-  const [workspacePath, setWorkspacePath] = useState<string | null>(loadWorkspacePath);
-  const [defaultWorkspace, setDefaultWorkspace] = useState<DefaultWorkspace | null>(null);
+  const [projectPath, setProjectPath] = useState<string | null>(loadWorkspacePath);
+  const [defaultProjectDirectory, setDefaultProjectDirectory] = useState<DefaultProjectDirectory | null>(null);
   const [workspaceExplorerOpen, setWorkspaceExplorerOpen] = useState(false);
   const [workspaceExplorerInitialPath, setWorkspaceExplorerInitialPath] = useState<string | null>(null);
   const [mentions, setMentions] = useState<FileMention[]>([]);
@@ -98,18 +98,18 @@ function App() {
     resizePanel,
     finishPanelResize,
   } = useResizablePanels();
-  const newThreadWorkspacePath = workspacePath ?? defaultWorkspace?.path ?? null;
-  const session = useAgentSession(settings, permissionMode, newThreadWorkspacePath);
-  const currentWorkspacePath = session.thread?.cwd
+  const newThreadCwd = projectPath ?? defaultProjectDirectory?.path ?? null;
+  const session = useAgentSession(settings, permissionMode, newThreadCwd);
+  const currentProjectPath = session.thread?.cwd
     ? String(session.thread.cwd)
-    : newThreadWorkspacePath;
-  const usingManagedWorkspace = Boolean(
-    currentWorkspacePath
-    && defaultWorkspace
-    && isManagedWorkspacePath(currentWorkspacePath, defaultWorkspace.rootPath),
+    : newThreadCwd;
+  const usingDefaultProjectDirectory = Boolean(
+    currentProjectPath
+    && defaultProjectDirectory
+    && isDefaultProjectPath(currentProjectPath, defaultProjectDirectory.rootPath),
   );
-  const workspaceStatusKind = currentWorkspacePath
-    ? (usingManagedWorkspace ? "default" : "custom")
+  const projectSource = currentProjectPath
+    ? (usingDefaultProjectDirectory ? "default" : session.thread ? "thread" : "selected")
     : "waiting";
   const mentionQuery = activeFileMentionQuery(draft);
   const typedSlashQuery = activeSlashCommandQuery(draft);
@@ -134,26 +134,14 @@ function App() {
   useEffect(() => {
     if (!("__TAURI_INTERNALS__" in window)) return;
     void invoke<ModelSettings>("load_model_settings").then(setSettings).catch(() => undefined);
-    void invoke<DefaultWorkspace>("get_default_workspace")
-      .then(setDefaultWorkspace)
+    void invoke<DefaultProjectDirectory>("get_default_project_directory")
+      .then(setDefaultProjectDirectory)
       .catch((error) => setUiError(errorMessage(error)));
   }, []);
 
   useEffect(() => {
-    if (!session.thread?.cwd) return;
-    const cwd = String(session.thread.cwd);
-    if (defaultWorkspace && isManagedWorkspacePath(cwd, defaultWorkspace.rootPath)) {
-      setWorkspacePath(null);
-      saveWorkspacePath(null);
-      return;
-    }
-    setWorkspacePath(cwd);
-    saveWorkspacePath(cwd);
-  }, [defaultWorkspace, session.thread?.id, session.thread?.cwd]);
-
-  useEffect(() => {
     const requestId = ++mentionRequestRef.current;
-    if (!currentWorkspacePath || mentionQuery === null) {
+    if (!currentProjectPath || mentionQuery === null) {
       setMentionResults([]);
       setMentionLoading(false);
       return;
@@ -169,7 +157,7 @@ function App() {
       });
     }, 120);
     return () => window.clearTimeout(timeout);
-  }, [currentWorkspacePath, mentionQuery, session.searchFiles]);
+  }, [currentProjectPath, mentionQuery, session.searchFiles]);
 
   useEffect(() => setSlashSelectedIndex(0), [slashQuery]);
 
@@ -303,11 +291,11 @@ function App() {
     setPermissionMode(next);
   }
 
-  function changeWorkspace(path: string | null) {
+  function changeProject(path: string | null) {
     setWorkspaceExplorerOpen(false);
     setWorkspaceExplorerInitialPath(null);
     startNewTask();
-    setWorkspacePath(path);
+    setProjectPath(path);
     saveWorkspacePath(path);
   }
 
@@ -376,8 +364,8 @@ function App() {
       >
         <aside className="sidebar panel">
           <button className="primary-button new-task" onClick={startNewTask} disabled={session.submitting || session.openingThreadId !== null}>＋ 新建对话</button>
-          <div className="section-label">工作区</div>
-          <WorkspaceSelector path={usingManagedWorkspace ? null : workspacePath} disabled={session.submitting || session.openingThreadId !== null} onExplore={() => openWorkspaceExplorer()} onChange={changeWorkspace} onError={setUiError} />
+          <div className="section-label">项目</div>
+          <WorkspaceSelector path={usingDefaultProjectDirectory ? null : currentProjectPath} disabled={session.submitting || session.openingThreadId !== null} onExplore={() => openWorkspaceExplorer()} onChange={changeProject} onError={setUiError} />
           <ThreadHistoryList
             threads={session.history}
             archived={session.historyArchived}
@@ -472,8 +460,8 @@ function App() {
                   <button type="button" onClick={() => session.removeQueued(queued.id)} aria-label={`取消待发送消息：${queued.text}`} title="取消待发送">×</button>
                 </div>)}
               </div>}
-              <textarea value={draft} onChange={(event) => { setDraft(event.target.value); setUiError(""); setCommandNotice(""); setSlashMenuForced(false); setSlashMenuDismissed(false); }} onKeyDown={handleComposerKeyDown} placeholder={session.running ? "输入下一条消息，当前回答完成后发送…" : collaborationMode === "plan" ? "描述需要分析和规划的任务…" : currentWorkspacePath ? "交给 Codex 一个任务，输入 / 使用命令，输入 @ 引用文件…" : "正在准备默认工作区…"} />
-              {currentWorkspacePath && mentionQuery !== null && <FileMentionMenu query={mentionQuery} results={mentionResults} loading={mentionLoading} onSelect={selectMention} />}
+              <textarea value={draft} onChange={(event) => { setDraft(event.target.value); setUiError(""); setCommandNotice(""); setSlashMenuForced(false); setSlashMenuDismissed(false); }} onKeyDown={handleComposerKeyDown} placeholder={session.running ? "输入下一条消息，当前回答完成后发送…" : collaborationMode === "plan" ? "描述需要分析和规划的任务…" : currentProjectPath ? "交给 Codex 一个任务，输入 / 使用命令，输入 @ 引用文件…" : "正在准备默认项目目录…"} />
+              {currentProjectPath && mentionQuery !== null && <FileMentionMenu query={mentionQuery} results={mentionResults} loading={mentionLoading} onSelect={selectMention} />}
               {slashMenuVisible && <SlashCommandMenu query={slashQuery ?? ""} selectedIndex={slashSelectedIndex} hasThread={Boolean(session.thread)} running={session.running} onSelect={(id) => void runSlashCommand(id, "", !slashMenuForced)} />}
               {commandPanel === "skills" && <SkillPicker selected={skills} loadSkills={session.listSkills} onToggle={toggleSkill} onClose={() => setCommandPanel(null)} />}
               {commandPanel === "mcp" && <McpStatusPanel loadServers={session.listMcpServers} loginServer={session.loginMcpServer} reloadServers={session.reloadMcpServers} readResource={session.readMcpResource} onClose={() => setCommandPanel(null)} />}
@@ -536,21 +524,21 @@ function App() {
             <button className={inspectorTab === "status" ? "active" : ""} onClick={() => setInspectorTab("status")}>状态</button>
             <button className={inspectorTab === "logs" ? "active" : ""} onClick={() => setInspectorTab("logs")}>日志</button>
           </div>
-          {inspectorTab === "changes" ? <DiffInspector diff={currentDiff} onOpenFile={currentWorkspacePath ? (path) => {
-            const filePath = resolveWorkspaceRelativePath(currentWorkspacePath, path);
+          {inspectorTab === "changes" ? <DiffInspector diff={currentDiff} onOpenFile={currentProjectPath ? (path) => {
+            const filePath = resolveProjectRelativePath(currentProjectPath, path);
             if (filePath) openWorkspaceExplorer(filePath);
-            else setUiError("Diff 文件不在当前工作区内，无法预览");
+            else setUiError("Diff 文件不在当前项目内，无法预览");
           } : undefined} /> : inspectorTab === "logs" ? (
             <RuntimeLogPanel store={session.runtimeLogStore} />
           ) : (
-            <StatusInspector turnCount={session.turns.length} threadId={session.thread?.id ?? null} workspacePath={currentWorkspacePath} workspaceKind={workspaceStatusKind} usingManagedWorkspace={usingManagedWorkspace} canUseDefaultWorkspace={Boolean(defaultWorkspace)} codexHome={session.codexHome} codexHomeDisabled={session.runningThreadCount > 0 || session.submitting} noticeStore={session.runtimeNoticeStore} windowsSandboxReadiness={session.windowsSandboxReadiness} onBrowseWorkspace={() => openWorkspaceExplorer()} onUseDefaultWorkspace={() => changeWorkspace(null)} onSetupWindowsSandbox={session.setupWindowsSandbox} onRestart={session.restart} />
+            <StatusInspector turnCount={session.turns.length} threadId={session.thread?.id ?? null} projectPath={currentProjectPath} projectSource={projectSource} usingDefaultProjectDirectory={usingDefaultProjectDirectory} canUseDefaultProjectDirectory={Boolean(defaultProjectDirectory)} codexHome={session.codexHome} codexHomeDisabled={session.runningThreadCount > 0 || session.submitting} noticeStore={session.runtimeNoticeStore} windowsSandboxReadiness={session.windowsSandboxReadiness} onBrowseProject={() => openWorkspaceExplorer()} onUseDefaultProjectDirectory={() => changeProject(null)} onSetupWindowsSandbox={session.setupWindowsSandbox} onRestart={session.restart} />
           )}
         </aside>
       </section>
 
       {settingsOpen && <ModelSettingsPanel settings={settings} loadProviderCapabilities={session.readModelProviderCapabilities} onClose={() => setSettingsOpen(false)} onSave={(next, requiresRestart = false) => { setSettings(next); setModelDisplayName(null); setSettingsOpen(false); if (requiresRestart) void session.restart(); }} />}
       <ServerInteractionDialog store={session.interactionStore} />
-      {workspaceExplorerOpen && currentWorkspacePath && <WorkspaceExplorer rootPath={currentWorkspacePath} initialFilePath={workspaceExplorerInitialPath} onClose={() => setWorkspaceExplorerOpen(false)} readDirectory={session.readWorkspaceDirectory} readFile={session.readWorkspaceFile} watchPath={session.watchWorkspacePath} />}
+      {workspaceExplorerOpen && currentProjectPath && <WorkspaceExplorer rootPath={currentProjectPath} initialFilePath={workspaceExplorerInitialPath} onClose={() => setWorkspaceExplorerOpen(false)} readDirectory={session.readWorkspaceDirectory} readFile={session.readWorkspaceFile} watchPath={session.watchWorkspacePath} />}
     </main>
   );
 }

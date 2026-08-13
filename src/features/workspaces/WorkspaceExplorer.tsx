@@ -4,7 +4,7 @@ import { errorMessage } from "../../shared/errors";
 import type { WatchWorkspacePath } from "../runtime/useWorkspaceFiles";
 import { decodeFilePreview, formatFileSize, type FilePreview } from "./filePreview";
 import { useWorkspaceDirectoryWatches } from "./useWorkspaceDirectoryWatches";
-import { joinWorkspacePath, workspaceName, workspaceRelativePath } from "./workspaceState";
+import { joinProjectPath, projectName, projectRelativePath } from "./workspaceState";
 
 interface Props {
   rootPath: string;
@@ -105,10 +105,10 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
     setPreviewError("");
     setWatchError("");
     const relativeParts = initialFilePath
-      ? workspaceRelativePath(rootPath, initialFilePath).split(/[\\/]/).filter(Boolean)
+      ? projectRelativePath(rootPath, initialFilePath).split(/[\\/]/).filter(Boolean)
       : [];
     const parentDirectories = relativeParts.slice(0, -1).reduce<string[]>((paths, part) => {
-      paths.push(joinWorkspacePath(paths[paths.length - 1] ?? rootPath, part));
+      paths.push(joinProjectPath(paths[paths.length - 1] ?? rootPath, part));
       return paths;
     }, []);
     setExpanded(new Set([rootPath, ...parentDirectories]));
@@ -165,7 +165,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
     return state.entries.map((entry) => {
       if (!entry.isDirectory && normalizedFilter
         && !entry.fileName.toLocaleLowerCase().includes(normalizedFilter)) return null;
-      const path = joinWorkspacePath(directory, entry.fileName);
+      const path = joinProjectPath(directory, entry.fileName);
       if (entry.isDirectory) {
         const isExpanded = expanded.has(path);
         return (
@@ -189,22 +189,22 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
   const previewLines = preview?.kind === "text" ? preview.content.split("\n") : [];
 
   return (
-    <div className="workspace-explorer-layer" role="dialog" aria-modal="true" aria-label="工作区文件浏览器">
-      <button className="workspace-explorer-scrim" onClick={onClose} aria-label="关闭工作区文件浏览器" />
+    <div className="workspace-explorer-layer" role="dialog" aria-modal="true" aria-label="项目文件浏览器">
+      <button className="workspace-explorer-scrim" onClick={onClose} aria-label="关闭项目文件浏览器" />
       <section className="workspace-explorer-drawer">
         <header className="explorer-header">
-          <div><span className="eyebrow">Workspace Explorer</span><strong>{workspaceName(rootPath)}</strong><small>{rootPath}</small>{watchError && <i className="explorer-watch-warning" title={watchError}>自动刷新不可用</i>}</div>
+          <div><span className="eyebrow">Project Explorer</span><strong>{projectName(rootPath)}</strong><small>{rootPath}</small>{watchError && <i className="explorer-watch-warning" title={watchError}>自动刷新不可用</i>}</div>
           <button className="explorer-close" onClick={onClose} aria-label="关闭文件浏览器">×</button>
         </header>
         <div className="explorer-body">
           <aside className="explorer-tree-pane">
             <div className="explorer-filter"><span>⌕</span><input value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="筛选已展开文件…" /></div>
-            <button className="explorer-root" onClick={() => toggleDirectory(rootPath)}><i>{expanded.has(rootPath) ? "⌄" : "›"}</i><span>▣</span><strong>{workspaceName(rootPath)}</strong></button>
+            <button className="explorer-root" onClick={() => toggleDirectory(rootPath)}><i>{expanded.has(rootPath) ? "⌄" : "›"}</i><span>▣</span><strong>{projectName(rootPath)}</strong></button>
             <div className="explorer-tree-scroll">{expanded.has(rootPath) && renderDirectory(rootPath, 0)}</div>
           </aside>
           <main className="explorer-preview-pane">
             <div className="explorer-preview-bar">
-              <span>{selectedPath ? workspaceRelativePath(rootPath, selectedPath) : "文件预览"}</span>
+              <span>{selectedPath ? projectRelativePath(rootPath, selectedPath) : "文件预览"}</span>
               {preview && <small>{formatFileSize(preview.byteSize)}</small>}
             </div>
             {!selectedPath && <div className="explorer-empty"><span>⌁</span><strong>选择一个文件</strong><p>在左侧展开目录并单击文件，即可在这里预览内容。</p></div>}

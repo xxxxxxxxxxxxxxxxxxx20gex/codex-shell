@@ -2,7 +2,8 @@ import type { FuzzyFileSearchResult } from "../../generated/app-server/FuzzyFile
 
 const STORAGE_KEY = "codex-shell.workspace.v1";
 
-export interface DefaultWorkspace {
+/** The product-owned fallback project directory used for new threads. */
+export interface DefaultProjectDirectory {
   rootPath: string;
   path: string;
 }
@@ -24,12 +25,12 @@ export function saveWorkspacePath(path: string | null) {
   }
 }
 
-export function workspaceName(path: string | null) {
-  if (!path) return "未选择工作区";
+export function projectName(path: string | null) {
+  if (!path) return "未选择项目";
   return path.replace(/[\\/]+$/, "").split(/[\\/]/).pop() || path;
 }
 
-export function isManagedWorkspacePath(path: string, rootPath: string) {
+export function isDefaultProjectPath(path: string, rootPath: string) {
   const normalizedPath = path.replace(/[\\/]+$/, "");
   const normalizedRoot = rootPath.replace(/[\\/]+$/, "");
   if (normalizedPath.toLowerCase() === normalizedRoot.toLowerCase()) return true;
@@ -37,22 +38,22 @@ export function isManagedWorkspacePath(path: string, rootPath: string) {
     || normalizedPath.toLowerCase().startsWith(`${normalizedRoot.toLowerCase()}/`);
 }
 
-export function joinWorkspacePath(directory: string, name: string) {
+export function joinProjectPath(directory: string, name: string) {
   const separator = directory.includes("\\") ? "\\" : "/";
   return `${directory.replace(/[\\/]+$/, "")}${separator}${name.replace(/^[\\/]+/, "")}`;
 }
 
-export function resolveWorkspaceRelativePath(root: string, relativePath: string) {
+export function resolveProjectRelativePath(root: string, relativePath: string) {
   const normalized = relativePath.replace(/\\/g, "/");
   if (!normalized || normalized.startsWith("/") || /^[a-zA-Z]:\//.test(normalized)) return null;
   const parts = normalized.split("/").filter((part) => part && part !== ".");
   if (parts.length === 0 || parts.some((part) => part === "..")) return null;
-  return parts.reduce(joinWorkspacePath, root);
+  return parts.reduce(joinProjectPath, root);
 }
 
-export function workspaceRelativePath(root: string, path: string) {
+export function projectRelativePath(root: string, path: string) {
   const normalizedRoot = root.replace(/[\\/]+$/, "");
-  if (path.toLowerCase() === normalizedRoot.toLowerCase()) return workspaceName(root);
+  if (path.toLowerCase() === normalizedRoot.toLowerCase()) return projectName(root);
   if (path.toLowerCase().startsWith(`${normalizedRoot.toLowerCase()}\\`)
     || path.toLowerCase().startsWith(`${normalizedRoot.toLowerCase()}/`)) {
     return path.slice(normalizedRoot.length + 1);

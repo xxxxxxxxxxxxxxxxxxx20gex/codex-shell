@@ -14,16 +14,16 @@ describe("StatusInspector", () => {
       <StatusInspector
         turnCount={0}
         threadId={null}
-        workspacePath="C:\\workspace"
-        workspaceKind="custom"
-        usingManagedWorkspace={false}
-        canUseDefaultWorkspace={false}
+        projectPath="C:\\workspace"
+        projectSource="selected"
+        usingDefaultProjectDirectory={false}
+        canUseDefaultProjectDirectory={false}
         codexHome="C:\\Users\\example\\.codex-shell"
         codexHomeDisabled={false}
         noticeStore={new RuntimeNoticeStore()}
         windowsSandboxReadiness="notConfigured"
-        onBrowseWorkspace={vi.fn()}
-        onUseDefaultWorkspace={vi.fn()}
+        onBrowseProject={vi.fn()}
+        onUseDefaultProjectDirectory={vi.fn()}
         onSetupWindowsSandbox={onSetupWindowsSandbox}
         onRestart={vi.fn(async () => undefined)}
       />,

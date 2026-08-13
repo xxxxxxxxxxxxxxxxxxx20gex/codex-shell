@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   activeFileMentionQuery,
-  isManagedWorkspacePath,
-  joinWorkspacePath,
+  isDefaultProjectPath,
+  joinProjectPath,
   replaceActiveFileMention,
   resolveFileSearchPath,
-  resolveWorkspaceRelativePath,
-  workspaceRelativePath,
+  resolveProjectRelativePath,
+  projectRelativePath,
 } from "./workspaceState";
 
 describe("workspace composer helpers", () => {
@@ -31,26 +31,26 @@ describe("workspace composer helpers", () => {
 
 describe("workspace paths", () => {
   it("joins child names using the workspace path style", () => {
-    expect(joinWorkspacePath("C:\\work", "src")).toBe("C:\\work\\src");
-    expect(joinWorkspacePath("/work/", "src")).toBe("/work/src");
+    expect(joinProjectPath("C:\\work", "src")).toBe("C:\\work\\src");
+    expect(joinProjectPath("/work/", "src")).toBe("/work/src");
   });
 
   it("resolves only files contained by the workspace", () => {
-    expect(resolveWorkspaceRelativePath("C:\\work", "src/App.tsx")).toBe("C:\\work\\src\\App.tsx");
-    expect(resolveWorkspaceRelativePath("C:\\work", "../secret.txt")).toBeNull();
-    expect(resolveWorkspaceRelativePath("C:\\work", "D:\\other.txt")).toBeNull();
+    expect(resolveProjectRelativePath("C:\\work", "src/App.tsx")).toBe("C:\\work\\src\\App.tsx");
+    expect(resolveProjectRelativePath("C:\\work", "../secret.txt")).toBeNull();
+    expect(resolveProjectRelativePath("C:\\work", "D:\\other.txt")).toBeNull();
   });
 
   it("renders paths relative to the selected workspace", () => {
-    expect(workspaceRelativePath("C:\\Work", "C:\\work\\src\\App.tsx")).toBe("src\\App.tsx");
+    expect(projectRelativePath("C:\\Work", "C:\\work\\src\\App.tsx")).toBe("src\\App.tsx");
   });
 
   it("recognizes only paths inside the managed default workspace root", () => {
-    expect(isManagedWorkspacePath(
+    expect(isDefaultProjectPath(
       "C:\\Users\\example\\Documents\\Codex-Shell\\2026-08-10",
       "C:\\Users\\example\\Documents\\Codex-Shell",
     )).toBe(true);
-    expect(isManagedWorkspacePath(
+    expect(isDefaultProjectPath(
       "C:\\Users\\example\\Documents\\Codex-Shell-Project",
       "C:\\Users\\example\\Documents\\Codex-Shell",
     )).toBe(false);

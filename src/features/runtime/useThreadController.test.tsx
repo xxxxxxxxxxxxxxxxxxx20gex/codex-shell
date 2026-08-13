@@ -106,7 +106,7 @@ function setup() {
       verbosity: "low" as const,
     },
     permissionMode: "ask" as PermissionMode,
-    workspacePath: "C:\\work",
+    projectCwd: "C:\\work",
     dispatch,
     submitting: false,
     setSubmitting: vi.fn(),

@@ -16,18 +16,18 @@ export function useAgentCommands(
   ensureConnected: EnsureConnected,
   ensureActiveThread: EnsureActiveThread,
   currentThreadId: () => string | null,
-  workspacePath: string | null,
+  projectCwd: string | null,
   markThreadRunning: (threadId: string, turnId: string | null, kind: RunningTurnKind) => void,
   markThreadStopped: (threadId: string) => void,
 ) {
   const listSkills = useCallback(async (forceReload = false): Promise<SkillMetadata[]> => {
     const client = await ensureConnected();
     const response = await client.listSkills({
-      cwds: workspacePath ? [workspacePath] : [],
+      cwds: projectCwd ? [projectCwd] : [],
       forceReload,
     });
     return response.data.flatMap((entry) => entry.skills).filter((skill) => skill.enabled);
-  }, [ensureConnected, workspacePath]);
+  }, [ensureConnected, projectCwd]);
 
   const listMcpServers = useCallback(async (): Promise<McpServerStatus[]> => {
     const client = await ensureConnected();

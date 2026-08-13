@@ -15,20 +15,20 @@ let nextWatchId = 1;
 
 export function useWorkspaceFiles(
   ensureConnected: EnsureConnected,
-  workspacePath: string | null,
+  projectCwd: string | null,
 ) {
   const searchFiles = useCallback(async (query: string): Promise<FuzzyFileSearchResult[]> => {
-    if (!workspacePath) return [];
+    if (!projectCwd) return [];
     const client = await ensureConnected();
     if (!query.trim()) {
-      const response = await client.readDirectory({ path: workspacePath });
+      const response = await client.readDirectory({ path: projectCwd });
       return response.entries
         .filter((entry) => entry.isDirectory || entry.isFile)
         .sort((left, right) => Number(right.isDirectory) - Number(left.isDirectory)
           || left.fileName.localeCompare(right.fileName))
         .slice(0, 30)
         .map((entry) => ({
-          root: workspacePath,
+          root: projectCwd,
           path: entry.fileName,
           match_type: entry.isDirectory ? "directory" as const : "file" as const,
           file_name: entry.fileName,
@@ -38,11 +38,11 @@ export function useWorkspaceFiles(
     }
     const response = await client.fuzzyFileSearch({
       query: query.trim(),
-      roots: [workspacePath],
+      roots: [projectCwd],
       cancellationToken: "codex-shell-composer-file-search",
     });
     return response.files.slice(0, 12);
-  }, [ensureConnected, workspacePath]);
+  }, [ensureConnected, projectCwd]);
 
   const readWorkspaceDirectory = useCallback(async (path: string): Promise<FsReadDirectoryEntry[]> => {
     const client = await ensureConnected();

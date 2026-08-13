@@ -32,7 +32,7 @@ interface Props {
   ensureConnected: EnsureConnected;
   settings: ModelSettings;
   permissionMode: PermissionMode;
-  workspacePath: string | null;
+  projectCwd: string | null;
   dispatch: Dispatch<AgentSessionAction>;
   submitting: boolean;
   setSubmitting: Dispatch<SetStateAction<boolean>>;
@@ -135,7 +135,7 @@ export function useThreadController(props: Props) {
     ensureActiveThread,
     settings: props.settings,
     permissionMode: props.permissionMode,
-    workspacePath: props.workspacePath,
+    projectCwd: props.projectCwd,
     submitting: props.submitting,
     setSubmitting: props.setSubmitting,
     setError: props.setError,

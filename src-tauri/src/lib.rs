@@ -20,7 +20,7 @@ pub fn run() {
             config::load_model_settings,
             config::save_model_settings,
             credentials::save_api_key,
-            workspace::get_default_workspace,
+            workspace::get_default_project_directory,
         ])
         .run(tauri::generate_context!())
         .expect("failed to run Codex Shell");

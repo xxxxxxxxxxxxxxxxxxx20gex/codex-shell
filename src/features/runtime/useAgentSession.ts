@@ -29,7 +29,7 @@ function useStableStore<T>(create: () => T) {
 export function useAgentSession(
   settings: ModelSettings,
   permissionMode: PermissionMode,
-  workspacePath: string | null,
+  projectCwd: string | null,
 ) {
   const clientRef = useRef<AppServerClient | null>(null);
   clientRef.current ??= new AppServerClient();
@@ -86,7 +86,7 @@ export function useAgentSession(
     ensureConnected,
     settings,
     permissionMode,
-    workspacePath,
+    projectCwd,
     dispatch,
     submitting,
     setSubmitting,
@@ -245,18 +245,18 @@ export function useAgentSession(
     interactionStore.dispose();
   }, [interactionStore, runtimeLogStore, runtimeNoticeStore]);
 
-  const activeWorkspacePath = sessionState.thread?.cwd
+  const activeProjectCwd = sessionState.thread?.cwd
     ? String(sessionState.thread.cwd)
-    : workspacePath;
+    : projectCwd;
   const { searchFiles, readWorkspaceDirectory, readWorkspaceFile, watchWorkspacePath } = useWorkspaceFiles(
     ensureConnected,
-    activeWorkspacePath,
+    activeProjectCwd,
   );
   const agentCommands = useAgentCommands(
     ensureConnected,
     ensureActiveThread,
     currentThreadId,
-    activeWorkspacePath,
+    activeProjectCwd,
     markThreadRunning,
     markThreadStopped,
   );
@@ -264,7 +264,7 @@ export function useAgentSession(
   const setupWindowsSandbox = useCallback(async (mode: WindowsSandboxSetupMode) => {
     try {
       const client = await ensureConnected();
-      await client.startWindowsSandboxSetup({ mode, cwd: activeWorkspacePath });
+      await client.startWindowsSandboxSetup({ mode, cwd: activeProjectCwd });
       runtimeNoticeStore.push({
         kind: "info",
         title: "Windows Sandbox 设置已开始",
@@ -275,7 +275,7 @@ export function useAgentSession(
       setError(errorMessage(setupError));
       return false;
     }
-  }, [activeWorkspacePath, ensureConnected, runtimeNoticeStore]);
+  }, [activeProjectCwd, ensureConnected, runtimeNoticeStore]);
 
   const restart = useCallback(async () => {
     const threadIdToRestore = currentThreadId();

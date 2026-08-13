@@ -18,9 +18,9 @@ describe("WorkspaceSelector", () => {
   it("keeps the managed default workspace out of the left workspace card", () => {
     const markup = render(null);
 
-    expect(markup).toContain("选择工作区");
+    expect(markup).toContain("选择项目");
     expect(markup).not.toContain("workspace-item");
-    expect(markup).not.toContain("未选择工作区");
+    expect(markup).not.toContain("未选择项目");
   });
 
   it("shows a user-selected project and its browse entry", () => {
@@ -29,6 +29,6 @@ describe("WorkspaceSelector", () => {
     expect(markup).toContain("workspace-item");
     expect(markup).toContain("project");
     expect(markup).toContain("C:\\work\\project");
-    expect(markup).toContain("更换工作区");
+    expect(markup).toContain("切换项目");
   });
 });

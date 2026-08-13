@@ -21,11 +21,11 @@
 - 对话时间线已展示每轮发送时间、回答完成时间和回答耗时，生成过程中显示明确状态。
 - 已压缩桌面纵向占用：移除无功能的应用品牌栏、会话标题栏和输入框底部提示，时间线显示区域扩大；模型入口统一为工具栏按钮，上下文热力条改为自下而上增长。
 - 左右功能区均支持拖拽调整宽度和独立隐藏/恢复，中央对话区会自动占用释放的空间，并受最小可用宽度保护。
-- UI 默认展开左侧 Session/工作区栏、收起右侧功能区，并默认选择“完全访问权限”；用户仍可从分隔线和输入框工具栏随时调整。
+- UI 默认展开左侧 Session/项目栏、收起右侧功能区，并默认选择“完全访问权限”；用户仍可从分隔线和输入框工具栏随时调整。
 - 右侧状态区已删除重复的 app-server 与审批策略卡片；CODEX_HOME 卡片支持选择自定义目录和恢复默认目录，切换时安全重启 app-server。
 - 已消费稳定 v2 item/turn 通知，展示计划、推理、命令输出、文件变更、MCP、Web 搜索、图片与子智能体活动。
 - 已用 `turn/diff/updated` 建立实时文件 Diff 面板，并从持久化 `fileChange` item 重建历史 Diff。
-- 已接入系统目录选择器，新线程把用户工作区作为 `thread/start.cwd`；输入框通过稳定 `fuzzyFileSearch` 搜索，并以原生 `mention` 输入发送文件引用。
+- 已接入系统目录选择器，新线程把用户选择的项目目录作为 `thread/start.cwd`；输入框通过稳定 `fuzzyFileSearch` 搜索，并以原生 `mention` 输入发送文件引用。
 - 已完成游标分页、固定、重命名、单 Session 归档和永久删除。
 - 左侧 Session 与中央对话区只展示稳定的 Session 名称；打开、修改、删除、分叉和复制仍只使用真实 Thread ID 或 rollout 路径，不使用会因列表变化而漂移的展示编号。
 - 每个 Session 可复制 rollout 路径供其他智能体读取，路径缺失时回退真实 Thread ID；操作按钮统一使用居中 SVG 与 0.3 秒延迟说明。
@@ -34,7 +34,7 @@
 - 已将运行态从全局锁改为按 Thread 跟踪：一个 Session 等待回答时仍可新建、打开和操作其他 Session，并可同时运行多个 Turn；左栏和顶部显示并行运行状态，停止操作只作用于当前 Session。
 - 运行中的补充消息默认通过 Queue 等待当前 Turn 完成；发送按钮悬停菜单也提供 app-server 原生 Steer，已排队消息可以直接转为 Steer 并从队列移除。命令执行项默认折叠，避免长命令输出在出现瞬间撑开对话区。
 - 历史 Session 操作按钮固定在条目右侧的上层，不再悬停时向下扩展列表；长 Session 名称在操作区前截断并渐隐，保持文字与复制、固定、重命名、归档、删除按钮可读且不重叠。
-- 已增加从左侧展开的工作区文件浏览器：目录懒加载、已展开文件筛选、单击文本/图片预览、二进制提示和大文本截断；工作区浏览与“选择工作区”改为两个独立入口。
+- 已增加从左侧展开的项目文件浏览器：目录懒加载、已展开文件筛选、单击文本/图片预览、二进制提示和大文本截断；项目浏览与“选择项目”改为两个独立入口。
 - 已增加 Codex 风格 `/` 命令菜单，接入稳定 `skills/list`、`mcpServerStatus/list`、`thread/compact/start` 和 `thread/goal/*`；Skill 作为原生输入发送，MCP/Goal 使用面板管理。
 - 已消费 `thread/tokenUsage/updated`，在对话框左侧显示当前上下文蓝红热力条；悬停区分当前上下文与 Session 累计 Token，点击复用 `thread/compact/start`，自动压缩阈值仍完全由 Codex Core 根据模型元数据动态决定。
 - 已完成全项目代码健康审查：保留完整生成协议，删除未使用客户端包装、返回字段和 Runtime 来源标签，统一压缩及发送收尾流程，收窄多余导出并合并重复 CSS；严格 TypeScript、Knip 与 Rust Clippy 均通过。
@@ -42,7 +42,7 @@
 - 已将 Session 前端状态限制为最近 200 个 Turn，Diff 与 Plan 映射随裁剪同步释放；移除旧状态栏删除后遗留的 React 连接状态镜像。
 - 已加固 CODEX_HOME 升级迁移：空的新默认目录仍迁移旧历史，双非空目录无损拒绝，默认真实路径同样禁止绕回官方 `.codex`。
 - 已把 app-server 原生 Item 生命周期接入对话窗口：实时显示当前分析、命令、文件、MCP、工具和子智能体活动；Plan delta 与 MCP progress 流式更新，未引入轮询或自定义提示词。
-- 已对齐官方桌面壳的默认工作区方式：使用系统文档目录下独立的 `Codex-Shell/YYYY-MM-DD` 每日目录；左侧只展示用户选择的项目，默认路径集中到右侧状态区。
+- 已对齐官方桌面壳的项目目录语义：使用系统文档目录下独立的 `Codex-Shell/YYYY-MM-DD` 每日目录作为新 Thread 兜底；已有 Thread 使用自身 `cwd`，默认路径集中到右侧状态区。
 - 已修复四项对话运行问题：用户消息气泡改为 `fit-content` 自适应并保留最大可读宽度；仅切换模型/推理参数不再重启 app-server，下一轮通过原生 `turn/start` 覆盖生效；权限模式随每轮 Turn 持续传给 app-server，避免完全访问模式在后续回合降级；历史分页刷新保留已知分叉祖先，避免父子缩进暂时消失。
 - 归档和永久删除 Session 均增加产品内二次确认窗口，清楚说明可恢复性差异，并提供安全取消焦点、Escape 与遮罩关闭。
 - 已确认原版 app-server 在隔离 CODEX_HOME 中原生记录 SQLite tracing 日志和 rollout 事件；一次 33.5 秒回合中壳层与 app-server 提交开销不足 1 秒，约 28 秒消耗在网关首个可见增量等待，后续回合另出现上游 overloaded 与 Core 原生重试。
@@ -90,8 +90,8 @@
 ## 验证证据
 
 - `pnpm typecheck`：通过。
-- `pnpm test`：39 个测试文件、145 项测试全部通过，新增 GPT-5.2 快捷模型过滤、滚动到底后消息轨道同步、空 reasoning 隐藏、活跃空 reasoning 进度保留、两项以上过程默认折叠、普通/Review/Compact/未知 active 运行类型、等待标志保持、非 Steer 阶段拒绝发送、手动压缩标记及请求失败回滚覆盖；原生 Steer 中途消息顺序、执行过程归并、安全 Markdown、模型/权限热切换、分叉祖先、工作区 watch、统一反向交互、Review 和 MCP 覆盖继续通过。
-- Rust 单元测试：11 项全部通过，覆盖显式模型参数、旧模板配置兼容归一化、动态 Runtime、每日默认工作区、独立 provider 参数、旧 CODEX_HOME 迁移、双目录冲突和官方目录防重叠校验。
+- `pnpm test`：40 个测试文件、151 项测试全部通过，覆盖项目目录/Thread `cwd`、默认项目目录、文件浏览与 watch、执行过程、Queue/Steer、模型/权限热切换、分叉祖先、统一反向交互、Review 和 MCP。
+- Rust 单元测试：11 项全部通过，覆盖显式模型参数、旧模板配置兼容归一化、动态 Runtime、每日默认项目目录、独立 provider 参数、旧 CODEX_HOME 迁移、双目录冲突和官方目录防重叠校验。
 - `pnpm rust:check`：从 clean target 完整重编译后通过。
 - `pnpm build`：包含虚拟时间线、目录 watch、目录选择插件和 P0 工作台 UI 的生产构建通过。
 - Tauri debug build：构建通过，产物为 `src-tauri/target/debug/codex-shell.exe`；同目录三个 Runtime 文件名正确且 SHA-256 与 manifest 一致，此前从项目目录之外调用脚本的动态路径证据继续有效。

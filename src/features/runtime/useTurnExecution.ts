@@ -20,7 +20,7 @@ interface Props {
   ensureActiveThread: () => Promise<{ client: AppServerClient; threadId: string }>;
   settings: ModelSettings;
   permissionMode: PermissionMode;
-  workspacePath: string | null;
+  projectCwd: string | null;
   submitting: boolean;
   setSubmitting: Dispatch<SetStateAction<boolean>>;
   setError: Dispatch<SetStateAction<string>>;
@@ -88,7 +88,7 @@ export function useTurnExecution(props: Props) {
         const permissions = getPermissionMode(props.permissionMode);
         const response = await client.startThread({
           model: props.settings.modelId,
-          cwd: props.workspacePath,
+          cwd: props.projectCwd,
           approvalPolicy: permissions.approvalPolicy,
           approvalsReviewer: permissions.approvalsReviewer,
           sandbox: permissions.sandbox,
