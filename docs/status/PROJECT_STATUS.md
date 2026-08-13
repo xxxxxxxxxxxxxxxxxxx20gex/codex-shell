@@ -26,6 +26,7 @@
 - 已消费稳定 v2 item/turn 通知，展示计划、推理、命令输出、文件变更、MCP、Web 搜索、图片与子智能体活动。
 - 已用 `turn/diff/updated` 建立实时文件 Diff 面板，并从持久化 `fileChange` item 重建历史 Diff。
 - 已接入系统目录选择器，新线程把用户选择的项目目录作为 `thread/start.cwd`；输入框通过稳定 `fuzzyFileSearch` 搜索，并以原生 `mention` 输入发送文件引用。
+- 附件输入已对齐官方桌面端的统一入口：加号菜单只提供“添加文件和文件夹”，图片、普通文件和拖入目录由同一条路径收集，再映射为 app-server 原生 `localImage`/`image`/`mention`；Windows 系统选择器保持官方当前版本的多文件行为，目录通过拖拽进入，不新增自定义文件附件协议。
 - 已完成游标分页、固定、重命名、单 Session 归档和永久删除。
 - 左侧 Session 与中央对话区只展示稳定的 Session 名称；打开、修改、删除、分叉和复制仍只使用真实 Thread ID 或 rollout 路径，不使用会因列表变化而漂移的展示编号。
 - 每个 Session 可复制 rollout 路径供其他智能体读取，路径缺失时回退真实 Thread ID；操作按钮统一使用居中 SVG 与 0.3 秒延迟说明。

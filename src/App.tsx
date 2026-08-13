@@ -538,7 +538,7 @@ function App() {
               <div className="composer-toolbar">
                 <div className="composer-tools">
                   {session.activityLabel && <span className={`steer-mode-indicator ${session.canSteer ? "steerable" : ""}`}><i aria-hidden="true" />{session.activityLabel}</span>}
-                  <AttachmentMenu onSelectImages={addImages} onSelectFiles={addFiles} onError={setUiError} />
+                  <AttachmentMenu onSelectPaths={addDroppedPaths} onError={setUiError} />
                   <button ref={commandButtonRef} className={`command-button ${slashMenuVisible || commandPanel ? "active" : ""}`} onClick={() => { setCommandPanel(null); setSlashMenuDismissed(false); setSlashMenuForced((current) => !current); setSlashSelectedIndex(0); }} title="Skills、MCP、计划、压缩与目标">/</button>
                   {collaborationMode === "plan" && <button className="plan-mode-button" onClick={() => { setCollaborationMode("default"); setCommandNotice("已退出计划模式，下一条消息将按默认模式执行。"); }} title="退出计划模式"><span>☷</span>计划模式<i>×</i></button>}
                   <div className="model-picker-anchor">

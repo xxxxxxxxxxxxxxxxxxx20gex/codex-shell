@@ -10,19 +10,20 @@ vi.mock("@tauri-apps/plugin-dialog", () => ({ open: vi.fn() }));
 afterEach(cleanup);
 
 describe("AttachmentMenu", () => {
-  it("offers image and file pickers from the plus menu", () => {
-    render(<AttachmentMenu onSelectImages={vi.fn()} onSelectFiles={vi.fn()} onError={vi.fn()} />);
+  it("offers one Codex-style files and folders action from the plus menu", () => {
+    render(<AttachmentMenu onSelectPaths={vi.fn()} onError={vi.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: "添加附件" }));
-    expect(screen.getByRole("menuitem", { name: /添加图片/ })).toBeTruthy();
-    expect(screen.getByRole("menuitem", { name: /添加文件/ })).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: /添加文件和文件夹/ })).toBeTruthy();
+    expect(screen.queryAllByRole("menuitem")).toHaveLength(1);
   });
 
-  it("routes selected image paths to the image callback", async () => {
+  it("routes every selected path through the unified callback", async () => {
     vi.mocked(open).mockResolvedValue(["C:\\work\\screen.png"]);
-    const onSelectImages = vi.fn();
-    render(<AttachmentMenu onSelectImages={onSelectImages} onSelectFiles={vi.fn()} onError={vi.fn()} />);
+    const onSelectPaths = vi.fn();
+    render(<AttachmentMenu onSelectPaths={onSelectPaths} onError={vi.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: "添加附件" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: /添加图片/ }));
-    await vi.waitFor(() => expect(onSelectImages).toHaveBeenCalledWith(["C:\\work\\screen.png"]));
+    fireEvent.click(screen.getByRole("menuitem", { name: /添加文件和文件夹/ }));
+    await vi.waitFor(() => expect(onSelectPaths).toHaveBeenCalledWith(["C:\\work\\screen.png"]));
+    expect(open).toHaveBeenCalledWith({ multiple: true, directory: false, title: "添加文件和文件夹" });
   });
 });
