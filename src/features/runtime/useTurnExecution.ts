@@ -120,6 +120,7 @@ export function useTurnExecution(props: Props) {
         await props.ensureActiveThread();
       }
 
+      const submittedAt = Date.now() / 1_000;
       const response = await startTurn(
         client,
         threadId,
@@ -129,7 +130,7 @@ export function useTurnExecution(props: Props) {
         props.permissionMode,
       );
       props.markThreadRunning(threadId, response.turn.id, "regular");
-      props.dispatch({ type: "turnSubmitted", turn: response.turn, userInput: input });
+      props.dispatch({ type: "turnSubmitted", turn: response.turn, userInput: input, submittedAt });
       return true;
     } catch (sendError) {
       props.setError(errorMessage(sendError));
@@ -188,6 +189,7 @@ export function useTurnExecution(props: Props) {
         queued.images ?? [],
         "队列消息和附件路径",
       );
+      const submittedAt = Date.now() / 1_000;
       const response = await startTurn(
         client,
         threadId,
@@ -198,7 +200,7 @@ export function useTurnExecution(props: Props) {
       );
       props.markThreadRunning(threadId, response.turn.id, "regular");
       if (props.threadIdRef.current === threadId) {
-        props.dispatch({ type: "turnSubmitted", turn: response.turn, userInput: input });
+        props.dispatch({ type: "turnSubmitted", turn: response.turn, userInput: input, submittedAt });
       }
       return true;
     } catch (sendError) {

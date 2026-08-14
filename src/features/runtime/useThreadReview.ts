@@ -43,10 +43,11 @@ export function useThreadReview({
         if (target.title) assertModelVisibleInput(target.title, "Commit 标题");
       }
       const { client, threadId } = await ensureActiveThread();
+      const startedAt = Date.now() / 1_000;
       const response = await client.startReview({ threadId, target, delivery });
       markThreadRunning(response.reviewThreadId, response.turn.id, "review");
       if (delivery === "inline") {
-        dispatch({ type: "turnStarted", turn: response.turn });
+        dispatch({ type: "turnStarted", turn: response.turn, startedAt });
       } else {
         await unsubscribeIfIdle(threadId);
         subscribedThreadIdsRef.current.add(response.reviewThreadId);

@@ -350,14 +350,25 @@ export function useThreadController(props: Props) {
 
   const onTurnStarted = useCallback((notification: TurnStartedNotification) => {
     props.markThreadRunning(notification.threadId, notification.turn.id, "unknown");
-    if (notification.threadId === threadIdRef.current) props.setSubmitting(false);
-  }, [props.markThreadRunning, props.setSubmitting]);
+    if (notification.threadId === threadIdRef.current) {
+      props.setSubmitting(false);
+      props.dispatch({
+        type: "turnStarted",
+        turn: notification.turn,
+        startedAt: Date.now() / 1_000,
+      });
+    }
+  }, [props.dispatch, props.markThreadRunning, props.setSubmitting]);
 
   const onTurnCompleted = useCallback((notification: TurnCompletedNotification) => {
     props.markThreadStopped(notification.threadId);
     if (notification.threadId === threadIdRef.current) {
       props.setSubmitting(false);
-      props.dispatch({ type: "turnCompleted", notification });
+      props.dispatch({
+        type: "turnCompleted",
+        notification,
+        completedAt: Date.now() / 1_000,
+      });
       if (notification.turn.error) props.setError(notification.turn.error.message);
     } else if (notification.turn.status !== "completed" || queued.get(notification.threadId).length === 0) {
       void unsubscribeIfIdle(notification.threadId);

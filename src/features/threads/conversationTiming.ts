@@ -30,7 +30,7 @@ export function formatTurnDuration(durationMs: number) {
   return `${minutes} 分 ${pad(seconds)} 秒`;
 }
 
-function turnDurationMs(turn: Turn) {
+export function turnDurationMs(turn: Turn) {
   if (turn.durationMs !== null) return turn.durationMs;
   if (turn.startedAt === null || turn.completedAt === null) return null;
   return Math.max(0, (turn.completedAt - turn.startedAt) * 1000);

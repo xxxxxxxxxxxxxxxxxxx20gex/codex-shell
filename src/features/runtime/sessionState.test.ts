@@ -78,6 +78,7 @@ describe("agentSessionReducer", () => {
       type: "turnSubmitted",
       turn: turn("turn-2"),
       userInput: [{ type: "text", text: "第二问", text_elements: [] }],
+      submittedAt: 1,
     });
 
     expect(state.turns.map((item) => item.id)).toEqual(["turn-1", "turn-2"]);
@@ -96,6 +97,7 @@ describe("agentSessionReducer", () => {
       type: "turnSubmitted",
       turn: turn("turn-1"),
       userInput: input,
+      submittedAt: 1,
     });
 
     expect(state.turns[0].items).toEqual([{
@@ -112,9 +114,35 @@ describe("agentSessionReducer", () => {
     const state = agentSessionReducer(initialAgentSessionState, {
       type: "turnStarted",
       turn: reviewTurn,
+      startedAt: 1,
     });
 
-    expect(state.turns).toEqual([reviewTurn]);
+    expect(state.turns).toEqual([{ ...reviewTurn, startedAt: 1 }]);
+  });
+
+  it("keeps the earliest local clock fallback across turn lifecycle events", () => {
+    const submitted = agentSessionReducer(initialAgentSessionState, {
+      type: "turnSubmitted",
+      turn: { ...turn("turn-1"), startedAt: null },
+      userInput: [{ type: "text", text: "问题", text_elements: [] }],
+      submittedAt: 100,
+    });
+    const started = agentSessionReducer(submitted, {
+      type: "turnStarted",
+      turn: { ...turn("turn-1"), startedAt: null },
+      startedAt: 101,
+    });
+    const completed = agentSessionReducer(started, {
+      type: "turnCompleted",
+      notification: {
+        threadId: "thread-1",
+        turn: { ...turn("turn-1"), status: "completed", startedAt: null },
+      },
+      completedAt: 108,
+    });
+
+    expect(started.turns[0].startedAt).toBe(100);
+    expect(completed.turns[0]).toMatchObject({ startedAt: 100, completedAt: 108 });
   });
 
   it("replaces the optimistic user item when the persisted item starts", () => {
@@ -122,6 +150,7 @@ describe("agentSessionReducer", () => {
       type: "turnSubmitted",
       turn: turn("turn-1"),
       userInput: [{ type: "text", text: "真实问题", text_elements: [] }],
+      submittedAt: 1,
     });
     const persisted = userMessage("user-1", "真实问题");
 
@@ -138,6 +167,7 @@ describe("agentSessionReducer", () => {
       type: "turnSubmitted",
       turn: turn("turn-1"),
       userInput: [{ type: "text", text: "问题", text_elements: [] }],
+      submittedAt: 1,
     });
     const first = agentSessionReducer(submitted, {
       type: "agentDelta",
@@ -157,6 +187,7 @@ describe("agentSessionReducer", () => {
       type: "turnSubmitted",
       turn: turn("turn-1"),
       userInput: [{ type: "text", text: "问题", text_elements: [] }],
+      submittedAt: 1,
     });
     const completed = {
       ...turn("turn-1", [
@@ -164,12 +195,14 @@ describe("agentSessionReducer", () => {
         { type: "agentMessage", id: "agent-1", text: "答案", phase: null, memoryCitation: null },
       ]),
       status: "completed",
+      startedAt: 1,
       completedAt: 2,
     } as Turn;
 
     const state = agentSessionReducer(submitted, {
       type: "turnCompleted",
       notification: { threadId: "thread-1", turn: completed },
+      completedAt: 2,
     });
 
     expect(state.turns).toEqual([completed]);
@@ -180,6 +213,7 @@ describe("agentSessionReducer", () => {
       type: "turnSubmitted",
       turn: turn("turn-1"),
       userInput: [{ type: "text", text: "不能丢失的问题", text_elements: [] }],
+      submittedAt: 1,
     });
     const completed = {
       ...turn("turn-1", [
@@ -192,6 +226,7 @@ describe("agentSessionReducer", () => {
     const state = agentSessionReducer(submitted, {
       type: "turnCompleted",
       notification: { threadId: "thread-1", turn: completed },
+      completedAt: 2,
     });
 
     expect(state.turns[0].items.map((item) => item.type)).toEqual(["userMessage", "agentMessage"]);
@@ -228,6 +263,7 @@ describe("agentSessionReducer", () => {
     const state = agentSessionReducer(loaded, {
       type: "turnCompleted",
       notification: { threadId: "thread-1", turn: completed },
+      completedAt: 2,
     });
 
     expect(state.turns[0]).toEqual(completed);
@@ -360,6 +396,7 @@ describe("agentSessionReducer", () => {
       type: "turnSubmitted",
       turn: turn("turn-200"),
       userInput: [{ type: "text", text: "下一问", text_elements: [] }],
+      submittedAt: 1,
     });
 
     expect(state.turns).toHaveLength(200);

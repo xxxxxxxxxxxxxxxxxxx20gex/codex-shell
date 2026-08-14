@@ -4,7 +4,7 @@ import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import type { Turn } from "../../generated/app-server/v2/Turn";
 import { buildUserInput } from "../runtime/sessionInput";
 import { ConversationTurn } from "./ConversationTurn";
-import { formatMessageTimestamp, formatTurnDuration } from "./conversationTiming";
+import { formatMessageTimestamp, formatTurnDuration, turnDurationMs } from "./conversationTiming";
 
 function completedTurn(): Turn {
   const user: ThreadItem = {
@@ -56,6 +56,7 @@ describe("conversation timing", () => {
   it("formats short and long durations", () => {
     expect(formatTurnDuration(8421)).toBe("8.4 秒");
     expect(formatTurnDuration(65_234)).toBe("1 分 05 秒");
+    expect(turnDurationMs({ ...completedTurn(), durationMs: null })).toBe(8_000);
   });
 
   it("renders send time, answer time, and duration", () => {
@@ -246,7 +247,7 @@ describe("conversation timing", () => {
       />,
     );
 
-    expect(markup).toContain("已处理");
+    expect(markup).toContain("正在处理");
     expect(markup).toContain("运行命令");
     expect(markup).not.toContain('class="turn-activity-group" open=""');
   });
@@ -291,7 +292,7 @@ describe("conversation timing", () => {
       />,
     );
 
-    expect((markup.match(/已处理/g) ?? []).length).toBe(1);
+    expect((markup.match(/正在处理/g) ?? []).length).toBe(1);
     expect((markup.match(/class="turn-activity-stream/g) ?? []).length).toBe(2);
   });
 
@@ -466,7 +467,7 @@ describe("conversation timing", () => {
     );
 
     expect(markup).toContain("正在读取接口文档");
-    expect(markup).toContain("已处理");
+    expect(markup).toContain("正在处理");
     expect(markup).not.toContain("正在处理任务…");
     expect(markup).not.toContain("Codex 正在处理任务…");
     expect(markup).toContain("role=\"status\"");

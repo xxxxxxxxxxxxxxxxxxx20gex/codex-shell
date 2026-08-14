@@ -39,8 +39,8 @@ export type AgentSessionAction =
   | { type: "updateThread"; thread: Thread }
   | { type: "renameThread"; threadId: string; name: string | null }
   | { type: "threadStatusChanged"; threadId: string; status: ThreadStatus }
-  | { type: "turnSubmitted"; turn: Turn; userInput: UserInput[] }
-  | { type: "turnStarted"; turn: Turn }
+  | { type: "turnSubmitted"; turn: Turn; userInput: UserInput[]; submittedAt: number }
+  | { type: "turnStarted"; turn: Turn; startedAt: number }
   | { type: "itemStarted"; notification: ItemStartedNotification }
   | { type: "itemCompleted"; notification: ItemCompletedNotification }
   | { type: "agentDelta"; notification: AgentMessageDeltaNotification }
@@ -53,7 +53,7 @@ export type AgentSessionAction =
   | { type: "turnDiffUpdated"; notification: TurnDiffUpdatedNotification }
   | { type: "turnPlanUpdated"; notification: TurnPlanUpdatedNotification }
   | { type: "tokenUsageUpdated"; notification: ThreadTokenUsageUpdatedNotification }
-  | { type: "turnCompleted"; notification: TurnCompletedNotification };
+  | { type: "turnCompleted"; notification: TurnCompletedNotification; completedAt: number };
 
 export const initialAgentSessionState: AgentSessionState = {
   thread: null,
@@ -119,34 +119,55 @@ function pendingTurn(turnId: string): Turn {
   };
 }
 
+function withFallbackStartedAt(turn: Turn, startedAt: number) {
+  return turn.startedAt === null ? { ...turn, startedAt } : turn;
+}
+
+function ensureTurnStartedAt(turns: Turn[], turnId: string, startedAt: number) {
+  if (!turns.some((turn) => turn.id === turnId)) {
+    return [...turns, { ...pendingTurn(turnId), startedAt }];
+  }
+  return turns.map((turn) => turn.id === turnId
+    ? withFallbackStartedAt(turn, startedAt)
+    : turn);
+}
+
 function mergeSubmittedTurn(turns: Turn[], turn: Turn) {
   const existing = turns.find((item) => item.id === turn.id);
   if (!existing) return upsertTurn(turns, turn);
   const incomingIds = new Set(turn.items.map((item) => item.id));
   return upsertTurn(turns, {
     ...turn,
+    startedAt: turn.startedAt ?? existing.startedAt,
+    completedAt: turn.completedAt ?? existing.completedAt,
+    durationMs: turn.durationMs ?? existing.durationMs,
     items: [...turn.items, ...existing.items.filter((item) => !incomingIds.has(item.id))],
   });
 }
 
-function mergeCompletedTurn(turns: Turn[], turn: Turn) {
+function mergeCompletedTurn(turns: Turn[], turn: Turn, completedAt: number) {
   const existing = turns.find((item) => item.id === turn.id);
-  if (!existing) return upsertTurn(turns, turn);
-  const includesPersistedUser = turn.items.some((item) => item.type === "userMessage");
+  const completedTurn = {
+    ...turn,
+    startedAt: turn.startedAt ?? existing?.startedAt ?? null,
+    completedAt: turn.completedAt ?? completedAt,
+  };
+  if (!existing) return upsertTurn(turns, completedTurn);
+  const includesPersistedUser = completedTurn.items.some((item) => item.type === "userMessage");
   const existingItems = existing.items.filter((item) => {
     return !(includesPersistedUser && item.id.startsWith(LOCAL_USER_PREFIX));
   });
-  if (turn.itemsView === "full") {
+  if (completedTurn.itemsView === "full") {
     const optimisticUser = includesPersistedUser
       ? []
       : existingItems.filter((item) => item.type === "userMessage" && item.id.startsWith(LOCAL_USER_PREFIX));
-    return upsertTurn(turns, { ...turn, items: [...optimisticUser, ...turn.items] });
+    return upsertTurn(turns, { ...completedTurn, items: [...optimisticUser, ...completedTurn.items] });
   }
-  const incomingById = new Map(turn.items.map((item) => [item.id, item]));
+  const incomingById = new Map(completedTurn.items.map((item) => [item.id, item]));
   const mergedItems = existingItems.map((item) => incomingById.get(item.id) ?? item);
   const existingIds = new Set(existingItems.map((item) => item.id));
-  mergedItems.push(...turn.items.filter((item) => !existingIds.has(item.id)));
-  return upsertTurn(turns, { ...turn, items: mergedItems });
+  mergedItems.push(...completedTurn.items.filter((item) => !existingIds.has(item.id)));
+  return upsertTurn(turns, { ...completedTurn, items: mergedItems });
 }
 
 function optimisticUserItem(turnId: string, content: UserInput[]): ThreadItem {
@@ -282,10 +303,30 @@ export function agentSessionReducer(
     case "turnSubmitted":
       return withTurns(
         state,
-        mergeSubmittedTurn(state.turns, withOptimisticUser(action.turn, action.userInput)),
+        mergeSubmittedTurn(
+          state.turns,
+          withOptimisticUser(
+            withFallbackStartedAt(
+              action.turn,
+              state.turns.find((turn) => turn.id === action.turn.id)?.startedAt
+                ?? action.submittedAt,
+            ),
+            action.userInput,
+          ),
+        ),
       );
     case "turnStarted":
-      return withTurns(state, mergeSubmittedTurn(state.turns, action.turn));
+      return withTurns(
+        state,
+        mergeSubmittedTurn(
+          state.turns,
+          withFallbackStartedAt(
+            action.turn,
+            state.turns.find((turn) => turn.id === action.turn.id)?.startedAt
+              ?? action.startedAt,
+          ),
+        ),
+      );
     case "itemStarted":
       return withTurns(
         {
@@ -295,7 +336,15 @@ export function agentSessionReducer(
             [action.notification.item.id]: action.notification.turnId,
           },
         },
-        updateTurnItem(state.turns, action.notification.turnId, action.notification.item),
+        updateTurnItem(
+          ensureTurnStartedAt(
+            state.turns,
+            action.notification.turnId,
+            action.notification.startedAtMs / 1_000,
+          ),
+          action.notification.turnId,
+          action.notification.item,
+        ),
       );
     case "itemCompleted": {
       const activeItemTurnIds = { ...state.activeItemTurnIds };
@@ -416,7 +465,7 @@ export function agentSessionReducer(
               .filter(([, notification]) => notification.turnId !== completedTurnId),
           ),
         },
-        mergeCompletedTurn(state.turns, action.notification.turn),
+        mergeCompletedTurn(state.turns, action.notification.turn, action.completedAt),
       );
     }
   }

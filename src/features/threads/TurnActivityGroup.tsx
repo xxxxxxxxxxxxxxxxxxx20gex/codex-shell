@@ -54,7 +54,7 @@ export function TurnActivityGroup({ items, active, turnActive, startedAt, durati
     <section className="turn-activity-stream" role={active ? "status" : undefined} aria-live={active ? "polite" : undefined}>
       {showHeader && <div className="turn-work-status">
         <span className={`turn-activity-indicator${turnActive ? " active" : ""}`} aria-hidden="true" />
-        <strong>{`已处理${duration}`}</strong>
+        <strong>{`${turnActive ? "正在处理" : "已处理"}${duration}`}</strong>
       </div>}
       <div className="turn-activity-list">
         {activityBlocks.map((item) => item.type === "commandDrawer" ? (

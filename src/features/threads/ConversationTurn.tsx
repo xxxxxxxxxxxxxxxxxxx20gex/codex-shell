@@ -3,7 +3,7 @@ import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import type { McpToolCallProgressNotification } from "../../generated/app-server/v2/McpToolCallProgressNotification";
 import type { Turn } from "../../generated/app-server/v2/Turn";
 import type { TurnPlanUpdatedNotification } from "../../generated/app-server/v2/TurnPlanUpdatedNotification";
-import { agentMessageTiming, formatTurnDuration, userMessageTiming } from "./conversationTiming";
+import { agentMessageTiming, formatTurnDuration, turnDurationMs, userMessageTiming } from "./conversationTiming";
 import { TurnActivityGroup } from "./TurnActivityGroup";
 import { TurnFileChanges } from "./TurnFileChanges";
 import { TurnPlanView } from "./TurnPlanView";
@@ -100,7 +100,8 @@ export function ConversationTurn({
   const userMessageCount = items.filter((item) => item.type === "userMessage").length;
   const collapseCompletedProcess = !active && turn.status === "completed" && userMessageCount <= 1 && answerItems.length > 0
     && activityBlocks.length > 0 && finalActivityBlockIndex < finalAnswerBlockIndex;
-  const completedProcessDuration = turn.durationMs === null ? "" : ` ${formatTurnDuration(turn.durationMs)}`;
+  const durationMs = turnDurationMs(turn);
+  const completedProcessDuration = durationMs === null ? "" : ` ${formatTurnDuration(durationMs)}`;
   const lastAgentMessageId = answerItems[answerItems.length - 1]?.id;
   const sentTiming = userMessageTiming(turn);
   const answerTiming = agentMessageTiming(turn, active);
@@ -163,7 +164,7 @@ export function ConversationTurn({
                         active={false}
                         turnActive={false}
                         startedAt={turn.startedAt}
-                        durationMs={turn.durationMs}
+                        durationMs={durationMs}
                         showHeader={false}
                         turnId={turn.id}
                         activeItemTurnIds={activeItemTurnIds}
@@ -178,7 +179,7 @@ export function ConversationTurn({
                 active={active && (blockIndex === finalActivityBlockIndex || block.items.some((item) => activeItemTurnIds[item.id] === turn.id))}
                 turnActive={active}
                 startedAt={turn.startedAt}
-                durationMs={turn.durationMs}
+                durationMs={durationMs}
                 showHeader={blockIndex === firstActivityBlockIndex}
                 turnId={turn.id}
                 activeItemTurnIds={activeItemTurnIds}
