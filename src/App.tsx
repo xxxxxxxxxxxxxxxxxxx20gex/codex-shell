@@ -50,11 +50,9 @@ import {
   activeFileMentionQuery,
   type DefaultProjectDirectory,
   isDefaultProjectPath,
-  loadWorkspacePath,
   replaceActiveFileMention,
   resolveFileSearchPath,
   resolveProjectRelativePath,
-  saveWorkspacePath,
 } from "./features/workspaces/workspaceState";
 
 const initialSettings: ModelSettings = {
@@ -76,7 +74,7 @@ function App() {
   const [modelDisplayName, setModelDisplayName] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [permissionMode, setPermissionMode] = useState<PermissionMode>(DEFAULT_PERMISSION_MODE);
-  const [projectPath, setProjectPath] = useState<string | null>(loadWorkspacePath);
+  const [pendingProjectPath, setPendingProjectPath] = useState<string | null>(null);
   const [defaultProjectDirectory, setDefaultProjectDirectory] = useState<DefaultProjectDirectory | null>(null);
   const [workspaceExplorerOpen, setWorkspaceExplorerOpen] = useState(false);
   const [workspaceExplorerInitialPath, setWorkspaceExplorerInitialPath] = useState<string | null>(null);
@@ -110,7 +108,7 @@ function App() {
     resizePanel,
     finishPanelResize,
   } = useResizablePanels();
-  const newThreadCwd = projectPath ?? defaultProjectDirectory?.path ?? null;
+  const newThreadCwd = pendingProjectPath ?? defaultProjectDirectory?.path ?? null;
   const session = useAgentSession(settings, permissionMode, newThreadCwd);
   const currentProjectPath = session.thread?.cwd
     ? String(session.thread.cwd)
@@ -298,6 +296,7 @@ function App() {
     setSlashMenuDismissed(false);
     setCommandNotice("");
     setCollaborationMode("default");
+    setPendingProjectPath(null);
     session.startNewTask();
   }
 
@@ -308,11 +307,12 @@ function App() {
   }
 
   function changeProject(path: string | null) {
+    if (session.thread) return;
     setWorkspaceExplorerOpen(false);
     setWorkspaceExplorerInitialPath(null);
-    startNewTask();
-    setProjectPath(path);
-    saveWorkspacePath(path);
+    setMentions([]);
+    setMentionResults([]);
+    setPendingProjectPath(path);
   }
 
   function openWorkspaceExplorer(initialFilePath: string | null = null) {
@@ -426,8 +426,17 @@ function App() {
       >
         <aside className="sidebar panel">
           <button className="primary-button new-task" onClick={startNewTask} disabled={session.submitting || session.openingThreadId !== null}>＋ 新建对话</button>
-          <div className="section-label">项目</div>
-          <WorkspaceSelector path={usingDefaultProjectDirectory ? null : currentProjectPath} disabled={session.submitting || session.openingThreadId !== null} onExplore={() => openWorkspaceExplorer()} onChange={changeProject} onError={setUiError} />
+          {(!session.thread || !usingDefaultProjectDirectory) && <>
+            <div className="section-label">项目</div>
+            <WorkspaceSelector
+              path={usingDefaultProjectDirectory ? null : currentProjectPath}
+              disabled={session.submitting || session.openingThreadId !== null}
+              selectionLocked={Boolean(session.thread)}
+              onExplore={() => openWorkspaceExplorer()}
+              onChange={changeProject}
+              onError={setUiError}
+            />
+          </>}
           <ThreadHistoryList
             threads={session.history}
             archived={session.historyArchived}
@@ -604,7 +613,7 @@ function App() {
           } : undefined} /> : inspectorTab === "logs" ? (
             <RuntimeLogPanel store={session.runtimeLogStore} />
           ) : (
-            <StatusInspector turnCount={session.turns.length} threadId={session.thread?.id ?? null} projectPath={currentProjectPath} projectSource={projectSource} usingDefaultProjectDirectory={usingDefaultProjectDirectory} canUseDefaultProjectDirectory={Boolean(defaultProjectDirectory)} codexHome={session.codexHome} codexHomeDisabled={session.runningThreadCount > 0 || session.submitting} noticeStore={session.runtimeNoticeStore} windowsSandboxReadiness={session.windowsSandboxReadiness} onBrowseProject={() => openWorkspaceExplorer()} onUseDefaultProjectDirectory={() => changeProject(null)} onSetupWindowsSandbox={session.setupWindowsSandbox} onRestart={session.restart} />
+            <StatusInspector turnCount={session.turns.length} threadId={session.thread?.id ?? null} projectPath={currentProjectPath} projectSource={projectSource} usingDefaultProjectDirectory={usingDefaultProjectDirectory} canUseDefaultProjectDirectory={Boolean(defaultProjectDirectory && !session.thread)} codexHome={session.codexHome} codexHomeDisabled={session.runningThreadCount > 0 || session.submitting} noticeStore={session.runtimeNoticeStore} windowsSandboxReadiness={session.windowsSandboxReadiness} onBrowseProject={() => openWorkspaceExplorer()} onUseDefaultProjectDirectory={() => changeProject(null)} onSetupWindowsSandbox={session.setupWindowsSandbox} onRestart={session.restart} />
           )}
         </aside>
       </section>

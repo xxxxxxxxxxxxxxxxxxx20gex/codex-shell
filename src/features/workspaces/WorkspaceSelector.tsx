@@ -5,12 +5,13 @@ import { projectName } from "./workspaceState";
 interface Props {
   path: string | null;
   disabled: boolean;
+  selectionLocked: boolean;
   onExplore: () => void;
   onChange: (path: string | null) => void;
   onError: (message: string) => void;
 }
 
-export function WorkspaceSelector({ path, disabled, onExplore, onChange, onError }: Props) {
+export function WorkspaceSelector({ path, disabled, selectionLocked, onExplore, onChange, onError }: Props) {
   async function chooseProject() {
     try {
       const selected = await open({ directory: true, multiple: false, title: "选择 Codex 项目目录" });
@@ -29,9 +30,19 @@ export function WorkspaceSelector({ path, disabled, onExplore, onChange, onError
           <i className="workspace-expand">›</i>
         </button>
       )}
-      <button className="choose-workspace-button" disabled={disabled} onClick={() => void chooseProject()}>
-        {path ? "切换项目" : "选择项目"}
-      </button>
+      {!selectionLocked && <div className="workspace-selection-actions">
+        <button className="choose-workspace-button" disabled={disabled} onClick={() => void chooseProject()}>
+          {path ? "切换项目" : "选择项目"}
+        </button>
+        {path && <button
+          type="button"
+          className="clear-workspace-button"
+          disabled={disabled}
+          onClick={() => onChange(null)}
+          aria-label="取消自定义项目"
+          title="取消自定义项目"
+        >×</button>}
+      </div>}
     </div>
   );
 }

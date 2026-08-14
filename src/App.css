@@ -265,8 +265,11 @@ code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 .workspace-selector .workspace-item { padding-right: 9px; }
 .workspace-selector .workspace-item:not(:disabled):hover { background: #22221e; }
 .workspace-expand { margin-left: auto; color: #6e6c63; font-size: 18px; font-style: normal; }
-.choose-workspace-button { margin: 0 8px; min-height: 34px; padding: 7px 9px; border: 1px solid #3f3e37; border-radius: 7px; color: var(--text-secondary); background: #1c1c18; font-size: 11px; cursor: pointer; }
+.workspace-selection-actions { display: flex; gap: 6px; margin: 0 8px; }
+.choose-workspace-button { min-width: 0; min-height: 34px; flex: 1; padding: 7px 9px; border: 1px solid #3f3e37; border-radius: 7px; color: var(--text-secondary); background: #1c1c18; font-size: 11px; cursor: pointer; }
 .choose-workspace-button:hover { border-color: #4b4d34; color: #c5c8a5; background: #22231c; }
+.clear-workspace-button { display: grid; width: 34px; height: 34px; flex: none; place-items: center; padding: 0; border: 1px solid #3f3e37; border-radius: 7px; color: var(--text-muted); background: #1c1c18; font-size: 17px; line-height: 1; cursor: pointer; }
+.clear-workspace-button:hover { border-color: #615044; color: #e1c8b5; background: #27201b; }
 .thread-row { position: relative; display: grid; grid-template-columns: minmax(0,1fr); margin-left: calc(var(--thread-depth, 0) * 14px); border-radius: 8px; transition: background-color .16s ease, box-shadow .16s ease; }
 .thread-row.branched::before { position: absolute; top: 0; bottom: 0; left: -8px; width: 1px; background: #3d4930; content: ""; }
 .thread-row.branched::after { position: absolute; top: 18px; left: -8px; width: 8px; height: 1px; background: #3d4930; content: ""; }

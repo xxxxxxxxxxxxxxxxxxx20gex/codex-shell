@@ -34,7 +34,11 @@ export function StatusInspector(props: Props) {
       <div className="inspector-card workspace-status-card">
         <div className="card-title"><span>当前项目</span><i>{props.projectSource}</i></div>
         <strong>{props.projectPath || "正在准备默认项目目录"}</strong>
-        <p>{props.usingDefaultProjectDirectory ? "Codex Shell 按日期维护的默认项目目录；选择项目后，新对话会使用该目录。" : "当前 Thread 的项目目录；相对路径命令、文件搜索和浏览都以此为基准。"}</p>
+        <p>{props.usingDefaultProjectDirectory
+          ? "Codex Shell 按日期维护的默认项目目录；新对话未选择自定义项目时使用这里。"
+          : props.threadId
+            ? "当前 Session 的项目目录；相对路径命令、文件搜索和浏览都以此为基准。"
+            : "新对话将使用这个自定义项目；发送第一条消息前可以取消。"}</p>
         <div className="status-card-actions">
           <button className="secondary-button" disabled={!props.projectPath} onClick={props.onBrowseProject}>浏览项目文件</button>
           {!props.usingDefaultProjectDirectory && props.canUseDefaultProjectDirectory && <button className="secondary-button" onClick={props.onUseDefaultProjectDirectory}>使用今日默认项目</button>}

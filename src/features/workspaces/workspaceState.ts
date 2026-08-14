@@ -1,28 +1,9 @@
 import type { FuzzyFileSearchResult } from "../../generated/app-server/FuzzyFileSearchResult";
 
-const STORAGE_KEY = "codex-shell.workspace.v1";
-
 /** The product-owned fallback project directory used for new threads. */
 export interface DefaultProjectDirectory {
   rootPath: string;
   path: string;
-}
-
-export function loadWorkspacePath() {
-  try {
-    return window.localStorage.getItem(STORAGE_KEY);
-  } catch {
-    return null;
-  }
-}
-
-export function saveWorkspacePath(path: string | null) {
-  try {
-    if (path) window.localStorage.setItem(STORAGE_KEY, path);
-    else window.localStorage.removeItem(STORAGE_KEY);
-  } catch {
-    // The app remains usable when browser storage is unavailable.
-  }
 }
 
 export function projectName(path: string | null) {
