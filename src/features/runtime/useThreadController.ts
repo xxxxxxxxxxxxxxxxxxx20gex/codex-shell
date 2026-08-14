@@ -14,7 +14,7 @@ import type { ThreadStatusChangedNotification } from "../../generated/app-server
 import type { TurnCompletedNotification } from "../../generated/app-server/v2/TurnCompletedNotification";
 import type { TurnStartedNotification } from "../../generated/app-server/v2/TurnStartedNotification";
 import { errorMessage } from "../../shared/errors";
-import type { PermissionMode } from "../approvals/permissionModes";
+import type { ApprovalReviewerMode, PermissionMode } from "../approvals/permissionModes";
 import type { ModelSettings } from "../models/types";
 import type { AppServerClient } from "./appServerClient";
 import type { AgentSessionAction } from "./sessionState";
@@ -32,6 +32,7 @@ interface Props {
   ensureConnected: EnsureConnected;
   settings: ModelSettings;
   permissionMode: PermissionMode;
+  approvalReviewer: ApprovalReviewerMode;
   projectCwd: string | null;
   dispatch: Dispatch<AgentSessionAction>;
   submitting: boolean;
@@ -128,6 +129,7 @@ export function useThreadController(props: Props) {
     ensureActiveThread,
     settings: props.settings,
     permissionMode: props.permissionMode,
+    approvalReviewer: props.approvalReviewer,
     projectCwd: props.projectCwd,
     submitting: props.submitting,
     setSubmitting: props.setSubmitting,
@@ -159,10 +161,11 @@ export function useThreadController(props: Props) {
       images: [...images],
       settings: { ...props.settings },
       permissionMode: props.permissionMode,
+      approvalReviewer: props.approvalReviewer,
     });
     if (!accepted) props.setError("当前 Session 最多排队 10 条消息");
     return accepted;
-  }, [props.isThreadRunning, props.permissionMode, props.setError, props.settings, props.submitting, queued.enqueue]);
+  }, [props.approvalReviewer, props.isThreadRunning, props.permissionMode, props.setError, props.settings, props.submitting, queued.enqueue]);
 
   const sendNextQueued = useCallback(async (threadId: string) => {
     const next = queued.shift(threadId);

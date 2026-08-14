@@ -6,7 +6,7 @@ import { errorMessage } from "../../shared/errors";
 import type { ServerInteractionStore } from "../interactions/serverInteractionStore";
 import { ServerInteractionStore as InteractionStore } from "../interactions/serverInteractionStore";
 import type { ModelSettings } from "../models/types";
-import type { PermissionMode } from "../approvals/permissionModes";
+import type { ApprovalReviewerMode, PermissionMode } from "../approvals/permissionModes";
 import { AppServerClient } from "./appServerClient";
 import { RuntimeLogStore } from "./runtimeLogStore";
 import { RuntimeNoticeStore } from "./runtimeNoticeStore";
@@ -29,6 +29,7 @@ function useStableStore<T>(create: () => T) {
 export function useAgentSession(
   settings: ModelSettings,
   permissionMode: PermissionMode,
+  approvalReviewer: ApprovalReviewerMode,
   projectCwd: string | null,
 ) {
   const clientRef = useRef<AppServerClient | null>(null);
@@ -86,6 +87,7 @@ export function useAgentSession(
     ensureConnected,
     settings,
     permissionMode,
+    approvalReviewer,
     projectCwd,
     dispatch,
     submitting,

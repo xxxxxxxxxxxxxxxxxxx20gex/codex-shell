@@ -4,7 +4,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Thread } from "../../generated/app-server/v2/Thread";
 import type { Turn } from "../../generated/app-server/v2/Turn";
-import type { PermissionMode } from "../approvals/permissionModes";
+import type { ApprovalReviewerMode, PermissionMode } from "../approvals/permissionModes";
 import type { AppServerClient } from "./appServerClient";
 import { useThreadController } from "./useThreadController";
 
@@ -105,7 +105,8 @@ function setup() {
       reasoningEffort: "none" as const,
       verbosity: "low" as const,
     },
-    permissionMode: "ask" as PermissionMode,
+    permissionMode: "workspace" as PermissionMode,
+    approvalReviewer: "user" as ApprovalReviewerMode,
     projectCwd: "C:\\work",
     dispatch,
     submitting: false,
@@ -190,9 +191,49 @@ describe("useThreadController", () => {
     }), undefined);
   });
 
+  it("maps read-only access to native Thread and Turn sandbox fields", async () => {
+    const { client, props } = setup();
+    props.permissionMode = "read";
+    const { result } = renderHook(() => useThreadController(props));
+    await waitFor(() => expect(client.listThreads).toHaveBeenCalled());
+
+    await act(async () => {
+      expect(await result.current.send("inspect without writing")).toBe(true);
+    });
+
+    expect(client.startThread).toHaveBeenCalledWith(expect.objectContaining({
+      approvalPolicy: "on-request",
+      approvalsReviewer: "user",
+      sandbox: "read-only",
+    }));
+    expect(client.startTurn).toHaveBeenCalledWith(expect.objectContaining({
+      approvalPolicy: "on-request",
+      approvalsReviewer: "user",
+      sandboxPolicy: { type: "readOnly", networkAccess: false },
+    }), undefined);
+  });
+
+  it("routes protected operations to automatic review without changing workspace access", async () => {
+    const { client, props } = setup();
+    props.permissionMode = "workspace";
+    props.approvalReviewer = "auto_review";
+    const { result } = renderHook(() => useThreadController(props));
+    await waitFor(() => expect(client.listThreads).toHaveBeenCalled());
+
+    await act(async () => {
+      expect(await result.current.send("edit the workspace")).toBe(true);
+    });
+
+    expect(client.startTurn).toHaveBeenCalledWith(expect.objectContaining({
+      approvalPolicy: "on-request",
+      approvalsReviewer: "auto_review",
+      sandboxPolicy: expect.objectContaining({ type: "workspaceWrite" }),
+    }), undefined);
+  });
+
   it("explicitly tightens the Turn sandbox after leaving full access", async () => {
     const { client, props } = setup();
-    props.permissionMode = "ask";
+    props.permissionMode = "workspace";
     const { result } = renderHook(() => useThreadController(props));
     await waitFor(() => expect(client.listThreads).toHaveBeenCalled());
 

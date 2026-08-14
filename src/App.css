@@ -179,15 +179,23 @@ code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 .send-button:disabled { color: #69685f; background: #2c2b26; cursor: default; }
 .permission-selector { position: relative; }
 .permission-trigger { display: flex; min-height: var(--ui-control-height); align-items: center; gap: 6px; padding: 5px 9px; border: 1px solid var(--ui-line-strong); border-radius: var(--ui-control-radius); color: var(--ui-text-control); background: var(--ui-surface-control); cursor: pointer; }
-.permission-trigger span { font-size: 11px; }.permission-trigger strong { font-size: 10px; font-weight: 600; }.permission-trigger .chevron-icon { color: #65645d; }
+.permission-trigger strong { font-size: 10px; font-weight: 600; }.permission-trigger .chevron-icon { color: #65645d; }
 .permission-trigger.danger { border-color: #704126; color: #e88f4d; background: #251b14; }
 .permission-menu { position: absolute; z-index: 12; bottom: calc(100% + 7px); left: 0; width: 330px; overflow: hidden; border: 1px solid #3b3931; border-radius: var(--ui-panel-radius); background: #20201c; box-shadow: var(--ui-shadow-popover); }
 .permission-menu button { display: grid; width: 100%; grid-template-columns: 24px 1fr 16px; align-items: center; gap: 7px; padding: 11px 12px; border: 0; border-bottom: 1px solid #2d2c26; color: var(--text-primary); text-align: left; background: transparent; cursor: pointer; }
-.permission-menu button:last-child { border-bottom: 0; }.permission-menu button:hover, .permission-menu button.active { background: #292923; }
+.permission-menu button:hover, .permission-menu button.active { background: #292923; }
 .permission-menu button.danger { color: #ef914c; }.permission-menu button.danger:hover, .permission-menu button.danger.active { background: #312117; }
 .permission-menu button > span:nth-child(2) { display: flex; flex-direction: column; min-width: 0; }
 .permission-menu strong { font-size: 10px; }.permission-menu small { margin-top: 3px; color: var(--text-muted); font-size: 8px; }.permission-menu em { color: var(--accent); font-size: 10px; font-style: normal; }
-.permission-menu .permission-icon { display: grid; place-items: center; color: inherit; font-size: 12px; }
+.permission-menu .permission-icon, .permission-trigger .permission-icon { display: grid; width: 18px; height: 18px; place-items: center; color: inherit; }
+.permission-icon svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.25; }
+.permission-menu .permission-reviewer-toggle { border-top: 5px solid #181815; border-bottom: 0; }
+.permission-menu .permission-reviewer-toggle:hover { background: #292923; }
+.permission-reviewer-icon { display: grid; place-items: center; color: #aaa9a2; font-size: 15px; }
+.permission-reviewer-toggle > i { position: relative; display: block; width: 27px; height: 16px; border-radius: 999px; background: #45443d; transition: background-color var(--ui-motion-fast); }
+.permission-reviewer-toggle > i b { position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #aaa9a2; transition: transform var(--ui-motion-fast), background-color var(--ui-motion-fast); }
+.permission-reviewer-toggle > i.active { background: #657d32; }
+.permission-reviewer-toggle > i.active b { background: var(--accent); transform: translateX(11px); }
 .inspector { grid-column: 3; overflow-y: auto; border-left: 1px solid var(--line); }
 .inspector-hidden .inspector { overflow: hidden; border-left: 0; visibility: hidden; }
 .panel-resizer { position: absolute; z-index: 18; top: 0; bottom: 0; width: 10px; touch-action: none; cursor: col-resize; }

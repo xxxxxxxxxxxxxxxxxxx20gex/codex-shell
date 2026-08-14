@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import type { ModeKind } from "../../generated/app-server/ModeKind";
-import type { PermissionMode } from "../approvals/permissionModes";
+import type { ApprovalReviewerMode, PermissionMode } from "../approvals/permissionModes";
 import type { ModelSettings } from "../models/types";
 import type { FileMention, ImageAttachment, SkillMention } from "./sessionInput";
 
@@ -15,6 +15,7 @@ export interface QueuedTurnInput {
   collaborationMode: ModeKind;
   settings: ModelSettings;
   permissionMode: PermissionMode;
+  approvalReviewer: ApprovalReviewerMode;
 }
 
 let nextQueuedTurnId = 0;

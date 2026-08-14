@@ -5,8 +5,10 @@ import type { UserInput } from "../../generated/app-server/v2/UserInput";
 import { errorMessage } from "../../shared/errors";
 import { assertModelVisibleInput } from "../../shared/modelVisibleInput";
 import {
+  getApprovalsReviewer,
   getPermissionMode,
   getTurnSandboxPolicy,
+  type ApprovalReviewerMode,
   type PermissionMode,
 } from "../approvals/permissionModes";
 import type { ModelSettings } from "../models/types";
@@ -25,6 +27,7 @@ interface Props {
   ensureActiveThread: () => Promise<{ client: AppServerClient; threadId: string }>;
   settings: ModelSettings;
   permissionMode: PermissionMode;
+  approvalReviewer: ApprovalReviewerMode;
   projectCwd: string | null;
   submitting: boolean;
   setSubmitting: Dispatch<SetStateAction<boolean>>;
@@ -44,6 +47,7 @@ function startTurn(
   collaborationMode: ModeKind,
   settings: ModelSettings,
   permissionMode: PermissionMode,
+  approvalReviewer: ApprovalReviewerMode,
 ) {
   const permissions = getPermissionMode(permissionMode);
   const collaboration = collaborationMode === "plan" ? {
@@ -60,7 +64,7 @@ function startTurn(
     model: settings.modelId,
     effort: settings.reasoningEffort,
     approvalPolicy: permissions.approvalPolicy,
-    approvalsReviewer: permissions.approvalsReviewer,
+    approvalsReviewer: getApprovalsReviewer(permissionMode, approvalReviewer),
     sandboxPolicy: getTurnSandboxPolicy(permissionMode),
   }, collaboration);
 }
@@ -105,7 +109,7 @@ export function useTurnExecution(props: Props) {
           model: props.settings.modelId,
           cwd: props.projectCwd,
           approvalPolicy: permissions.approvalPolicy,
-          approvalsReviewer: permissions.approvalsReviewer,
+          approvalsReviewer: getApprovalsReviewer(props.permissionMode, props.approvalReviewer),
           sandbox: permissions.sandbox,
           ephemeral: false,
         });
@@ -128,6 +132,7 @@ export function useTurnExecution(props: Props) {
         collaborationMode,
         props.settings,
         props.permissionMode,
+        props.approvalReviewer,
       );
       props.markThreadRunning(threadId, response.turn.id, "regular");
       props.dispatch({ type: "turnSubmitted", turn: response.turn, userInput: input, submittedAt });
@@ -197,6 +202,7 @@ export function useTurnExecution(props: Props) {
         queued.collaborationMode,
         queued.settings,
         queued.permissionMode,
+        queued.approvalReviewer,
       );
       props.markThreadRunning(threadId, response.turn.id, "regular");
       if (props.threadIdRef.current === threadId) {

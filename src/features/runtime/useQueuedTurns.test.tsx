@@ -16,6 +16,7 @@ const queuedInput = {
     verbosity: "low" as const,
   },
   permissionMode: "full" as const,
+  approvalReviewer: "user" as const,
 };
 
 describe("useQueuedTurns", () => {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_PERMISSION_MODE,
+  getApprovalsReviewer,
   getPermissionMode,
   getTurnSandboxPolicy,
 } from "./permissionModes";
@@ -16,18 +17,12 @@ describe("default permission mode", () => {
 
   it("maps every UI mode to an explicit app-server Turn sandbox policy", () => {
     expect({
-      ask: getTurnSandboxPolicy("ask"),
-      auto: getTurnSandboxPolicy("auto"),
+      read: getTurnSandboxPolicy("read"),
+      workspace: getTurnSandboxPolicy("workspace"),
       full: getTurnSandboxPolicy("full"),
     }).toEqual({
-      ask: {
-        type: "workspaceWrite",
-        writableRoots: [],
-        networkAccess: false,
-        excludeTmpdirEnvVar: false,
-        excludeSlashTmp: false,
-      },
-      auto: {
+      read: { type: "readOnly", networkAccess: false },
+      workspace: {
         type: "workspaceWrite",
         writableRoots: [],
         networkAccess: false,
@@ -36,5 +31,12 @@ describe("default permission mode", () => {
       },
       full: { type: "dangerFullAccess" },
     });
+  });
+
+  it("keeps approval routing independent from sandbox access", () => {
+    expect(getApprovalsReviewer("read", "auto_review")).toBe("auto_review");
+    expect(getApprovalsReviewer("workspace", "auto_review")).toBe("auto_review");
+    expect(getApprovalsReviewer("workspace", "user")).toBe("user");
+    expect(getApprovalsReviewer("full", "auto_review")).toBe("user");
   });
 });

@@ -3,46 +3,40 @@ import type { AskForApproval } from "../../generated/app-server/v2/AskForApprova
 import type { SandboxMode } from "../../generated/app-server/v2/SandboxMode";
 import type { SandboxPolicy } from "../../generated/app-server/v2/SandboxPolicy";
 
-export type PermissionMode = "ask" | "auto" | "full";
+export type PermissionMode = "read" | "workspace" | "full";
+export type ApprovalReviewerMode = Extract<ApprovalsReviewer, "user" | "auto_review">;
 
 export const DEFAULT_PERMISSION_MODE: PermissionMode = "full";
+export const DEFAULT_APPROVAL_REVIEWER: ApprovalReviewerMode = "user";
 
 export interface PermissionModeConfig {
   id: PermissionMode;
   label: string;
   description: string;
-  icon: string;
   approvalPolicy: AskForApproval;
-  approvalsReviewer: ApprovalsReviewer;
   sandbox: SandboxMode;
 }
 
 export const PERMISSION_MODES: PermissionModeConfig[] = [
   {
-    id: "ask",
-    label: "请求批准",
-    description: "执行受保护操作时由你确认",
-    icon: "✋",
+    id: "read",
+    label: "只读",
+    description: "读取项目；写入或扩大访问时请求批准",
     approvalPolicy: "on-request",
-    approvalsReviewer: "user",
-    sandbox: "workspace-write",
+    sandbox: "read-only",
   },
   {
-    id: "auto",
-    label: "替我审批",
-    description: "由 Codex 风险审查子智能体决定",
-    icon: "◈",
+    id: "workspace",
+    label: "工作区写入",
+    description: "可修改当前项目；项目外操作请求批准",
     approvalPolicy: "on-request",
-    approvalsReviewer: "auto_review",
     sandbox: "workspace-write",
   },
   {
     id: "full",
-    label: "完全访问权限",
-    description: "不受限制地访问网络和本机文件",
-    icon: "!",
+    label: "完全访问",
+    description: "访问本机文件和网络，不再请求批准",
     approvalPolicy: "never",
-    approvalsReviewer: "user",
     sandbox: "danger-full-access",
   },
 ];
@@ -52,13 +46,25 @@ export function getPermissionMode(id: PermissionMode) {
 }
 
 export function getTurnSandboxPolicy(id: PermissionMode): SandboxPolicy {
-  return id === "full"
-    ? { type: "dangerFullAccess" }
-    : {
+  switch (id) {
+    case "read":
+      return { type: "readOnly", networkAccess: false };
+    case "workspace":
+      return {
         type: "workspaceWrite",
         writableRoots: [],
         networkAccess: false,
         excludeTmpdirEnvVar: false,
         excludeSlashTmp: false,
       };
+    case "full":
+      return { type: "dangerFullAccess" };
+  }
+}
+
+export function getApprovalsReviewer(
+  permissionMode: PermissionMode,
+  reviewer: ApprovalReviewerMode,
+): ApprovalsReviewer {
+  return permissionMode === "full" ? "user" : reviewer;
 }

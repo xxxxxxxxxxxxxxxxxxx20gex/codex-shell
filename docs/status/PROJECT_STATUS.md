@@ -12,7 +12,7 @@
 - 已接通 `initialize → thread/start/resume/list → turn/start → item 通知 → turn/completed`。
 - 已将会话状态建模为可增量合并的 `Thread → Turn → Item`，支持多轮发送、历史加载和失败状态。
 - 已实现左侧最近 50 个非临时本地线程、线程切换与重启恢复。
-- 已实现命令、文件修改、额外目录/网络权限的审批队列及三档权限模式。
+- 已实现命令、文件修改、额外目录/网络权限的审批队列；主权限按 app-server 原生沙盒分为只读、工作区写入和完全访问三档，自动风险审查作为独立审批方式。
 - JSON-RPC 客户端已支持启动去重、30 秒请求超时、停止时拒绝 pending request、协议错误上报和可注入 transport。
 - 已使用中性产品标识 `com.codexshell.desktop`；默认 CODEX_HOME 按官方 `~/.codex` 的命名规则落在 `~/.codex-shell`，支持自定义目录并禁止与官方目录重叠，应用配置、凭据、SQLite、sessions、缓存和默认工作区均与官方 Codex 隔离。
 - 已修复历史来源过滤：独立 CODEX_HOME 内的 rollout 可能被 Runtime 标记为 `vscode`，历史查询不再硬编码 `appServer`。
@@ -64,7 +64,7 @@
 - Diff 已支持新增、删除、重命名和修改的文件级摘要，非删除文件可直接在工作区浏览器定位预览；工作区通过稳定 `fs/watch/fs/changed/fs/unwatch` 自动刷新展开目录和当前文件，并完整清理订阅、listener 与防抖 timer。
 - GitHub 交付已切换为 GitHub CLI 非交互凭据助手，并为本仓库固定本机 `7897` HTTP(S) 代理；完成并验证用户要求的改动后默认提交、推送，不再触发 GCM 图形确认。
 - 已修复模型启动配置切换导致当前 Session 丢失：必要的 app-server 重启会保存当前 Thread ID，重连后通过原生 `thread/read` 恢复，下一轮继续在同一 Session 使用新模型。
-- 已完成一轮 app-server 语义对齐审计：权限切换不再新建 Session；从完全访问降权时显式发送 `workspaceWrite`，避免沿用旧沙盒；历史 Resume 不再提前改写模型和权限，下一 Turn 的模型、推理与权限由 `turn/start` 原子生效；initialize 能力声明补齐显式 attestation 选择。Queue 明确为 Shell 当前进程内的有界队列，Steer 保持原生 `turn/steer`。
+- 已完成一轮 app-server 语义对齐审计：权限切换不再新建 Session；从完全访问降权时显式发送 `readOnly` 或 `workspaceWrite`，避免沿用旧沙盒；审批者与沙盒范围独立并随 Queue 快照；历史 Resume 不再提前改写模型和权限，下一 Turn 的模型、推理与权限由 `turn/start` 原子生效。Queue 明确为 Shell 当前进程内的有界队列，Steer 保持原生 `turn/steer`。
 - 模型原生目录已收敛为单一名称展示，不再重复显示相同名称和 ID；助手回答移除模型侧头像与名称，改为左侧短高亮竖线，减少重复信息和横向占用。
 - 模型入口已改为 Codex 风格两层结构：输入框旁即时选择 app-server 原生模型与推理强度，高级设置管理网关、Key、自定义模型和扩展参数；能力模板及静态模板目录已移除，所有参数变化均保持当前 Session。
 - 对话执行体验进一步对齐 Codex 桌面端：同一 Turn 的 commentary、reasoning、命令与工具事件按原始顺序组成连续过程流，运行中显示 app-server 原生活动或 MCP progress，完成后使用稳定 `Turn.durationMs` 展示耗时；命令与工具逐项折叠，文件修改在回答末尾汇总，不生成服务端未提供的过程内容。消息轨道不再根据点击索引误判滚动到底，运行项展开和新输出不会把正在阅读历史的视口拉回。
@@ -93,7 +93,7 @@
 ## 验证证据
 
 - `pnpm typecheck`：通过。
-- `pnpm test`：46 个测试文件、183 项测试全部通过，覆盖项目目录选择/取消/锁定、Thread `cwd`、默认项目目录、文件浏览与 watch、附件输入/预览/历史还原、附件拖拽生命周期、执行过程实时计时与清理、Queue/Steer、模型/权限热切换与降权、Resume 无覆盖、分叉祖先、统一反向交互、Review 和 MCP。
+- `pnpm test`：47 个测试文件、189 项测试全部通过，覆盖项目目录选择/取消/锁定、Thread `cwd`、默认项目目录、文件浏览与 watch、附件输入/预览/历史还原、附件拖拽生命周期、执行过程实时计时与清理、Queue/Steer、三档原生沙盒、审批者解耦、模型/权限热切换与降权、Resume 无覆盖、分叉祖先、统一反向交互、Review 和 MCP。
 - Rust 单元测试：11 项全部通过，覆盖显式模型参数、旧模板配置兼容归一化、动态 Runtime、每日默认项目目录、独立 provider 参数、旧 CODEX_HOME 迁移、双目录冲突和官方目录防重叠校验。
 - `pnpm rust:check`：从 clean target 完整重编译后通过。
 - `pnpm build`：包含虚拟时间线、目录 watch、目录选择插件和 P0 工作台 UI 的生产构建通过。

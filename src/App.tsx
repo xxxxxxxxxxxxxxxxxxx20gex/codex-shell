@@ -5,7 +5,12 @@ import type { ModeKind } from "./generated/app-server/ModeKind";
 import { errorMessage } from "./shared/errors";
 import "./App.css";
 import { PermissionModeSelector } from "./features/approvals/PermissionModeSelector";
-import { DEFAULT_PERMISSION_MODE, type PermissionMode } from "./features/approvals/permissionModes";
+import {
+  DEFAULT_APPROVAL_REVIEWER,
+  DEFAULT_PERMISSION_MODE,
+  type ApprovalReviewerMode,
+  type PermissionMode,
+} from "./features/approvals/permissionModes";
 import { AttachmentGallery } from "./features/attachments/AttachmentGallery";
 import { GoalPanel } from "./features/commands/GoalPanel";
 import { McpStatusPanel } from "./features/commands/McpStatusPanel";
@@ -74,6 +79,7 @@ function App() {
   const [modelDisplayName, setModelDisplayName] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [permissionMode, setPermissionMode] = useState<PermissionMode>(DEFAULT_PERMISSION_MODE);
+  const [approvalReviewer, setApprovalReviewer] = useState<ApprovalReviewerMode>(DEFAULT_APPROVAL_REVIEWER);
   const [pendingProjectPath, setPendingProjectPath] = useState<string | null>(null);
   const [defaultProjectDirectory, setDefaultProjectDirectory] = useState<DefaultProjectDirectory | null>(null);
   const [workspaceExplorerOpen, setWorkspaceExplorerOpen] = useState(false);
@@ -109,7 +115,7 @@ function App() {
     finishPanelResize,
   } = useResizablePanels();
   const newThreadCwd = pendingProjectPath ?? defaultProjectDirectory?.path ?? null;
-  const session = useAgentSession(settings, permissionMode, newThreadCwd);
+  const session = useAgentSession(settings, permissionMode, approvalReviewer, newThreadCwd);
   const currentProjectPath = session.thread?.cwd
     ? String(session.thread.cwd)
     : newThreadCwd;
@@ -304,6 +310,14 @@ function App() {
     if (next === permissionMode) return;
     setPermissionMode(next);
     setCommandNotice("权限设置将在当前 Session 的下一条消息生效。");
+  }
+
+  function changeApprovalReviewer(next: ApprovalReviewerMode) {
+    if (next === approvalReviewer) return;
+    setApprovalReviewer(next);
+    setCommandNotice(next === "auto_review"
+      ? "自动风险审查将在下一条消息生效。"
+      : "受保护操作将在下一条消息起由你审批。");
   }
 
   function changeProject(path: string | null) {
@@ -559,7 +573,12 @@ function App() {
                     <button className="model-button" onClick={() => setModelPickerOpen((open) => !open)} title="选择模型与推理强度"><span>{modelDisplayName ?? settings.modelId}</span><svg className="chevron-icon" aria-hidden="true" viewBox="0 0 12 12"><path d="m3.5 4.5 2.5 2.5 2.5-2.5" /></svg></button>
                     {modelPickerOpen && <ModelQuickPicker settings={settings} loadModels={session.listModels} onChange={changeModelSettings} onDisplayName={setModelDisplayName} onAdvanced={() => { setModelPickerOpen(false); setSettingsOpen(true); }} onClose={() => setModelPickerOpen(false)} />}
                   </div>
-                  <PermissionModeSelector value={permissionMode} onChange={changePermissionMode} />
+                  <PermissionModeSelector
+                    value={permissionMode}
+                    reviewer={approvalReviewer}
+                    onChange={changePermissionMode}
+                    onReviewerChange={changeApprovalReviewer}
+                  />
                 </div>
                 <div className="composer-actions">
                   <SendModeControl
