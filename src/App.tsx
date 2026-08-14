@@ -6,6 +6,7 @@ import { errorMessage } from "./shared/errors";
 import "./App.css";
 import { PermissionModeSelector } from "./features/approvals/PermissionModeSelector";
 import { DEFAULT_PERMISSION_MODE, type PermissionMode } from "./features/approvals/permissionModes";
+import { AttachmentGallery } from "./features/attachments/AttachmentGallery";
 import { GoalPanel } from "./features/commands/GoalPanel";
 import { McpStatusPanel } from "./features/commands/McpStatusPanel";
 import { ReviewPanel } from "./features/commands/ReviewPanel";
@@ -62,6 +63,11 @@ const initialSettings: ModelSettings = {
   reasoningEffort: "low",
   verbosity: "low",
 };
+
+function queuedTurnLabel(turn: { text: string; mentions: FileMention[]; images?: ImageAttachment[] }) {
+  if (turn.text) return turn.text;
+  return [...turn.mentions, ...(turn.images ?? [])].map((attachment) => attachment.name).join("、") || "附件";
+}
 
 function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -232,7 +238,7 @@ function App() {
 
   async function submit() {
     const message = draft.trim();
-    if (!message) return;
+    if (!message && mentions.length === 0 && images.length === 0) return;
     const command = parseSlashCommand(message);
     if (command) {
       await runSlashCommand(command.id, command.args);
@@ -252,7 +258,7 @@ function App() {
 
   async function steerCurrentTurn() {
     const message = draft.trim();
-    if (!message || !session.canSteer) return;
+    if ((!message && mentions.length === 0 && images.length === 0) || !session.canSteer) return;
     if (await session.steer(message, mentions, skills, images)) {
       setDraft("");
       setMentions([]);
@@ -356,7 +362,7 @@ function App() {
   }
 
   function addDroppedPaths(paths: string[]) {
-    const imagePaths = paths.filter((path) => /\.(png|jpe?g|gif|webp|bmp)$/i.test(path));
+    const imagePaths = paths.filter((path) => /\.(avif|png|jpe?g|gif|webp|bmp)$/i.test(path));
     const filePaths = paths.filter((path) => !imagePaths.includes(path));
     addImages(imagePaths);
     addFiles(filePaths);
@@ -486,6 +492,7 @@ function App() {
               plansByTurnId={session.plansByTurnId}
               activeItemTurnIds={session.activeItemTurnIds}
               mcpProgressByItemId={session.mcpProgressByItemId}
+              readFile={session.readWorkspaceFile}
             />
           ) : (
             <div className="timeline"><div className="conversation-empty"><div className="agent-avatar">CS</div><h2>Codex Shell</h2><p>原生 Codex app-server 工作台</p></div></div>
@@ -502,20 +509,28 @@ function App() {
             {commandNotice && <div className="composer-notice">{commandNotice}</div>}
             <div ref={composerRef} className="composer has-context-heatbar">
               <ContextHeatBar usage={session.tokenUsage} hasThread={Boolean(session.thread)} running={session.running} onCompact={() => runSlashCommand("compact", "", false)} />
-              {(mentions.length > 0 || skills.length > 0 || images.length > 0) && <div className="mention-chips">
+              {skills.length > 0 && <div className="mention-chips">
                 {skills.map((skill) => <span className="skill-chip" key={skill.path} title={skill.path}>✦ {skill.name}<button onClick={() => toggleSkill(skill)}>×</button></span>)}
-                {mentions.map((mention) => <span key={mention.path} title={mention.path}>@{mention.name}<button onClick={() => setMentions((current) => current.filter((item) => item.path !== mention.path))}>×</button></span>)}
-                {images.map((image, index) => <span className="image-chip" key={image.path ?? image.url ?? index} title={image.path ?? "剪贴板图片"}>▧ {image.name}<button onClick={() => setImages((current) => current.filter((_, itemIndex) => itemIndex !== index))}>×</button></span>)}
               </div>}
+              <AttachmentGallery
+                files={mentions}
+                images={images}
+                readFile={session.readWorkspaceFile}
+                onRemoveFile={(path) => setMentions((current) => current.filter((item) => item.path !== path))}
+                onRemoveImage={(index) => setImages((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+              />
               {session.queuedTurns.length > 0 && <div className="queued-turns" aria-label="待发送消息">
                 <div className="queued-turns-heading"><span>待发送 · {session.queuedTurns.length}</span>{session.running
                   ? <small>当前回答完成后依次发送</small>
                   : <button type="button" onClick={() => void session.resumeQueued()} title="继续发送队列">继续发送</button>}</div>
-                {session.queuedTurns.map((queued, index) => <div className="queued-turn" key={queued.id}>
-                  <span><i>{index + 1}</i>{queued.text}</span>
-                  {session.canSteer && <button type="button" onClick={() => void steerQueuedTurn(queued)} aria-label={`引导发送待发送消息：${queued.text}`} title="引导发送">↗</button>}
-                  <button type="button" onClick={() => session.removeQueued(queued.id)} aria-label={`取消待发送消息：${queued.text}`} title="取消待发送">×</button>
-                </div>)}
+                {session.queuedTurns.map((queued, index) => {
+                  const label = queuedTurnLabel(queued);
+                  return <div className="queued-turn" key={queued.id}>
+                    <span><i>{index + 1}</i>{label}</span>
+                    {session.canSteer && <button type="button" onClick={() => void steerQueuedTurn(queued)} aria-label={`引导发送待发送消息：${label}`} title="引导发送">↗</button>}
+                    <button type="button" onClick={() => session.removeQueued(queued.id)} aria-label={`取消待发送消息：${label}`} title="取消待发送">×</button>
+                  </div>;
+                })}
               </div>}
               <textarea value={draft} onChange={(event) => { setDraft(event.target.value); setUiError(""); setCommandNotice(""); setSlashMenuForced(false); setSlashMenuDismissed(false); }} onPaste={(event) => void handleComposerPaste(event)} onKeyDown={handleComposerKeyDown} placeholder={session.running ? "输入下一条消息，当前回答完成后发送…" : collaborationMode === "plan" ? "描述需要分析和规划的任务…" : currentProjectPath ? "交给 Codex 一个任务，输入 / 使用命令，输入 @ 引用文件…" : "正在准备默认项目目录…"} />
               {currentProjectPath && mentionQuery !== null && <FileMentionMenu query={mentionQuery} results={mentionResults} loading={mentionLoading} onSelect={selectMention} />}
@@ -539,7 +554,7 @@ function App() {
                 <div className="composer-actions">
                   <SendModeControl
                     canSteer={session.canSteer}
-                    hasDraft={Boolean(draft.trim())}
+                    hasDraft={Boolean(draft.trim() || mentions.length > 0 || images.length > 0)}
                     running={session.running}
                     onQueue={() => void submitWithMode("queue")}
                     onSteer={() => void submitWithMode("steer")}

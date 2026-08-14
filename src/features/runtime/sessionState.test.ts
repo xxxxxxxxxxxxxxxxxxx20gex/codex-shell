@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Thread } from "../../generated/app-server/v2/Thread";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import type { Turn } from "../../generated/app-server/v2/Turn";
+import { buildUserInput } from "./sessionInput";
 import { agentSessionReducer, initialAgentSessionState } from "./sessionState";
 
 function turn(id: string, items: ThreadItem[] = []): Turn {
@@ -76,11 +77,33 @@ describe("agentSessionReducer", () => {
     const state = agentSessionReducer(loaded, {
       type: "turnSubmitted",
       turn: turn("turn-2"),
-      userText: "第二问",
+      userInput: [{ type: "text", text: "第二问", text_elements: [] }],
     });
 
     expect(state.turns.map((item) => item.id)).toEqual(["turn-1", "turn-2"]);
     expect(state.turns[1].items[0]).toMatchObject({ type: "userMessage" });
+  });
+
+  it("keeps optimistic file and image attachments until the persisted user item arrives", () => {
+    const input = buildUserInput(
+      "检查",
+      [{ name: "README.md", path: "C:\\work\\README.md" }],
+      [],
+      [{ name: "screen.png", path: "C:\\work\\screen.png" }],
+    );
+
+    const state = agentSessionReducer(initialAgentSessionState, {
+      type: "turnSubmitted",
+      turn: turn("turn-1"),
+      userInput: input,
+    });
+
+    expect(state.turns[0].items).toEqual([{
+      type: "userMessage",
+      id: "local-user:turn-1",
+      clientId: null,
+      content: input,
+    }]);
   });
 
   it("keeps the synthetic user item returned for an inline Review", () => {
@@ -98,7 +121,7 @@ describe("agentSessionReducer", () => {
     const submitted = agentSessionReducer(initialAgentSessionState, {
       type: "turnSubmitted",
       turn: turn("turn-1"),
-      userText: "真实问题",
+      userInput: [{ type: "text", text: "真实问题", text_elements: [] }],
     });
     const persisted = userMessage("user-1", "真实问题");
 
@@ -114,7 +137,7 @@ describe("agentSessionReducer", () => {
     const submitted = agentSessionReducer(initialAgentSessionState, {
       type: "turnSubmitted",
       turn: turn("turn-1"),
-      userText: "问题",
+      userInput: [{ type: "text", text: "问题", text_elements: [] }],
     });
     const first = agentSessionReducer(submitted, {
       type: "agentDelta",
@@ -133,7 +156,7 @@ describe("agentSessionReducer", () => {
     const submitted = agentSessionReducer(initialAgentSessionState, {
       type: "turnSubmitted",
       turn: turn("turn-1"),
-      userText: "问题",
+      userInput: [{ type: "text", text: "问题", text_elements: [] }],
     });
     const completed = {
       ...turn("turn-1", [
@@ -156,7 +179,7 @@ describe("agentSessionReducer", () => {
     const submitted = agentSessionReducer(initialAgentSessionState, {
       type: "turnSubmitted",
       turn: turn("turn-1"),
-      userText: "不能丢失的问题",
+      userInput: [{ type: "text", text: "不能丢失的问题", text_elements: [] }],
     });
     const completed = {
       ...turn("turn-1", [
@@ -336,7 +359,7 @@ describe("agentSessionReducer", () => {
     const state = agentSessionReducer(withPlan, {
       type: "turnSubmitted",
       turn: turn("turn-200"),
-      userText: "下一问",
+      userInput: [{ type: "text", text: "下一问", text_elements: [] }],
     });
 
     expect(state.turns).toHaveLength(200);

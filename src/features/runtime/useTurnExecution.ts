@@ -1,6 +1,7 @@
 import { useCallback, useRef, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
 import type { ModeKind } from "../../generated/app-server/ModeKind";
 import type { Thread } from "../../generated/app-server/v2/Thread";
+import type { UserInput } from "../../generated/app-server/v2/UserInput";
 import { errorMessage } from "../../shared/errors";
 import { assertModelVisibleInput } from "../../shared/modelVisibleInput";
 import {
@@ -39,11 +40,8 @@ interface Props {
 function startTurn(
   client: AppServerClient,
   threadId: string,
-  message: string,
-  mentions: FileMention[],
-  skills: SkillMention[],
+  input: UserInput[],
   collaborationMode: ModeKind,
-  images: ImageAttachment[],
   settings: ModelSettings,
   permissionMode: PermissionMode,
 ) {
@@ -58,13 +56,26 @@ function startTurn(
   } : undefined;
   return client.startTurn({
     threadId,
-    input: buildUserInput(message, mentions, skills, images),
+    input,
     model: settings.modelId,
     effort: settings.reasoningEffort,
     approvalPolicy: permissions.approvalPolicy,
     approvalsReviewer: permissions.approvalsReviewer,
     sandboxPolicy: getTurnSandboxPolicy(permissionMode),
   }, collaboration);
+}
+
+function validatedUserInput(
+  message: string,
+  mentions: FileMention[],
+  skills: SkillMention[],
+  images: ImageAttachment[],
+  label: string,
+) {
+  const input = buildUserInput(message, mentions, skills, images);
+  const text = input[0];
+  if (text?.type === "text" && text.text) assertModelVisibleInput(text.text, label);
+  return input;
 }
 
 export function useTurnExecution(props: Props) {
@@ -78,14 +89,14 @@ export function useTurnExecution(props: Props) {
   ) => {
     const message = text.trim();
     const activeThreadId = props.threadIdRef.current;
-    if (!message || props.submitting || props.threadOperationRef.current
+    if ((!message && mentions.length === 0 && images.length === 0) || props.submitting || props.threadOperationRef.current
       || (activeThreadId !== null && props.isThreadRunning(activeThreadId))) return false;
 
     props.threadOperationRef.current = true;
     props.setSubmitting(true);
     props.setError("");
     try {
-      assertModelVisibleInput(message, "消息");
+      const input = validatedUserInput(message, mentions, skills, images, "消息和附件路径");
       const client = await props.ensureConnected();
       let threadId = props.threadIdRef.current;
       if (!threadId) {
@@ -101,7 +112,8 @@ export function useTurnExecution(props: Props) {
         threadId = response.thread.id;
         props.threadIdRef.current = threadId;
         props.subscribedThreadIdsRef.current.add(threadId);
-        const optimisticThread = { ...response.thread, preview: response.thread.preview || message };
+        const preview = message || mentions[0]?.name || images[0]?.name || "附件";
+        const optimisticThread = { ...response.thread, preview: response.thread.preview || preview };
         props.dispatch({ type: "loadThread", thread: optimisticThread });
         props.showActiveWith(optimisticThread);
       } else if (!props.subscribedThreadIdsRef.current.has(threadId)) {
@@ -111,16 +123,13 @@ export function useTurnExecution(props: Props) {
       const response = await startTurn(
         client,
         threadId,
-        message,
-        mentions,
-        skills,
+        input,
         collaborationMode,
-        images,
         props.settings,
         props.permissionMode,
       );
       props.markThreadRunning(threadId, response.turn.id, "regular");
-      props.dispatch({ type: "turnSubmitted", turn: response.turn, userText: message });
+      props.dispatch({ type: "turnSubmitted", turn: response.turn, userInput: input });
       return true;
     } catch (sendError) {
       props.setError(errorMessage(sendError));
@@ -140,17 +149,17 @@ export function useTurnExecution(props: Props) {
     const message = text.trim();
     const threadId = props.threadIdRef.current;
     const runningTurn = threadId ? props.getRunningTurn(threadId) : undefined;
-    if (!message || !threadId || !canSteerRunningTurn(runningTurn)
+    if ((!message && mentions.length === 0 && images.length === 0) || !threadId || !canSteerRunningTurn(runningTurn)
       || props.threadOperationRef.current) return false;
     props.threadOperationRef.current = true;
     props.setError("");
     try {
-      assertModelVisibleInput(message, "补充指令");
+      const input = validatedUserInput(message, mentions, skills, images, "补充指令和附件路径");
       const { client } = await props.ensureActiveThread();
       await client.steerTurn({
         threadId,
         expectedTurnId: runningTurn.turnId,
-        input: buildUserInput(message, mentions, skills, images),
+        input,
       });
       return true;
     } catch (steerError) {
@@ -172,20 +181,24 @@ export function useTurnExecution(props: Props) {
         await client.resumeThread({ threadId });
         props.subscribedThreadIdsRef.current.add(threadId);
       }
-      const response = await startTurn(
-        client,
-        threadId,
+      const input = validatedUserInput(
         queued.text,
         queued.mentions,
         queued.skills,
-        queued.collaborationMode,
         queued.images ?? [],
+        "队列消息和附件路径",
+      );
+      const response = await startTurn(
+        client,
+        threadId,
+        input,
+        queued.collaborationMode,
         queued.settings,
         queued.permissionMode,
       );
       props.markThreadRunning(threadId, response.turn.id, "regular");
       if (props.threadIdRef.current === threadId) {
-        props.dispatch({ type: "turnSubmitted", turn: response.turn, userText: queued.text });
+        props.dispatch({ type: "turnSubmitted", turn: response.turn, userInput: input });
       }
       return true;
     } catch (sendError) {

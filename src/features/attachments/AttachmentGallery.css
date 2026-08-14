@@ -1,0 +1,41 @@
+.attachment-gallery { display: flex; min-width: 0; flex-wrap: wrap; gap: 7px; }
+.attachment-gallery.align-end { justify-content: flex-end; }
+.attachment-image-card, .attachment-file-card { position: relative; flex: none; }
+.attachment-image-preview, .attachment-file-preview { display: flex; min-width: 0; padding: 0; overflow: hidden; border: 1px solid var(--ui-line-strong); border-radius: 7px; color: var(--text-primary); background: var(--panel-raised); cursor: pointer; }
+.attachment-image-preview { position: relative; width: 104px; height: 72px; align-items: stretch; }
+.attachment-image-preview img { width: 100%; height: 100%; object-fit: cover; }
+.attachment-image-preview > span:last-child { position: absolute; right: 0; bottom: 0; left: 0; overflow: hidden; padding: 13px 7px 5px; color: #fff; background: linear-gradient(transparent, rgba(0,0,0,.78)); font-size: 9px; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
+.attachment-image-fallback { display: grid; width: 100%; place-items: center; color: var(--text-muted); font-size: 9px; }
+.attachment-file-preview { width: min(210px, 44vw); height: 54px; align-items: center; gap: 9px; padding: 8px 28px 8px 9px; text-align: left; }
+.attachment-file-preview > span:last-child { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.attachment-file-preview strong { overflow: hidden; font-size: 10px; font-weight: 560; text-overflow: ellipsis; white-space: nowrap; }
+.attachment-file-preview small { color: var(--text-muted); font-size: 8px; }
+.attachment-file-icon { position: relative; width: 24px; height: 30px; flex: none; border: 1px solid #6d7561; border-radius: 3px; background: #242a20; }
+.attachment-file-icon::after { position: absolute; right: -1px; top: -1px; width: 8px; height: 8px; border-bottom: 1px solid #6d7561; border-left: 1px solid #6d7561; background: var(--panel-raised); content: ""; }
+.attachment-remove { position: absolute; z-index: 1; top: 4px; right: 4px; display: grid; width: 19px; height: 19px; place-items: center; padding: 0; border: 1px solid rgba(255,255,255,.16); border-radius: 50%; color: #eee; background: rgba(15,15,13,.82); font-size: 13px; line-height: 1; cursor: pointer; }
+.attachment-image-preview:hover, .attachment-file-preview:hover { border-color: #717569; background: var(--ui-surface-hover); }
+.attachment-image-preview:focus-visible, .attachment-file-preview:focus-visible, .attachment-remove:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.attachment-loading { display: inline-block; width: 15px; height: 15px; margin: auto; border: 2px solid #53564d; border-top-color: var(--accent); border-radius: 50%; animation: attachment-spin .75s linear infinite; }
+.attachment-preview-layer { position: fixed; z-index: 80; inset: 0; display: grid; place-items: center; padding: 28px; }
+.attachment-preview-scrim { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: rgba(5,5,4,.78); cursor: default; backdrop-filter: blur(5px); }
+.attachment-preview-dialog { position: relative; display: grid; width: min(920px, 92vw); height: min(720px, 88vh); grid-template-rows: auto minmax(0,1fr); overflow: hidden; border: 1px solid var(--ui-line-strong); border-radius: 8px; background: var(--panel); box-shadow: 0 24px 80px rgba(0,0,0,.52); }
+.attachment-preview-dialog header { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 13px; border-bottom: 1px solid var(--ui-line); }
+.attachment-preview-dialog header > div { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.attachment-preview-dialog header strong, .attachment-preview-dialog header small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.attachment-preview-dialog header strong { font-size: 11px; }
+.attachment-preview-dialog header small { color: var(--text-muted); font-size: 8px; }
+.attachment-preview-dialog header > button { display: grid; width: 28px; height: 28px; flex: none; place-items: center; padding: 0; border: 0; border-radius: 5px; color: var(--text-secondary); background: transparent; font-size: 19px; cursor: pointer; }
+.attachment-preview-dialog header > button:hover { color: var(--text-primary); background: var(--ui-surface-hover); }
+.attachment-preview-content { display: grid; min-width: 0; min-height: 0; place-items: center; overflow: auto; padding: 18px; }
+.attachment-preview-content > img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.attachment-preview-content > pre { box-sizing: border-box; width: 100%; min-height: 100%; margin: 0; padding: 15px; overflow: auto; color: var(--text-primary); background: #11110f; font: 10px/1.6 "Cascadia Code", Consolas, monospace; white-space: pre-wrap; word-break: break-word; }
+.attachment-preview-state { display: flex; align-items: center; flex-direction: column; gap: 9px; color: var(--text-secondary); text-align: center; }
+.attachment-preview-state strong { color: var(--text-primary); font-size: 12px; }
+.attachment-preview-state p { margin: 0; color: var(--text-muted); font-size: 9px; }
+.attachment-preview-state.error strong { color: #e6aaa3; }
+@keyframes attachment-spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 720px) {
+  .attachment-preview-layer { padding: 12px; }
+  .attachment-preview-dialog { width: 100%; height: min(760px, 92vh); }
+}

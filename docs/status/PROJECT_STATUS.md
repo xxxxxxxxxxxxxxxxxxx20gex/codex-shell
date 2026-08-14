@@ -2,7 +2,7 @@
 
 - 当前阶段：Milestone 2 — P0 桌面编程工作台
 - 总体状态：P0 工作台与第一、第二阶段 app-server 原生能力接入已完成
-- 最后更新：2026-08-13
+- 最后更新：2026-08-14
 
 ## 已完成
 
@@ -25,8 +25,8 @@
 - 右侧状态区已删除重复的 app-server 与审批策略卡片；CODEX_HOME 卡片支持选择自定义目录和恢复默认目录，切换时安全重启 app-server。
 - 已消费稳定 v2 item/turn 通知，展示计划、推理、命令输出、文件变更、MCP、Web 搜索、图片与子智能体活动。
 - 已用 `turn/diff/updated` 建立实时文件 Diff 面板，并从持久化 `fileChange` item 重建历史 Diff。
-- 已接入系统目录选择器，新线程把用户选择的项目目录作为 `thread/start.cwd`；输入框通过稳定 `fuzzyFileSearch` 搜索，并以原生 `mention` 输入发送文件引用。
-- 附件输入已对齐官方桌面端的统一入口：加号菜单只提供“添加文件和文件夹”，图片、普通文件和拖入目录由同一条路径收集，再映射为 app-server 原生 `localImage`/`image`/`mention`；Windows 系统选择器保持官方当前版本的多文件行为，目录通过拖拽进入，不新增自定义文件附件协议。
+- 已接入系统目录选择器，新线程把用户选择的项目目录作为 `thread/start.cwd`；输入框通过稳定 `fuzzyFileSearch` 搜索，选择的本地文件以绝对路径和原生 `text_elements` 元数据进入用户输入，不再误用面向 `app://`、`plugin://` 和 `mcp://` 资源的 `mention`。
+- 附件输入与展示已对齐官方桌面端的统一入口：加号菜单、拖拽和剪贴板图片共用附件模型；图片映射为 app-server 原生 `localImage`/`image`，普通文件把真实路径写入用户 `text` 并用 `text_elements` 持久化显示信息。Composer 和历史消息均显示图片缩略图或文件卡片，点击后复用 `fs/readFile` 预览图片、文本或二进制摘要；仅附件消息、Queue 和 Steer 使用同一输入构建逻辑，未新增系统或 developer prompt。
 - 已完成游标分页、固定、重命名、单 Session 归档和永久删除。
 - 左侧 Session 与中央对话区只展示稳定的 Session 名称；打开、修改、删除、分叉和复制仍只使用真实 Thread ID 或 rollout 路径，不使用会因列表变化而漂移的展示编号。
 - 每个 Session 可复制 rollout 路径供其他智能体读取，路径缺失时回退真实 Thread ID；操作按钮统一使用居中 SVG 与 0.3 秒延迟说明。
@@ -78,7 +78,7 @@
 
 ## 当前风险
 
-- app-server 崩溃后的当前 Session 自动恢复、Shell Queue 跨重启持久化、超大文件预览/超大 Diff 的源端截断和二进制文件变更提示尚未完成；单个超长 Turn 内部活动尚未二次虚拟化。
+- app-server 崩溃后的当前 Session 自动恢复、Shell Queue 跨重启持久化、超大文件预览/超大 Diff 的源端截断和 Office/PDF 专用渲染尚未完成；单个超长 Turn 内部活动尚未二次虚拟化。普通文件是供 Codex 工具读取的本地路径引用，不是直接上传到模型视觉上下文的通用 Blob。
 - `useThreadController` 已拆出历史、Review 和普通 Turn 执行生命周期；Thread 元数据操作仍集中，继续扩充前应按操作族拆分。`App.tsx` 仍约 600 行，Composer 状态和面板编排是下一处明确拆分边界；`App.css` 仍包含多个 feature 的集中样式，应按实际功能改动渐进迁移。
 - PATH Runtime 尚未校验与生成协议的版本/hash；旧进程无代际 `stopped` 事件、跨卷 CODEX_HOME 迁移和旧应用标识/凭据迁移仍存在兼容风险。
 - 用户文本、Steer、Review、Goal 和结构化问答已在 Shell 边界限制为 8000 UTF-8 bytes；多 Skill 聚合、全局 `AGENTS.md` 和 Runtime Goal continuation 仍缺少统一硬预算，应优先在 app-server/Runtime 中建立不可绕过的中央边界。
@@ -93,7 +93,7 @@
 ## 验证证据
 
 - `pnpm typecheck`：通过。
-- `pnpm test`：43 个测试文件、166 项测试全部通过，覆盖项目目录/Thread `cwd`、默认项目目录、文件浏览与 watch、附件拖拽生命周期、执行过程、Queue/Steer、模型/权限热切换与降权、Resume 无覆盖、分叉祖先、统一反向交互、Review 和 MCP。
+- `pnpm test`：45 个测试文件、177 项测试全部通过，覆盖项目目录/Thread `cwd`、默认项目目录、文件浏览与 watch、附件输入/预览/历史还原、附件拖拽生命周期、执行过程、Queue/Steer、模型/权限热切换与降权、Resume 无覆盖、分叉祖先、统一反向交互、Review 和 MCP。
 - Rust 单元测试：11 项全部通过，覆盖显式模型参数、旧模板配置兼容归一化、动态 Runtime、每日默认项目目录、独立 provider 参数、旧 CODEX_HOME 迁移、双目录冲突和官方目录防重叠校验。
 - `pnpm rust:check`：从 clean target 完整重编译后通过。
 - `pnpm build`：包含虚拟时间线、目录 watch、目录选择插件和 P0 工作台 UI 的生产构建通过。

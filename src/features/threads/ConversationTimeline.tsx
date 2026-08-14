@@ -15,6 +15,7 @@ interface Props {
   plansByTurnId?: Record<string, TurnPlanUpdatedNotification>;
   activeItemTurnIds?: Record<string, string>;
   mcpProgressByItemId?: Record<string, McpToolCallProgressNotification>;
+  readFile?: (path: string) => Promise<string>;
 }
 
 interface UserTurnLink {
@@ -39,6 +40,7 @@ export function ConversationTimeline({
   plansByTurnId = {},
   activeItemTurnIds = {},
   mcpProgressByItemId = {},
+  readFile,
 }: Props) {
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const [atBottom, setAtBottom] = useState(true);
@@ -100,6 +102,7 @@ export function ConversationTimeline({
               plan={plansByTurnId[turn.id]}
               activeItemTurnIds={activeItemTurnIds}
               mcpProgressByItemId={mcpProgressByItemId}
+              readFile={readFile}
             />
           </div>
         )}

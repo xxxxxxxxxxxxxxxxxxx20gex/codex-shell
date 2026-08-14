@@ -16,6 +16,8 @@ import type { Turn } from "../../generated/app-server/v2/Turn";
 import type { TurnCompletedNotification } from "../../generated/app-server/v2/TurnCompletedNotification";
 import type { TurnDiffUpdatedNotification } from "../../generated/app-server/v2/TurnDiffUpdatedNotification";
 import type { TurnPlanUpdatedNotification } from "../../generated/app-server/v2/TurnPlanUpdatedNotification";
+import type { UserInput } from "../../generated/app-server/v2/UserInput";
+import { userMessagePresentation } from "./userMessagePresentation";
 
 const MAX_VISIBLE_TURNS = 200;
 const LOCAL_USER_PREFIX = "local-user:";
@@ -37,7 +39,7 @@ export type AgentSessionAction =
   | { type: "updateThread"; thread: Thread }
   | { type: "renameThread"; threadId: string; name: string | null }
   | { type: "threadStatusChanged"; threadId: string; status: ThreadStatus }
-  | { type: "turnSubmitted"; turn: Turn; userText: string }
+  | { type: "turnSubmitted"; turn: Turn; userInput: UserInput[] }
   | { type: "turnStarted"; turn: Turn }
   | { type: "itemStarted"; notification: ItemStartedNotification }
   | { type: "itemCompleted"; notification: ItemCompletedNotification }
@@ -147,18 +149,18 @@ function mergeCompletedTurn(turns: Turn[], turn: Turn) {
   return upsertTurn(turns, { ...turn, items: mergedItems });
 }
 
-function optimisticUserItem(turnId: string, text: string): ThreadItem {
+function optimisticUserItem(turnId: string, content: UserInput[]): ThreadItem {
   return {
     type: "userMessage",
     id: `${LOCAL_USER_PREFIX}${turnId}`,
     clientId: null,
-    content: [{ type: "text", text, text_elements: [] }],
+    content,
   };
 }
 
-function withOptimisticUser(turn: Turn, text: string): Turn {
+function withOptimisticUser(turn: Turn, content: UserInput[]): Turn {
   if (turn.items.some((item) => item.type === "userMessage")) return turn;
-  return { ...turn, items: [optimisticUserItem(turn.id, text), ...turn.items] };
+  return { ...turn, items: [optimisticUserItem(turn.id, content), ...turn.items] };
 }
 
 function upsertItem(turn: Turn, item: ThreadItem) {
@@ -280,7 +282,7 @@ export function agentSessionReducer(
     case "turnSubmitted":
       return withTurns(
         state,
-        mergeSubmittedTurn(state.turns, withOptimisticUser(action.turn, action.userText)),
+        mergeSubmittedTurn(state.turns, withOptimisticUser(action.turn, action.userInput)),
       );
     case "turnStarted":
       return withTurns(state, mergeSubmittedTurn(state.turns, action.turn));
@@ -421,9 +423,5 @@ export function agentSessionReducer(
 }
 
 export function userMessageText(item: ThreadItem) {
-  if (item.type !== "userMessage") return "";
-  return item.content
-    .map((content) => content.type === "text" ? content.text : "")
-    .filter(Boolean)
-    .join("\n");
+  return userMessagePresentation(item).text;
 }

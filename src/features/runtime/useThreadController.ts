@@ -149,7 +149,8 @@ export function useThreadController(props: Props) {
   ) => {
     const message = text.trim();
     const threadId = threadIdRef.current;
-    if (!message || !threadId || (!props.submitting && !props.isThreadRunning(threadId))) return false;
+    if ((!message && mentions.length === 0 && images.length === 0)
+      || !threadId || (!props.submitting && !props.isThreadRunning(threadId))) return false;
     const accepted = queued.enqueue(threadId, {
       text: message,
       mentions: [...mentions],

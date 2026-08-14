@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import type { Turn } from "../../generated/app-server/v2/Turn";
+import { buildUserInput } from "../runtime/sessionInput";
 import { ConversationTurn } from "./ConversationTurn";
 import { formatMessageTimestamp, formatTurnDuration } from "./conversationTiming";
 
@@ -40,6 +41,7 @@ function renderTurn(turn: Turn, active = false) {
       onFork={vi.fn()}
       activeItemTurnIds={{}}
       mcpProgressByItemId={{}}
+      readFile={vi.fn()}
     />,
   );
 }
@@ -64,6 +66,23 @@ describe("conversation timing", () => {
     expect(markup).not.toContain("发送于");
     expect(markup).not.toContain("回答于");
     expect(markup).not.toContain("耗时");
+  });
+
+  it("renders message attachments and hides the internal file path block", () => {
+    const user = completedTurn().items[0];
+    if (user.type !== "userMessage") throw new Error("expected user message");
+    user.content = [
+      ...buildUserInput("检查附件", [{ name: "README.md", path: "C:\\work\\README.md" }], []),
+      { type: "localImage", path: "C:\\work\\screen.png" },
+    ];
+
+    const markup = renderTurn({ ...completedTurn(), items: [user] });
+
+    expect(markup).toContain("检查附件");
+    expect(markup).toContain("README.md");
+    expect(markup).toContain("screen.png");
+    expect(markup).toContain('<div class="user-message">检查附件</div>');
+    expect(markup).not.toContain("Attached files:");
   });
 
   it("renders copy and fork actions below a completed answer", () => {

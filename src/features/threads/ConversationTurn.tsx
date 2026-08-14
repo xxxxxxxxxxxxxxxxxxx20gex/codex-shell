@@ -3,7 +3,6 @@ import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import type { McpToolCallProgressNotification } from "../../generated/app-server/v2/McpToolCallProgressNotification";
 import type { Turn } from "../../generated/app-server/v2/Turn";
 import type { TurnPlanUpdatedNotification } from "../../generated/app-server/v2/TurnPlanUpdatedNotification";
-import { userMessageText } from "../runtime/sessionState";
 import { agentMessageTiming, formatTurnDuration, userMessageTiming } from "./conversationTiming";
 import { TurnActivityGroup } from "./TurnActivityGroup";
 import { TurnFileChanges } from "./TurnFileChanges";
@@ -11,6 +10,8 @@ import { TurnPlanView } from "./TurnPlanView";
 import { TurnProgressIndicator } from "./TurnProgressIndicator";
 import { writeClipboardText } from "./clipboard";
 import { MarkdownContent } from "./MarkdownContent";
+import { AttachmentGallery } from "../attachments/AttachmentGallery";
+import { userMessagePresentation } from "../runtime/userMessagePresentation";
 
 interface Props {
   turn: Turn;
@@ -20,6 +21,7 @@ interface Props {
   plan?: TurnPlanUpdatedNotification;
   activeItemTurnIds: Record<string, string>;
   mcpProgressByItemId: Record<string, McpToolCallProgressNotification>;
+  readFile?: (path: string) => Promise<string>;
 }
 
 type UserMessageItem = Extract<ThreadItem, { type: "userMessage" }>;
@@ -78,6 +80,7 @@ export function ConversationTurn({
   plan,
   activeItemTurnIds,
   mcpProgressByItemId,
+  readFile,
 }: Props) {
   const items = turn.items;
   const blocks = orderedTurnBlocks(items);
@@ -128,7 +131,15 @@ export function ConversationTurn({
         <Fragment key={block.type === "activity" ? `activity:${block.items[0].id}` : block.item.id}>
           {block.type === "user" && (
             <div className="user-message-group">
-              <div className="user-message">{userMessageText(block.item)}</div>
+              {(() => {
+                const message = userMessagePresentation(block.item);
+                return <>
+                  {(message.files.length > 0 || message.images.length > 0) && readFile && (
+                    <AttachmentGallery files={message.files} images={message.images} readFile={readFile} align="end" />
+                  )}
+                  {message.text && <div className="user-message">{message.text}</div>}
+                </>;
+              })()}
               {block.item.id === firstUserMessageId && sentTiming && (
                 <div className="message-timing user-message-timing">{sentTiming}</div>
               )}
