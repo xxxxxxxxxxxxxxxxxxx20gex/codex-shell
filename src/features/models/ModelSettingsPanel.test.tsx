@@ -80,4 +80,34 @@ describe("ModelSettingsPanel", () => {
       reasoningEffort: "none",
     })));
   });
+
+  it("normalizes model identifiers and gateway URLs before saving", async () => {
+    const onSave = vi.fn();
+    render(
+      <ModelSettingsPanel
+        settings={settings}
+        loadProviderCapabilities={vi.fn(async () => ({
+          namespaceTools: false,
+          imageGeneration: false,
+          webSearch: false,
+        }))}
+        onClose={vi.fn()}
+        onSave={onSave}
+      />,
+    );
+
+    fireEvent.change(screen.getByDisplayValue(settings.baseUrl), {
+      target: { value: "  https://next.example.test/v1  " },
+    });
+    fireEvent.change(screen.getByDisplayValue(settings.modelId), {
+      target: { value: "  next-model  " },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "保存配置" }));
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith({
+      ...settings,
+      baseUrl: "https://next.example.test/v1",
+      modelId: "next-model",
+    }, true));
+  });
 });

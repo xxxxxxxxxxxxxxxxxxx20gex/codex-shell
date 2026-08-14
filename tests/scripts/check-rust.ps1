@@ -11,6 +11,7 @@ Import-Module $devShellModule
 Enter-VsDevShell -VsInstallPath $installationPath -SkipAutomaticLocation -DevCmdArguments "-arch=x64 -host_arch=x64"
 
 $projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$env:CARGO_TARGET_DIR = Join-Path ([System.IO.Path]::GetTempPath()) "codex-shell-quality-target"
 $cargoCommand = Get-Command cargo.exe -ErrorAction SilentlyContinue
 if ($cargoCommand) {
     $cargo = $cargoCommand.Source
@@ -31,4 +32,14 @@ if (-not (Test-Path -LiteralPath $cargo -PathType Leaf)) {
 & $cargo check --manifest-path (Join-Path $projectRoot "src-tauri\Cargo.toml")
 if ($LASTEXITCODE -ne 0) {
     throw "cargo check 失败，退出码：$LASTEXITCODE"
+}
+
+& $cargo test --manifest-path (Join-Path $projectRoot "src-tauri\Cargo.toml") --lib
+if ($LASTEXITCODE -ne 0) {
+    throw "cargo test --lib 失败，退出码：$LASTEXITCODE"
+}
+
+& $cargo clippy --manifest-path (Join-Path $projectRoot "src-tauri\Cargo.toml") --all-targets -- -D warnings
+if ($LASTEXITCODE -ne 0) {
+    throw "cargo clippy 失败，退出码：$LASTEXITCODE"
 }

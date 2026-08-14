@@ -5,7 +5,7 @@ use tauri::{AppHandle, Manager};
 
 const CONFIG_FILE_NAME: &str = "settings.json";
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ModelSettings {
     pub base_url: String,
@@ -48,10 +48,12 @@ pub fn read_settings(app: &AppHandle) -> Result<ModelSettings, String> {
         .map_err(|error| format!("读取模型配置失败（{}）：{error}", path.display()))?;
     let settings: ModelSettings =
         serde_json::from_str(&contents).map_err(|error| format!("模型配置格式无效：{error}"))?;
-    Ok(normalize_legacy_settings(settings))
+    Ok(normalize_settings(settings))
 }
 
-fn normalize_legacy_settings(mut settings: ModelSettings) -> ModelSettings {
+fn normalize_settings(mut settings: ModelSettings) -> ModelSettings {
+    settings.base_url = settings.base_url.trim().to_string();
+    settings.model_id = settings.model_id.trim().to_string();
     if settings.legacy_capability_template.as_deref() == Some("openai-compatible-basic") {
         settings.reasoning_effort = None;
         settings.verbosity = None;
@@ -66,7 +68,8 @@ pub fn load_model_settings(app: AppHandle) -> Result<ModelSettings, String> {
 
 #[tauri::command]
 pub fn save_model_settings(app: AppHandle, settings: ModelSettings) -> Result<(), String> {
-    if settings.base_url.trim().is_empty() || settings.model_id.trim().is_empty() {
+    let settings = normalize_settings(settings);
+    if settings.base_url.is_empty() || settings.model_id.is_empty() {
         return Err("Base URL 与模型 ID 不能为空".to_string());
     }
 

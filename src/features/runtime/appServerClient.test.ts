@@ -85,6 +85,41 @@ describe("AppServerClient", () => {
     expect(client.connectionStatus).toBe("stopped");
   });
 
+  it("ignores a delayed stop event from an earlier process generation", async () => {
+    const transport = new FakeTransport();
+    const client = new AppServerClient(transport);
+    await client.start();
+    const previousProcess = transport.startedProcesses[0];
+
+    await client.stop();
+    await client.start();
+    transport.emitStopped(previousProcess);
+
+    expect(client.connectionStatus).toBe("ready");
+    expect(client.serverInfo?.codexHome).toBe("C:\\app\\codex-home");
+  });
+
+  it("ignores delayed protocol and log output from an earlier process generation", async () => {
+    const transport = new FakeTransport();
+    const client = new AppServerClient(transport);
+    const notifications: unknown[] = [];
+    const logs: string[] = [];
+    client.onNotification("test/event", (params) => notifications.push(params));
+    client.onLog((line) => logs.push(line));
+    await client.start();
+    const previousProcess = transport.startedProcesses[0];
+
+    await client.stop();
+    await client.start();
+    transport.emit({ method: "test/event", params: { source: "old" } }, previousProcess);
+    transport.emitLog("old log", previousProcess);
+    transport.emit({ method: "test/event", params: { source: "current" } });
+    transport.emitLog("current log");
+
+    expect(notifications).toEqual([{ source: "current" }]);
+    expect(logs).toEqual(["current log"]);
+  });
+
   it("reports malformed protocol messages instead of silently dropping them", async () => {
     const transport = new FakeTransport();
     const client = new AppServerClient(transport);

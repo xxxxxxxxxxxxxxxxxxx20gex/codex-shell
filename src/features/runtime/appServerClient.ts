@@ -66,6 +66,7 @@ import type { WindowsSandboxSetupStartResponse } from "../../generated/app-serve
 import { asError, errorMessage } from "../../shared/errors";
 import {
   TauriAppServerTransport,
+  type AppServerProcess,
   type AppServerTransport,
   type DisposeListener,
 } from "./appServerTransport";
@@ -125,6 +126,7 @@ export class AppServerClient {
   private startPromise: Promise<void> | null = null;
   private status: AppServerClientStatus = "stopped";
   private initializeResponse: InitializeResponse | null = null;
+  private activeProcess: AppServerProcess | null = null;
 
   constructor(
     private readonly transport: AppServerTransport = new TauriAppServerTransport(),
@@ -329,7 +331,7 @@ export class AppServerClient {
     this.status = "starting";
     await this.attachTransportListeners();
     try {
-      await this.transport.start();
+      this.activeProcess = await this.transport.start();
       this.initializeResponse = await this.requestRaw<InitializeResponse>("initialize", {
         clientInfo: { name: "codex-shell", title: "Codex Shell", version: "0.1.0" },
         capabilities: {
@@ -407,6 +409,7 @@ export class AppServerClient {
     const shouldNotify = this.status !== "stopped" || this.pending.size > 0;
     this.status = "stopped";
     this.initializeResponse = null;
+    this.activeProcess = null;
     this.disposeListeners();
     for (const request of this.pending.values()) {
       clearTimeout(request.timeout);
@@ -425,14 +428,18 @@ export class AppServerClient {
 
   private async attachTransportListeners() {
     this.disposeListeners();
-    const messageListener = await this.transport.onMessage((line) => this.receive(line));
+    const messageListener = await this.transport.onMessage((output) => {
+      if (output.generation === this.activeProcess?.generation) this.receive(output.line);
+    });
     this.disposeTransportListeners.push(messageListener);
     try {
-      const logListener = await this.transport.onLog((line) => {
-        this.logHandlers.forEach((handler) => handler(line));
+      const logListener = await this.transport.onLog((output) => {
+        if (output.generation !== this.activeProcess?.generation) return;
+        this.logHandlers.forEach((handler) => handler(output.line));
       });
       this.disposeTransportListeners.push(logListener);
-      const stoppedListener = await this.transport.onStopped(() => {
+      const stoppedListener = await this.transport.onStopped((process) => {
+        if (process.generation !== this.activeProcess?.generation) return;
         this.handleStopped(new Error("app-server 意外退出"));
       });
       this.disposeTransportListeners.push(stoppedListener);

@@ -4,8 +4,8 @@
 
 ## 脚本
 
-- `check-rust.ps1`：加载 Windows C++ 编译环境并执行 `src-tauri` 的 `cargo check`。
-- `run-quality-gates.ps1`：依次运行类型检查、Vitest、生产构建、Knip、Rust 检查和 `git diff --check`。
+- `check-rust.ps1`：加载 Windows C++ 编译环境，在独立临时 target 目录中依次执行 `src-tauri` 的 `cargo check`、`cargo test --lib` 和严格 Clippy（警告视为错误）。
+- `run-quality-gates.ps1`：依次运行类型检查、Vitest、生产构建、Knip、完整 Rust 质量检查和 `git diff --check`。
 
 ## 调用
 

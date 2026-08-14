@@ -40,23 +40,28 @@ export function ModelSettingsPanel({
   }, [loadProviderCapabilities]);
 
   async function save() {
-    if (!draft.baseUrl.trim() || !draft.modelId.trim()) {
+    const normalizedDraft = {
+      ...draft,
+      baseUrl: draft.baseUrl.trim(),
+      modelId: draft.modelId.trim(),
+    };
+    if (!normalizedDraft.baseUrl || !normalizedDraft.modelId) {
       setStatus("Base URL 与模型 ID 不能为空");
       return;
     }
     try {
       if (isTauri()) {
-        await invoke("save_model_settings", { settings: draft });
+        await invoke("save_model_settings", { settings: normalizedDraft });
         if (apiKey) await invoke("save_api_key", { apiKey });
       }
       setApiKey("");
       const requiresRestart = Boolean(
         apiKey
-        || draft.baseUrl !== settings.baseUrl
-        || draft.verbosity !== settings.verbosity,
+        || normalizedDraft.baseUrl !== settings.baseUrl
+        || normalizedDraft.verbosity !== settings.verbosity,
       );
-      if (requiresRestart) onSave(draft, true);
-      else onSave(draft);
+      if (requiresRestart) onSave(normalizedDraft, true);
+      else onSave(normalizedDraft);
     } catch (error) {
       setStatus(errorMessage(error));
     }

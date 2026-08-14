@@ -3,9 +3,11 @@ use crate::config::read_settings;
 use crate::credentials::read_api_key;
 use crate::runtime::resolve_codex_executable;
 use crate::workspace::resolve_default_project_directory;
+use serde::Serialize;
 use std::io::{BufRead, BufReader, Write};
 use std::process::{Child, ChildStdin, Command, Stdio};
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicU64, Ordering};
 use tauri::{AppHandle, Emitter, State};
 
 #[cfg(windows)]
@@ -19,9 +21,35 @@ struct AppServerSession {
     stdin: ChildStdin,
 }
 
+#[derive(Clone, Copy, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AppServerProcess {
+    process_id: u32,
+    generation: u64,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct AppServerOutput {
+    process_id: u32,
+    generation: u64,
+    line: String,
+}
+
+impl AppServerOutput {
+    fn new(process: AppServerProcess, line: String) -> Self {
+        Self {
+            process_id: process.process_id,
+            generation: process.generation,
+            line,
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct AppServerState {
     session: Mutex<Option<AppServerSession>>,
+    next_generation: AtomicU64,
 }
 
 impl Drop for AppServerState {
@@ -37,7 +65,10 @@ impl Drop for AppServerState {
 }
 
 #[tauri::command]
-pub fn app_server_start(app: AppHandle, state: State<'_, AppServerState>) -> Result<u32, String> {
+pub fn app_server_start(
+    app: AppHandle,
+    state: State<'_, AppServerState>,
+) -> Result<AppServerProcess, String> {
     let mut session = state
         .session
         .lock()
@@ -88,23 +119,33 @@ pub fn app_server_start(app: AppHandle, state: State<'_, AppServerState>) -> Res
         .take()
         .ok_or_else(|| "无法连接 app-server stderr".to_string())?;
     let process_id = child.id();
+    let process = AppServerProcess {
+        process_id,
+        generation: state.next_generation.fetch_add(1, Ordering::Relaxed) + 1,
+    };
 
     let event_app = app.clone();
+    let output_process = process;
+    let stopped_process = process;
     std::thread::spawn(move || {
         for line in BufReader::new(stdout).lines().map_while(Result::ok) {
-            let _ = event_app.emit("app-server://message", line);
+            let _ = event_app.emit(
+                "app-server://message",
+                AppServerOutput::new(output_process, line),
+            );
         }
-        let _ = event_app.emit("app-server://stopped", ());
+        let _ = event_app.emit("app-server://stopped", stopped_process);
     });
 
+    let log_process = process;
     std::thread::spawn(move || {
         for line in BufReader::new(stderr).lines().map_while(Result::ok) {
-            let _ = app.emit("app-server://log", line);
+            let _ = app.emit("app-server://log", AppServerOutput::new(log_process, line));
         }
     });
 
     *session = Some(AppServerSession { child, stdin });
-    Ok(process_id)
+    Ok(process)
 }
 
 fn app_server_arguments(
