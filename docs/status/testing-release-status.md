@@ -2,7 +2,7 @@
 
 - 模块职责：维护类型检查、单元测试、集成测试、Windows 构建与发行物。
 - 当前状态：类型、前端单元、Rust 路径/provider 单元和后台 app-server smoke 已覆盖；发布流水线未建立。
-- 最近变更：新增 Turn 运行秒表、完成态冻结、时间字段空值回退、通知竞态和定时器卸载清理测试；源码迁移后已清理带旧绝对路径的 Rust 构建缓存，并在新位置完成全量重建。
+- 最近变更：更新项目选择器 DOM 覆盖，验证 Composer 上方的新对话项目条、项目名与路径提示、取消回调和提交期间禁用；左栏旧项目卡片接口与样式已由静态搜索确认无残留。
 - 当前接口：`pnpm typecheck`、`pnpm test`、`pnpm test:quality`、`pnpm build`、`pnpm rust:check`、`pnpm desktop:build`；独立测试脚本统一位于 `tests/scripts`。
 - 已知问题：没有 CI、签名、MSI/NSIS 和干净机器 UAC/sidecar 验证；仍缺 staged Runtime/Tauri 的完整自动化生命周期和三栏拖拽 DOM 覆盖；Runtime 版本不匹配和快速重启竞态尚无自动化覆盖。
 - 下一步：配置不含密钥的 CI 基线，并在干净 Windows 环境验证安装后的动态 sidecar 路径。

@@ -7,13 +7,11 @@ import { WorkspaceSelector } from "./WorkspaceSelector";
 
 afterEach(cleanup);
 
-function render(path: string | null, selectionLocked = false) {
+function render(path: string | null, disabled = false) {
   return renderToStaticMarkup(
     <WorkspaceSelector
       path={path}
-      disabled={false}
-      selectionLocked={selectionLocked}
-      onExplore={vi.fn()}
+      disabled={disabled}
       onChange={vi.fn()}
       onError={vi.fn()}
     />,
@@ -21,21 +19,19 @@ function render(path: string | null, selectionLocked = false) {
 }
 
 describe("WorkspaceSelector", () => {
-  it("keeps the managed default workspace out of the left workspace card", () => {
+  it("offers project selection above a new conversation composer", () => {
     const markup = render(null);
 
+    expect(markup).toContain("composer-workspace-selector");
     expect(markup).toContain("选择项目");
-    expect(markup).not.toContain("workspace-item");
     expect(markup).not.toContain("未选择项目");
   });
 
-  it("shows a user-selected project and its browse entry", () => {
+  it("shows the selected project name and keeps the full path in its tooltip", () => {
     const markup = render("C:\\work\\project");
 
-    expect(markup).toContain("workspace-item");
     expect(markup).toContain("project");
-    expect(markup).toContain("C:\\work\\project");
-    expect(markup).toContain("切换项目");
+    expect(markup).toContain("点击切换项目");
     expect(markup).toContain("取消自定义项目");
   });
 
@@ -45,8 +41,6 @@ describe("WorkspaceSelector", () => {
       <WorkspaceSelector
         path="C:\\work\\project"
         disabled={false}
-        selectionLocked={false}
-        onExplore={vi.fn()}
         onChange={onChange}
         onError={vi.fn()}
       />,
@@ -56,11 +50,9 @@ describe("WorkspaceSelector", () => {
     expect(onChange).toHaveBeenCalledWith(null);
   });
 
-  it("keeps an existing Session project browsable but prevents changing it", () => {
+  it("disables project changes while the new conversation is being submitted", () => {
     const markup = render("C:\\work\\project", true);
 
-    expect(markup).toContain("workspace-item");
-    expect(markup).not.toContain("切换项目");
-    expect(markup).not.toContain("取消自定义项目");
+    expect((markup.match(/disabled=""/g) ?? []).length).toBe(2);
   });
 });

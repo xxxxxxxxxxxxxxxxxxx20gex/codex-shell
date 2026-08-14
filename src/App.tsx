@@ -425,18 +425,13 @@ function App() {
         style={workspaceGridStyle}
       >
         <aside className="sidebar panel">
-          <button className="primary-button new-task" onClick={startNewTask} disabled={session.submitting || session.openingThreadId !== null}>＋ 新建对话</button>
-          {(!session.thread || !usingDefaultProjectDirectory) && <>
-            <div className="section-label">项目</div>
-            <WorkspaceSelector
-              path={usingDefaultProjectDirectory ? null : currentProjectPath}
-              disabled={session.submitting || session.openingThreadId !== null}
-              selectionLocked={Boolean(session.thread)}
-              onExplore={() => openWorkspaceExplorer()}
-              onChange={changeProject}
-              onError={setUiError}
-            />
-          </>}
+          <button className="new-task" onClick={startNewTask} disabled={session.submitting || session.openingThreadId !== null}>
+            <svg aria-hidden="true" viewBox="0 0 20 20">
+              <path d="M11.5 3.5h-6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-6" />
+              <path d="m9 11 7.25-7.25a1.4 1.4 0 0 1 2 2L11 13l-3 .75z" />
+            </svg>
+            <span>新对话</span>
+          </button>
           <ThreadHistoryList
             threads={session.history}
             archived={session.historyArchived}
@@ -516,6 +511,12 @@ function App() {
             />
             {(session.error || uiError) && <div className="composer-error">{session.error || uiError}</div>}
             {commandNotice && <div className="composer-notice">{commandNotice}</div>}
+            {!session.thread && <WorkspaceSelector
+              path={pendingProjectPath}
+              disabled={session.submitting || session.openingThreadId !== null}
+              onChange={changeProject}
+              onError={setUiError}
+            />}
             <div ref={composerRef} className="composer has-context-heatbar">
               <ContextHeatBar usage={session.tokenUsage} hasThread={Boolean(session.thread)} running={session.running} onCompact={() => runSlashCommand("compact", "", false)} />
               {skills.length > 0 && <div className="mention-chips">

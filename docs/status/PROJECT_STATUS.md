@@ -43,7 +43,7 @@
 - 已将 Session 前端状态限制为最近 200 个 Turn，Diff 与 Plan 映射随裁剪同步释放；移除旧状态栏删除后遗留的 React 连接状态镜像。
 - 已加固 CODEX_HOME 升级迁移：空的新默认目录仍迁移旧历史，双非空目录无损拒绝，默认真实路径同样禁止绕回官方 `.codex`。
 - 已把 app-server 原生 Item 生命周期接入对话窗口：实时显示当前分析、命令、文件、MCP、工具和子智能体活动；Plan delta 与 MCP progress 流式更新，未引入轮询或自定义提示词。
-- 已对齐官方桌面壳的项目目录语义：使用系统文档目录下独立的 `Codex-Shell/YYYY-MM-DD` 每日目录作为新 Thread 兜底；自定义项目只属于尚未发送首条消息的新对话，可选择、切换或取消，不再写入 `localStorage` 成为后续对话的永久默认值；已有 Thread 始终使用自身 `cwd`。
+- 已对齐官方桌面壳的项目目录语义：使用系统文档目录下独立的 `Codex-Shell/YYYY-MM-DD` 每日目录作为新 Thread 兜底；自定义项目只属于尚未发送首条消息的新对话，通过 Composer 上方的项目条选择、切换或取消，不再占用左栏或写入 `localStorage`；已有 Thread 始终使用自身 `cwd`。
 - 已修复四项对话运行问题：用户消息气泡改为 `fit-content` 自适应并保留最大可读宽度；仅切换模型/推理参数不再重启 app-server，下一轮通过原生 `turn/start` 覆盖生效；权限模式随每轮 Turn 持续传给 app-server，避免完全访问模式在后续回合降级；历史分页刷新保留已知分叉祖先，避免父子缩进暂时消失。
 - 归档和永久删除 Session 均增加产品内二次确认窗口，清楚说明可恢复性差异，并提供安全取消焦点、Escape 与遮罩关闭。
 - 已确认原版 app-server 在隔离 CODEX_HOME 中原生记录 SQLite tracing 日志和 rollout 事件；一次 33.5 秒回合中壳层与 app-server 提交开销不足 1 秒，约 28 秒消耗在网关首个可见增量等待，后续回合另出现上游 overloaded 与 Core 原生重试。
