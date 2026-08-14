@@ -2,7 +2,7 @@
 
 - 模块职责：维护类型检查、单元测试、集成测试、Windows 构建与发行物。
 - 当前状态：类型、前端单元、Rust 路径/provider 单元和后台 app-server smoke 已覆盖；发布流水线未建立。
-- 最近变更：新增普通文件输入语义、UTF-8 路径范围、用户消息附件还原、Composer/历史附件预览、仅附件 optimistic Item 和旧 mention 兼容测试；固定 Runtime 和生成协议保持不变。
+- 最近变更：修复桌面 WebView CSP 拦截 `data:image/...` 导致剪贴板图片和本地图片预览破图的问题；变更仅扩展 `img-src data:`，固定 Runtime、生成协议和文件访问权限保持不变。
 - 当前接口：`pnpm typecheck`、`pnpm test`、`pnpm test:quality`、`pnpm build`、`pnpm rust:check`、`pnpm desktop:build`；独立测试脚本统一位于 `tests/scripts`。
 - 已知问题：没有 CI、签名、MSI/NSIS 和干净机器 UAC/sidecar 验证；仍缺 staged Runtime/Tauri 的完整自动化生命周期和三栏拖拽 DOM 覆盖；Runtime 版本不匹配和快速重启竞态尚无自动化覆盖。
 - 下一步：配置不含密钥的 CI 基线，并在干净 Windows 环境验证安装后的动态 sidecar 路径。
