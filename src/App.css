@@ -121,33 +121,39 @@ code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 .queued-turn i { display: inline-grid; width: 16px; height: 16px; flex: none; place-items: center; border-radius: 50%; color: #becf8e; background: rgba(194,232,92,.1); font-size: 8px; font-style: normal; }
 .queued-turn button { display: grid; width: 20px; height: 20px; flex: none; place-items: center; border: 0; border-radius: 4px; color: var(--text-tertiary); background: transparent; font-size: 12px; }
 .queued-turn button:hover { color: var(--text-primary); background: rgba(255,255,255,.07); }
-.composer-toolbar { display: flex; align-items: center; justify-content: space-between; }
-.composer-tools { display: flex; align-items: center; gap: 5px; }
-.attachment-menu-anchor { position: relative; }
-.attachment-button { display: grid; width: 25px; height: 25px; place-items: center; border: 0; border-radius: 7px; color: var(--text-muted); background: transparent; font-size: 18px; line-height: 1; cursor: pointer; }
-.attachment-button:hover, .attachment-button.active { color: var(--text-primary); background: var(--ui-surface-hover); }
-.attachment-menu { position: absolute; z-index: 18; bottom: calc(100% + 8px); left: 0; display: grid; width: 245px; gap: 2px; padding: 6px; border: 1px solid var(--ui-line-strong); border-radius: 9px; background: var(--ui-panel-overlay); box-shadow: var(--ui-shadow-popover); }
-.attachment-menu > strong { padding: 4px 8px 5px; color: var(--text-muted); font-size: 10px; font-weight: 600; }
-.attachment-menu button { display: grid; grid-template-columns: 18px minmax(0,1fr); align-items: center; gap: 6px; padding: 8px; border: 0; border-radius: 6px; color: var(--text-primary); text-align: left; background: transparent; cursor: pointer; font-size: 12px; }
-.attachment-menu button:hover { background: var(--ui-surface-selected); }
-.attachment-menu button span { grid-column: 2; grid-row: 1; }
-.attachment-menu button small { grid-column: 2; grid-row: 2; color: var(--text-muted); font-size: 9px; }
+.composer-toolbar { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 12px; }
+.composer-tools { display: flex; min-width: 0; align-items: center; gap: 4px; }
+.composer-add-menu-anchor { position: relative; flex: none; }
+.composer-add-button { display: grid; width: 27px; height: 27px; place-items: center; border: 0; border-radius: 50%; color: var(--text-secondary); background: rgba(255,255,255,.045); font-size: 19px; font-weight: 300; line-height: 1; cursor: pointer; }
+.composer-add-button:hover, .composer-add-button:focus-visible, .composer-add-button.active { color: var(--text-primary); background: var(--ui-surface-hover); outline: none; }
+.composer-add-menu { position: absolute; z-index: 18; bottom: calc(100% + 8px); left: 0; display: grid; width: 300px; max-height: min(430px, 70vh); gap: 2px; padding: 6px; overflow-y: auto; border: 1px solid var(--ui-line-strong); border-radius: 9px; background: var(--ui-panel-overlay); box-shadow: var(--ui-shadow-popover); }
+.composer-add-menu > strong { padding: 4px 8px 5px; color: var(--text-muted); font-size: 10px; font-weight: 600; }
+.composer-add-menu > hr { width: calc(100% + 12px); height: 1px; margin: 4px -6px; border: 0; background: var(--ui-line); }
+.composer-add-menu button { display: grid; grid-template-columns: 22px minmax(0,1fr) auto; align-items: center; gap: 8px; padding: 8px; border: 0; border-radius: 6px; color: var(--text-primary); text-align: left; background: transparent; cursor: pointer; }
+.composer-add-menu button:hover:not(:disabled) { background: var(--ui-surface-selected); }
+.composer-add-menu button:disabled { color: var(--ui-text-disabled); cursor: not-allowed; }
+.composer-add-menu button > i { display: grid; width: 22px; height: 22px; place-items: center; color: var(--accent); font-size: 12px; font-style: normal; }
+.composer-add-menu button > span { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
+.composer-add-menu button b { overflow: hidden; font-size: 11px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.composer-add-menu button small { overflow: hidden; color: var(--text-muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.composer-add-menu button kbd { color: var(--text-quiet); font: 9px "Cascadia Code", Consolas, monospace; }
+.composer-add-menu button:disabled > i, .composer-add-menu button:disabled small, .composer-add-menu button:disabled kbd { color: var(--ui-text-disabled); }
 .image-chip { color: #bcd88b; }
 .steer-mode-indicator { display: inline-flex; height: var(--ui-control-height); align-items: center; gap: 6px; padding: 0 8px; border: 1px solid var(--ui-line-strong); border-radius: var(--ui-control-radius); color: var(--text-secondary); background: rgba(29,29,26,.72); font-size: 9px; white-space: nowrap; }
 .steer-mode-indicator i { width: 5px; height: 5px; border-radius: 50%; background: #8d8b80; box-shadow: 0 0 7px rgba(141,139,128,.36); animation: activity-pulse 1.4s ease-in-out infinite; }
 .steer-mode-indicator.steerable { border-color: rgba(194,232,92,.2); color: #b9cc87; background: rgba(36,44,25,.72); }
 .steer-mode-indicator.steerable i { background: var(--accent); box-shadow: 0 0 7px rgba(194,232,92,.48); }
-.command-button { display: grid; width: var(--ui-control-height); height: var(--ui-control-height); place-items: center; border: 1px solid var(--ui-line-strong); border-radius: var(--ui-control-radius); color: #d0cfc8; background: #191916; font: 700 15px "Cascadia Code", Consolas, monospace; cursor: pointer; }
-.command-button:hover, .command-button.active { border-color: #596b35; color: var(--accent); background: #252a1d; }
 .plan-mode-button { display: flex; height: 31px; align-items: center; gap: 5px; padding: 0 9px; border: 1px solid #526635; border-radius: 8px; color: #c1d49a; background: #202719; font-size: 11px; cursor: pointer; }
 .plan-mode-button:hover { border-color: #78934b; color: #d5e7ae; background: #29331f; }
 .plan-mode-button span { color: var(--accent); font-size: 10px; }.plan-mode-button i { color: #7f9561; font-size: 11px; font-style: normal; }
-.model-button { display: inline-flex; height: var(--ui-control-height); align-items: center; gap: 5px; padding: 0 10px; border: 1px solid var(--ui-line-strong); border-radius: var(--ui-control-radius); color: var(--ui-text-control); background: var(--ui-surface-control); font-size: 11px; cursor: pointer; }
+.model-button { display: inline-flex; height: var(--ui-control-height); min-width: 0; align-items: center; gap: 5px; padding: 0 8px; border: 1px solid transparent; border-radius: var(--ui-control-radius); color: var(--ui-text-control); background: transparent; font-size: 11px; cursor: pointer; }
 .model-button > span { overflow: hidden; max-width: 180px; text-overflow: ellipsis; white-space: nowrap; }
-.model-button:hover { border-color: #4b4a41; color: #c9c6bc; background: var(--ui-surface-hover); }
+.model-button > small { color: var(--text-muted); font-size: 10px; text-transform: capitalize; white-space: nowrap; }
+.model-button:hover, .model-button:focus-visible { color: #c9c6bc; background: var(--ui-surface-hover); outline: none; }
 .model-button:disabled { border-color: #2d2c27; color: var(--ui-text-disabled); background: var(--ui-panel); cursor: not-allowed; }
-.model-picker-anchor { position: relative; }
+.model-picker-anchor { position: relative; min-width: 0; }
 .model-picker-popover { position: absolute; z-index: 15; bottom: calc(100% + 9px); left: 0; width: 278px; overflow: hidden; padding: 7px; border: 1px solid #3d3c35; border-radius: var(--ui-panel-radius); background: var(--ui-panel-overlay); box-shadow: var(--ui-shadow-popover); }
+.composer-actions .model-picker-popover { right: 0; left: auto; }
 .model-picker-section { padding: 5px 4px 8px; border-bottom: 1px solid #37362f; }
 .model-picker-label { display: block; margin: 2px 4px 6px; color: var(--text-muted); font-size: 11px; font-weight: 700; }
 .model-picker-options { display: grid; max-height: 190px; gap: 2px; overflow-y: auto; }
@@ -178,9 +184,11 @@ code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 .stop-button { color: #2c0804; background: var(--red); }
 .send-button:disabled { color: #69685f; background: #2c2b26; cursor: default; }
 .permission-selector { position: relative; }
-.permission-trigger { display: flex; min-height: var(--ui-control-height); align-items: center; gap: 6px; padding: 5px 9px; border: 1px solid var(--ui-line-strong); border-radius: var(--ui-control-radius); color: var(--ui-text-control); background: var(--ui-surface-control); cursor: pointer; }
+.permission-trigger { display: flex; min-height: var(--ui-control-height); align-items: center; gap: 6px; padding: 5px 8px; border: 1px solid transparent; border-radius: var(--ui-control-radius); color: var(--ui-text-control); background: transparent; cursor: pointer; }
 .permission-trigger strong { font-size: 10px; font-weight: 600; }.permission-trigger .chevron-icon { color: #65645d; }
-.permission-trigger.danger { border-color: #704126; color: #e88f4d; background: #251b14; }
+.permission-trigger:hover, .permission-trigger:focus-visible { background: var(--ui-surface-hover); outline: none; }
+.permission-trigger.danger { color: #e88f4d; background: transparent; }
+.permission-trigger.danger:hover, .permission-trigger.danger:focus-visible { background: rgba(112,65,38,.2); }
 .permission-menu { position: absolute; z-index: 12; bottom: calc(100% + 7px); left: 0; width: 330px; overflow: hidden; border: 1px solid #3b3931; border-radius: var(--ui-panel-radius); background: #20201c; box-shadow: var(--ui-shadow-popover); }
 .permission-menu button { display: grid; width: 100%; grid-template-columns: 24px 1fr 16px; align-items: center; gap: 7px; padding: 11px 12px; border: 0; border-bottom: 1px solid #2d2c26; color: var(--text-primary); text-align: left; background: transparent; cursor: pointer; }
 .permission-menu button:hover, .permission-menu button.active { background: #292923; }
@@ -451,8 +459,10 @@ code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 
 .composer-actions {
   display: flex;
+  min-width: 0;
+  flex: none;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .history-view-toggle {

@@ -17,7 +17,7 @@ import { McpStatusPanel } from "./features/commands/McpStatusPanel";
 import { ReviewPanel } from "./features/commands/ReviewPanel";
 import { SkillPicker } from "./features/commands/SkillPicker";
 import { composerSubmitAction, SendModeControl } from "./features/composer/SendModeControl";
-import { AttachmentMenu } from "./features/composer/AttachmentMenu";
+import { ComposerAddMenu } from "./features/composer/ComposerAddMenu";
 import { useComposerDropPaths } from "./features/composer/useComposerDropPaths";
 import { commandDisabled, SlashCommandMenu } from "./features/commands/SlashCommandMenu";
 import { useResizablePanels } from "./features/layout/useResizablePanels";
@@ -93,13 +93,11 @@ function App() {
   const [commandNotice, setCommandNotice] = useState("");
   const [commandPanel, setCommandPanel] = useState<"skills" | "mcp" | "goal" | "review" | null>(null);
   const [collaborationMode, setCollaborationMode] = useState<ModeKind>("default");
-  const [slashMenuForced, setSlashMenuForced] = useState(false);
   const [slashMenuDismissed, setSlashMenuDismissed] = useState(false);
   const [slashSelectedIndex, setSlashSelectedIndex] = useState(0);
   const [inspectorTab, setInspectorTab] = useState<"changes" | "status" | "logs">("changes");
   const mentionRequestRef = useRef(0);
   const composerRef = useRef<HTMLDivElement>(null);
-  const commandButtonRef = useRef<HTMLButtonElement>(null);
   const {
     workspaceGridRef,
     workspaceGridStyle,
@@ -129,7 +127,7 @@ function App() {
     : "waiting";
   const mentionQuery = activeFileMentionQuery(draft);
   const typedSlashQuery = activeSlashCommandQuery(draft);
-  const slashQuery = slashMenuForced ? "" : slashMenuDismissed ? null : typedSlashQuery;
+  const slashQuery = slashMenuDismissed ? null : typedSlashQuery;
 
   function changeModelSettings(next: ModelSettings) {
     setSettings(next);
@@ -180,15 +178,13 @@ function App() {
   useDismissiblePopover<HTMLDivElement>({
     open: slashMenuVisible || commandPanel !== null,
     onClose: () => {
-      setSlashMenuForced(false);
       setSlashMenuDismissed(true);
       setCommandPanel(null);
     },
-    isInside: (target) => target instanceof Element && Boolean(target.closest(".slash-command-menu, .agent-command-panel, .command-button")),
+    isInside: (target) => target instanceof Element && Boolean(target.closest(".slash-command-menu, .agent-command-panel, .composer-add-menu")),
   });
 
   async function runSlashCommand(id: SlashCommandId, args = "", clearDraft = true) {
-    setSlashMenuForced(false);
     setSlashMenuDismissed(true);
     if (clearDraft) setDraft("");
     setUiError("");
@@ -298,7 +294,6 @@ function App() {
     setSkills([]);
     setImages([]);
     setCommandPanel(null);
-    setSlashMenuForced(false);
     setSlashMenuDismissed(false);
     setCommandNotice("");
     setCollaborationMode("default");
@@ -395,7 +390,6 @@ function App() {
       }
       if (event.key === "Escape") {
         event.preventDefault();
-        setSlashMenuForced(false);
         setSlashMenuDismissed(true);
         if (typedSlashQuery !== null) setDraft("");
         return;
@@ -406,7 +400,7 @@ function App() {
         if (command && commandDisabled(command, Boolean(session.thread), session.running)) {
           setUiError(command.requiresThread && !session.thread ? "请先发送一条消息创建 Session" : "当前任务运行期间不能执行该命令");
         } else if (command) {
-          void runSlashCommand(command.id, "", !slashMenuForced);
+          void runSlashCommand(command.id);
         }
         return;
       }
@@ -556,31 +550,37 @@ function App() {
                   </div>;
                 })}
               </div>}
-              <textarea value={draft} onChange={(event) => { setDraft(event.target.value); setUiError(""); setCommandNotice(""); setSlashMenuForced(false); setSlashMenuDismissed(false); }} onPaste={(event) => void handleComposerPaste(event)} onKeyDown={handleComposerKeyDown} placeholder={session.running ? "输入下一条消息，当前回答完成后发送…" : collaborationMode === "plan" ? "描述需要分析和规划的任务…" : currentProjectPath ? "交给 Codex 一个任务，输入 / 使用命令，输入 @ 引用文件…" : "正在准备默认项目目录…"} />
+              <textarea value={draft} onChange={(event) => { setDraft(event.target.value); setUiError(""); setCommandNotice(""); setSlashMenuDismissed(false); }} onPaste={(event) => void handleComposerPaste(event)} onKeyDown={handleComposerKeyDown} placeholder={session.running ? "输入下一条消息，当前回答完成后发送…" : collaborationMode === "plan" ? "描述需要分析和规划的任务…" : currentProjectPath ? "交给 Codex 一个任务，输入 / 使用命令，输入 @ 引用文件…" : "正在准备默认项目目录…"} />
               {currentProjectPath && mentionQuery !== null && <FileMentionMenu query={mentionQuery} results={mentionResults} loading={mentionLoading} onSelect={selectMention} />}
-              {slashMenuVisible && <SlashCommandMenu query={slashQuery ?? ""} selectedIndex={slashSelectedIndex} hasThread={Boolean(session.thread)} running={session.running} onSelect={(id) => void runSlashCommand(id, "", !slashMenuForced)} />}
+              {slashMenuVisible && <SlashCommandMenu query={slashQuery ?? ""} selectedIndex={slashSelectedIndex} hasThread={Boolean(session.thread)} running={session.running} onSelect={(id) => void runSlashCommand(id)} />}
               {commandPanel === "skills" && <SkillPicker selected={skills} loadSkills={session.listSkills} onToggle={toggleSkill} onClose={() => setCommandPanel(null)} />}
               {commandPanel === "mcp" && <McpStatusPanel loadServers={session.listMcpServers} loginServer={session.loginMcpServer} reloadServers={session.reloadMcpServers} readResource={session.readMcpResource} onClose={() => setCommandPanel(null)} />}
               {commandPanel === "goal" && <GoalPanel getGoal={session.getThreadGoal} setGoal={session.setThreadGoal} clearGoal={session.clearThreadGoal} onClose={() => setCommandPanel(null)} />}
               {commandPanel === "review" && <ReviewPanel startReview={session.startReview} onStarted={(delivery) => { setCommandPanel(null); setCommandNotice(delivery === "detached" ? "已打开独立 Review Session。" : "原生代码审查已在当前 Session 启动。"); }} onClose={() => setCommandPanel(null)} />}
               <div className="composer-toolbar">
                 <div className="composer-tools">
-                  {session.activityLabel && <span className={`steer-mode-indicator ${session.canSteer ? "steerable" : ""}`}><i aria-hidden="true" />{session.activityLabel}</span>}
-                  <AttachmentMenu onSelectPaths={addDroppedPaths} onError={setUiError} />
-                  <button ref={commandButtonRef} className={`command-button ${slashMenuVisible || commandPanel ? "active" : ""}`} onClick={() => { setCommandPanel(null); setSlashMenuDismissed(false); setSlashMenuForced((current) => !current); setSlashSelectedIndex(0); }} title="Skills、MCP、计划、压缩与目标">/</button>
-                  {collaborationMode === "plan" && <button className="plan-mode-button" onClick={() => { setCollaborationMode("default"); setCommandNotice("已退出计划模式，下一条消息将按默认模式执行。"); }} title="退出计划模式"><span>☷</span>计划模式<i>×</i></button>}
-                  <div className="model-picker-anchor">
-                    <button className="model-button" onClick={() => setModelPickerOpen((open) => !open)} title="选择模型与推理强度"><span>{modelDisplayName ?? settings.modelId}</span><svg className="chevron-icon" aria-hidden="true" viewBox="0 0 12 12"><path d="m3.5 4.5 2.5 2.5 2.5-2.5" /></svg></button>
-                    {modelPickerOpen && <ModelQuickPicker settings={settings} loadModels={session.listModels} onChange={changeModelSettings} onDisplayName={setModelDisplayName} onAdvanced={() => { setModelPickerOpen(false); setSettingsOpen(true); }} onClose={() => setModelPickerOpen(false)} />}
-                  </div>
+                  <ComposerAddMenu
+                    hasThread={Boolean(session.thread)}
+                    running={session.running}
+                    onSelectPaths={addDroppedPaths}
+                    onCommand={(id) => void runSlashCommand(id, "", false)}
+                    onError={setUiError}
+                    onOpen={() => { setModelPickerOpen(false); setCommandPanel(null); setSlashMenuDismissed(true); }}
+                  />
                   <PermissionModeSelector
                     value={permissionMode}
                     reviewer={approvalReviewer}
                     onChange={changePermissionMode}
                     onReviewerChange={changeApprovalReviewer}
                   />
+                  {collaborationMode === "plan" && <button className="plan-mode-button" onClick={() => { setCollaborationMode("default"); setCommandNotice("已退出计划模式，下一条消息将按默认模式执行。"); }} title="退出计划模式"><span>☷</span>计划模式<i>×</i></button>}
+                  {session.activityLabel && <span className={`steer-mode-indicator ${session.canSteer ? "steerable" : ""}`}><i aria-hidden="true" />{session.activityLabel}</span>}
                 </div>
                 <div className="composer-actions">
+                  <div className="model-picker-anchor">
+                    <button className="model-button" onClick={() => setModelPickerOpen((open) => !open)} title="选择模型与推理强度"><span>{modelDisplayName ?? settings.modelId}</span>{settings.reasoningEffort && <small>{settings.reasoningEffort}</small>}<svg className="chevron-icon" aria-hidden="true" viewBox="0 0 12 12"><path d="m3.5 4.5 2.5 2.5 2.5-2.5" /></svg></button>
+                    {modelPickerOpen && <ModelQuickPicker settings={settings} loadModels={session.listModels} onChange={changeModelSettings} onDisplayName={setModelDisplayName} onAdvanced={() => { setModelPickerOpen(false); setSettingsOpen(true); }} onClose={() => setModelPickerOpen(false)} />}
+                  </div>
                   <SendModeControl
                     canSteer={session.canSteer}
                     hasDraft={Boolean(draft.trim() || mentions.length > 0 || images.length > 0)}

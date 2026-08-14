@@ -36,7 +36,7 @@
 - 运行中的补充消息默认通过 Queue 等待当前 Turn 完成；发送按钮悬停菜单也提供 app-server 原生 Steer，已排队消息可以直接转为 Steer 并从队列移除。命令执行项默认折叠，避免长命令输出在出现瞬间撑开对话区。
 - 历史 Session 操作按钮固定在条目右侧的上层，不再悬停时向下扩展列表；长 Session 名称在操作区前截断并渐隐，保持文字与复制、固定、重命名、归档、删除按钮可读且不重叠。
 - 已增加从左侧展开的项目文件浏览器：目录懒加载、已展开文件筛选、单击文本/图片预览、二进制提示和大文本截断；项目浏览与“选择项目”改为两个独立入口。
-- 已增加 Codex 风格 `/` 命令菜单，接入稳定 `skills/list`、`mcpServerStatus/list`、`thread/compact/start` 和 `thread/goal/*`；Skill 作为原生输入发送，MCP/Goal 使用面板管理。
+- Composer 底栏已对齐 Codex 的轻量左右分组：统一 `+` 菜单与权限位于左侧，模型、推理强度和发送位于右侧；模型与权限入口只在悬停或聚焦时显示交互区域。独立 `/` 按钮已移除，附件与 Skills、MCP、压缩、计划、目标、Review 收入同一个 `+` 菜单；键入 `/` 仍保留过滤、键盘选择和执行快捷能力。
 - 已消费 `thread/tokenUsage/updated`，在对话框左侧显示当前上下文蓝红热力条；悬停区分当前上下文与 Session 累计 Token，点击复用 `thread/compact/start`，自动压缩阈值仍完全由 Codex Core 根据模型元数据动态决定。
 - 已完成全项目代码健康审查：保留完整生成协议，删除未使用客户端包装、返回字段和 Runtime 来源标签，统一压缩及发送收尾流程，收窄多余导出并合并重复 CSS；严格 TypeScript、Knip 与 Rust Clippy 均通过。
 - 已通过最小 scoped experimental 适配启用真实 `/plan`：initialize 声明能力，只有 Plan Turn 附加 collaboration mode，默认 Turn 保持稳定请求结构，不生成或暴露整套实验 schema。
@@ -93,7 +93,7 @@
 ## 验证证据
 
 - `pnpm typecheck`：通过。
-- `pnpm test`：47 个测试文件、189 项测试全部通过，覆盖项目目录选择/取消/锁定、Thread `cwd`、默认项目目录、文件浏览与 watch、附件输入/预览/历史还原、附件拖拽生命周期、执行过程实时计时与清理、Queue/Steer、三档原生沙盒、审批者解耦、模型/权限热切换与降权、Resume 无覆盖、分叉祖先、统一反向交互、Review 和 MCP。
+- `pnpm test`：47 个测试文件、191 项测试全部通过，覆盖项目目录选择/取消/锁定、Thread `cwd`、默认项目目录、文件浏览与 watch、统一附件/命令菜单、附件输入/预览/历史还原、附件拖拽生命周期、执行过程实时计时与清理、Queue/Steer、三档原生沙盒、审批者解耦、模型/权限热切换与降权、Resume 无覆盖、分叉祖先、统一反向交互、Review 和 MCP。
 - Rust 单元测试：11 项全部通过，覆盖显式模型参数、旧模板配置兼容归一化、动态 Runtime、每日默认项目目录、独立 provider 参数、旧 CODEX_HOME 迁移、双目录冲突和官方目录防重叠校验。
 - `pnpm rust:check`：从 clean target 完整重编译后通过。
 - `pnpm build`：包含虚拟时间线、目录 watch、目录选择插件和 P0 工作台 UI 的生产构建通过。
