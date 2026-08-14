@@ -25,6 +25,7 @@
 
 - Composer 左侧为统一 `+` 菜单和权限，右侧为模型、推理强度和发送；模型与权限只在悬停或聚焦时显示交互区域。
 - `+` 菜单统一提供文件、Skills、MCP、压缩、计划、目标和 Review；键入 `/` 仍支持过滤、方向键选择和 Enter 执行。
+- Goal 与 Plan 是 Composer 中互斥的单标签模式：Goal 在主输入框定义目标并复用原生 continuation，Plan 使用 `collaborationMode=plan`；进入 Plan 会清除活动 Goal，不存在 Shell 自建 Goal 执行循环。
 - 权限按 app-server 原生沙盒分为只读、工作区写入、完全访问；自动风险审查是独立审批者设置，默认仍为完全访问。
 - 模型目录和推理强度来自 `model/list`；网关、API Key、自定义模型和回答冗余度位于高级设置。
 
@@ -53,7 +54,7 @@
 
 ## 验证基线
 
-- 2026-08-14：完整 `pnpm test:quality` 通过，覆盖 47 个 Vitest 文件、194 项测试、TypeScript、Vite production build、Knip、`git diff --check`、`cargo check`、12 项 Rust 单元测试和 `cargo clippy --all-targets -- -D warnings`；桌面 debug 构建成功。
+- 2026-08-14：完整 `pnpm test:quality` 通过，覆盖 49 个 Vitest 文件、200 项测试、TypeScript、Vite production build、Knip、`git diff --check`、`cargo check`、12 项 Rust 单元测试和 `cargo clippy --all-targets -- -D warnings`；桌面 debug 构建成功。
 - 静态审查：Knip 未发现无效文件、导出或依赖；生产 TypeScript/CSS/Rust 未发现达到 6 行/60 tokens 的重复块。jscpd 报告 13 处重复全部位于测试夹具与场景搭建，整体重复行占 0.92%。
 - `pnpm audit --prod` 无已知漏洞；源码扫描未发现 PAT、API Key、用户密钥或开发机绝对路径。
 - 真实 app-server smoke 已覆盖多 Turn 恢复、并行 Thread、文件 RPC、Skills/MCP/Goal、Plan 和第三方兼容网关；这些证据对应固定 Runtime，不代表最新版 Codex 源码能力。

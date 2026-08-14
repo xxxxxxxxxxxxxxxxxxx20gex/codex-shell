@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { FuzzyFileSearchResult } from "./generated/app-server/FuzzyFileSearchResult";
-import type { ModeKind } from "./generated/app-server/ModeKind";
 import { errorMessage } from "./shared/errors";
 import "./App.css";
 import { PermissionModeSelector } from "./features/approvals/PermissionModeSelector";
@@ -12,12 +11,18 @@ import {
   type PermissionMode,
 } from "./features/approvals/permissionModes";
 import { AttachmentGallery } from "./features/attachments/AttachmentGallery";
-import { GoalPanel } from "./features/commands/GoalPanel";
 import { McpStatusPanel } from "./features/commands/McpStatusPanel";
 import { ReviewPanel } from "./features/commands/ReviewPanel";
 import { SkillPicker } from "./features/commands/SkillPicker";
 import { composerSubmitAction, SendModeControl } from "./features/composer/SendModeControl";
 import { ComposerAddMenu } from "./features/composer/ComposerAddMenu";
+import { ComposerIntentControl } from "./features/composer/ComposerIntentControl";
+import {
+  collaborationModeForIntent,
+  toggleComposerIntent,
+  type ComposerIntent,
+  type SelectableComposerIntent,
+} from "./features/composer/composerIntent";
 import { useComposerDropPaths } from "./features/composer/useComposerDropPaths";
 import { commandDisabled, SlashCommandMenu } from "./features/commands/SlashCommandMenu";
 import { useResizablePanels } from "./features/layout/useResizablePanels";
@@ -91,8 +96,8 @@ function App() {
   const [mentionLoading, setMentionLoading] = useState(false);
   const [uiError, setUiError] = useState("");
   const [commandNotice, setCommandNotice] = useState("");
-  const [commandPanel, setCommandPanel] = useState<"skills" | "mcp" | "goal" | "review" | null>(null);
-  const [collaborationMode, setCollaborationMode] = useState<ModeKind>("default");
+  const [commandPanel, setCommandPanel] = useState<"skills" | "mcp" | "review" | null>(null);
+  const [composerIntent, setComposerIntent] = useState<ComposerIntent>("default");
   const [slashMenuDismissed, setSlashMenuDismissed] = useState(false);
   const [slashSelectedIndex, setSlashSelectedIndex] = useState(0);
   const [inspectorTab, setInspectorTab] = useState<"changes" | "status" | "logs">("changes");
@@ -128,6 +133,7 @@ function App() {
   const mentionQuery = activeFileMentionQuery(draft);
   const typedSlashQuery = activeSlashCommandQuery(draft);
   const slashQuery = slashMenuDismissed ? null : typedSlashQuery;
+  const collaborationMode = collaborationModeForIntent(composerIntent);
 
   function changeModelSettings(next: ModelSettings) {
     setSettings(next);
@@ -184,6 +190,30 @@ function App() {
     isInside: (target) => target instanceof Element && Boolean(target.closest(".slash-command-menu, .agent-command-panel, .composer-add-menu")),
   });
 
+  async function selectComposerIntent(selected: SelectableComposerIntent, toggle = true) {
+    if (session.running) throw new Error("当前任务完成后才能切换计划或目标模式");
+    const next = toggle ? toggleComposerIntent(composerIntent, selected) : selected;
+    if (next === "plan" && composerIntent !== "plan" && session.thread) {
+      const activeGoal = await session.getThreadGoal();
+      if (activeGoal) await session.clearThreadGoal();
+    }
+    setComposerIntent(next);
+    setCommandNotice("");
+    return next;
+  }
+
+  async function submitGoal(objective: string) {
+    if (mentions.length > 0 || images.length > 0 || skills.length > 0) {
+      throw new Error("目标模式目前只支持文字；请移除附件和 Skill 后再提交目标");
+    }
+    await session.setThreadGoal(objective);
+    setDraft("");
+    setSkills([]);
+    setMentionResults([]);
+    setComposerIntent("default");
+    setCommandNotice("");
+  }
+
   async function runSlashCommand(id: SlashCommandId, args = "", clearDraft = true) {
     setSlashMenuDismissed(true);
     if (clearDraft) setDraft("");
@@ -201,10 +231,8 @@ function App() {
         return;
       }
       if (id === "plan") {
-        if (session.running) throw new Error("当前任务完成后才能切换到计划模式");
-        setCollaborationMode("plan");
+        await selectComposerIntent("plan", !args);
         if (!args) {
-          setCommandNotice("计划模式已开启。下一条消息会让 Codex 先分析需求并制定计划；点击工具栏中的计划模式可退出。");
           return;
         }
         if (await session.send(args, mentions, skills, "plan", images)) {
@@ -223,13 +251,18 @@ function App() {
         setCommandNotice("已开始压缩当前 Session，上下文摘要会通过时间线返回。");
         return;
       }
-      if (!args) { setCommandPanel("goal"); return; }
+      if (!args) {
+        await selectComposerIntent("goal");
+        return;
+      }
       if (args.toLocaleLowerCase() === "clear") {
+        if (!session.thread) throw new Error("当前没有可清除目标的 Session");
         await session.clearThreadGoal();
+        setComposerIntent("default");
         setCommandNotice("当前 Session 的长期目标已清除。");
       } else {
-        await session.setThreadGoal(args);
-        setCommandNotice("长期目标已保存，后续 Turn 会持续跟进。");
+        await selectComposerIntent("goal", false);
+        await submitGoal(args);
       }
     } catch (error) {
       setUiError(errorMessage(error));
@@ -242,6 +275,14 @@ function App() {
     const command = parseSlashCommand(message);
     if (command) {
       await runSlashCommand(command.id, command.args);
+      return;
+    }
+    if (composerIntent === "goal") {
+      try {
+        await submitGoal(message);
+      } catch (error) {
+        setUiError(errorMessage(error));
+      }
       return;
     }
     if (await sendOrQueue(session, message, mentions, skills, collaborationMode, images)) {
@@ -296,7 +337,7 @@ function App() {
     setCommandPanel(null);
     setSlashMenuDismissed(false);
     setCommandNotice("");
-    setCollaborationMode("default");
+    setComposerIntent("default");
     setPendingProjectPath(null);
     session.startNewTask();
   }
@@ -450,7 +491,7 @@ function App() {
             actionThreadId={session.threadActionId}
             runningThreadIds={session.runningThreadIds}
             hasMore={session.historyHasMore}
-            onOpen={(threadId) => { setCollaborationMode("default"); void session.openThread(threadId); }}
+            onOpen={(threadId) => { setComposerIntent("default"); void session.openThread(threadId); }}
             onRename={(threadId, name) => void session.renameThread(threadId, name)}
             onTogglePin={(thread) => void session.toggleThreadPin(thread)}
             onArchive={(threadId) => void session.archiveThread(threadId)}
@@ -550,12 +591,11 @@ function App() {
                   </div>;
                 })}
               </div>}
-              <textarea value={draft} onChange={(event) => { setDraft(event.target.value); setUiError(""); setCommandNotice(""); setSlashMenuDismissed(false); }} onPaste={(event) => void handleComposerPaste(event)} onKeyDown={handleComposerKeyDown} placeholder={session.running ? "输入下一条消息，当前回答完成后发送…" : collaborationMode === "plan" ? "描述需要分析和规划的任务…" : currentProjectPath ? "交给 Codex 一个任务，输入 / 使用命令，输入 @ 引用文件…" : "正在准备默认项目目录…"} />
+              <textarea value={draft} onChange={(event) => { setDraft(event.target.value); setUiError(""); setCommandNotice(""); setSlashMenuDismissed(false); }} onPaste={(event) => void handleComposerPaste(event)} onKeyDown={handleComposerKeyDown} placeholder={session.running ? "输入下一条消息，当前回答完成后发送…" : composerIntent === "goal" ? "描述你的目标，最好包含可衡量的结果…" : composerIntent === "plan" ? "描述需要分析和规划的任务…" : currentProjectPath ? "交给 Codex 一个任务，输入 / 使用命令，输入 @ 引用文件…" : "正在准备默认项目目录…"} />
               {currentProjectPath && mentionQuery !== null && <FileMentionMenu query={mentionQuery} results={mentionResults} loading={mentionLoading} onSelect={selectMention} />}
               {slashMenuVisible && <SlashCommandMenu query={slashQuery ?? ""} selectedIndex={slashSelectedIndex} hasThread={Boolean(session.thread)} running={session.running} onSelect={(id) => void runSlashCommand(id)} />}
               {commandPanel === "skills" && <SkillPicker selected={skills} loadSkills={session.listSkills} onToggle={toggleSkill} onClose={() => setCommandPanel(null)} />}
               {commandPanel === "mcp" && <McpStatusPanel loadServers={session.listMcpServers} loginServer={session.loginMcpServer} reloadServers={session.reloadMcpServers} readResource={session.readMcpResource} onClose={() => setCommandPanel(null)} />}
-              {commandPanel === "goal" && <GoalPanel getGoal={session.getThreadGoal} setGoal={session.setThreadGoal} clearGoal={session.clearThreadGoal} onClose={() => setCommandPanel(null)} />}
               {commandPanel === "review" && <ReviewPanel startReview={session.startReview} onStarted={(delivery) => { setCommandPanel(null); setCommandNotice(delivery === "detached" ? "已打开独立 Review Session。" : "原生代码审查已在当前 Session 启动。"); }} onClose={() => setCommandPanel(null)} />}
               <div className="composer-toolbar">
                 <div className="composer-tools">
@@ -573,7 +613,7 @@ function App() {
                     onChange={changePermissionMode}
                     onReviewerChange={changeApprovalReviewer}
                   />
-                  {collaborationMode === "plan" && <button className="plan-mode-button" onClick={() => { setCollaborationMode("default"); setCommandNotice("已退出计划模式，下一条消息将按默认模式执行。"); }} title="退出计划模式"><span>☷</span>计划模式<i>×</i></button>}
+                  {composerIntent !== "default" && <ComposerIntentControl intent={composerIntent} onClear={() => { setComposerIntent("default"); setCommandNotice(""); }} />}
                   {session.activityLabel && <span className={`steer-mode-indicator ${session.canSteer ? "steerable" : ""}`}><i aria-hidden="true" />{session.activityLabel}</span>}
                 </div>
                 <div className="composer-actions">

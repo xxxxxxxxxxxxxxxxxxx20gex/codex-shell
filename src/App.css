@@ -143,9 +143,14 @@ code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 .steer-mode-indicator i { width: 5px; height: 5px; border-radius: 50%; background: #8d8b80; box-shadow: 0 0 7px rgba(141,139,128,.36); animation: activity-pulse 1.4s ease-in-out infinite; }
 .steer-mode-indicator.steerable { border-color: rgba(194,232,92,.2); color: #b9cc87; background: rgba(36,44,25,.72); }
 .steer-mode-indicator.steerable i { background: var(--accent); box-shadow: 0 0 7px rgba(194,232,92,.48); }
-.plan-mode-button { display: flex; height: 31px; align-items: center; gap: 5px; padding: 0 9px; border: 1px solid #526635; border-radius: 8px; color: #c1d49a; background: #202719; font-size: 11px; cursor: pointer; }
-.plan-mode-button:hover { border-color: #78934b; color: #d5e7ae; background: #29331f; }
-.plan-mode-button span { color: var(--accent); font-size: 10px; }.plan-mode-button i { color: #7f9561; font-size: 11px; font-style: normal; }
+.composer-intent-button { display: flex; height: 31px; align-items: center; gap: 5px; padding: 0 9px; border: 1px solid #526635; border-radius: 8px; color: #c1d49a; background: #202719; font-size: 11px; cursor: pointer; }
+.composer-intent-button:hover { border-color: #78934b; color: #d5e7ae; background: #29331f; }
+.composer-intent-button span { color: var(--accent); font-size: 10px; }
+.composer-intent-button i { color: #7f9561; font-size: 11px; font-style: normal; }
+.composer-intent-button.goal { border-color: rgba(102,163,207,.42); color: #b8d5e8; background: rgba(28,42,52,.92); }
+.composer-intent-button.goal:hover { border-color: rgba(126,190,232,.66); color: #d2e8f5; background: rgba(34,51,63,.96); }
+.composer-intent-button.goal span { color: #83c4ee; }
+.composer-intent-button.goal i { color: #7898ab; }
 .model-button { display: inline-flex; height: var(--ui-control-height); min-width: 0; align-items: center; gap: 5px; padding: 0 8px; border: 1px solid transparent; border-radius: var(--ui-control-radius); color: var(--ui-text-control); background: transparent; font-size: 11px; cursor: pointer; }
 .model-button > span { overflow: hidden; max-width: 180px; text-overflow: ellipsis; white-space: nowrap; }
 .model-button > small { color: var(--text-muted); font-size: 10px; text-transform: capitalize; white-space: nowrap; }
@@ -411,8 +416,6 @@ code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 .command-panel-list > button { display: grid; width: 100%; grid-template-columns: 25px minmax(0,1fr) auto; align-items: center; gap: 8px; padding: 9px 11px; border: 0; border-top: 1px solid #2c2b26; color: var(--text-secondary); text-align: left; background: transparent; }
 .command-panel-list > button { cursor: pointer; }.command-panel-list > button:hover, .command-panel-list > button.active { color: #dedbd1; background: #292923; }.command-panel-list > button > i, .mcp-server > i { color: #8eb9d6; font-style: normal; }.command-panel-list > button > span, .mcp-server > span { display: flex; min-width: 0; flex-direction: column; }.command-panel-list strong { overflow: hidden; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }.command-panel-list small { overflow: hidden; margin-top: 3px; color: #716f67; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }.command-panel-list em { color: #6f7d57; font-size: 7px; font-style: normal; }
 .mcp-panel { grid-template-rows: auto minmax(0,1fr); }.mcp-server { border-top: 1px solid #2c2b26; color: #aaa89f; }.mcp-server summary { display: grid; grid-template-columns: 25px minmax(0,1fr) auto; align-items: center; gap: 8px; padding: 9px 11px; cursor: pointer; list-style: none; }.mcp-server summary::-webkit-details-marker { display: none; }.mcp-server summary:hover { background: #292923; }.mcp-server summary > i { color: #8eb9d6; font-style: normal; }.mcp-server summary > span { display: flex; min-width: 0; flex-direction: column; }.mcp-server summary > em { color: #7c976a; font-size: 7px; font-style: normal; }.mcp-tool-list { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 11px 10px 44px; }.mcp-tool-list code { padding: 3px 5px; border: 1px solid #34342c; border-radius: 4px; color: #9ead84; background: #191916; font-size: 7px; }.mcp-tool-list small { color: #6f6d65; font-size: 8px; }
-.goal-panel { grid-template-rows: auto minmax(0,1fr); }.goal-editor { padding: 11px; }.composer .goal-editor textarea { box-sizing: border-box; width: 100%; height: 88px; padding: 9px; resize: vertical; border: 1px solid #38372f; border-radius: 7px; outline: 0; color: #c7c5bc; background: #171714; font-size: 9px; line-height: 1.55; }.goal-editor > p { margin: 7px 0; color: #dc948d; font-size: 8px; }.goal-editor > div { display: flex; justify-content: flex-end; gap: 7px; margin-top: 9px; }.goal-editor button { padding: 7px 11px; font-size: 8px; }
-
 .inspector-tabs { justify-content: flex-start; gap: 5px; }.inspector-tabs button { padding: 6px 10px; border: 0; border-radius: 6px; color: #77756d; background: transparent; font-size: 9px; cursor: pointer; }.inspector-tabs button.active { color: #e2e0d7; background: #25251f; }
 
 .workspace-explorer-layer { position: fixed; z-index: 15; inset: 58px 0 0; }

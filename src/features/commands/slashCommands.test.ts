@@ -25,4 +25,13 @@ describe("slash command parsing", () => {
     expect(commandDisabled(plan, false, false)).toBe(false);
     expect(commandDisabled(plan, true, true)).toBe(true);
   });
+
+  it("allows composing a goal before a thread exists and blocks it while running", () => {
+    const goal = matchingSlashCommands("goal")[0];
+
+    expect(goal).toMatchObject({ id: "goal", blockedWhileRunning: true });
+    expect(goal.requiresThread).toBeUndefined();
+    expect(commandDisabled(goal, false, false)).toBe(false);
+    expect(commandDisabled(goal, true, true)).toBe(true);
+  });
 });
