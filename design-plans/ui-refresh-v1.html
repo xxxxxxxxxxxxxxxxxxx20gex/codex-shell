@@ -1,0 +1,1077 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Codex Shell UI Refresh V1</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --surface-canvas: #101112;
+      --surface-sidebar: #141617;
+      --surface-panel: #191b1c;
+      --surface-raised: #202324;
+      --surface-selected: #292d2e;
+      --border-subtle: #272a2b;
+      --border-default: #35393a;
+      --border-strong: #484d4e;
+      --text-primary: #f1f3f1;
+      --text-secondary: #c5cac6;
+      --text-muted: #909691;
+      --text-disabled: #606561;
+      --accent-action: #b8d957;
+      --accent-info: #73b7e8;
+      --accent-warning: #ddb45e;
+      --accent-danger: #e17972;
+      --accent-success: #74bf83;
+      --font-ui: "Segoe UI Variable Text", "Segoe UI", Inter, "Microsoft YaHei UI", sans-serif;
+      --font-mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+      --shadow-popover: 0 14px 32px rgb(0 0 0 / 32%);
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--surface-canvas);
+      color: var(--text-primary);
+      font-family: var(--font-ui);
+      font-size: 13px;
+      line-height: 20px;
+      letter-spacing: 0;
+    }
+
+    button,
+    textarea { font: inherit; }
+
+    button { color: inherit; }
+
+    svg {
+      width: 16px;
+      height: 16px;
+      flex: 0 0 16px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.75;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 248px minmax(520px, 1fr) 288px;
+      width: 100vw;
+      height: 100vh;
+      min-width: 760px;
+      background: var(--surface-canvas);
+    }
+
+    .sidebar,
+    .inspector {
+      min-width: 0;
+      min-height: 0;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--surface-sidebar);
+    }
+
+    .sidebar {
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      border-right: 1px solid var(--border-subtle);
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 48px;
+      padding: 0 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border: 1px solid var(--border-default);
+      border-radius: 6px;
+      color: var(--accent-action);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .brand-name {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 600;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .spacer { flex: 1; }
+
+    .button,
+    .icon-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: transparent;
+      cursor: pointer;
+      transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+    }
+
+    .button:focus-visible,
+    .icon-button:focus-visible,
+    .session-row:focus-visible,
+    summary:focus-visible,
+    textarea:focus-visible {
+      outline: 2px solid var(--accent-info);
+      outline-offset: 2px;
+    }
+
+    .icon-button {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      color: var(--text-muted);
+    }
+
+    .icon-button:hover {
+      background: var(--surface-raised);
+      color: var(--text-primary);
+    }
+
+    .new-chat-wrap { padding: 12px; }
+
+    .new-chat {
+      width: 100%;
+      height: 32px;
+      gap: 8px;
+      border-color: var(--border-default);
+      background: var(--surface-panel);
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .new-chat:hover {
+      border-color: var(--border-strong);
+      background: var(--surface-raised);
+    }
+
+    .history {
+      min-height: 0;
+      overflow: auto;
+      padding: 0 8px 12px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-default) transparent;
+    }
+
+    .section-label {
+      height: 28px;
+      padding: 4px 8px;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 20px;
+    }
+
+    .session-row {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 56px;
+      align-items: center;
+      width: 100%;
+      height: 40px;
+      padding: 0 4px 0 10px;
+      border: 0;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--text-secondary);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .session-row::before {
+      content: "";
+      position: absolute;
+      top: 8px;
+      bottom: 8px;
+      left: 0;
+      width: 2px;
+      border-radius: 2px;
+      background: transparent;
+    }
+
+    .session-row:hover { background: var(--surface-raised); }
+
+    .session-row.is-selected {
+      background: var(--surface-selected);
+      color: var(--text-primary);
+    }
+
+    .session-row.is-selected::before { background: var(--accent-action); }
+
+    .session-copy {
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .session-title {
+      overflow: hidden;
+      font-size: 13px;
+      line-height: 18px;
+      text-overflow: ellipsis;
+    }
+
+    .session-meta {
+      overflow: hidden;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+      line-height: 16px;
+      text-overflow: ellipsis;
+    }
+
+    .row-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 120ms ease;
+    }
+
+    .session-row:hover .row-actions,
+    .session-row:focus-within .row-actions,
+    .session-row.is-selected .row-actions {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sidebar-footer {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 40px;
+      padding: 0 12px;
+      border-top: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent-success);
+    }
+
+    .main {
+      display: grid;
+      grid-template-rows: 48px minmax(0, 1fr) auto;
+      min-width: 0;
+      min-height: 0;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--surface-canvas);
+    }
+
+    .main-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .mobile-toggle { display: none; }
+
+    .session-heading {
+      min-width: 0;
+      overflow: hidden;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 20px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .session-id {
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .timeline {
+      min-height: 0;
+      overflow: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-default) transparent;
+    }
+
+    .conversation {
+      width: min(100%, 820px);
+      margin: 0 auto;
+      padding: 28px 32px 22px;
+    }
+
+    .turn {
+      margin-bottom: 26px;
+    }
+
+    .user-turn {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .user-bubble {
+      width: fit-content;
+      max-width: min(78%, 620px);
+      padding: 9px 12px;
+      border: 1px solid var(--border-default);
+      border-radius: 8px;
+      background: var(--surface-panel);
+      color: var(--text-primary);
+      font-size: 15px;
+      line-height: 24px;
+    }
+
+    .message-meta {
+      margin-top: 6px;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+      line-height: 16px;
+    }
+
+    .assistant-turn {
+      position: relative;
+      padding-left: 16px;
+    }
+
+    .assistant-turn::before {
+      content: "";
+      position: absolute;
+      top: 3px;
+      bottom: 2px;
+      left: 0;
+      width: 2px;
+      border-radius: 2px;
+      background: var(--border-strong);
+    }
+
+    .assistant-turn.is-active::before { background: var(--accent-action); }
+
+    .assistant-copy {
+      font-size: 15px;
+      line-height: 24px;
+    }
+
+    .assistant-copy p { margin: 0 0 12px; }
+    .assistant-copy p:last-child { margin-bottom: 0; }
+
+    .process-group {
+      margin: 12px 0;
+      border-top: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .process-group summary {
+      display: grid;
+      grid-template-columns: 16px minmax(0, 1fr) auto 16px;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      list-style: none;
+      cursor: pointer;
+    }
+
+    .process-group summary::-webkit-details-marker { display: none; }
+    .process-group summary:hover { color: var(--text-primary); }
+
+    .process-state {
+      color: var(--accent-success);
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .process-group .chevron { transition: transform 160ms ease; }
+    .process-group[open] .chevron { transform: rotate(90deg); }
+
+    .process-detail {
+      display: grid;
+      gap: 8px;
+      padding: 0 0 12px 24px;
+    }
+
+    .process-step {
+      display: grid;
+      grid-template-columns: 16px minmax(0, 1fr) auto;
+      align-items: start;
+      gap: 8px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      line-height: 20px;
+    }
+
+    .process-step code {
+      overflow: hidden;
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .step-time {
+      color: var(--text-muted);
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .file-changes {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .change-heading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .change-row {
+      display: grid;
+      grid-template-columns: 16px minmax(0, 1fr) auto;
+      align-items: center;
+      min-height: 30px;
+      gap: 8px;
+      padding: 0 6px;
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .change-row:hover { background: var(--surface-raised); }
+    .change-row .file-icon { color: var(--accent-info); }
+
+    .change-count {
+      display: flex;
+      gap: 8px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .added { color: var(--accent-success); }
+    .removed { color: var(--accent-danger); }
+
+    .active-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .spinner {
+      width: 12px;
+      height: 12px;
+      border: 2px solid var(--border-strong);
+      border-top-color: var(--accent-action);
+      border-radius: 50%;
+      animation: spin 800ms linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .composer-dock {
+      width: 100%;
+      padding: 0 24px 16px;
+      background: var(--surface-canvas);
+    }
+
+    .composer-wrap {
+      width: min(100%, 860px);
+      margin: 0 auto;
+    }
+
+    .queue-row {
+      display: grid;
+      grid-template-columns: 16px minmax(0, 1fr) auto;
+      align-items: center;
+      min-height: 32px;
+      margin: 0 8px 6px;
+      padding: 4px 8px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      background: var(--surface-sidebar);
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    .queue-label {
+      color: var(--accent-warning);
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .composer {
+      border: 1px solid var(--border-default);
+      border-radius: 8px;
+      background: var(--surface-panel);
+      box-shadow: 0 8px 22px rgb(0 0 0 / 18%);
+    }
+
+    .composer:focus-within { border-color: var(--border-strong); }
+
+    .composer textarea {
+      display: block;
+      width: 100%;
+      height: 58px;
+      resize: none;
+      padding: 12px 14px 4px;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text-primary);
+      font-size: 15px;
+      line-height: 24px;
+    }
+
+    .composer textarea::placeholder { color: var(--text-muted); }
+
+    .composer-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 40px;
+      padding: 4px 6px;
+    }
+
+    .toolbar-control {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 28px;
+      max-width: 180px;
+      padding: 0 8px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .toolbar-control:hover {
+      border-color: var(--border-default);
+      background: var(--surface-raised);
+      color: var(--text-primary);
+    }
+
+    .toolbar-control span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mode-chip {
+      border-color: color-mix(in srgb, var(--accent-action) 40%, var(--border-default));
+      color: var(--accent-action);
+    }
+
+    .send-button {
+      width: 32px;
+      height: 32px;
+      margin-left: 2px;
+      border: 0;
+      border-radius: 6px;
+      background: var(--accent-action);
+      color: #151812;
+    }
+
+    .send-button:hover { background: #c4e267; }
+
+    .composer-hint {
+      margin-top: 6px;
+      color: var(--text-muted);
+      font-size: 11px;
+      line-height: 16px;
+      text-align: center;
+    }
+
+    .inspector {
+      display: grid;
+      grid-template-rows: 48px minmax(0, 1fr) 40px;
+      border-left: 1px solid var(--border-subtle);
+    }
+
+    .inspector-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      align-items: end;
+      padding: 0 8px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .tab {
+      position: relative;
+      height: 40px;
+      border: 0;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .tab:hover { color: var(--text-primary); }
+
+    .tab.is-active { color: var(--text-primary); }
+
+    .tab.is-active::after {
+      content: "";
+      position: absolute;
+      right: 10px;
+      bottom: 0;
+      left: 10px;
+      height: 2px;
+      background: var(--accent-action);
+    }
+
+    .inspector-body {
+      min-height: 0;
+      overflow: auto;
+      padding: 14px 12px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px 10px;
+      padding: 0 4px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    .summary-grid strong {
+      color: var(--text-primary);
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .inspector-section { padding-top: 14px; }
+
+    .inspector-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 28px;
+      padding: 0 4px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .inspector-file {
+      display: grid;
+      grid-template-columns: 16px minmax(0, 1fr) auto;
+      align-items: center;
+      min-height: 36px;
+      gap: 8px;
+      padding: 0 6px;
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    .inspector-file:hover { background: var(--surface-raised); }
+
+    .inspector-file-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .file-badge {
+      color: var(--accent-success);
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .inspector-footer {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 12px;
+      border-top: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    .branch {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 1179px) {
+      .app { grid-template-columns: 232px minmax(0, 1fr); }
+      .inspector { display: none; }
+      .inspector-toggle { display: inline-flex; }
+      .conversation { padding-right: 28px; padding-left: 28px; }
+    }
+
+    @media (min-width: 1180px) {
+      .inspector-toggle { display: none; }
+    }
+
+    @media (max-width: 899px) {
+      .app { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+      .sidebar { display: none; }
+      .mobile-toggle { display: inline-flex; }
+      .session-id { display: none; }
+      .conversation { padding: 24px 22px 18px; }
+      .composer-dock { padding-right: 16px; padding-left: 16px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <aside class="sidebar" aria-label="会话历史">
+      <header class="sidebar-header">
+        <span class="brand-mark" aria-hidden="true">C</span>
+        <span class="brand-name">Codex Shell</span>
+        <span class="spacer"></span>
+        <button class="icon-button" aria-label="收起会话栏" title="收起会话栏">
+          <svg aria-hidden="true"><use href="#i-panel-left"></use></svg>
+        </button>
+      </header>
+
+      <div class="new-chat-wrap">
+        <button class="button new-chat">
+          <svg aria-hidden="true"><use href="#i-plus"></use></svg>
+          <span>新建对话</span>
+        </button>
+      </div>
+
+      <nav class="history">
+        <div class="section-label">今天</div>
+        <button class="session-row is-selected" type="button">
+          <span class="session-copy">
+            <span class="session-title">统一 Codex Shell 的界面设计规范</span>
+            <span class="session-meta">14:32 · codex-shell</span>
+          </span>
+          <span class="row-actions">
+            <span class="icon-button" aria-label="复制会话 ID" title="复制会话 ID"><svg><use href="#i-copy"></use></svg></span>
+            <span class="icon-button" aria-label="更多操作" title="更多操作"><svg><use href="#i-more"></use></svg></span>
+          </span>
+        </button>
+        <button class="session-row" type="button">
+          <span class="session-copy">
+            <span class="session-title">排查 app-server 的事件消费</span>
+            <span class="session-meta">11:08 · codex-shell</span>
+          </span>
+          <span class="row-actions">
+            <span class="icon-button" aria-label="复制会话 ID" title="复制会话 ID"><svg><use href="#i-copy"></use></svg></span>
+            <span class="icon-button" aria-label="更多操作" title="更多操作"><svg><use href="#i-more"></use></svg></span>
+          </span>
+        </button>
+        <button class="session-row" type="button">
+          <span class="session-copy">
+            <span class="session-title">文件附件与图片预览交互</span>
+            <span class="session-meta">09:46 · codex-shell</span>
+          </span>
+          <span class="row-actions">
+            <span class="icon-button" aria-label="复制会话 ID" title="复制会话 ID"><svg><use href="#i-copy"></use></svg></span>
+            <span class="icon-button" aria-label="更多操作" title="更多操作"><svg><use href="#i-more"></use></svg></span>
+          </span>
+        </button>
+
+        <div class="section-label">昨天</div>
+        <button class="session-row" type="button">
+          <span class="session-copy">
+            <span class="session-title">模型设置与会话连续性</span>
+            <span class="session-meta">18:14 · codex-shell</span>
+          </span>
+          <span class="row-actions">
+            <span class="icon-button" aria-label="复制会话 ID" title="复制会话 ID"><svg><use href="#i-copy"></use></svg></span>
+            <span class="icon-button" aria-label="更多操作" title="更多操作"><svg><use href="#i-more"></use></svg></span>
+          </span>
+        </button>
+        <button class="session-row" type="button">
+          <span class="session-copy">
+            <span class="session-title">工作区路径与默认目录审查</span>
+            <span class="session-meta">15:20 · codex</span>
+          </span>
+          <span class="row-actions">
+            <span class="icon-button" aria-label="复制会话 ID" title="复制会话 ID"><svg><use href="#i-copy"></use></svg></span>
+            <span class="icon-button" aria-label="更多操作" title="更多操作"><svg><use href="#i-more"></use></svg></span>
+          </span>
+        </button>
+      </nav>
+
+      <footer class="sidebar-footer">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span>app-server 已连接</span>
+        <span class="spacer"></span>
+        <button class="icon-button" aria-label="设置" title="设置"><svg><use href="#i-settings"></use></svg></button>
+      </footer>
+    </aside>
+
+    <section class="main" aria-label="当前对话">
+      <header class="main-header">
+        <button class="icon-button mobile-toggle" aria-label="打开会话栏" title="打开会话栏"><svg><use href="#i-panel-left"></use></svg></button>
+        <h1 class="session-heading">统一 Codex Shell 的界面设计规范</h1>
+        <span class="session-id">019ffa5c…fb25</span>
+        <span class="spacer"></span>
+        <button class="icon-button" aria-label="复制会话 ID" title="复制会话 ID"><svg><use href="#i-copy"></use></svg></button>
+        <button class="icon-button" aria-label="分叉会话" title="分叉会话"><svg><use href="#i-fork"></use></svg></button>
+        <button class="icon-button inspector-toggle" aria-label="打开检查器" title="打开检查器"><svg><use href="#i-panel-right"></use></svg></button>
+      </header>
+
+      <div class="timeline">
+        <div class="conversation">
+          <article class="turn user-turn">
+            <div class="user-bubble">先做一个高保真设计稿，并建立长期统一的设计规范。不要直接修改生产界面。</div>
+            <div class="message-meta">14:32</div>
+          </article>
+
+          <article class="turn assistant-turn">
+            <div class="assistant-copy">
+              <p>设计方向已收敛为 <strong>Quiet Graphite Workbench</strong>。它保留三栏工作台和当前功能密度，但统一字体、图标、列表状态与控件尺寸，让长时间使用更清晰。</p>
+            </div>
+
+            <details class="process-group">
+              <summary>
+                <svg aria-hidden="true"><use href="#i-activity"></use></svg>
+                <span>已处理 4 个步骤</span>
+                <span class="process-state">1分42秒</span>
+                <svg class="chevron" aria-hidden="true"><use href="#i-chevron-right"></use></svg>
+              </summary>
+              <div class="process-detail">
+                <div class="process-step">
+                  <svg aria-hidden="true"><use href="#i-check"></use></svg>
+                  <span>审计主工作台的字体、颜色和控件几何</span>
+                  <span class="step-time">18秒</span>
+                </div>
+                <div class="process-step">
+                  <svg aria-hidden="true"><use href="#i-terminal"></use></svg>
+                  <code>rg "font-size|color|border-radius" src/App.css</code>
+                  <span class="step-time">3秒</span>
+                </div>
+                <div class="process-step">
+                  <svg aria-hidden="true"><use href="#i-check"></use></svg>
+                  <span>建立语义 Token 和六级字体体系</span>
+                  <span class="step-time">42秒</span>
+                </div>
+                <div class="process-step">
+                  <svg aria-hidden="true"><use href="#i-check"></use></svg>
+                  <span>生成三栏高保真原型并检查紧凑视口</span>
+                  <span class="step-time">39秒</span>
+                </div>
+              </div>
+            </details>
+
+            <div class="assistant-copy">
+              <p>第一阶段应先处理字体和按钮基础，再调整历史列表、Composer 与时间线。这样能避免局部美化继续扩大现有样式漂移。</p>
+            </div>
+
+            <div class="file-changes">
+              <div class="change-heading">
+                <svg aria-hidden="true"><use href="#i-files"></use></svg>
+                <span>文件变更 · 3</span>
+              </div>
+              <div class="change-row">
+                <svg class="file-icon" aria-hidden="true"><use href="#i-file"></use></svg>
+                <span>DESIGN.md</span>
+                <span class="change-count"><span class="added">+148</span></span>
+              </div>
+              <div class="change-row">
+                <svg class="file-icon" aria-hidden="true"><use href="#i-file"></use></svg>
+                <span>design-plans/ui-refresh-v1.md</span>
+                <span class="change-count"><span class="added">+76</span></span>
+              </div>
+              <div class="change-row">
+                <svg class="file-icon" aria-hidden="true"><use href="#i-file"></use></svg>
+                <span>design-plans/ui-refresh-v1.html</span>
+                <span class="change-count"><span class="added">+612</span></span>
+              </div>
+            </div>
+            <div class="message-meta">回答于 14:34 · 耗时 1分42秒</div>
+          </article>
+
+          <article class="turn user-turn">
+            <div class="user-bubble">先验证设计稿在紧凑窗口里不会遮挡，再准备分阶段实施。</div>
+            <div class="message-meta">14:35</div>
+          </article>
+
+          <article class="turn assistant-turn is-active">
+            <div class="active-line">
+              <span class="spinner" aria-hidden="true"></span>
+              <span>正在处理</span>
+              <span class="session-id">00:18</span>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <div class="composer-dock">
+        <div class="composer-wrap">
+          <div class="queue-row">
+            <svg aria-hidden="true"><use href="#i-clock"></use></svg>
+            <span>检查完后总结最值得先做的三个界面改动</span>
+            <span class="queue-label">等待中</span>
+          </div>
+          <div class="composer">
+            <textarea aria-label="发送消息" placeholder="继续输入，可排队或引导当前任务…"></textarea>
+            <div class="composer-toolbar">
+              <button class="icon-button" aria-label="添加文件或命令" title="添加文件或命令"><svg><use href="#i-plus"></use></svg></button>
+              <button class="toolbar-control" type="button">
+                <svg aria-hidden="true"><use href="#i-folder"></use></svg>
+                <span>codex-shell</span>
+                <svg aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+              </button>
+              <button class="toolbar-control" type="button">
+                <svg aria-hidden="true"><use href="#i-shield"></use></svg>
+                <span>完全访问</span>
+              </button>
+              <button class="toolbar-control mode-chip" type="button">
+                <svg aria-hidden="true"><use href="#i-plan"></use></svg>
+                <span>计划</span>
+                <svg aria-hidden="true"><use href="#i-x"></use></svg>
+              </button>
+              <span class="spacer"></span>
+              <button class="toolbar-control" type="button">
+                <span>GPT-5.3 Codex</span>
+                <svg aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+              </button>
+              <button class="toolbar-control" type="button"><span>高</span></button>
+              <button class="icon-button send-button" aria-label="排队发送" title="排队发送"><svg><use href="#i-send"></use></svg></button>
+            </div>
+          </div>
+          <div class="composer-hint">Enter 排队 · Ctrl + Shift + Enter 引导当前任务</div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="inspector" aria-label="工作区检查器">
+      <div class="inspector-tabs" role="tablist" aria-label="检查器视图">
+        <button class="tab is-active" role="tab" aria-selected="true">变更</button>
+        <button class="tab" role="tab" aria-selected="false">状态</button>
+        <button class="tab" role="tab" aria-selected="false">日志</button>
+      </div>
+
+      <div class="inspector-body">
+        <div class="summary-grid">
+          <span>已修改文件</span><strong>3</strong>
+          <span>新增行</span><strong class="added">+836</strong>
+          <span>删除行</span><strong class="removed">-0</strong>
+        </div>
+
+        <section class="inspector-section">
+          <div class="inspector-title">
+            <span>工作区变更</span>
+            <button class="icon-button" aria-label="刷新变更" title="刷新变更"><svg><use href="#i-refresh"></use></svg></button>
+          </div>
+          <div class="inspector-file">
+            <svg aria-hidden="true"><use href="#i-file-text"></use></svg>
+            <span class="inspector-file-name">DESIGN.md</span>
+            <span class="file-badge">A</span>
+          </div>
+          <div class="inspector-file">
+            <svg aria-hidden="true"><use href="#i-file-text"></use></svg>
+            <span class="inspector-file-name">design-plans/ui-refresh-v1.md</span>
+            <span class="file-badge">A</span>
+          </div>
+          <div class="inspector-file">
+            <svg aria-hidden="true"><use href="#i-code"></use></svg>
+            <span class="inspector-file-name">design-plans/ui-refresh-v1.html</span>
+            <span class="file-badge">A</span>
+          </div>
+        </section>
+
+        <section class="inspector-section">
+          <div class="inspector-title"><span>当前任务</span></div>
+          <div class="summary-grid">
+            <span>模式</span><strong>计划</strong>
+            <span>模型</span><strong>GPT-5.3 Codex</strong>
+            <span>上下文</span><strong>38%</strong>
+          </div>
+        </section>
+      </div>
+
+      <footer class="inspector-footer">
+        <svg aria-hidden="true"><use href="#i-branch"></use></svg>
+        <span class="branch">main</span>
+        <span class="spacer"></span>
+        <span>3 个变更</span>
+      </footer>
+    </aside>
+  </main>
+
+  <svg aria-hidden="true" width="0" height="0" style="position:absolute">
+    <defs>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="m18 6-12 12M6 6l12 12"></path></symbol>
+      <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></symbol>
+      <symbol id="i-fork" viewBox="0 0 24 24"><circle cx="6" cy="4" r="2"></circle><circle cx="18" cy="4" r="2"></circle><circle cx="12" cy="20" r="2"></circle><path d="M6 6v3a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V6M12 12v6"></path></symbol>
+      <symbol id="i-panel-left" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M9 3v18"></path></symbol>
+      <symbol id="i-panel-right" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M15 3v18"></path></symbol>
+      <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></symbol>
+      <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></symbol>
+      <symbol id="i-activity" viewBox="0 0 24 24"><path d="M4 14h4l2-8 4 12 2-8h4"></path></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"></path></symbol>
+      <symbol id="i-terminal" viewBox="0 0 24 24"><path d="m4 17 6-6-6-6M12 19h8"></path></symbol>
+      <symbol id="i-files" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v12"></path><rect width="14" height="14" x="6" y="6" rx="2"></rect></symbol>
+      <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6"></path></symbol>
+      <symbol id="i-file-text" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h8"></path></symbol>
+      <symbol id="i-code" viewBox="0 0 24 24"><path d="m8 9-3 3 3 3M16 9l3 3-3 3M14 5l-4 14"></path></symbol>
+      <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V5l8-3 8 3zM9 12l2 2 4-4"></path></symbol>
+      <symbol id="i-plan" viewBox="0 0 24 24"><path d="M9 5h10M9 12h10M9 19h10M5 5h.01M5 12h.01M5 19h.01"></path></symbol>
+      <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4zM22 2 11 13"></path></symbol>
+      <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21H9.6v-.1A1.7 1.7 0 0 0 8.5 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3V9.6h.1A1.7 1.7 0 0 0 4.6 8.5a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.1A1.7 1.7 0 0 0 15.5 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.4.3.6.7.6 1.1V10h1v4h-.1a1.7 1.7 0 0 0-1.5 1z"></path></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 6v5h-5M4 18v-5h5M18 9a7 7 0 0 0-12-2l-2 4M6 15a7 7 0 0 0 12 2l2-4"></path></symbol>
+      <symbol id="i-branch" viewBox="0 0 24 24"><circle cx="6" cy="4" r="2"></circle><circle cx="18" cy="6" r="2"></circle><circle cx="6" cy="20" r="2"></circle><path d="M6 6v12M18 8c0 4-3 6-7 6H6"></path></symbol>
+    </defs>
+  </svg>
+</body>
+</html>

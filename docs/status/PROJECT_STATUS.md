@@ -3,7 +3,7 @@
 - 当前阶段：Milestone 2 - P0 桌面编程工作台
 - 总体状态：核心对话、Session、工具活动、审批、文件、Diff 和模型配置可用；发布工程与 Runtime 恢复能力尚未完成。
 - 文档原则：本文件只记录跨模块当前基线、风险和下一里程碑；历史变更以 Git 提交和各模块状态文档为准，不在此累积功能流水账。
-- 最后更新：2026-08-14
+- 最后更新：2026-08-15
 
 ## 当前基线
 
@@ -20,6 +20,11 @@
 - 多个 Session 可并行运行；当前 Session 的普通补充消息进入每 Session 最多 10 条的内存 Queue，显式 `Ctrl/Cmd+Shift+Enter` 使用原生 `turn/steer`。
 - 模型、推理强度、沙盒范围和审批者随下一次 `turn/start` 生效，不因参数切换创建新 Session；Queue 会快照入队时的权限和模型设置。
 - 前端只保留当前 Session 最近 200 个 Turn，关联 Diff、Plan 和流式状态同步裁剪。
+
+### UI 视觉基础
+
+- `DESIGN.md` 已成为 UI 静态设计契约，第一阶段生产实现通过 `src/styles/tokens.css` 和 `src/styles/shell-refresh.css` 收敛壳层 Token、字体层级和控件几何；`lucide-react` 已用于历史会话和 Composer 高频操作图标。
+- 视觉迁移保持现有 app-server、Session、队列、Steer、模型、审批和附件行为不变；设计稿与实施计划位于 `design-plans/`，不参与运行时构建。
 
 ### Composer 与能力入口
 
@@ -42,19 +47,21 @@
 - app-server 自动断线恢复尚未完成；当前代际隔离可以阻止旧进程延迟事件污染新连接，但不会主动重启崩溃进程或恢复进行中的 Turn。
 - Shell Queue 只存在当前进程内，应用退出后不会恢复；MCP 配置编辑、Skills/Plugin 管理和显式连接诊断尚未完成。
 - `App.tsx` 与 `App.css` 均已超过 600 行，Composer/弹层编排和 feature 样式仍集中；`useThreadController.ts` 接近 500 行，Thread 元数据和通知协调继续扩展前应拆分。
+- `App.css` 和部分 feature CSS 仍有旧色值、渐变和 7–10px 局部声明；当前由迁移层覆盖高频路径，后续需按设计计划逐步删除旧规则，避免形成并行样式系统。
 - 文件预览会先经 IPC 读取完整文件再在前端截断；超大 Diff、单个超长活动和二进制 Diff 尚无源端截断或专用视图。
 - Runtime 二进制未进入 Git，尚无可复现下载/构建流程；安装包、签名、CI、干净 Windows 环境 UAC/sidecar 验证均未完成。
 
 ## 下一里程碑
 
 1. 实现 app-server 断线后当前 Session 的可控恢复，并明确进行中 Turn 的失败与重试边界。
-2. 把 Composer 状态/弹层编排从 `App.tsx` 拆为独立模块，并按 feature 迁移 `App.css` 样式；保持行为和测试快照不变。
+2. 按 `design-plans/ui-refresh-v1.md` 迁移时间线、Inspector、弹层和附件预览样式，删除已无消费者的旧规则；再把 Composer 状态/弹层编排从 `App.tsx` 拆为独立模块，保持行为和测试快照不变。
 3. 建立 CI、Runtime 获取/校验和安装包签名基线，在干净 Windows 用户环境验证 elevated Sandbox 与 sidecar。
 4. 在 Runtime 侧或读取协议层增加大文件、Diff 和活动输出的源端预算，避免仅靠 DOM 端截断。
 
 ## 验证基线
 
 - 2026-08-14：完整 `pnpm test:quality` 通过，覆盖 49 个 Vitest 文件、200 项测试、TypeScript、Vite production build、Knip、`git diff --check`、`cargo check`、12 项 Rust 单元测试和 `cargo clippy --all-targets -- -D warnings`；桌面 debug 构建成功。
+- 2026-08-15：视觉基础改动通过 `pnpm typecheck`、`pnpm test`（49/200）和 `pnpm build`；生产预览验证 `1440x900`、`1280x780`、`1024x720`、`900x700`，静态预览无页面溢出。静态预览未运行 Tauri IPC，因此不作为 Runtime smoke 证据。
 - 静态审查：Knip 未发现无效文件、导出或依赖；生产 TypeScript/CSS/Rust 未发现达到 6 行/60 tokens 的重复块。jscpd 报告 13 处重复全部位于测试夹具与场景搭建，整体重复行占 0.92%。
 - `pnpm audit --prod` 无已知漏洞；源码扫描未发现 PAT、API Key、用户密钥或开发机绝对路径。
 - 真实 app-server smoke 已覆盖多 Turn 恢复、并行 Thread、文件 RPC、Skills/MCP/Goal、Plan 和第三方兼容网关；这些证据对应固定 Runtime，不代表最新版 Codex 源码能力。

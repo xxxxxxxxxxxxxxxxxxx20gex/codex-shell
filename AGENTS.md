@@ -23,6 +23,15 @@ Codex Shell 是面向个人开发者的 Windows 桌面智能体工作台。产�
 - 用户可见行为必须有对应测试或可复现的验证证据。
 - 提交前至少运行 `pnpm typecheck`、`pnpm build` 和 `cargo check --manifest-path src-tauri/Cargo.toml`。
 
+## UI 设计规范
+
+- [DESIGN.md](DESIGN.md) 是所有新增或修改 UI 的静态设计契约；开始 UI 工作前必须先读取，不能仅凭局部截图或现有硬编码样式推断全局规范。
+- `src/styles/tokens.css` 是运行时 Token 实现，必须逐步收敛到 `DESIGN.md`；组件样式消费语义 Token，不得复制全局颜色、字号、间距、圆角、控件高度、阴影或动效尺度。
+- 设计稿与实施计划放在 `design-plans/`，只表达目标状态和迁移步骤，不得作为第二套运行时 Token 或当前完成状态。
+- 新的全局视觉模式必须先更新 `DESIGN.md` 并说明适用范围；只影响单个业务状态的局部样式不扩张为全局规则。
+- UI 改动必须验证 `1440x900`、`1280x780`、`1024x720` 和 `900x700`，同时检查文字下限、图标一致性、对齐、截断、键盘焦点、外部点击、Escape 和 reduced-motion。
+- 生产标准动作优先使用 `lucide-react`，统一为 16px、1.75px stroke 和 `currentColor`；不得继续用 Unicode、Emoji 或文本字符代替常见操作图标。
+
 ## 阶段性代码健康审查
 
 - 每完成一个可独立交付的里程碑，或连续落地约 3–5 个功能提交后，进行一次保持现有行为的代码健康审查；清理应使用独立提交，避免与新功能混在一起。
