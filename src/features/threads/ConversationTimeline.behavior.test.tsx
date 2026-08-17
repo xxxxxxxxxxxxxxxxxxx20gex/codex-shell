@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 
-import { forwardRef, useImperativeHandle } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
@@ -8,6 +8,7 @@ import type { Turn } from "../../generated/app-server/v2/Turn";
 
 const virtuoso = vi.hoisted(() => ({
   scrollToIndex: vi.fn(),
+  autoscrollToBottom: vi.fn(),
   atBottomStateChange: null as ((atBottom: boolean) => void) | null,
   rangeChanged: null as ((range: { startIndex: number; endIndex: number }) => void) | null,
 }));
@@ -18,11 +19,20 @@ vi.mock("react-virtuoso", () => ({
     itemContent: (index: number, turn: Turn) => React.ReactNode;
     atBottomStateChange: (atBottom: boolean) => void;
     rangeChanged: (range: { startIndex: number; endIndex: number }) => void;
+    scrollerRef: (ref: HTMLElement | Window | null) => void;
   }, ref) => {
+    const scrollerRef = useRef<HTMLDivElement>(null);
     virtuoso.atBottomStateChange = props.atBottomStateChange;
     virtuoso.rangeChanged = props.rangeChanged;
-    useImperativeHandle(ref, () => ({ scrollToIndex: virtuoso.scrollToIndex }));
-    return <div data-testid="virtual-list">{props.data.map((turn, index) => props.itemContent(index, turn))}</div>;
+    useImperativeHandle(ref, () => ({
+      scrollToIndex: virtuoso.scrollToIndex,
+      autoscrollToBottom: virtuoso.autoscrollToBottom,
+    }));
+    useEffect(() => {
+      props.scrollerRef(scrollerRef.current);
+      return () => props.scrollerRef(null);
+    }, [props.scrollerRef]);
+    return <div ref={scrollerRef} data-testid="virtual-list">{props.data.map((turn, index) => props.itemContent(index, turn))}</div>;
   }),
 }));
 
@@ -52,6 +62,7 @@ describe("ConversationTimeline navigation", () => {
 
   beforeEach(() => {
     virtuoso.scrollToIndex.mockReset();
+    virtuoso.autoscrollToBottom.mockReset();
     virtuoso.atBottomStateChange = null;
     virtuoso.rangeChanged = null;
   });
@@ -101,7 +112,7 @@ describe("ConversationTimeline navigation", () => {
     view.rerender(<ConversationTimeline turns={[...initialTurns, turn("3", "第三问")]} running />);
     fireEvent.click(screen.getByRole("button", { name: "有新内容 · 返回最新" }));
 
-    expect(virtuoso.scrollToIndex).toHaveBeenLastCalledWith({ index: 2, align: "start", behavior: "smooth" });
+    expect(virtuoso.scrollToIndex).toHaveBeenLastCalledWith({ index: "LAST", align: "end", behavior: "smooth" });
   });
 
   it("does not infer that a tall latest Turn is at the bottom after navigation", () => {
@@ -114,5 +125,48 @@ describe("ConversationTimeline navigation", () => {
 
     expect(screen.getByRole("button", { name: "有新内容 · 返回最新" })).toBeTruthy();
     expect(virtuoso.scrollToIndex).toHaveBeenLastCalledWith({ index: 1, align: "start", behavior: "smooth" });
+  });
+
+  it("keeps following a streamed Turn after content growth temporarily moves the viewport off bottom", () => {
+    const initialTurns = [turn("1", "第一问")];
+    const view = render(<ConversationTimeline turns={initialTurns} running />);
+    virtuoso.autoscrollToBottom.mockClear();
+
+    act(() => virtuoso.atBottomStateChange?.(false));
+    view.rerender(<ConversationTimeline turns={[turn("1", "第一问，回答继续增长")]} running />);
+
+    expect(virtuoso.autoscrollToBottom).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not mistake a layout-driven scroll correction for reader navigation", () => {
+    const initialTurns = [turn("1", "第一问")];
+    const view = render(<ConversationTimeline turns={initialTurns} running />);
+    const scroller = screen.getByTestId("virtual-list");
+    Object.defineProperty(scroller, "scrollTop", { configurable: true, writable: true, value: 100 });
+    fireEvent.scroll(scroller);
+    scroller.scrollTop = 40;
+    fireEvent.scroll(scroller);
+    virtuoso.autoscrollToBottom.mockClear();
+
+    view.rerender(<ConversationTimeline turns={[turn("1", "第一问，回答继续增长")]} running />);
+
+    expect(virtuoso.autoscrollToBottom).toHaveBeenCalledTimes(1);
+  });
+
+  it("stops following streamed output after the reader scrolls upward", () => {
+    const initialTurns = [turn("1", "第一问")];
+    const view = render(<ConversationTimeline turns={initialTurns} running />);
+    const scroller = screen.getByTestId("virtual-list");
+    Object.defineProperty(scroller, "scrollTop", { configurable: true, writable: true, value: 100 });
+    fireEvent.scroll(scroller);
+    fireEvent.pointerDown(scroller);
+    scroller.scrollTop = 40;
+    fireEvent.scroll(scroller);
+    fireEvent.pointerUp(window);
+    virtuoso.autoscrollToBottom.mockClear();
+
+    view.rerender(<ConversationTimeline turns={[turn("1", "第一问，回答继续增长")]} running />);
+
+    expect(virtuoso.autoscrollToBottom).not.toHaveBeenCalled();
   });
 });

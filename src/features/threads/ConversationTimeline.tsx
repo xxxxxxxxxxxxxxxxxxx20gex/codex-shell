@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Virtuoso, type ListRange, type VirtuosoHandle } from "react-virtuoso";
 import type { McpToolCallProgressNotification } from "../../generated/app-server/v2/McpToolCallProgressNotification";
 import type { Turn } from "../../generated/app-server/v2/Turn";
@@ -23,6 +23,10 @@ interface UserTurnLink {
   label: string;
 }
 
+const EMPTY_PLANS: Record<string, TurnPlanUpdatedNotification> = {};
+const EMPTY_ACTIVE_ITEMS: Record<string, string> = {};
+const EMPTY_MCP_PROGRESS: Record<string, McpToolCallProgressNotification> = {};
+
 function userTurnLinks(turns: Turn[]): UserTurnLink[] {
   return turns.flatMap((turn, index) => {
     const message = turn.items.find((item) => item.type === "userMessage");
@@ -37,12 +41,14 @@ export function ConversationTimeline({
   running,
   threadId = null,
   onFork,
-  plansByTurnId = {},
-  activeItemTurnIds = {},
-  mcpProgressByItemId = {},
+  plansByTurnId = EMPTY_PLANS,
+  activeItemTurnIds = EMPTY_ACTIVE_ITEMS,
+  mcpProgressByItemId = EMPTY_MCP_PROGRESS,
   readFile,
 }: Props) {
   const virtuosoRef = useRef<VirtuosoHandle>(null);
+  const followLatestRef = useRef(true);
+  const scrollerCleanupRef = useRef<(() => void) | null>(null);
   const [atBottom, setAtBottom] = useState(true);
   const [hasNewActivity, setHasNewActivity] = useState(false);
   const [visibleStartIndex, setVisibleStartIndex] = useState(Math.max(0, turns.length - 1));
@@ -61,12 +67,67 @@ export function ConversationTimeline({
     if (!atBottom) setHasNewActivity(true);
   }, [running, turns]);
 
+  useEffect(() => () => scrollerCleanupRef.current?.(), []);
+
+  useLayoutEffect(() => {
+    if (followLatestRef.current) virtuosoRef.current?.autoscrollToBottom();
+  }, [activeItemTurnIds, mcpProgressByItemId, plansByTurnId, running, turns]);
+
   const handleAtBottomChange = useCallback((nextAtBottom: boolean) => {
     setAtBottom(nextAtBottom);
-    if (nextAtBottom) setHasNewActivity(false);
+    if (nextAtBottom) {
+      followLatestRef.current = true;
+      setHasNewActivity(false);
+    }
+  }, []);
+
+  const handleScrollerRef = useCallback((scroller: HTMLElement | Window | null) => {
+    scrollerCleanupRef.current?.();
+    scrollerCleanupRef.current = null;
+    if (!scroller) return;
+
+    const eventTarget: EventTarget = scroller;
+    const scrollTop = () => scroller instanceof Window ? scroller.scrollY : scroller.scrollTop;
+    let pointerScrolling = false;
+    let previousScrollTop = scrollTop();
+    const stopFollowing = () => {
+      followLatestRef.current = false;
+    };
+    const handleWheel = (event: Event) => {
+      if ((event as WheelEvent).deltaY < 0) stopFollowing();
+    };
+    const handlePointerDown = () => {
+      pointerScrolling = true;
+    };
+    const handlePointerUp = () => {
+      pointerScrolling = false;
+    };
+    const handleKeyDown = (event: Event) => {
+      if (["ArrowUp", "PageUp", "Home"].includes((event as KeyboardEvent).key)) stopFollowing();
+    };
+    const handleScroll = () => {
+      const nextScrollTop = scrollTop();
+      if (pointerScrolling && nextScrollTop < previousScrollTop - 1) stopFollowing();
+      previousScrollTop = nextScrollTop;
+    };
+    eventTarget.addEventListener("wheel", handleWheel, { passive: true });
+    eventTarget.addEventListener("pointerdown", handlePointerDown, { passive: true });
+    eventTarget.addEventListener("keydown", handleKeyDown);
+    eventTarget.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("pointerup", handlePointerUp, { passive: true });
+    window.addEventListener("pointercancel", handlePointerUp, { passive: true });
+    scrollerCleanupRef.current = () => {
+      eventTarget.removeEventListener("wheel", handleWheel);
+      eventTarget.removeEventListener("pointerdown", handlePointerDown);
+      eventTarget.removeEventListener("keydown", handleKeyDown);
+      eventTarget.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerUp);
+    };
   }, []);
 
   const scrollToTurn = useCallback((index: number) => {
+    followLatestRef.current = false;
     virtuosoRef.current?.scrollToIndex({ index, align: "start", behavior: "smooth" });
     setVisibleStartIndex(index);
   }, []);
@@ -76,9 +137,10 @@ export function ConversationTimeline({
   }, []);
 
   const scrollToLatest = useCallback(() => {
-    scrollToTurn(turns.length - 1);
+    followLatestRef.current = true;
+    virtuosoRef.current?.scrollToIndex({ index: "LAST", align: "end", behavior: "smooth" });
     setHasNewActivity(false);
-  }, [scrollToTurn, turns.length]);
+  }, []);
 
   return (
     <div className="timeline-shell">
@@ -89,9 +151,10 @@ export function ConversationTimeline({
         atBottomThreshold={8}
         atBottomStateChange={handleAtBottomChange}
         computeItemKey={(_index, turn) => turn.id}
-        followOutput={(isAtBottom) => isAtBottom ? "auto" : false}
+        followOutput="auto"
         initialTopMostItemIndex={Math.max(0, turns.length - 1)}
         rangeChanged={handleRangeChanged}
+        scrollerRef={handleScrollerRef}
         itemContent={(turnIndex, turn) => (
           <div className={`conversation-turn-frame ${turnIndex === 0 ? "first" : "separated"} ${turnIndex === turns.length - 1 ? "last" : ""}`}>
             <ConversationTurn

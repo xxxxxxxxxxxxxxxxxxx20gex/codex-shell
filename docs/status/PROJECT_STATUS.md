@@ -38,7 +38,7 @@
 ### 时间线、文件与诊断
 
 - 时间线按 app-server 原始顺序展示用户/助手消息、推理、计划、命令、文件、MCP、动态工具、搜索、图片和子智能体活动；命令默认折叠，文件修改在回答末尾汇总。
-- 运行中显示“正在处理”和实时耗时，完成后冻结服务端或本地生命周期计算出的最终耗时；长 Session 使用可变高度虚拟列表。
+- 运行中显示“正在处理”和实时耗时，完成后冻结服务端或本地生命周期计算出的最终耗时；长 Session 使用可变高度虚拟列表。人在底部时流式回答和活动高度变化持续贴底，主动上滑后停止自动跟随，“返回最新”直接定位到最后消息底部。
 - 新 Thread 未选择项目时使用 `Documents/Codex-Shell/YYYY-MM-DD`，自定义项目只在首条消息前可选；已有 Thread 始终使用服务端返回的 `cwd`。
 - 支持文件/图片附件、剪贴板图片、拖拽、`@` 文件引用、项目浏览和预览、目录 watch、实时/历史 Diff、上下文 Token 热力条与原生压缩。
 - app-server stderr、Warning、Guardian、配置、弃用、模型和 Sandbox 通知均已消费；日志、通知、资源预览、用户输入和可见 Turn 均有硬上限。
@@ -60,7 +60,7 @@
 
 ## 验证基线
 
-- 2026-08-17：完整 `pnpm test:quality` 通过，覆盖 50 个 Vitest 文件、203 项测试、TypeScript、Vite production build、Knip、`git diff --check`、`cargo check`、12 项 Rust 单元测试和 `cargo clippy --all-targets -- -D warnings`；Headless Edge 已验证 1440×900、1280×780、1024×720、900×700 和 899×700 的布局边界；桌面 debug 构建成功。
+- 2026-08-17：完整 `pnpm test:quality` 通过，覆盖 50 个 Vitest 文件、206 项测试、TypeScript、Vite production build、Knip、`git diff --check`、`cargo check`、12 项 Rust 单元测试和 `cargo clippy --all-targets -- -D warnings`；桌面 debug 构建成功。Headless Edge 最近一次已验证 1440×900、1280×780、1024×720、900×700 和 899×700 的布局边界。
 - 静态审查：Knip 未发现无效文件、导出或依赖；生产 TypeScript/CSS/Rust 未发现达到 6 行/60 tokens 的重复块。jscpd 报告 13 处重复全部位于测试夹具与场景搭建，整体重复行占 0.92%。
 - `pnpm audit --prod` 无已知漏洞；源码扫描未发现 PAT、API Key、用户密钥或开发机绝对路径。
 - 真实 app-server smoke 已覆盖多 Turn 恢复、并行 Thread、文件 RPC、Skills/MCP/Goal、Plan 和第三方兼容网关；这些证据对应固定 Runtime，不代表最新版 Codex 源码能力。
