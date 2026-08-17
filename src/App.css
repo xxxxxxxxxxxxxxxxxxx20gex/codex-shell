@@ -317,8 +317,6 @@ code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 .thread-list .thread-actions button { position: relative; display: flex; width: 24px; height: 24px; flex: none; align-items: center; justify-content: center; padding: 0; border-radius: 4px; color: var(--text-muted); line-height: 0; }
 .thread-list .thread-actions button:hover { color: var(--accent); background: #2a2a23; }
 .thread-list .thread-actions button:disabled { color: #4f4e48; }
-.thread-more-button { border: 0; background: transparent; cursor: pointer; }
-.thread-more-button svg { width: 16px; height: 16px; stroke-width: 1.8; }
 .thread-actions.menu-open { opacity: 1; visibility: visible; }
 .thread-action-menu { position: absolute; top: calc(100% + 5px); right: 0; display: grid; min-width: 174px; padding: 4px; border: 1px solid var(--border-default); border-radius: var(--radius-control); background: var(--surface-raised); box-shadow: var(--shadow-popover); opacity: 0; pointer-events: none; transform: translateY(-3px); transition: opacity var(--motion-fast), transform var(--motion-fast), visibility 0s linear var(--motion-fast); visibility: hidden; }
 .thread-action-menu.open { opacity: 1; pointer-events: auto; transform: translateY(0); visibility: visible; transition-delay: 0s; }
