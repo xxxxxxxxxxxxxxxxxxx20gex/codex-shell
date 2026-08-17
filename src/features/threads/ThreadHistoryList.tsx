@@ -5,6 +5,7 @@ import {
   ChevronDown,
   Copy,
   FilePenLine,
+  MoreHorizontal,
   Pin,
   RefreshCw,
   Trash2,
@@ -76,6 +77,7 @@ function ThreadActionButton({ label, disabled = false, onClick, children }: Thre
 export function ThreadHistoryList(props: Props) {
   const orderedThreads = useMemo(() => orderThreadsByBranch(props.threads), [props.threads]);
   const [copyFeedback, setCopyFeedback] = useState<{ threadId: string; label: string } | null>(null);
+  const [openActionThreadId, setOpenActionThreadId] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<{
     action: SessionDestructiveAction;
     thread: Thread;
@@ -86,6 +88,13 @@ export function ThreadHistoryList(props: Props) {
     const timeout = window.setTimeout(() => setCopyFeedback(null), 1_800);
     return () => window.clearTimeout(timeout);
   }, [copyFeedback]);
+
+  useEffect(() => {
+    if (!openActionThreadId) return;
+    const close = () => setOpenActionThreadId(null);
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, [openActionThreadId]);
 
   function rename(thread: Thread) {
     const name = window.prompt("重命名会话", threadTitle(thread));
@@ -141,16 +150,28 @@ export function ThreadHistoryList(props: Props) {
                 <span className="thread-title">{thread.isPinned && <i>◆</i>}{threadTitle(thread)}</span>
                 <small>{running ? "运行中" : dateFormatter.format(new Date(thread.updatedAt * 1000))}</small>
               </button>
-              <div className="thread-actions">
+              <div className={`thread-actions ${openActionThreadId === thread.id ? "menu-open" : ""}`} onPointerDown={(event) => event.stopPropagation()}>
                 <ThreadActionButton onClick={() => void copyReference(thread)} label={copyLabel}><Copy aria-hidden="true" /></ThreadActionButton>
-                {props.archived ? (
-                  <ThreadActionButton disabled={busy} onClick={() => props.onUnarchive(thread.id)} label="恢复 Session"><ArchiveRestore aria-hidden="true" /></ThreadActionButton>
-                ) : <>
-                  <ThreadActionButton disabled={busy} onClick={() => props.onTogglePin(thread)} label={thread.isPinned ? "取消固定" : "固定"}><Pin aria-hidden="true" fill={thread.isPinned ? "currentColor" : "none"} /></ThreadActionButton>
-                  <ThreadActionButton disabled={busy} onClick={() => rename(thread)} label="重命名"><FilePenLine aria-hidden="true" /></ThreadActionButton>
-                  <ThreadActionButton disabled={busy || running} onClick={() => setPendingAction({ action: "archive", thread })} label={running ? "运行中无法归档" : "归档"}><Archive aria-hidden="true" /></ThreadActionButton>
-                </>}
-                <ThreadActionButton disabled={busy || running} onClick={() => setPendingAction({ action: "delete", thread })} label={running ? "运行中无法删除" : "永久删除"}><Trash2 aria-hidden="true" /></ThreadActionButton>
+                <button
+                  type="button"
+                  className="thread-more-button"
+                  aria-label="更多操作"
+                  aria-expanded={openActionThreadId === thread.id}
+                  title="更多操作"
+                  onClick={() => setOpenActionThreadId((current) => current === thread.id ? null : thread.id)}
+                >
+                  <MoreHorizontal aria-hidden="true" />
+                </button>
+                <div className={`thread-action-menu ${openActionThreadId === thread.id ? "open" : ""}`} role="menu">
+                  {props.archived ? (
+                    <ThreadActionButton disabled={busy} onClick={() => { setOpenActionThreadId(null); props.onUnarchive(thread.id); }} label="恢复 Session"><ArchiveRestore aria-hidden="true" /><span>恢复 Session</span></ThreadActionButton>
+                  ) : <>
+                    <ThreadActionButton disabled={busy} onClick={() => { setOpenActionThreadId(null); props.onTogglePin(thread); }} label={thread.isPinned ? "取消固定" : "固定"}><Pin aria-hidden="true" fill={thread.isPinned ? "currentColor" : "none"} /><span>{thread.isPinned ? "取消固定" : "固定"}</span></ThreadActionButton>
+                    <ThreadActionButton disabled={busy} onClick={() => { setOpenActionThreadId(null); rename(thread); }} label="重命名"><FilePenLine aria-hidden="true" /><span>重命名</span></ThreadActionButton>
+                    <ThreadActionButton disabled={busy || running} onClick={() => { setOpenActionThreadId(null); setPendingAction({ action: "archive", thread }); }} label={running ? "运行中无法归档" : "归档"}><Archive aria-hidden="true" /><span>归档</span></ThreadActionButton>
+                  </>}
+                  <ThreadActionButton disabled={busy || running} onClick={() => { setOpenActionThreadId(null); setPendingAction({ action: "delete", thread }); }} label={running ? "运行中无法删除" : "永久删除"}><Trash2 aria-hidden="true" /><span>永久删除</span></ThreadActionButton>
+                </div>
               </div>
             </div>
           );
