@@ -709,3 +709,38 @@ code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 
 @media (max-width: 1040px) { .workspace-grid { grid-template-columns: var(--sidebar-width) minmax(0,1fr); }.inspector, .inspector-resizer { display: none; }.template-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 720px) { .workspace-grid { grid-template-columns: 1fr; }.sidebar, .sidebar-resizer { display: none; }.conversation { grid-column: 1; }.composer-wrap { padding-right: 18px; padding-left: 18px; }.template-grid { grid-template-columns: 1fr 1fr; }.workspace-explorer-drawer { width: 100%; }.explorer-body { grid-template-columns: 225px minmax(0,1fr); } }
+
+/* Quiet Graphite workbench: final owners for the production surface. */
+.conversation-empty { padding: 24px; }
+.conversation-empty .agent-avatar { width: 40px; height: 40px; border-radius: 10px; font-size: 11px; }
+.conversation-empty h2 { margin: 14px 0 6px; font-size: 16px; }
+.conversation-empty p { font-size: var(--font-size-control); }
+.composer-workspace-selector { min-height: 32px; margin: 0 0 6px; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.composer-workspace-button { height: 28px; padding: 0 8px; border: 1px solid transparent; border-radius: var(--radius-control); color: var(--text-muted); font-size: var(--font-size-control); }
+.composer-workspace-button:hover { border-color: var(--border-default); background: var(--surface-raised); color: var(--text-primary); }
+.composer-workspace-selector .clear-workspace-button { width: 28px; height: 28px; }
+.composer-toolbar { min-height: 40px; padding: 4px 6px; }
+.composer-tools, .composer-actions { gap: 4px; }
+.composer-add-button { width: 28px; height: 28px; background: transparent; font-size: 18px; }
+.permission-trigger, .model-button, .steer-mode-indicator { min-height: 28px; height: 28px; font-size: var(--font-size-control); }
+.permission-trigger strong, .model-button > small { font-size: var(--font-size-caption); }
+.composer-intent-button { height: 28px; font-size: var(--font-size-control); }
+.send-button, .stop-button { width: 32px; height: 32px; border-radius: var(--radius-control); }
+.queued-turns { border-color: var(--border-subtle); border-radius: var(--radius-control); background: var(--surface-sidebar); }
+.queued-turns-heading, .queued-turn { font-size: var(--font-size-control); }
+.queued-turns-heading small { font-size: var(--font-size-caption); }
+.queued-turn { min-height: 32px; background: var(--surface-panel); }
+.inspector-card { margin: 14px 12px 0; padding: 12px; border-color: var(--border-subtle); border-radius: var(--radius-control); background: transparent; }
+.card-title, .card-title button, .inspector-card > p, .codex-home-note, .codex-home-error { font-size: var(--font-size-caption); }
+.inspector-card > strong { font-size: var(--font-size-control); }
+.turn-activity-stream, .turn-process-disclosure, .turn-file-changes, .turn-progress { margin-left: 16px; }
+.turn-work-status strong, .turn-process-disclosure > summary strong { font-size: var(--font-size-ui); }
+.turn-commentary, .activity-body, .activity-reasoning-note { font-size: var(--font-size-control); line-height: 20px; }
+.activity-card summary strong, .command-drawer > summary strong { font-size: var(--font-size-ui); }
+.activity-card summary small, .command-drawer > summary small, .activity-card summary i, .command-drawer > summary i { font-size: var(--font-size-caption); }
+.activity-body pre, .activity-body code, .activity-command, .turn-file-changes li code { font-size: var(--font-size-caption); }
+.turn-file-changes summary strong, .turn-file-changes summary small, .turn-file-changes li > span, .turn-file-changes li > small { font-size: var(--font-size-caption); }
+.activity-note { margin-left: 16px; font-size: var(--font-size-caption); }
+.slash-command-menu strong, .slash-command-menu button small, .slash-command-menu button b, .file-mention-menu button strong, .file-mention-menu button small { font-size: var(--font-size-caption); }
+.slash-command-menu > header span, .agent-command-panel > header strong, .command-panel-list strong, .mcp-server summary > span { font-size: var(--font-size-control); }
+.slash-command-menu > header small, .file-mention-menu header, .file-mention-menu > p, .agent-command-panel > header small, .command-panel-list small, .mcp-server summary > em { font-size: var(--font-size-caption); }
