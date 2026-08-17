@@ -210,6 +210,28 @@ describe("conversation timing", () => {
     expect(markup).not.toContain('class="turn-process-disclosure" open=""');
   });
 
+  it("shows pre-turn compaction between the initial user message and final answer", () => {
+    const compaction: ThreadItem = { type: "contextCompaction", id: "compact-before-user" };
+    const user: ThreadItem = {
+      type: "userMessage",
+      id: "user-after-compaction",
+      clientId: null,
+      content: [{ type: "text", text: "当前是什么模型", text_elements: [] }],
+    };
+    const answer: ThreadItem = {
+      type: "agentMessage",
+      id: "answer-after-compaction",
+      text: "当前使用 GPT 模型。",
+      phase: "final_answer",
+      memoryCitation: null,
+    };
+    const markup = renderTurn({ ...completedTurn(), items: [compaction, user, answer] });
+
+    expect(markup.indexOf("当前是什么模型")).toBeLessThan(markup.indexOf("已处理"));
+    expect(markup.indexOf("已处理")).toBeLessThan(markup.indexOf("当前使用 GPT 模型。"));
+    expect(markup).toContain("已压缩会话上下文");
+  });
+
   it("renders multiple native process items as one continuous activity stream", () => {
     const reasoning: ThreadItem = {
       type: "reasoning",

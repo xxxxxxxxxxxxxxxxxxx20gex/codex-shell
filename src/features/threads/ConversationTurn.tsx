@@ -63,6 +63,15 @@ function orderedTurnBlocks(items: ThreadItem[]) {
     activityItems.push(item);
   });
   flushActivity();
+
+  const initialUserIndex = blocks.findIndex(
+    (block) => block.type === "user" && block.item.clientId === null,
+  );
+  if (initialUserIndex <= 0) return blocks;
+  const leadingBlocks = blocks.slice(0, initialUserIndex);
+  if (leadingBlocks.every((block) => block.type === "activity")) {
+    return [blocks[initialUserIndex], ...leadingBlocks, ...blocks.slice(initialUserIndex + 1)];
+  }
   return blocks;
 }
 
