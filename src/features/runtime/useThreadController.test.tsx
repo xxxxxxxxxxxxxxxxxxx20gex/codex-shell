@@ -63,6 +63,12 @@ function setup() {
     resumeThread: vi.fn(async ({ threadId }: { threadId: string }) => ({ thread: threads.get(threadId)! })),
     unsubscribeThread: vi.fn(async () => ({})),
     startThread: vi.fn(async () => ({ thread: thread("thread-new") })),
+    forkThread: vi.fn(async ({ threadId, lastTurnId }: { threadId: string; lastTurnId?: string }) => ({
+      thread: thread("thread-fork", {
+        forkedFromId: threadId,
+        turns: lastTurnId ? [turn(lastTurnId, "completed")] : [],
+      }),
+    })),
     startTurn: vi.fn(async (_params: unknown, _collaboration?: unknown) => ({ turn: turn("turn-a") })),
     steerTurn: vi.fn(async () => ({ turnId: "turn-a" })),
     startReview: vi.fn(async ({ delivery }: { delivery: "inline" | "detached" }) => ({
@@ -375,6 +381,28 @@ describe("useThreadController", () => {
     });
 
     expect(result.current.history.map((item) => item.id)).toEqual(["child", "parent"]);
+  });
+
+  it("forks a Session through the selected completed Turn", async () => {
+    const { client, props, dispatch, running } = setup();
+    const { result } = renderHook(() => useThreadController(props));
+    await waitFor(() => expect(client.listThreads).toHaveBeenCalled());
+
+    await act(async () => {
+      await result.current.openThread("thread-a");
+      running.add("thread-a");
+      expect(await result.current.forkThread("thread-a", "turn-previous")).toBe(true);
+    });
+
+    expect(client.forkThread).toHaveBeenCalledWith({
+      threadId: "thread-a",
+      lastTurnId: "turn-previous",
+      ephemeral: false,
+    });
+    expect(dispatch).toHaveBeenCalledWith(expect.objectContaining({
+      type: "loadThread",
+      thread: expect.objectContaining({ id: "thread-fork", forkedFromId: "thread-a" }),
+    }));
   });
 
   it("does not retain active branch ancestors in the archived view", async () => {

@@ -187,7 +187,7 @@ function App() {
               turns={session.turns}
               running={session.running}
               threadId={session.thread?.id}
-              onFork={(threadId) => void session.forkThread(threadId)}
+              onFork={(threadId, lastTurnId) => void session.forkThread(threadId, lastTurnId)}
               plansByTurnId={session.plansByTurnId}
               activeItemTurnIds={session.activeItemTurnIds}
               mcpProgressByItemId={session.mcpProgressByItemId}

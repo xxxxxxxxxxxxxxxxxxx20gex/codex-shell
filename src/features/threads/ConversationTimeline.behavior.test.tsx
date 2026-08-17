@@ -57,6 +57,18 @@ function turn(id: string, text: string): Turn {
   };
 }
 
+function answeredTurn(id: string, text: string): Turn {
+  const base = turn(id, text);
+  const answer: ThreadItem = {
+    type: "agentMessage",
+    id: `answer-${id}`,
+    text: `回答 ${text}`,
+    phase: null,
+    memoryCitation: null,
+  };
+  return { ...base, items: [...base.items, answer] };
+}
+
 describe("ConversationTimeline navigation", () => {
   afterEach(cleanup);
 
@@ -73,6 +85,43 @@ describe("ConversationTimeline navigation", () => {
     fireEvent.click(screen.getByRole("button", { name: "跳到消息：第一问" }));
 
     expect(virtuoso.scrollToIndex).toHaveBeenCalledWith({ index: 0, align: "start", behavior: "smooth" });
+  });
+
+  it("forks through the selected historical Turn instead of the whole Session", () => {
+    const onFork = vi.fn();
+    render(
+      <ConversationTimeline
+        turns={[answeredTurn("turn-1", "第一问"), answeredTurn("turn-2", "第二问")]}
+        running={false}
+        threadId="thread-source"
+        onFork={onFork}
+      />,
+    );
+
+    const forkButtons = screen.getAllByRole("button", { name: "分叉 Session" });
+    expect(forkButtons).toHaveLength(2);
+    fireEvent.click(forkButtons[0]);
+    fireEvent.click(forkButtons[1]);
+
+    expect(onFork).toHaveBeenNthCalledWith(1, "thread-source", "turn-1");
+    expect(onFork).toHaveBeenNthCalledWith(2, "thread-source", "turn-2");
+  });
+
+  it("keeps a completed historical Turn forkable while the latest Turn is running", () => {
+    const onFork = vi.fn();
+    render(
+      <ConversationTimeline
+        turns={[answeredTurn("turn-1", "第一问"), answeredTurn("turn-2", "第二问")]}
+        running
+        threadId="thread-source"
+        onFork={onFork}
+      />,
+    );
+
+    const forkButton = screen.getByRole("button", { name: "分叉 Session" });
+    fireEvent.click(forkButton);
+
+    expect(onFork).toHaveBeenCalledWith("thread-source", "turn-1");
   });
 
   it("marks the visible message on the Codex-style rail", () => {

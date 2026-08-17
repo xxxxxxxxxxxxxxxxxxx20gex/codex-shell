@@ -317,13 +317,13 @@ export function useThreadController(props: Props) {
     }
   }, [props.ensureConnected, props.isThreadRunning, props.setError, queued.clearThread, removeFromHistory, startNewTask, threadActionId]);
 
-  const forkThread = useCallback(async (threadId: string) => {
-    if (threadActionId || props.isThreadRunning(threadId)) return false;
+  const forkThread = useCallback(async (threadId: string, lastTurnId?: string) => {
+    if (threadActionId || (!lastTurnId && props.isThreadRunning(threadId))) return false;
     setThreadActionId(threadId);
     props.setError("");
     try {
       const client = await props.ensureConnected();
-      const response = await client.forkThread({ threadId, ephemeral: false });
+      const response = await client.forkThread({ threadId, lastTurnId, ephemeral: false });
       await unsubscribeIfIdle(threadIdRef.current);
       threadIdRef.current = response.thread.id;
       subscribedThreadIdsRef.current.add(response.thread.id);
