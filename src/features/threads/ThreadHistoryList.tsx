@@ -10,10 +10,7 @@ import {
 } from "lucide-react";
 import type { Thread } from "../../generated/app-server/v2/Thread";
 import { writeClipboardText } from "./clipboard";
-import {
-  SessionActionConfirmDialog,
-  type SessionDestructiveAction,
-} from "./SessionActionConfirmDialog";
+import { SessionActionConfirmDialog } from "./SessionActionConfirmDialog";
 import {
   threadReference,
   threadReferenceKind,
@@ -75,10 +72,7 @@ export function ThreadHistoryList(props: Props) {
   const orderedThreads = useMemo(() => orderThreadsByBranch(props.threads), [props.threads]);
   const [copyFeedback, setCopyFeedback] = useState<{ threadId: string; label: string } | null>(null);
   const [openActionThreadId, setOpenActionThreadId] = useState<string | null>(null);
-  const [pendingAction, setPendingAction] = useState<{
-    action: SessionDestructiveAction;
-    thread: Thread;
-  } | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Thread | null>(null);
 
   useEffect(() => {
     if (!copyFeedback) return;
@@ -98,12 +92,10 @@ export function ThreadHistoryList(props: Props) {
     if (name?.trim() && name.trim() !== threadTitle(thread)) props.onRename(thread.id, name);
   }
 
-  function confirmPendingAction() {
-    if (!pendingAction) return;
-    const { action, thread } = pendingAction;
-    setPendingAction(null);
-    if (action === "archive") props.onArchive(thread.id);
-    else props.onDelete(thread.id);
+  function confirmPendingDelete() {
+    if (!pendingDelete) return;
+    setPendingDelete(null);
+    props.onDelete(pendingDelete.id);
   }
 
   async function copyReference(thread: Thread) {
@@ -158,7 +150,7 @@ export function ThreadHistoryList(props: Props) {
                   ) : <>
                     <ThreadActionButton disabled={busy} onClick={() => { setOpenActionThreadId(null); rename(thread); }} label="重命名"><FilePenLine aria-hidden="true" /><b className="thread-action-label">重命名</b></ThreadActionButton>
                   </>}
-                  <ThreadActionButton disabled={busy || running} onClick={() => { setOpenActionThreadId(null); setPendingAction({ action: "delete", thread }); }} label={running ? "运行中无法删除" : "永久删除"}><Trash2 aria-hidden="true" /><b className="thread-action-label">永久删除</b></ThreadActionButton>
+                  <ThreadActionButton disabled={busy || running} onClick={() => { setOpenActionThreadId(null); setPendingDelete(thread); }} label={running ? "运行中无法删除" : "永久删除"}><Trash2 aria-hidden="true" /><b className="thread-action-label">永久删除</b></ThreadActionButton>
                 </div>
               </div>
             </div>
@@ -166,12 +158,11 @@ export function ThreadHistoryList(props: Props) {
         })}
         {props.hasMore && <button className="load-more" disabled={props.loading} onClick={props.onLoadMore}>{props.loading ? "加载中…" : "加载更多"}</button>}
       </nav>
-      {pendingAction && (
+      {pendingDelete && (
         <SessionActionConfirmDialog
-          action={pendingAction.action}
-          thread={pendingAction.thread}
-          onCancel={() => setPendingAction(null)}
-          onConfirm={confirmPendingAction}
+          thread={pendingDelete}
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={confirmPendingDelete}
         />
       )}
     </>

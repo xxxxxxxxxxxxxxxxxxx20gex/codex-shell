@@ -22,6 +22,7 @@ vi.mock("react-virtuoso", () => ({
     scrollerRef: (ref: HTMLElement | Window | null) => void;
   }, ref) => {
     const scrollerRef = useRef<HTMLDivElement>(null);
+    const setScrollerRef = props.scrollerRef;
     virtuoso.atBottomStateChange = props.atBottomStateChange;
     virtuoso.rangeChanged = props.rangeChanged;
     useImperativeHandle(ref, () => ({
@@ -29,9 +30,9 @@ vi.mock("react-virtuoso", () => ({
       autoscrollToBottom: virtuoso.autoscrollToBottom,
     }));
     useEffect(() => {
-      props.scrollerRef(scrollerRef.current);
-      return () => props.scrollerRef(null);
-    }, [props.scrollerRef]);
+      setScrollerRef(scrollerRef.current);
+      return () => setScrollerRef(null);
+    }, [setScrollerRef]);
     return <div ref={scrollerRef} data-testid="virtual-list">{props.data.map((turn, index) => props.itemContent(index, turn))}</div>;
   }),
 }));
@@ -122,6 +123,20 @@ describe("ConversationTimeline navigation", () => {
     fireEvent.click(forkButton);
 
     expect(onFork).toHaveBeenCalledWith("thread-source", "turn-1");
+  });
+
+  it("disables every Turn fork action while another Session mutation is pending", () => {
+    render(
+      <ConversationTimeline
+        turns={[answeredTurn("turn-1", "第一问"), answeredTurn("turn-2", "第二问")]}
+        running={false}
+        threadId="thread-source"
+        forkDisabled
+        onFork={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "分叉 Session" })).toBeNull();
   });
 
   it("marks the visible message on the Codex-style rail", () => {

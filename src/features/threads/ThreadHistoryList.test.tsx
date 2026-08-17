@@ -76,18 +76,13 @@ describe("ThreadHistoryList", () => {
     expect(markup).toContain('aria-label="恢复 Session"');
   });
 
-  it("renders distinct archive and permanent-delete confirmations", () => {
+  it("renders permanent-delete confirmation", () => {
     const session = thread("real-thread-a", "C:\\sessions\\a.jsonl");
-    const archiveMarkup = renderToStaticMarkup(
-      <SessionActionConfirmDialog action="archive" thread={session} onCancel={vi.fn()} onConfirm={vi.fn()} />,
-    );
     const deleteMarkup = renderToStaticMarkup(
-      <SessionActionConfirmDialog action="delete" thread={session} onCancel={vi.fn()} onConfirm={vi.fn()} />,
+      <SessionActionConfirmDialog thread={session} onCancel={vi.fn()} onConfirm={vi.fn()} />,
     );
 
-    expect(archiveMarkup).toContain('role="alertdialog"');
-    expect(archiveMarkup).toContain("归档这个会话？");
-    expect(archiveMarkup).toContain("记录仍保留");
+    expect(deleteMarkup).toContain('role="alertdialog"');
     expect(deleteMarkup).toContain("永久删除这个会话？");
     expect(deleteMarkup).toContain("此操作无法撤销");
   });

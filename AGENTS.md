@@ -39,7 +39,7 @@ Codex Shell 是面向个人开发者的 Windows 桌面智能体工作台。产�
 - 优先复用 app-server v2、Codex Core 和 Tauri 已有能力。新增包装层、Hook 或工具函数前，必须确认现有抽象无法直接满足需求；只被调用一次且不能形成清晰职责边界的小包装不应保留。
 - `App`、Session 编排和 Runtime 生命周期入口只负责协调。单个手写 TypeScript/Rust 模块目标不超过约 500 行；接近上限时，新功能应先拆到按职责命名的模块。超过约 800 行必须拆分，不以压缩格式或超长单行规避统计。
 - 删除代码前先证明没有调用方、持久化兼容或协议依赖；不得为了“整洁”删除生成协议、历史 Session/rollout 兼容、迁移逻辑或仍由 app-server 使用的稳定接口。
-- 审查先用静态证据定位问题，再做最小安全修改。前端至少运行 TypeScript、Vitest、production build 和 Knip；Rust 变更至少运行 Cargo check、相关单元测试和 Clippy。用户可见行为或生命周期修复必须补对应测试。
+- 审查先用静态证据定位问题，再做最小安全修改。前端至少运行 TypeScript、ESLint（含 React Hooks）、Vitest、production build 和 Knip；Rust 变更至少运行 Cargo check、相关单元测试和 Clippy。用户可见行为或生命周期修复必须补对应测试。
 - 审查结论同步到相关 `docs/status/*.md`：记录已删除的冗余、仍保留的风险和验证证据，不记录仅有主观偏好的格式调整。
 
 ## 动态文档更新门禁

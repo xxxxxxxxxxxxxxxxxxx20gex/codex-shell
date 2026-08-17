@@ -11,6 +11,7 @@ interface Props {
   turns: Turn[];
   running: boolean;
   threadId?: string | null;
+  forkDisabled?: boolean;
   onFork?: (threadId: string, lastTurnId: string) => void;
   plansByTurnId?: Record<string, TurnPlanUpdatedNotification>;
   activeItemTurnIds?: Record<string, string>;
@@ -40,6 +41,7 @@ export function ConversationTimeline({
   turns,
   running,
   threadId = null,
+  forkDisabled = false,
   onFork,
   plansByTurnId = EMPTY_PLANS,
   activeItemTurnIds = EMPTY_ACTIVE_ITEMS,
@@ -52,6 +54,7 @@ export function ConversationTimeline({
   const [atBottom, setAtBottom] = useState(true);
   const [hasNewActivity, setHasNewActivity] = useState(false);
   const [visibleStartIndex, setVisibleStartIndex] = useState(Math.max(0, turns.length - 1));
+  const previousActivityRef = useRef({ running, turns });
   const links = useMemo(() => userTurnLinks(turns), [turns]);
 
   const activeLinkIndex = useMemo(() => {
@@ -64,8 +67,12 @@ export function ConversationTimeline({
   }, [atBottom, links, visibleStartIndex]);
 
   useEffect(() => {
-    if (!atBottom) setHasNewActivity(true);
-  }, [running, turns]);
+    const previous = previousActivityRef.current;
+    previousActivityRef.current = { running, turns };
+    if (!atBottom && (previous.running !== running || previous.turns !== turns)) {
+      setHasNewActivity(true);
+    }
+  }, [atBottom, running, turns]);
 
   useEffect(() => () => scrollerCleanupRef.current?.(), []);
 
@@ -160,7 +167,7 @@ export function ConversationTimeline({
             <ConversationTurn
               turn={turn}
               active={running && turnIndex === turns.length - 1}
-              canFork={Boolean(onFork && threadId && turn.status !== "inProgress" && !(running && turnIndex === turns.length - 1))}
+              canFork={Boolean(onFork && threadId && !forkDisabled && turn.status !== "inProgress" && !(running && turnIndex === turns.length - 1))}
               onFork={threadId && onFork ? () => onFork(threadId, turn.id) : undefined}
               plan={plansByTurnId[turn.id]}
               activeItemTurnIds={activeItemTurnIds}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { RefreshCw, Server, X } from "lucide-react";
 import type { McpServerStatus } from "../../generated/app-server/v2/McpServerStatus";
 import type { ResourceContent } from "../../generated/app-server/ResourceContent";
@@ -39,7 +39,7 @@ export function McpStatusPanel({ loadServers, loginServer, reloadServers, readRe
   const [authorizationUrl, setAuthorizationUrl] = useState("");
   const [resourcePreview, setResourcePreview] = useState("");
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
@@ -49,13 +49,11 @@ export function McpStatusPanel({ loadServers, loginServer, reloadServers, readRe
     } finally {
       setLoading(false);
     }
-  }
+  }, [loadServers]);
 
   useEffect(() => {
     void refresh();
-    // loadServers is a stable callback owned by the Session hook.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadServers]);
+  }, [refresh]);
 
   async function login(name: string) {
     setActionServer(name);

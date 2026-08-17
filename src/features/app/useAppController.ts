@@ -82,6 +82,7 @@ export function useAppController() {
   const panels = useResizablePanels();
   const newThreadCwd = pendingProjectPath ?? defaultProjectDirectory?.path ?? null;
   const session = useAgentSession(settings, permissionMode, approvalReviewer, newThreadCwd);
+  const searchFiles = session.searchFiles;
   const currentProjectPath = session.thread?.cwd ? String(session.thread.cwd) : newThreadCwd;
   const usingDefaultProjectDirectory = Boolean(
     currentProjectPath
@@ -129,7 +130,7 @@ export function useAppController() {
     }
     setMentionLoading(true);
     const timeout = window.setTimeout(() => {
-      void session.searchFiles(mentionQuery).then((results) => {
+      void searchFiles(mentionQuery).then((results) => {
         if (mentionRequestRef.current === requestId) setMentionResults(results);
       }).catch((error) => {
         if (mentionRequestRef.current === requestId) setUiError(errorMessage(error));
@@ -138,7 +139,7 @@ export function useAppController() {
       });
     }, 120);
     return () => window.clearTimeout(timeout);
-  }, [currentProjectPath, mentionQuery, session.searchFiles]);
+  }, [currentProjectPath, mentionQuery, searchFiles]);
 
   useEffect(() => setSlashSelectedIndex(0), [slashQuery]);
 

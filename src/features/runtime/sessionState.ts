@@ -277,7 +277,7 @@ export function agentSessionReducer(
       return initialAgentSessionState;
     case "clearLiveProgress":
       return { ...state, activeItemTurnIds: {}, mcpProgressByItemId: {} };
-    case "loadThread":
+    case "loadThread": {
       const visibleTurns = boundedTurns(action.thread.turns);
       return {
         thread: { ...action.thread, turns: [] },
@@ -288,6 +288,7 @@ export function agentSessionReducer(
         mcpProgressByItemId: {},
         tokenUsage: null,
       };
+    }
     case "updateThread":
       return state.thread?.id === action.thread.id
         ? { ...state, thread: { ...action.thread, turns: [] } }

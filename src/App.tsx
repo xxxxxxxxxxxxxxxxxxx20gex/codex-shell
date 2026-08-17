@@ -126,7 +126,7 @@ function App() {
             <strong>Codex Shell</strong>
           </header>
           <div className="new-task-wrap">
-            <button className="new-task" onClick={startNewTask} disabled={session.submitting || session.openingThreadId !== null}>
+            <button className="new-task" onClick={startNewTask} disabled={session.submitting || session.openingThreadId !== null || session.threadActionId !== null}>
               <MessageSquarePlus aria-hidden="true" />
               <span>新建对话</span>
             </button>
@@ -137,7 +137,7 @@ function App() {
             activeThreadId={session.thread?.id ?? null}
             loading={session.historyLoading}
             error={session.historyError}
-            disabled={session.submitting || session.openingThreadId !== null}
+            disabled={session.submitting || session.openingThreadId !== null || session.threadActionId !== null}
             actionThreadId={session.threadActionId}
             runningThreadIds={session.runningThreadIds}
             hasMore={session.historyHasMore}
@@ -187,6 +187,7 @@ function App() {
               turns={session.turns}
               running={session.running}
               threadId={session.thread?.id}
+              forkDisabled={session.submitting || session.openingThreadId !== null || session.threadActionId !== null}
               onFork={(threadId, lastTurnId) => void session.forkThread(threadId, lastTurnId)}
               plansByTurnId={session.plansByTurnId}
               activeItemTurnIds={session.activeItemTurnIds}

@@ -5,6 +5,9 @@ try {
     & pnpm typecheck
     if ($LASTEXITCODE -ne 0) { throw "TypeScript 类型检查失败，退出码：$LASTEXITCODE" }
 
+    & pnpm lint
+    if ($LASTEXITCODE -ne 0) { throw "前端 ESLint 检查失败，退出码：$LASTEXITCODE" }
+
     & pnpm test
     if ($LASTEXITCODE -ne 0) { throw "Vitest 测试失败，退出码：$LASTEXITCODE" }
 

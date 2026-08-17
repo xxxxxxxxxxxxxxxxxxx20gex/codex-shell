@@ -22,7 +22,7 @@
 
 ### 对话与 Session
 
-- 支持 Thread 创建、只读打开、按需 Resume、分页历史、重命名、固定、归档、恢复、删除、按任一已完成 Turn 精确 Fork，以及 rollout 路径/ID 复制。历史列表中置顶与归档直接展示并可点击，其他操作通过右键菜单进入；归档无需二次确认，永久删除仍需二次确认，刷新按钮已移除。
+- 支持 Thread 创建、只读打开、按需 Resume、分页历史、重命名、固定、归档、恢复、删除、按任一已完成 Turn 精确 Fork，以及 rollout 路径/ID 复制。Session 变更使用同步互斥锁和 token 丢弃过期响应，不与发送、切换或其他 Session 操作并发；历史列表中置顶与归档直接展示并可点击，其他操作通过右键菜单进入；归档无需二次确认，永久删除仍需二次确认，刷新按钮已移除。
 - 多个 Session 可并行运行；当前 Session 的普通补充消息进入每 Session 最多 10 条的内存 Queue，显式 `Ctrl/Cmd+Shift+Enter` 使用原生 `turn/steer`。
 - 模型、推理强度、沙盒范围和审批者随下一次 `turn/start` 生效，不因参数切换创建新 Session；Queue 会快照入队时的权限和模型设置。
 - 前端只保留当前 Session 最近 200 个 Turn，关联 Diff、Plan 和流式状态同步裁剪。
@@ -47,7 +47,7 @@
 
 - app-server 自动断线恢复尚未完成；当前代际隔离可以阻止旧进程延迟事件污染新连接，但不会主动重启崩溃进程或恢复进行中的 Turn。
 - Shell Queue 只存在当前进程内，应用退出后不会恢复；MCP 配置编辑、Skills/Plugin 管理和显式连接诊断尚未完成。
-- `useAppController.ts` 和 `useThreadController.ts` 均接近 500 行；继续扩展 Composer 或 Thread 编排前应按状态域拆分，避免重新形成高频单体入口。
+- `useAppController.ts` 接近 500 行；继续扩展 Composer 编排前应按附件、文件 mention 和命令状态拆分，避免重新形成高频单体入口。Thread 元数据操作已从 `useThreadController` 拆入 `useThreadActions`。
 - 文件预览会先经 IPC 读取完整文件再在前端截断；超大 Diff、单个超长活动和二进制 Diff 尚无源端截断或专用视图。
 - Runtime 二进制未进入 Git，尚无可复现下载/构建流程；安装包、签名、CI、干净 Windows 环境 UAC/sidecar 验证均未完成。
 
@@ -60,7 +60,7 @@
 
 ## 验证基线
 
-- 2026-08-17：完整 `pnpm test:quality` 通过，覆盖 50 个 Vitest 文件、209 项测试、TypeScript、Vite production build、Knip、`git diff --check`、`cargo check`、12 项 Rust 单元测试和 `cargo clippy --all-targets -- -D warnings`；桌面 debug 构建成功。Headless Edge 最近一次已验证 1440×900、1280×780、1024×720、900×700 和 899×700 的布局边界。
+- 2026-08-17：完整 `pnpm test:quality` 通过，覆盖 ESLint 零 warning、50 个 Vitest 文件、212 项测试、TypeScript、Vite production build、Knip、`git diff --check`、`cargo check`、12 项 Rust 单元测试和严格 Clippy；桌面 debug 构建成功。Headless Edge 最近一次已验证 1440×900、1280×780、1024×720、900×700 和 899×700 的布局边界。
 - 静态审查：Knip 未发现无效文件、导出或依赖；生产 TypeScript/CSS/Rust 未发现达到 6 行/60 tokens 的重复块。jscpd 报告 13 处重复全部位于测试夹具与场景搭建，整体重复行占 0.92%。
 - `pnpm audit --prod` 无已知漏洞；源码扫描未发现 PAT、API Key、用户密钥或开发机绝对路径。
 - 真实 app-server smoke 已覆盖多 Turn 恢复、并行 Thread、文件 RPC、Skills/MCP/Goal、Plan 和第三方兼容网关；这些证据对应固定 Runtime，不代表最新版 Codex 源码能力。

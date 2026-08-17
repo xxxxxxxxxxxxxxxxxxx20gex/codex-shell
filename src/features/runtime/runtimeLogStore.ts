@@ -7,6 +7,7 @@ export interface RuntimeLogEntry {
 const MAX_RUNTIME_LOG_ENTRIES = 200;
 const MAX_RUNTIME_LOG_LINE_CHARS = 4_000;
 const LOG_FLUSH_INTERVAL_MS = 150;
+// eslint-disable-next-line no-control-regex -- ANSI terminal sequences start with ESC.
 const ANSI_ESCAPE_SEQUENCE = /\u001B(?:[@-_][0-?]*[ -/]*[@-~]|\[[0-?]*[ -/]*[@-~])/g;
 
 export function normalizeRuntimeLogLine(line: string) {

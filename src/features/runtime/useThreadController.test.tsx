@@ -69,7 +69,11 @@ function setup() {
         turns: lastTurnId ? [turn(lastTurnId, "completed")] : [],
       }),
     })),
-    startTurn: vi.fn(async (_params: unknown, _collaboration?: unknown) => ({ turn: turn("turn-a") })),
+    startTurn: vi.fn(async (params: unknown, collaboration?: unknown) => {
+      void params;
+      void collaboration;
+      return { turn: turn("turn-a") };
+    }),
     steerTurn: vi.fn(async () => ({ turnId: "turn-a" })),
     startReview: vi.fn(async ({ delivery }: { delivery: "inline" | "detached" }) => ({
       reviewThreadId: delivery === "inline" ? "thread-a" : "review-thread",
@@ -402,6 +406,69 @@ describe("useThreadController", () => {
     expect(dispatch).toHaveBeenCalledWith(expect.objectContaining({
       type: "loadThread",
       thread: expect.objectContaining({ id: "thread-fork", forkedFromId: "thread-a" }),
+    }));
+  });
+
+  it("serializes Session actions before React can publish the pending state", async () => {
+    const { client, props } = setup();
+    let resolveFork!: (value: { thread: Thread }) => void;
+    client.forkThread.mockImplementationOnce(() => new Promise((resolve) => {
+      resolveFork = resolve;
+    }));
+    const { result } = renderHook(() => useThreadController(props));
+    await waitFor(() => expect(client.listThreads).toHaveBeenCalled());
+    await act(async () => result.current.openThread("thread-a"));
+
+    let firstFork!: Promise<boolean>;
+    let secondFork = true;
+    let sendDuringFork = true;
+    await act(async () => {
+      firstFork = result.current.forkThread("thread-a", "turn-previous");
+      secondFork = await result.current.forkThread("thread-a", "turn-other");
+      sendDuringFork = await result.current.send("不应在分叉期间发送");
+      await result.current.openThread("thread-b");
+    });
+
+    expect(secondFork).toBe(false);
+    expect(sendDuringFork).toBe(false);
+    expect(client.forkThread).toHaveBeenCalledTimes(1);
+    expect(client.startTurn).not.toHaveBeenCalled();
+    expect(client.readThread).not.toHaveBeenCalledWith({ threadId: "thread-b", includeTurns: true });
+
+    await act(async () => {
+      resolveFork({ thread: thread("thread-fork", { forkedFromId: "thread-a" }) });
+      expect(await firstFork).toBe(true);
+    });
+  });
+
+  it("ignores an obsolete fork response after the Session state is reset", async () => {
+    const { client, props, dispatch } = setup();
+    let resolveFork!: (value: { thread: Thread }) => void;
+    client.forkThread.mockImplementationOnce(() => new Promise((resolve) => {
+      resolveFork = resolve;
+    }));
+    const { result } = renderHook(() => useThreadController(props));
+    await waitFor(() => expect(client.listThreads).toHaveBeenCalled());
+    await act(async () => result.current.openThread("thread-a"));
+    dispatch.mockClear();
+
+    let pendingFork!: Promise<boolean>;
+    act(() => {
+      pendingFork = result.current.forkThread("thread-a", "turn-previous");
+    });
+    await waitFor(() => expect(client.forkThread).toHaveBeenCalledTimes(1));
+    act(() => {
+      result.current.reset();
+    });
+    await act(async () => {
+      resolveFork({ thread: thread("stale-fork", { forkedFromId: "thread-a" }) });
+      expect(await pendingFork).toBe(false);
+    });
+
+    expect(dispatch).toHaveBeenCalledWith({ type: "clear" });
+    expect(dispatch).not.toHaveBeenCalledWith(expect.objectContaining({
+      type: "loadThread",
+      thread: expect.objectContaining({ id: "stale-fork" }),
     }));
   });
 
