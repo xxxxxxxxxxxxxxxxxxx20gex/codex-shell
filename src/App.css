@@ -311,12 +311,22 @@ code { color: #d7e8a5; font-family: "Cascadia Code", Consolas, monospace; }
 .thread-list .thread-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .thread-row:hover .thread-main, .thread-row:focus-within .thread-main { color: var(--text-primary); }
 .thread-main span i { margin-right: 5px; color: #9ebc50; font-size: 7px; font-style: normal; }
-.thread-actions { position: absolute; z-index: 2; top: 50%; right: 4px; display: flex; align-items: center; gap: 0; padding-left: 22px; background: linear-gradient(90deg, transparent, var(--surface-raised) 18px, var(--surface-raised) 24px); opacity: 0; visibility: hidden; transform: translateY(-50%); transition: opacity var(--motion-fast), visibility 0s linear .12s; }
+.thread-actions { position: absolute; z-index: 4; top: 50%; right: 4px; display: flex; align-items: center; gap: 0; padding-left: 22px; background: linear-gradient(90deg, transparent, var(--surface-raised) 18px, var(--surface-raised) 24px); opacity: 0; visibility: hidden; transform: translateY(-50%); transition: opacity var(--motion-fast), visibility 0s linear .12s; }
 .thread-row.active .thread-actions { background: linear-gradient(90deg, transparent, var(--surface-selected) 18px, var(--surface-selected) 24px); }
 .thread-row:hover .thread-actions, .thread-row:focus-within .thread-actions { opacity: 1; visibility: visible; transition-delay: 0s; }
 .thread-list .thread-actions button { position: relative; display: flex; width: 24px; height: 24px; flex: none; align-items: center; justify-content: center; padding: 0; border-radius: 4px; color: var(--text-muted); line-height: 0; }
 .thread-list .thread-actions button:hover { color: var(--accent); background: #2a2a23; }
 .thread-list .thread-actions button:disabled { color: #4f4e48; }
+.thread-menu-trigger { border: 0; background: transparent; cursor: pointer; }
+.thread-menu-trigger svg { width: 17px; height: 17px; stroke-width: 1.8; }
+.thread-action-menu { position: absolute; top: calc(100% + 5px); right: 0; display: grid; min-width: 174px; padding: 4px; border: 1px solid var(--border-default); border-radius: var(--radius-control); background: var(--surface-raised); box-shadow: var(--shadow-popover); opacity: 0; pointer-events: none; transform: translateY(-3px); transition: opacity var(--motion-fast), transform var(--motion-fast), visibility 0s linear var(--motion-fast); visibility: hidden; }
+.thread-action-menu.open { opacity: 1; pointer-events: auto; transform: translateY(0); visibility: visible; transition-delay: 0s; }
+.thread-action-menu .thread-action-button { display: flex; width: 100%; height: 30px; align-items: center; justify-content: flex-start; gap: 8px; padding: 0 8px; border: 0; color: var(--text-secondary); font-size: var(--font-size-control); text-align: left; }
+.thread-action-menu .thread-action-button span { display: inline; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.thread-action-menu .thread-action-button:hover { color: var(--text-primary); background: var(--surface-selected); }
+.thread-action-menu .thread-action-button:disabled { color: var(--text-disabled); }
+.thread-action-menu .thread-action-button::after { display: none; }
+.thread-action-menu .thread-action-button svg { flex: 0 0 15px; width: 15px; height: 15px; }
 .thread-action-button svg { display: block; width: 14px; height: 14px; overflow: visible; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .thread-action-button svg .filled { fill: currentColor; }
 .thread-action-button::after { position: absolute; z-index: 20; top: calc(100% + 7px); left: 0; width: max-content; padding: 4px 6px; pointer-events: none; border: 1px solid #424139; border-radius: 5px; color: #c7c5bc; background: #181815; box-shadow: 0 7px 20px rgba(0,0,0,.45); content: attr(data-tooltip); font-size: 9px; line-height: 1.2; white-space: nowrap; opacity: 0; visibility: hidden; transform: none; transition: opacity .1s ease, visibility 0s linear .1s; }
