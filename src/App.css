@@ -198,7 +198,10 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .send-mode-menu button:disabled small { color: var(--text-disabled); }
 .send-mode-menu button:disabled kbd { color: var(--text-disabled); }
 .send-button { color: var(--accent-ink); background: var(--accent-action); }
-.stop-button { color: var(--surface-canvas); background: var(--accent-danger); }
+.send-button svg { width: 16px; height: 16px; stroke-width: 1.9; }
+.stop-button { color: var(--accent-danger); background: color-mix(in srgb, var(--accent-danger) 16%, var(--surface-raised)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-danger) 20%, transparent); transition: background-color var(--motion-fast), box-shadow var(--motion-fast); }
+.stop-button svg { display: block; width: 10px; height: 10px; fill: currentColor; stroke: none; }
+.stop-button:hover { background: color-mix(in srgb, var(--accent-danger) 23%, var(--surface-raised)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-danger) 32%, transparent); }
 .send-button:disabled { color: var(--text-disabled); background: var(--surface-selected); cursor: default; }
 .permission-selector { position: relative; }
 .permission-trigger { display: flex; height: 28px; min-height: 28px; align-items: center; gap: 6px; padding: 5px 8px; border: 1px solid var(--border-subtle); border-radius: var(--radius-control); color: var(--text-secondary); background: var(--surface-panel); cursor: pointer; }

@@ -2,7 +2,7 @@
 
 - 模块职责：维护类型检查、单元测试、集成测试、Windows 构建与发行物。
 - 当前状态：类型、前端单元、Rust 路径/provider 单元和后台 app-server smoke 已覆盖；发布流水线未建立。
-- 最近变更：新增 ESLint 9 Flat Config，启用 JavaScript/TypeScript 推荐规则及 `react-hooks/rules-of-hooks`、`react-hooks/exhaustive-deps`，以零 warning 方式纳入完整质量门禁；同时增加 Session 同步互斥和过期 Fork 响应回归测试。
+- 最近变更：Composer 发送/停止按钮完成局部视觉校正；继续使用 ESLint 9 Flat Config、React Hooks 规则、Session 同步互斥和过期 Fork 响应回归测试作为质量基线。
 - 当前接口：`pnpm typecheck`、`pnpm lint`、`pnpm test`、`pnpm test:quality`、`pnpm build`、`pnpm rust:check`、`pnpm runtime:probe-goal`、`pnpm desktop:build`；独立测试脚本统一位于 `tests/scripts`。
 - 已知问题：没有 CI、签名、MSI/NSIS 和干净机器 UAC/sidecar 验证；仍缺 Runtime 版本不匹配和三栏拖拽的自动化覆盖。
 - 下一步：配置不含密钥的 CI 基线，并在干净 Windows 环境验证安装后的动态 sidecar 路径。

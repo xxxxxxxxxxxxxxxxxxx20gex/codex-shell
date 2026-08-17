@@ -277,7 +277,7 @@ function App() {
                     onQueue={() => void submitWithMode("queue")}
                     onSteer={() => void submitWithMode("steer")}
                   />
-                  {session.canInterrupt && <button className="stop-button" onClick={() => void session.interrupt()} aria-label="停止任务" title="停止任务"><Square aria-hidden="true" fill="currentColor" /></button>}
+                  {session.canInterrupt && <button className="stop-button" onClick={() => void session.interrupt()} aria-label="停止任务" title="停止任务"><Square aria-hidden="true" /></button>}
                 </div>
               </div>
             </div>
