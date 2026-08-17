@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { ArrowUpRight, ChevronDown, ChevronLeft, ChevronRight, MessageSquarePlus, Sparkles, Square, X } from "lucide-react";
 import type { FuzzyFileSearchResult } from "./generated/app-server/FuzzyFileSearchResult";
 import { errorMessage } from "./shared/errors";
 import "./App.css";
@@ -57,7 +56,6 @@ import { WorkspaceExplorer } from "./features/workspaces/WorkspaceExplorer";
 import { WorkspaceSelector } from "./features/workspaces/WorkspaceSelector";
 import { useDismissiblePopover } from "./shared/useDismissiblePopover";
 import "./styles/tokens.css";
-import "./styles/shell-refresh.css";
 import {
   activeFileMentionQuery,
   type DefaultProjectDirectory,
@@ -477,7 +475,10 @@ function App() {
       >
         <aside className="sidebar panel">
           <button className="new-task" onClick={startNewTask} disabled={session.submitting || session.openingThreadId !== null}>
-            <MessageSquarePlus aria-hidden="true" />
+            <svg aria-hidden="true" viewBox="0 0 20 20">
+              <path d="M11.5 3.5h-6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-6" />
+              <path d="m9 11 7.25-7.25a1.4 1.4 0 0 1 2 2L11 13l-3 .75z" />
+            </svg>
             <span>新对话</span>
           </button>
           <ThreadHistoryList
@@ -522,7 +523,9 @@ function App() {
             aria-label={sidebarOpen ? "隐藏左侧功能区" : "显示左侧功能区"}
             title={sidebarOpen ? "隐藏左侧功能区" : "显示左侧功能区"}
           >
-            {sidebarOpen ? <ChevronLeft aria-hidden="true" /> : <ChevronRight aria-hidden="true" />}
+            <svg aria-hidden="true" viewBox="0 0 10 10">
+              <path d={sidebarOpen ? "M6.5 2 3.5 5l3 3" : "M3.5 2l3 3-3 3"} />
+            </svg>
           </button>
         </div>
 
@@ -566,7 +569,7 @@ function App() {
             <div ref={composerRef} className="composer has-context-heatbar">
               <ContextHeatBar usage={session.tokenUsage} hasThread={Boolean(session.thread)} running={session.running} onCompact={() => runSlashCommand("compact", "", false)} />
               {skills.length > 0 && <div className="mention-chips">
-                {skills.map((skill) => <span className="skill-chip" key={skill.path} title={skill.path}><Sparkles aria-hidden="true" /> {skill.name}<button type="button" aria-label={`移除 Skill ${skill.name}`} onClick={() => toggleSkill(skill)}><X aria-hidden="true" /></button></span>)}
+                {skills.map((skill) => <span className="skill-chip" key={skill.path} title={skill.path}>✦ {skill.name}<button onClick={() => toggleSkill(skill)}>×</button></span>)}
               </div>}
               <AttachmentGallery
                 files={mentions}
@@ -583,8 +586,8 @@ function App() {
                   const label = queuedTurnLabel(queued);
                   return <div className="queued-turn" key={queued.id}>
                     <span><i>{index + 1}</i>{label}</span>
-                    {session.canSteer && <button type="button" onClick={() => void steerQueuedTurn(queued)} aria-label={`引导发送待发送消息：${label}`} title="引导发送"><ArrowUpRight aria-hidden="true" /></button>}
-                    <button type="button" onClick={() => session.removeQueued(queued.id)} aria-label={`取消待发送消息：${label}`} title="取消待发送"><X aria-hidden="true" /></button>
+                    {session.canSteer && <button type="button" onClick={() => void steerQueuedTurn(queued)} aria-label={`引导发送待发送消息：${label}`} title="引导发送">↗</button>}
+                    <button type="button" onClick={() => session.removeQueued(queued.id)} aria-label={`取消待发送消息：${label}`} title="取消待发送">×</button>
                   </div>;
                 })}
               </div>}
@@ -615,7 +618,7 @@ function App() {
                 </div>
                 <div className="composer-actions">
                   <div className="model-picker-anchor">
-                    <button className="model-button" onClick={() => setModelPickerOpen((open) => !open)} title="选择模型与推理强度"><span>{modelDisplayName ?? settings.modelId}</span>{settings.reasoningEffort && <small>{settings.reasoningEffort}</small>}<ChevronDown aria-hidden="true" className="chevron-icon" /></button>
+                    <button className="model-button" onClick={() => setModelPickerOpen((open) => !open)} title="选择模型与推理强度"><span>{modelDisplayName ?? settings.modelId}</span>{settings.reasoningEffort && <small>{settings.reasoningEffort}</small>}<svg className="chevron-icon" aria-hidden="true" viewBox="0 0 12 12"><path d="m3.5 4.5 2.5 2.5 2.5-2.5" /></svg></button>
                     {modelPickerOpen && <ModelQuickPicker settings={settings} loadModels={session.listModels} onChange={changeModelSettings} onDisplayName={setModelDisplayName} onAdvanced={() => { setModelPickerOpen(false); setSettingsOpen(true); }} onClose={() => setModelPickerOpen(false)} />}
                   </div>
                   <SendModeControl
@@ -625,7 +628,7 @@ function App() {
                     onQueue={() => void submitWithMode("queue")}
                     onSteer={() => void submitWithMode("steer")}
                   />
-                  {session.canInterrupt && <button className="stop-button" onClick={() => void session.interrupt()} aria-label="停止任务" title="停止任务"><Square aria-hidden="true" fill="currentColor" /></button>}
+                  {session.canInterrupt && <button className="stop-button" onClick={() => void session.interrupt()} aria-label="停止任务">■</button>}
                 </div>
               </div>
             </div>
@@ -651,7 +654,9 @@ function App() {
             aria-label={inspectorOpen ? "隐藏右侧功能区" : "显示右侧功能区"}
             title={inspectorOpen ? "隐藏右侧功能区" : "显示右侧功能区"}
           >
-            {inspectorOpen ? <ChevronRight aria-hidden="true" /> : <ChevronLeft aria-hidden="true" />}
+            <svg aria-hidden="true" viewBox="0 0 10 10">
+              <path d={inspectorOpen ? "M3.5 2l3 3-3 3" : "M6.5 2 3.5 5l3 3"} />
+            </svg>
           </button>
         </div>
 

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
-import { Archive, ArchiveRestore, Copy, FilePenLine, Pin, RefreshCw, Trash2 } from "lucide-react";
 import type { Thread } from "../../generated/app-server/v2/Thread";
 import { writeClipboardText } from "./clipboard";
 import {
@@ -64,6 +63,30 @@ function ThreadActionButton({ label, disabled = false, onClick, children }: Thre
   );
 }
 
+function PinIcon({ pinned }: { pinned: boolean }) {
+  return <svg aria-hidden="true" viewBox="0 0 16 16"><path className={pinned ? "filled" : ""} d="m5 2 6 0-.7 4 2.2 2.2v1.1H8.7V14H7.3V9.3H3.5V8.2L5.7 6 5 2Z" /></svg>;
+}
+
+function CopyIcon() {
+  return <svg aria-hidden="true" viewBox="0 0 16 16"><rect x="5.5" y="5.5" width="7" height="7" rx="1" /><path d="M10.5 5.5V4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v5.5a1 1 0 0 0 1 1h1.5" /></svg>;
+}
+
+function RenameIcon() {
+  return <svg aria-hidden="true" viewBox="0 0 16 16"><path d="m3 11.8.4-2.5L10 2.7a1.4 1.4 0 0 1 2 0l1.3 1.3a1.4 1.4 0 0 1 0 2l-6.6 6.6-2.5.4L3 11.8Z" /><path d="m9.2 3.5 3.3 3.3" /></svg>;
+}
+
+function ArchiveIcon() {
+  return <svg aria-hidden="true" viewBox="0 0 16 16"><path d="M3 5.5h10V13H3z" /><path d="M2.5 3h11v2.5h-11zM6 8h4" /></svg>;
+}
+
+function RestoreIcon() {
+  return <svg aria-hidden="true" viewBox="0 0 16 16"><path d="M3 5.5h10V13H3z" /><path d="M2.5 3h11v2.5h-11zM8 11V7M6.3 8.7 8 7l1.7 1.7" /></svg>;
+}
+
+function DeleteIcon() {
+  return <svg aria-hidden="true" viewBox="0 0 16 16"><path d="M3.5 4.5h9M6 4.5V3h4v1.5M5 6.5l.5 6.5h5l.5-6.5M7 7v4M9 7v4" /></svg>;
+}
+
 export function ThreadHistoryList(props: Props) {
   const orderedThreads = useMemo(() => orderThreadsByBranch(props.threads), [props.threads]);
   const [copyFeedback, setCopyFeedback] = useState<{ threadId: string; label: string } | null>(null);
@@ -105,7 +128,7 @@ export function ThreadHistoryList(props: Props) {
     <>
       <div className="section-heading">
         <button className="history-view-toggle" onClick={() => props.onShowArchived(!props.archived)}>{props.archived ? "已归档" : "本地历史"}<svg className="chevron-icon" aria-hidden="true" viewBox="0 0 12 12"><path d="m3.5 4.5 2.5 2.5 2.5-2.5" /></svg></button>
-        <button type="button" onClick={props.onRefresh} disabled={props.loading} aria-label="刷新本地历史" title="刷新本地历史"><RefreshCw aria-hidden="true" className={props.loading ? "is-spinning" : undefined} /></button>
+        <button onClick={props.onRefresh} disabled={props.loading} aria-label="刷新本地历史">{props.loading ? "…" : "↻"}</button>
       </div>
       <nav className="thread-list" aria-label="本地历史会话">
         {props.error && <p className="sidebar-error">{props.error}</p>}
@@ -129,19 +152,19 @@ export function ThreadHistoryList(props: Props) {
                   ? `${threadTitle(thread)}\n恢复 Session 后可打开`
                   : `${threadTitle(thread)}\n${thread.cwd}`}
               >
-                <span className="thread-title">{thread.isPinned && <Pin aria-hidden="true" className="thread-pin" fill="currentColor" />}{threadTitle(thread)}</span>
+                <span className="thread-title">{thread.isPinned && <i>◆</i>}{threadTitle(thread)}</span>
                 <small>{running ? "运行中" : dateFormatter.format(new Date(thread.updatedAt * 1000))}</small>
               </button>
               <div className="thread-actions">
-                <ThreadActionButton onClick={() => void copyReference(thread)} label={copyLabel}><Copy aria-hidden="true" /></ThreadActionButton>
+                <ThreadActionButton onClick={() => void copyReference(thread)} label={copyLabel}><CopyIcon /></ThreadActionButton>
                 {props.archived ? (
-                  <ThreadActionButton disabled={busy} onClick={() => props.onUnarchive(thread.id)} label="恢复 Session"><ArchiveRestore aria-hidden="true" /></ThreadActionButton>
+                  <ThreadActionButton disabled={busy} onClick={() => props.onUnarchive(thread.id)} label="恢复 Session"><RestoreIcon /></ThreadActionButton>
                 ) : <>
-                  <ThreadActionButton disabled={busy} onClick={() => props.onTogglePin(thread)} label={thread.isPinned ? "取消固定" : "固定"}><Pin aria-hidden="true" fill={thread.isPinned ? "currentColor" : "none"} /></ThreadActionButton>
-                  <ThreadActionButton disabled={busy} onClick={() => rename(thread)} label="重命名"><FilePenLine aria-hidden="true" /></ThreadActionButton>
-                  <ThreadActionButton disabled={busy || running} onClick={() => setPendingAction({ action: "archive", thread })} label={running ? "运行中无法归档" : "归档"}><Archive aria-hidden="true" /></ThreadActionButton>
+                  <ThreadActionButton disabled={busy} onClick={() => props.onTogglePin(thread)} label={thread.isPinned ? "取消固定" : "固定"}><PinIcon pinned={thread.isPinned} /></ThreadActionButton>
+                  <ThreadActionButton disabled={busy} onClick={() => rename(thread)} label="重命名"><RenameIcon /></ThreadActionButton>
+                  <ThreadActionButton disabled={busy || running} onClick={() => setPendingAction({ action: "archive", thread })} label={running ? "运行中无法归档" : "归档"}><ArchiveIcon /></ThreadActionButton>
                 </>}
-                <ThreadActionButton disabled={busy || running} onClick={() => setPendingAction({ action: "delete", thread })} label={running ? "运行中无法删除" : "永久删除"}><Trash2 aria-hidden="true" /></ThreadActionButton>
+                <ThreadActionButton disabled={busy || running} onClick={() => setPendingAction({ action: "delete", thread })} label={running ? "运行中无法删除" : "永久删除"}><DeleteIcon /></ThreadActionButton>
               </div>
             </div>
           );
