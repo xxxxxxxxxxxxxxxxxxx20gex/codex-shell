@@ -1,7 +1,7 @@
 export type ResizablePanel = "sidebar" | "inspector";
 
-export const DEFAULT_SIDEBAR_WIDTH = 244;
-export const DEFAULT_INSPECTOR_WIDTH = 310;
+export const DEFAULT_SIDEBAR_WIDTH = 248;
+export const DEFAULT_INSPECTOR_WIDTH = 288;
 
 const MIN_CONVERSATION_WIDTH = 440;
 const PANEL_LIMITS: Record<ResizablePanel, { minimum: number; maximum: number }> = {
