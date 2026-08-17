@@ -164,13 +164,13 @@ export function ThreadHistoryList(props: Props) {
                 </button>
                 <div className={`thread-action-menu ${openActionThreadId === thread.id ? "open" : ""}`} role="menu">
                   {props.archived ? (
-                    <ThreadActionButton disabled={busy} onClick={() => { setOpenActionThreadId(null); props.onUnarchive(thread.id); }} label="恢复 Session"><ArchiveRestore aria-hidden="true" /><span>恢复 Session</span></ThreadActionButton>
+                    <ThreadActionButton disabled={busy} onClick={() => { setOpenActionThreadId(null); props.onUnarchive(thread.id); }} label="恢复 Session"><ArchiveRestore aria-hidden="true" /><b className="thread-action-label">恢复 Session</b></ThreadActionButton>
                   ) : <>
-                    <ThreadActionButton disabled={busy} onClick={() => { setOpenActionThreadId(null); props.onTogglePin(thread); }} label={thread.isPinned ? "取消固定" : "固定"}><Pin aria-hidden="true" fill={thread.isPinned ? "currentColor" : "none"} /><span>{thread.isPinned ? "取消固定" : "固定"}</span></ThreadActionButton>
-                    <ThreadActionButton disabled={busy} onClick={() => { setOpenActionThreadId(null); rename(thread); }} label="重命名"><FilePenLine aria-hidden="true" /><span>重命名</span></ThreadActionButton>
-                    <ThreadActionButton disabled={busy || running} onClick={() => { setOpenActionThreadId(null); setPendingAction({ action: "archive", thread }); }} label={running ? "运行中无法归档" : "归档"}><Archive aria-hidden="true" /><span>归档</span></ThreadActionButton>
+                    <ThreadActionButton disabled={busy} onClick={() => { setOpenActionThreadId(null); props.onTogglePin(thread); }} label={thread.isPinned ? "取消固定" : "固定"}><Pin aria-hidden="true" fill={thread.isPinned ? "currentColor" : "none"} /><b className="thread-action-label">{thread.isPinned ? "取消固定" : "固定"}</b></ThreadActionButton>
+                    <ThreadActionButton disabled={busy} onClick={() => { setOpenActionThreadId(null); rename(thread); }} label="重命名"><FilePenLine aria-hidden="true" /><b className="thread-action-label">重命名</b></ThreadActionButton>
+                    <ThreadActionButton disabled={busy || running} onClick={() => { setOpenActionThreadId(null); setPendingAction({ action: "archive", thread }); }} label={running ? "运行中无法归档" : "归档"}><Archive aria-hidden="true" /><b className="thread-action-label">归档</b></ThreadActionButton>
                   </>}
-                  <ThreadActionButton disabled={busy || running} onClick={() => { setOpenActionThreadId(null); setPendingAction({ action: "delete", thread }); }} label={running ? "运行中无法删除" : "永久删除"}><Trash2 aria-hidden="true" /><span>永久删除</span></ThreadActionButton>
+                  <ThreadActionButton disabled={busy || running} onClick={() => { setOpenActionThreadId(null); setPendingAction({ action: "delete", thread }); }} label={running ? "运行中无法删除" : "永久删除"}><Trash2 aria-hidden="true" /><b className="thread-action-label">永久删除</b></ThreadActionButton>
                 </div>
               </div>
             </div>
