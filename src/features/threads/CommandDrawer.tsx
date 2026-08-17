@@ -1,3 +1,4 @@
+import { ChevronDown, Terminal } from "lucide-react";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import { TurnActivityItem } from "./TurnActivityItem";
 
@@ -19,10 +20,10 @@ export function CommandDrawer({ items }: Props) {
   return (
     <details className="command-drawer">
       <summary>
-        <span className="activity-icon" aria-hidden="true">&gt;_</span>
+        <span className="activity-icon"><Terminal aria-hidden="true" /></span>
         <strong>{drawerStatus(items)}</strong>
         <small>{items.length} 个命令</small>
-        <i aria-hidden="true">⌄</i>
+        <i><ChevronDown aria-hidden="true" /></i>
       </summary>
       <div className="command-drawer-list">
         {items.map((item) => <TurnActivityItem item={item} key={item.id} />)}

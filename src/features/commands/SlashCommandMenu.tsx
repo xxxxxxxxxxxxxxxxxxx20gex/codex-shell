@@ -20,9 +20,10 @@ export function SlashCommandMenu({ query, selectedIndex, hasThread, running, onS
       {commands.length === 0 && <p>没有匹配的命令。</p>}
       {commands.map((command, index) => {
         const disabled = commandDisabled(command, hasThread, running);
+        const Icon = command.icon;
         return (
           <button key={command.id} className={index === selectedIndex ? "selected" : ""} disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => onSelect(command.id)} role="option" aria-selected={index === selectedIndex}>
-            <i>{command.icon}</i>
+            <i><Icon aria-hidden="true" /></i>
             <span><strong>/{command.id} <em>{command.label}</em></strong><small>{command.description}</small></span>
           </button>
         );

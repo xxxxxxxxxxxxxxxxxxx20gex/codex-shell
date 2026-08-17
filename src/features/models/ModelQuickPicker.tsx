@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { ChevronRight, X } from "lucide-react";
 import type { Model } from "../../generated/app-server/v2/Model";
 import type { ModelSettings } from "./types";
 import { useDismissiblePopover } from "../../shared/useDismissiblePopover";
@@ -54,8 +55,8 @@ export function ModelQuickPicker({ settings, loadModels, onChange, onDisplayName
           {efforts.map((effort) => <button key={effort} className={settings.reasoningEffort === effort ? "active" : ""} onClick={() => onChange({ ...settings, reasoningEffort: effort })}>{effort}</button>)}
         </div>
       </div>}
-      <button className="model-picker-advanced" onClick={onAdvanced}>高级设置 <span>›</span></button>
-      <button className="model-picker-close" onClick={onClose} aria-label="关闭模型选择">×</button>
+      <button className="model-picker-advanced" onClick={onAdvanced}>高级设置 <ChevronRight aria-hidden="true" /></button>
+      <button className="model-picker-close" onClick={onClose} aria-label="关闭模型选择"><X aria-hidden="true" /></button>
     </div>
   );
 }

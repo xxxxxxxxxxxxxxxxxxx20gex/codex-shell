@@ -1,7 +1,7 @@
 # Codex Shell Design Standard
 
 > Status: Target contract v1. Production UI may still contain legacy values until the UI refresh is implemented.
-> Last updated: 2026-08-14.
+> Last updated: 2026-08-17.
 
 ## Product Character
 
@@ -81,6 +81,16 @@ Rules:
 | `--accent-warning` | `#DDB45E` | warnings and approval attention |
 | `--accent-danger` | `#E17972` | destructive actions and errors |
 | `--accent-success` | `#74BF83` | completed state |
+
+Context usage uses a dedicated continuous scale because it encodes a quantitative value rather than an action state:
+
+| Token | Value | Role |
+| --- | --- | --- |
+| `--context-cool` | `#4593FF` | low context usage |
+| `--context-balanced` | `#48CBD2` | moderate context usage |
+| `--context-warm` | `#E2AA45` | elevated context usage |
+| `--context-hot` | `#ED5B4F` | near-limit context usage |
+| `--context-marker` | `#F1F3F1` | current usage marker |
 
 Rules:
 

@@ -1,10 +1,24 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  ChevronDown,
+  ChevronRight,
+  File,
+  FileCog,
+  FileWarning,
+  Folder,
+  FolderOpen,
+  FolderRoot,
+  LoaderCircle,
+  Search,
+  X,
+} from "lucide-react";
 import type { FsReadDirectoryEntry } from "../../generated/app-server/v2/FsReadDirectoryEntry";
 import { errorMessage } from "../../shared/errors";
 import type { WatchWorkspacePath } from "../runtime/useWorkspaceFiles";
 import { decodeFilePreview, formatFileSize, type FilePreview } from "./filePreview";
 import { useWorkspaceDirectoryWatches } from "./useWorkspaceDirectoryWatches";
 import { joinProjectPath, projectName, projectRelativePath } from "./workspaceState";
+import "./WorkspaceExplorer.css";
 
 interface Props {
   rootPath: string;
@@ -171,7 +185,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
         return (
           <div key={path}>
             <button className="explorer-tree-row directory" style={{ paddingLeft: 10 + depth * 16 }} onClick={() => toggleDirectory(path)} title={path}>
-              <i>{isExpanded ? "⌄" : "›"}</i><span className="tree-folder">◆</span><span>{entry.fileName}</span>
+              <i>{isExpanded ? <ChevronDown aria-hidden="true" /> : <ChevronRight aria-hidden="true" />}</i><span className="tree-folder">{isExpanded ? <FolderOpen aria-hidden="true" /> : <Folder aria-hidden="true" />}</span><span>{entry.fileName}</span>
             </button>
             {isExpanded && renderDirectory(path, depth + 1)}
           </div>
@@ -180,7 +194,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
       if (!entry.isFile) return null;
       return (
         <button key={path} className={`explorer-tree-row file ${selectedPath === path ? "selected" : ""}`} style={{ paddingLeft: 30 + depth * 16 }} onClick={() => selectFile(path)} title={path}>
-          <span className="tree-file">{fileName(path).includes(".") ? "{}" : "·"}</span><span>{entry.fileName}</span>
+          <span className="tree-file"><File aria-hidden="true" /></span><span>{entry.fileName}</span>
         </button>
       );
     });
@@ -194,12 +208,12 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
       <section className="workspace-explorer-drawer">
         <header className="explorer-header">
           <div><span className="eyebrow">Project Explorer</span><strong>{projectName(rootPath)}</strong><small>{rootPath}</small>{watchError && <i className="explorer-watch-warning" title={watchError}>自动刷新不可用</i>}</div>
-          <button className="explorer-close" onClick={onClose} aria-label="关闭文件浏览器">×</button>
+          <button className="explorer-close" onClick={onClose} aria-label="关闭文件浏览器"><X aria-hidden="true" /></button>
         </header>
         <div className="explorer-body">
           <aside className="explorer-tree-pane">
-            <div className="explorer-filter"><span>⌕</span><input value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="筛选已展开文件…" /></div>
-            <button className="explorer-root" onClick={() => toggleDirectory(rootPath)}><i>{expanded.has(rootPath) ? "⌄" : "›"}</i><span>▣</span><strong>{projectName(rootPath)}</strong></button>
+            <div className="explorer-filter"><Search aria-hidden="true" /><input value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="筛选已展开文件…" /></div>
+            <button className="explorer-root" onClick={() => toggleDirectory(rootPath)}><i>{expanded.has(rootPath) ? <ChevronDown aria-hidden="true" /> : <ChevronRight aria-hidden="true" />}</i><span><FolderRoot aria-hidden="true" /></span><strong>{projectName(rootPath)}</strong></button>
             <div className="explorer-tree-scroll">{expanded.has(rootPath) && renderDirectory(rootPath, 0)}</div>
           </aside>
           <main className="explorer-preview-pane">
@@ -207,10 +221,10 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
               <span>{selectedPath ? projectRelativePath(rootPath, selectedPath) : "文件预览"}</span>
               {preview && <small>{formatFileSize(preview.byteSize)}</small>}
             </div>
-            {!selectedPath && <div className="explorer-empty"><span>⌁</span><strong>选择一个文件</strong><p>在左侧展开目录并单击文件，即可在这里预览内容。</p></div>}
-            {previewLoading && <div className="explorer-empty"><span className="preview-spinner">◌</span><strong>正在读取文件…</strong></div>}
-            {previewError && <div className="explorer-empty error"><span>!</span><strong>无法预览文件</strong><p>{previewError}</p></div>}
-            {preview?.kind === "binary" && <div className="explorer-empty"><span>01</span><strong>二进制文件</strong><p>该文件共 {formatFileSize(preview.byteSize)}，不适合以文本方式显示。</p></div>}
+            {!selectedPath && <div className="explorer-empty"><span><File aria-hidden="true" /></span><strong>选择一个文件</strong><p>在左侧展开目录并单击文件，即可在这里预览内容。</p></div>}
+            {previewLoading && <div className="explorer-empty"><span className="preview-spinner"><LoaderCircle aria-hidden="true" /></span><strong>正在读取文件…</strong></div>}
+            {previewError && <div className="explorer-empty error"><span><FileWarning aria-hidden="true" /></span><strong>无法预览文件</strong><p>{previewError}</p></div>}
+            {preview?.kind === "binary" && <div className="explorer-empty"><span><FileCog aria-hidden="true" /></span><strong>二进制文件</strong><p>该文件共 {formatFileSize(preview.byteSize)}，不适合以文本方式显示。</p></div>}
             {preview?.kind === "image" && <div className="explorer-image-preview"><img src={preview.dataUrl} alt={fileName(selectedPath ?? "图片预览")} /></div>}
             {preview?.kind === "text" && <div className="explorer-code-preview">
               {preview.truncated && <div className="preview-truncated">文件较大，仅显示前 200 KB / 4000 行。</div>}

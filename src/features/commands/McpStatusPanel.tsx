@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { RefreshCw, Server, X } from "lucide-react";
 import type { McpServerStatus } from "../../generated/app-server/v2/McpServerStatus";
 import type { ResourceContent } from "../../generated/app-server/ResourceContent";
 import { errorMessage } from "../../shared/errors";
@@ -97,7 +98,7 @@ export function McpStatusPanel({ loadServers, loginServer, reloadServers, readRe
   }
 
   return <div className="agent-command-panel mcp-panel">
-    <header><div><strong>MCP</strong><small>服务器、OAuth、工具与资源</small></div><span><button className="mcp-refresh" disabled={actionServer !== null} onClick={() => void reload()}>刷新配置</button><button onClick={onClose}>×</button></span></header>
+    <header><div><strong>MCP</strong><small>服务器、OAuth、工具与资源</small></div><span><button className="mcp-refresh" disabled={actionServer !== null} onClick={() => void reload()}><RefreshCw aria-hidden="true" />刷新配置</button><button onClick={onClose} aria-label="关闭 MCP"><X aria-hidden="true" /></button></span></header>
     <div className="command-panel-list">
       {loading && <p>正在读取 MCP 状态…</p>}{error && <p className="error">{error}</p>}
       {!loading && !error && servers.length === 0 && <p>当前没有配置 MCP 服务器。</p>}
@@ -106,7 +107,7 @@ export function McpStatusPanel({ loadServers, loginServer, reloadServers, readRe
       {servers.map((server) => {
         const tools = Object.keys(server.tools);
         return <details className="mcp-server" key={server.name}>
-          <summary><i>⌘</i><span><strong>{server.name}</strong><small>{tools.length} 个工具 · {AUTH_LABELS[server.authStatus]}</small></span><em>{server.serverInfo ? "已连接" : "未启动"}</em></summary>
+          <summary><i><Server aria-hidden="true" /></i><span><strong>{server.name}</strong><small>{tools.length} 个工具 · {AUTH_LABELS[server.authStatus]}</small></span><em>{server.serverInfo ? "已连接" : "未启动"}</em></summary>
           <div className="mcp-server-actions">
             {server.authStatus === "notLoggedIn" && <button className="secondary-button" disabled={actionServer !== null} onClick={() => void login(server.name)}>{actionServer === server.name ? "正在登录…" : "OAuth 登录"}</button>}
           </div>

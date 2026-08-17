@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { File, X } from "lucide-react";
 import { errorMessage } from "../../shared/errors";
 import type { FileMention, ImageAttachment } from "../runtime/sessionInput";
 import { decodeFilePreview, formatFileSize, type FilePreview } from "../workspaces/filePreview";
@@ -86,7 +87,7 @@ function AttachmentPreviewDialog({ target, readFile, onClose }: {
       <section className="attachment-preview-dialog">
         <header>
           <div><strong>{target.name}</strong><small>{target.path ?? "剪贴板图片"}</small></div>
-          <button type="button" onClick={onClose} aria-label="关闭附件预览">×</button>
+          <button type="button" onClick={onClose} aria-label="关闭附件预览"><X aria-hidden="true" /></button>
         </header>
         <div className="attachment-preview-content">
           {local.loading && <div className="attachment-preview-state"><span className="attachment-loading" /><strong>正在读取附件…</strong></div>}
@@ -121,16 +122,16 @@ export function AttachmentGallery({
               <ImageThumbnail image={image} readFile={readFile} />
               <span>{image.name}</span>
             </button>
-            {onRemoveImage && <button type="button" className="attachment-remove" onClick={() => onRemoveImage(index)} aria-label={`移除 ${image.name}`}>×</button>}
+            {onRemoveImage && <button type="button" className="attachment-remove" onClick={() => onRemoveImage(index)} aria-label={`移除 ${image.name}`}><X aria-hidden="true" /></button>}
           </div>
         ))}
         {files.map((file) => (
           <div className="attachment-file-card" key={file.path}>
             <button type="button" className="attachment-file-preview" onClick={() => setPreviewTarget({ kind: "file", ...file })} title={file.path}>
-              <span className="attachment-file-icon" aria-hidden="true" />
+              <File className="attachment-file-icon" aria-hidden="true" />
               <span><strong>{file.name}</strong><small>{fileKind(file.name)}</small></span>
             </button>
-            {onRemoveFile && <button type="button" className="attachment-remove" onClick={() => onRemoveFile(file.path)} aria-label={`移除 ${file.name}`}>×</button>}
+            {onRemoveFile && <button type="button" className="attachment-remove" onClick={() => onRemoveFile(file.path)} aria-label={`移除 ${file.name}`}><X aria-hidden="true" /></button>}
           </div>
         ))}
       </div>

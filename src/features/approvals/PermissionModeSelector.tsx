@@ -1,5 +1,13 @@
 import { useState } from "react";
 import {
+  Check,
+  ChevronDown,
+  FolderPen,
+  ScanSearch,
+  ShieldAlert,
+  ShieldCheck,
+} from "lucide-react";
+import {
   getPermissionMode,
   PERMISSION_MODES,
   type ApprovalReviewerMode,
@@ -16,18 +24,9 @@ interface Props {
 }
 
 function PermissionIcon({ mode }: { mode: PermissionMode }) {
-  if (mode === "workspace") {
-    return <svg aria-hidden="true" viewBox="0 0 20 20">
-      <path d="M3.25 7.25v7.5a2 2 0 0 0 2 2h9.5a2 2 0 0 0 2-2v-6.5a2 2 0 0 0-2-2H10L8.25 4h-3a2 2 0 0 0-2 2z" />
-      <path d="m8 13 5-5 1.5 1.5-5 5-2 .5z" />
-    </svg>;
-  }
-  return <svg aria-hidden="true" viewBox="0 0 20 20">
-    <path d="M10 2.75 16 5v4.25c0 4-2.45 6.6-6 8-3.55-1.4-6-4-6-8V5z" />
-    {mode === "read"
-      ? <path d="m7.25 10 1.75 1.75 3.75-4" />
-      : <path d="M10 7v4m0 2.5h.01" />}
-  </svg>;
+  if (mode === "workspace") return <FolderPen aria-hidden="true" />;
+  if (mode === "read") return <ShieldCheck aria-hidden="true" />;
+  return <ShieldAlert aria-hidden="true" />;
 }
 
 export function PermissionModeSelector({ value, reviewer, disabled, onChange, onReviewerChange }: Props) {
@@ -51,7 +50,7 @@ export function PermissionModeSelector({ value, reviewer, disabled, onChange, on
       >
         <span className="permission-icon"><PermissionIcon mode={value} /></span>
         <strong>{selected.label}</strong>
-        <svg className="chevron-icon" aria-hidden="true" viewBox="0 0 12 12"><path d="m3.5 4.5 2.5 2.5 2.5-2.5" /></svg>
+        <ChevronDown className="chevron-icon" aria-hidden="true" />
       </button>
       {open && (
         <div className="permission-menu" role="menu" aria-label="权限模式">
@@ -65,7 +64,7 @@ export function PermissionModeSelector({ value, reviewer, disabled, onChange, on
             >
               <span className="permission-icon"><PermissionIcon mode={mode.id} /></span>
               <span><strong>{mode.label}</strong><small>{mode.description}</small></span>
-              {mode.id === value && <em>✓</em>}
+              {mode.id === value && <em><Check aria-hidden="true" /></em>}
             </button>
           ))}
           {value !== "full" && <button
@@ -75,7 +74,7 @@ export function PermissionModeSelector({ value, reviewer, disabled, onChange, on
             aria-checked={reviewer === "auto_review"}
             onClick={() => onReviewerChange(reviewer === "user" ? "auto_review" : "user")}
           >
-            <span className="permission-reviewer-icon" aria-hidden="true">◇</span>
+            <span className="permission-reviewer-icon"><ScanSearch aria-hidden="true" /></span>
             <span><strong>自动风险审查</strong><small>由 Codex 审查受保护操作，而不是每次询问你</small></span>
             <i className={reviewer === "auto_review" ? "active" : ""} aria-hidden="true"><b /></i>
           </button>}

@@ -17,6 +17,11 @@
   --accent-warning: #ddb45e;
   --accent-danger: #e17972;
   --accent-success: #74bf83;
+  --context-cool: #4593ff;
+  --context-balanced: #48cbd2;
+  --context-warm: #e2aa45;
+  --context-hot: #ed5b4f;
+  --context-marker: #f1f3f1;
   --font-ui: "Segoe UI Variable Text", "Segoe UI", Inter, "Microsoft YaHei UI", sans-serif;
   --font-mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
   --font-size-caption: 11px;

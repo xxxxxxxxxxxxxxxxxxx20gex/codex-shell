@@ -6,14 +6,14 @@
 .conversation-turn-frame.separated { margin-top: 34px; padding-top: 28px; border-top: 1px solid var(--border-subtle); }
 .user-message-navigation { position: absolute; z-index: 2; top: 50%; left: 7px; display: flex; width: 17px; max-height: min(58vh, 420px); flex-direction: column; gap: 4px; overflow-y: auto; padding: 8px 2px; transform: translateY(-50%); scrollbar-width: none; }
 .user-message-navigation::-webkit-scrollbar { display: none; }
-.user-message-navigation::before { position: absolute; top: 0; bottom: 0; left: 9px; width: 1px; border-radius: 999px; background: linear-gradient(180deg, transparent, #3f3e37 10%, #3f3e37 90%, transparent); content: ""; }
+.user-message-navigation::before { position: absolute; top: 0; bottom: 0; left: 9px; width: 1px; border-radius: 999px; background: linear-gradient(180deg, transparent, var(--border-default) 10%, var(--border-default) 90%, transparent); content: ""; }
 .user-message-navigation button { position: relative; z-index: 1; display: flex; width: 13px; height: 14px; align-items: center; justify-content: center; padding: 0; border: 0; background: transparent; cursor: pointer; }
-.user-message-navigation button span { display: block; width: 6px; height: 2px; border-radius: 999px; background: #5b5a52; transition: width .15s ease, background .15s ease, box-shadow .15s ease; }
+.user-message-navigation button span { display: block; width: 6px; height: 2px; border-radius: 999px; background: var(--text-disabled); transition: width var(--motion-fast), background var(--motion-fast); }
 .user-message-navigation button.active span { width: 13px; background: var(--accent); box-shadow: 0 0 8px rgba(194,232,92,.52); }
-.user-message-navigation button:hover span, .user-message-navigation button:focus-visible span { width: 11px; background: #d8d7cc; outline: none; }
-.user-message-navigation button:focus-visible { outline: 1px solid rgba(194,232,92,.55); outline-offset: 2px; }
+.user-message-navigation button:hover span, .user-message-navigation button:focus-visible span { width: 11px; background: var(--text-secondary); outline: none; }
+.user-message-navigation button:focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; }
 .timeline-latest-button { position: absolute; z-index: 3; right: 22px; bottom: 16px; padding: 7px 11px; border: 1px solid var(--border-default); border-radius: 999px; color: var(--text-primary); background: var(--surface-raised); box-shadow: var(--shadow-popover); font-size: 11px; cursor: pointer; }
-.timeline-latest-button:hover { border-color: #66645a; background: #303029; }
+.timeline-latest-button:hover { border-color: var(--border-strong); background: var(--surface-raised); }
 
 @media (max-width: 720px) {
   .conversation-turn-frame { padding-right: 18px; padding-left: 18px; }

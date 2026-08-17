@@ -1,3 +1,19 @@
+import {
+  Bot,
+  CheckCircle2,
+  ChevronDown,
+  Clock3,
+  FilePenLine,
+  Image,
+  ImagePlus,
+  ListCollapse,
+  ListChecks,
+  Plug,
+  Search,
+  Terminal,
+  Wrench,
+  Zap,
+} from "lucide-react";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 
 interface Props {
@@ -16,24 +32,24 @@ function jsonPreview(value: unknown) {
 
 function activityIcon(item: ThreadItem) {
   switch (item.type) {
-    case "reasoning": return "";
-    case "plan": return "☷";
-    case "commandExecution": return ">_";
-    case "fileChange": return "±";
-    case "mcpToolCall": return "◇";
-    case "dynamicToolCall": return "◆";
+    case "reasoning": return null;
+    case "plan": return <ListChecks aria-hidden="true" />;
+    case "commandExecution": return <Terminal aria-hidden="true" />;
+    case "fileChange": return <FilePenLine aria-hidden="true" />;
+    case "mcpToolCall": return <Plug aria-hidden="true" />;
+    case "dynamicToolCall": return <Wrench aria-hidden="true" />;
     case "collabAgentToolCall":
-    case "subAgentActivity": return "◎";
-    case "webSearch": return "⌕";
-    case "imageView":
-    case "imageGeneration": return "▧";
-    case "contextCompaction": return "↘";
-    case "hookPrompt": return "↯";
-    case "sleep": return "◷";
+    case "subAgentActivity": return <Bot aria-hidden="true" />;
+    case "webSearch": return <Search aria-hidden="true" />;
+    case "imageView": return <Image aria-hidden="true" />;
+    case "imageGeneration": return <ImagePlus aria-hidden="true" />;
+    case "contextCompaction": return <ListCollapse aria-hidden="true" />;
+    case "hookPrompt": return <Zap aria-hidden="true" />;
+    case "sleep": return <Clock3 aria-hidden="true" />;
     case "enteredReviewMode":
-    case "exitedReviewMode": return "✓";
+    case "exitedReviewMode": return <CheckCircle2 aria-hidden="true" />;
     case "userMessage":
-    case "agentMessage": return "";
+    case "agentMessage": return null;
   }
 }
 
@@ -161,7 +177,7 @@ export function TurnActivityItem({ item }: Props) {
         <span className="activity-icon">{activityIcon(item)}</span>
         <strong>{activityTitle(item)}</strong>
         {statusText(item) && <small>{statusText(item)}</small>}
-        <i>⌄</i>
+        <i><ChevronDown aria-hidden="true" /></i>
       </summary>
       <div className="activity-body"><ActivityBody item={item} /></div>
     </details>

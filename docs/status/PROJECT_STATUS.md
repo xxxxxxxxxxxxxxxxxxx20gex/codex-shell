@@ -9,9 +9,9 @@
 
 ### UI 设计基线
 
-- 生产界面首轮对齐 `design-plans/ui-refresh-v1.html`：画布、侧栏、面板、边框、文字和强调色使用 `src/styles/tokens.css` 中的设计 token；侧栏默认 248px，检查器默认 288px 且继续保持产品既有的默认收起状态。
-- 主会话使用固定 48px 标题栏；时间线最大可读宽度 820px；Composer 最大宽度 860px 并居中；历史会话操作使用统一 Lucide 图标。助手回答生成中的侧线使用低饱和黄绿色，完成后回落为石墨灰，降低长回答过程中的视觉干扰。此次只调整 DOM/CSS 表现，不改变 app-server 协议、Session 连续性或执行状态逻辑。
-- Runtime 日志、Diff 检查器、消息时间线、会话列表和模型高级设置已迁移到设计字号与语义 token；附件预览和审批弹窗仍保留部分旧视觉，待专门的状态与视觉回归后迁移。此次只调整视觉和标准图标，不改变 app-server 消息顺序、Session 排序、模型配置或凭据行为。
+- 生产界面已完成 Quiet Graphite Workbench 设计系统收敛：画布、侧栏、面板、边框、文字、状态色和上下文热力刻度均由 `src/styles/tokens.css` 统一拥有；有意义文本从 11px/16px 起步，标准图标统一为 Lucide 16px/1.75px，组件圆角使用 4/6/8px 角色。
+- 主会话使用固定 48px 标题栏；时间线最大可读宽度 820px；Composer 最大宽度 860px 并居中；侧栏默认 248px，检查器默认 288px 且默认收起。1180px 以下检查器以 overlay 打开，900px 以下侧栏也以独立 overlay 打开，不再通过 `display:none` 删除功能入口。
+- 助手回答生成中的侧线使用低饱和黄绿色，完成后回落为石墨灰。`App.tsx`、`useAppController.ts` 和 `App.css` 均保持在约 500 行以内，Explorer、Command、Runtime 等样式由 feature 自有文件承载；此次不改变 app-server 消息顺序、Session 排序、模型配置、凭据或 Queue/Steer 行为。
 
 ### 架构与隔离
 
@@ -47,7 +47,7 @@
 
 - app-server 自动断线恢复尚未完成；当前代际隔离可以阻止旧进程延迟事件污染新连接，但不会主动重启崩溃进程或恢复进行中的 Turn。
 - Shell Queue 只存在当前进程内，应用退出后不会恢复；MCP 配置编辑、Skills/Plugin 管理和显式连接诊断尚未完成。
-- `App.tsx` 与 `App.css` 均已超过 600 行，Composer/弹层编排和 feature 样式仍集中；`useThreadController.ts` 接近 500 行，Thread 元数据和通知协调继续扩展前应拆分。
+- `useAppController.ts` 和 `useThreadController.ts` 均接近 500 行；继续扩展 Composer 或 Thread 编排前应按状态域拆分，避免重新形成高频单体入口。
 - 文件预览会先经 IPC 读取完整文件再在前端截断；超大 Diff、单个超长活动和二进制 Diff 尚无源端截断或专用视图。
 - Runtime 二进制未进入 Git，尚无可复现下载/构建流程；安装包、签名、CI、干净 Windows 环境 UAC/sidecar 验证均未完成。
 
@@ -60,7 +60,7 @@
 
 ## 验证基线
 
-- 2026-08-14：完整 `pnpm test:quality` 通过，覆盖 49 个 Vitest 文件、200 项测试、TypeScript、Vite production build、Knip、`git diff --check`、`cargo check`、12 项 Rust 单元测试和 `cargo clippy --all-targets -- -D warnings`；桌面 debug 构建成功。
+- 2026-08-17：完整 `pnpm test:quality` 通过，覆盖 50 个 Vitest 文件、203 项测试、TypeScript、Vite production build、Knip、`git diff --check`、`cargo check`、12 项 Rust 单元测试和 `cargo clippy --all-targets -- -D warnings`；Headless Edge 已验证 1440×900、1280×780、1024×720、900×700 和 899×700 的布局边界；桌面 debug 构建成功。
 - 静态审查：Knip 未发现无效文件、导出或依赖；生产 TypeScript/CSS/Rust 未发现达到 6 行/60 tokens 的重复块。jscpd 报告 13 处重复全部位于测试夹具与场景搭建，整体重复行占 0.92%。
 - `pnpm audit --prod` 无已知漏洞；源码扫描未发现 PAT、API Key、用户密钥或开发机绝对路径。
 - 真实 app-server smoke 已覆盖多 Turn 恢复、并行 Thread、文件 RPC、Skills/MCP/Goal、Plan 和第三方兼容网关；这些证据对应固定 Runtime，不代表最新版 Codex 源码能力。

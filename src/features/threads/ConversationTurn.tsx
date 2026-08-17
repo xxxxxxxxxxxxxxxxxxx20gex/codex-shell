@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import type { McpToolCallProgressNotification } from "../../generated/app-server/v2/McpToolCallProgressNotification";
 import type { Turn } from "../../generated/app-server/v2/Turn";
@@ -154,7 +155,7 @@ export function ConversationTurn({
                   <summary>
                     <span className="turn-activity-indicator" aria-hidden="true" />
                     <strong>{`已处理${completedProcessDuration}`}</strong>
-                    <i aria-hidden="true">⌄</i>
+                    <i><ChevronDown aria-hidden="true" /></i>
                   </summary>
                   <div className="turn-process-content">
                     {activityBlocks.map((activityBlock) => (

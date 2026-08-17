@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { GitCompareArrows } from "lucide-react";
 import { parseUnifiedDiff } from "./unifiedDiff";
 import "./DiffInspector.css";
 
@@ -32,7 +33,7 @@ export function DiffInspector({ diff, onOpenFile }: Props) {
 
   if (!selected) {
     return <div className="diff-empty">
-      <span>±</span>
+      <GitCompareArrows aria-hidden="true" />
       <strong>本轮尚无文件变更</strong>
       <p>Codex 修改文件后，app-server 提供的实时 Diff 会显示在这里。</p>
     </div>;

@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from "react";
+import { X } from "lucide-react";
 import type { RuntimeNoticeStore } from "./runtimeNoticeStore";
+import "./RuntimeNotices.css";
 
 interface Props {
   store: RuntimeNoticeStore;
@@ -17,7 +19,7 @@ export function RuntimeNoticeBanner({ store, onShowStatus }: Props) {
         <span>{notice.message}</span>
         {notices.length > 1 && <i>另有 {notices.length - 1} 项</i>}
       </button>
-      <button type="button" className="runtime-notice-dismiss" onClick={() => store.dismiss(notice.id)} aria-label="忽略这条提示">×</button>
+      <button type="button" className="runtime-notice-dismiss" onClick={() => store.dismiss(notice.id)} aria-label="忽略这条提示"><X aria-hidden="true" /></button>
     </div>
   );
 }

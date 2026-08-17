@@ -1,8 +1,10 @@
 import { useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import {
+  COMPACT_OVERLAY_BREAKPOINT,
   DEFAULT_INSPECTOR_WIDTH,
   DEFAULT_SIDEBAR_WIDTH,
   resizedPanelWidth,
+  THREE_PANEL_BREAKPOINT,
   type ResizablePanel,
 } from "./panelLayout";
 
@@ -33,12 +35,12 @@ export function useResizablePanels() {
     const bounds = workspaceGridRef.current?.getBoundingClientRect();
     if (!bounds) return;
     if (panel === "sidebar") {
-      const oppositeWidth = inspectorOpen && bounds.width > 1040 ? inspectorWidth : 0;
+      const oppositeWidth = inspectorOpen && bounds.width >= THREE_PANEL_BREAKPOINT ? inspectorWidth : 0;
       setSidebarWidth(resizedPanelWidth(panel, event.clientX, bounds, oppositeWidth));
       return;
     }
 
-    const oppositeWidth = sidebarOpen && bounds.width > 720 ? sidebarWidth : 0;
+    const oppositeWidth = sidebarOpen && bounds.width >= COMPACT_OVERLAY_BREAKPOINT ? sidebarWidth : 0;
     setInspectorWidth(resizedPanelWidth(panel, event.clientX, bounds, oppositeWidth));
   }
 

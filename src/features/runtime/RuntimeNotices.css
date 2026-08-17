@@ -1,0 +1,13 @@
+.runtime-notice-banner { display: flex; margin-bottom: 7px; overflow: hidden; border: 1px solid color-mix(in srgb, var(--accent-warning) 40%, var(--border-default)); border-radius: var(--radius-panel); background: var(--surface-panel); }
+.runtime-notice-banner[data-kind="security"], .runtime-notice-banner[data-kind="warning"] { border-color: color-mix(in srgb, var(--accent-danger) 45%, var(--border-default)); background: color-mix(in srgb, var(--accent-danger) 8%, var(--surface-panel)); }
+.runtime-notice-banner > button:first-child { display: grid; min-width: 0; flex: 1; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; padding: 7px 9px; border: 0; color: var(--text-secondary); text-align: left; background: transparent; cursor: pointer; }
+.runtime-notice-banner strong, .runtime-notice-banner span, .runtime-notice-banner i { overflow: hidden; font-size: var(--text-meta); text-overflow: ellipsis; white-space: nowrap; }
+.runtime-notice-banner i { color: var(--text-muted); font-style: normal; }
+.runtime-notice-dismiss { width: 28px; border: 0; color: var(--text-muted); background: transparent; cursor: pointer; }
+.runtime-notice-dismiss svg, .runtime-notice-list article button svg { width: 16px; height: 16px; stroke-width: 1.75; }
+.runtime-notice-list article { padding: 9px 0; border-top: 1px solid var(--border-subtle); }
+.runtime-notice-list article > div { display: flex; justify-content: space-between; gap: 6px; }
+.runtime-notice-list article button { border: 0; color: var(--text-muted); background: transparent; cursor: pointer; }
+.runtime-notice-list article p, .runtime-notice-list article code { overflow-wrap: anywhere; color: var(--text-muted); font-size: var(--text-meta); line-height: 16px; }
+.runtime-notice-list article[data-kind="warning"] strong, .runtime-notice-list article[data-kind="security"] strong { color: var(--accent-danger); }
+.sandbox-status-card > button { margin-top: 10px; min-height: 28px; padding: 4px 9px; font-size: var(--text-meta); }

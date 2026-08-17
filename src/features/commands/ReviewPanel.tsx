@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { X } from "lucide-react";
 import type { ReviewDelivery } from "../../generated/app-server/v2/ReviewDelivery";
 import type { ReviewTarget } from "../../generated/app-server/v2/ReviewTarget";
 import { errorMessage } from "../../shared/errors";
@@ -43,7 +44,7 @@ export function ReviewPanel({ startReview, onStarted, onClose }: Props) {
 
   return (
     <div className="agent-command-panel review-panel">
-      <header><div><strong>代码审查</strong><small>复用 app-server 原生 Reviewer</small></div><button onClick={onClose}>×</button></header>
+      <header><div><strong>代码审查</strong><small>复用 app-server 原生 Reviewer</small></div><button onClick={onClose} aria-label="关闭代码审查"><X aria-hidden="true" /></button></header>
       <div className="review-editor">
         <label><span>审查目标</span><select value={targetKind} onChange={(event) => setTargetKind(event.target.value as TargetKind)}>
           <option value="uncommittedChanges">当前未提交修改</option>
