@@ -20,13 +20,14 @@ export function WorkspaceSelector({ path, disabled, onChange, onError }: Props) 
   }
 
   return (
-    <div className="composer-workspace-selector">
+    <div className={`composer-workspace-selector${path ? " has-project" : " empty-project"}`}>
       <button
         type="button"
         className="composer-workspace-button"
         disabled={disabled}
         onClick={() => void chooseProject()}
-        title={path ? `${path}（点击切换项目）` : "为新对话选择项目"}
+        aria-label={path ? `当前项目：${projectName(path)}` : "选择项目"}
+        title={path ? `${path}（点击切换项目）` : "选择项目（可选）"}
       >
         <svg aria-hidden="true" viewBox="0 0 20 20">
           <path d="M2.75 6.25v8.5a2 2 0 0 0 2 2h10.5a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2H10L8.25 3.5h-3.5a2 2 0 0 0-2 2z" />

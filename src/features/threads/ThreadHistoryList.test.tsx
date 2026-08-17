@@ -36,7 +36,6 @@ describe("ThreadHistoryList", () => {
         onUnarchive={vi.fn()}
         onDelete={vi.fn()}
         onShowArchived={vi.fn()}
-        onRefresh={vi.fn()}
         onLoadMore={vi.fn()}
       />,
     );
@@ -69,7 +68,6 @@ describe("ThreadHistoryList", () => {
         onUnarchive={vi.fn()}
         onDelete={vi.fn()}
         onShowArchived={vi.fn()}
-        onRefresh={vi.fn()}
         onLoadMore={vi.fn()}
       />,
     );

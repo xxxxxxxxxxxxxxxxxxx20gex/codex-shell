@@ -45,4 +45,20 @@ describe("thread presentation", () => {
     expect(orderThreadsByBranch([orphan]).map((item) => item.id)).toEqual(["orphan"]);
     expect(threadBranchDepth(orphan, [orphan])).toBe(0);
   });
+
+  it("moves pinned sessions to the top while preserving relative order", () => {
+    const threads = [
+      thread("recent"),
+      thread("pinned-older", { isPinned: true }),
+      thread("older"),
+      thread("pinned-oldest", { isPinned: true }),
+    ];
+
+    expect(orderThreadsByBranch(threads).map((item) => item.id)).toEqual([
+      "pinned-older",
+      "pinned-oldest",
+      "recent",
+      "older",
+    ]);
+  });
 });

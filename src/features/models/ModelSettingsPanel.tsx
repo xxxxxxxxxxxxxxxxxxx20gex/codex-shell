@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { X } from "lucide-react";
 import type { ModelProviderCapabilitiesReadResponse } from "../../generated/app-server/v2/ModelProviderCapabilitiesReadResponse";
 import { errorMessage } from "../../shared/errors";
 import type { ModelSettings, Verbosity } from "./types";
@@ -70,7 +71,7 @@ export function ModelSettingsPanel({
   return (
     <div className="modal-backdrop" onMouseDown={onClose}>
       <section className="settings-modal" onMouseDown={(event) => event.stopPropagation()}>
-        <header><div><span className="eyebrow">高级设置</span><h2>网关与自定义模型</h2><p>密钥只写入 Windows 凭据管理器，项目配置不会保存明文。</p></div><button className="close-button" onClick={onClose}>×</button></header>
+        <header><div><span className="eyebrow">高级设置</span><h2>网关与自定义模型</h2><p>密钥只写入 Windows 凭据管理器，项目配置不会保存明文。</p></div><button className="close-button" onClick={onClose} aria-label="关闭高级设置" title="关闭高级设置"><X aria-hidden="true" /></button></header>
         <div className="settings-body">
           <label className="field"><span>Base URL</span><input value={draft.baseUrl} onChange={(event) => setDraft({ ...draft, baseUrl: event.target.value })} placeholder="https://api.openai.com/v1" /></label>
           <label className="field"><span>API Key</span><input type="password" value={apiKey} onChange={(event) => setApiKey(event.target.value)} placeholder="保留为空则继续使用已保存的密钥" autoComplete="off" /><small>保存后立即清空输入框；前端没有读取密钥的接口。</small></label>

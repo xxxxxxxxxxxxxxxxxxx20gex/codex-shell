@@ -423,9 +423,9 @@ describe("conversation timing", () => {
     expect(markup).not.toContain('class="agent-avatar"');
     expect(markup).not.toContain('class="agent-meta"');
     expect(markup).not.toContain("<strong>Codex</strong>");
-    expect(markup).toContain("已编辑 1 个文件");
+    expect(markup).toContain("文件变更 · 1");
     expect(markup).toContain("修改");
-    expect(markup.indexOf("已编辑 1 个文件")).toBeGreaterThan(markup.indexOf("第二段"));
+    expect(markup.indexOf("文件变更 · 1")).toBeGreaterThan(markup.indexOf("第二段"));
     expect(markup).not.toContain("修改文件 · 1");
   });
 

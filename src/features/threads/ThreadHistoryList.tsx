@@ -6,7 +6,6 @@ import {
   Copy,
   FilePenLine,
   Pin,
-  RefreshCw,
   Trash2,
 } from "lucide-react";
 import type { Thread } from "../../generated/app-server/v2/Thread";
@@ -39,7 +38,6 @@ interface Props {
   onArchive: (threadId: string) => void;
   onUnarchive: (threadId: string) => void;
   onDelete: (threadId: string) => void;
-  onRefresh: () => void;
   onShowArchived: (archived: boolean) => void;
   onLoadMore: () => void;
 }
@@ -122,7 +120,6 @@ export function ThreadHistoryList(props: Props) {
     <>
       <div className="section-heading">
         <button className="history-view-toggle" onClick={() => props.onShowArchived(!props.archived)}>{props.archived ? "已归档" : "本地历史"}<ChevronDown aria-hidden="true" className="chevron-icon" /></button>
-        <button onClick={props.onRefresh} disabled={props.loading} aria-label="刷新本地历史"><RefreshCw aria-hidden="true" className={props.loading ? "spinning" : ""} /></button>
       </div>
       <nav className="thread-list" aria-label="本地历史会话">
         {props.error && <p className="sidebar-error">{props.error}</p>}
@@ -146,13 +143,13 @@ export function ThreadHistoryList(props: Props) {
                   ? `${threadTitle(thread)}\n恢复 Session 后可打开`
                   : `${threadTitle(thread)}\n${thread.cwd}`}
               >
-                <span className="thread-title">{thread.isPinned && <i>◆</i>}{threadTitle(thread)}</span>
+                <span className="thread-title">{thread.isPinned && <Pin className="thread-pin-indicator" aria-hidden="true" fill="currentColor" />}{threadTitle(thread)}</span>
                 <small>{running ? "运行中" : dateFormatter.format(new Date(thread.updatedAt * 1000))}</small>
               </button>
               <div className={`thread-actions ${openActionThreadId === thread.id ? "menu-open" : ""}`} onPointerDown={(event) => event.stopPropagation()}>
                 {!props.archived && <>
                   <ThreadActionButton disabled={busy} onClick={() => props.onTogglePin(thread)} label={thread.isPinned ? "取消置顶" : "置顶"}><Pin aria-hidden="true" fill={thread.isPinned ? "currentColor" : "none"} /></ThreadActionButton>
-                  <ThreadActionButton disabled={busy || running} onClick={() => setPendingAction({ action: "archive", thread })} label={running ? "运行中无法归档" : "归档"}><Archive aria-hidden="true" /></ThreadActionButton>
+                  <ThreadActionButton disabled={busy || running} onClick={() => props.onArchive(thread.id)} label={running ? "运行中无法归档" : "归档"}><Archive aria-hidden="true" /></ThreadActionButton>
                 </>}
                 <div className={`thread-action-menu ${openActionThreadId === thread.id ? "open" : ""}`} role="menu">
                   <ThreadActionButton onClick={() => { setOpenActionThreadId(null); void copyReference(thread); }} label={copyLabel}><Copy aria-hidden="true" /><b className="thread-action-label">复制 {referenceKind === "路径" ? "Session 路径" : "Session ID"}</b></ThreadActionButton>

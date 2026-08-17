@@ -1,4 +1,5 @@
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
+import { ChevronRight, File, Files } from "lucide-react";
 import { parseUnifiedDiff } from "../diff/unifiedDiff";
 
 interface Props {
@@ -41,17 +42,23 @@ export function TurnFileChanges({ items }: Props) {
   return (
     <details className="turn-file-changes" open>
       <summary>
-        <span className="turn-file-changes-icon">±</span>
-        <strong>已编辑 {files.length} 个文件</strong>
-        <small>{additions > 0 && `+${additions} `}{deletions > 0 && `-${deletions}`}</small>
-        <i>⌄</i>
+        <Files className="turn-file-changes-icon" aria-hidden="true" />
+        <strong>文件变更 · {files.length}</strong>
+        <small className="turn-file-changes-total">
+          {additions > 0 && <span className="added">+{additions}</span>}
+          {deletions > 0 && <span className="removed">-{deletions}</span>}
+        </small>
+        <ChevronRight className="turn-file-changes-chevron" aria-hidden="true" />
       </summary>
       <ul>
         {files.map((file) => (
           <li key={file.path}>
-            <span data-kind={file.kind}>{kindLabels[file.kind] ?? file.kind}</span>
+            <File className="turn-file-icon" aria-label={kindLabels[file.kind] ?? file.kind} />
             <code title={file.path}>{file.path}</code>
-            {(file.additions > 0 || file.deletions > 0) && <small>+{file.additions} -{file.deletions}</small>}
+            {(file.additions > 0 || file.deletions > 0) && <small>
+              {file.additions > 0 && <span className="added">+{file.additions}</span>}
+              {file.deletions > 0 && <span className="removed">-{file.deletions}</span>}
+            </small>}
           </li>
         ))}
       </ul>

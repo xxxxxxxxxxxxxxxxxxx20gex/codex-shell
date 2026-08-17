@@ -1,116 +1,83 @@
-# Codex Shell UI Refresh V1
+# Quiet Graphite Workbench UI Reconciliation
 
-Written against: `c63ca33c43bca6f715cf5854984805f8fd5b8786`
+Written against: `57c3f73` plus the current uncommitted worktree on 2026-08-17
 
 ## Design language
 
-- Audited surface: the primary three-region workbench, including session history, conversation timeline, Composer, inspector, menus, and row actions.
-- Design sources: the rendered workbench at `1280x780`, `src/App.tsx`, `src/App.css`, `src/styles/tokens.css`, feature-local CSS, user-provided Codex desktop references, and the accepted `DESIGN.md` target contract.
-- Documented decisions: quiet, dense, work-focused desktop tooling; no marketing composition, decorative cards, gradients, duplicated control entrances, or meaningful text below 11px.
-- Governing owners and consumers: `src/styles/tokens.css`, `src/App.css`, `src/App.tsx`, thread feature components, Composer feature components, runtime inspector surfaces, and Diff inspector surfaces.
-- Explicit exceptions: conversation content uses a larger readable scale than operational chrome; code, command, and diff output use a mono family.
-
-## Evidence chain
-
-- Surface: the running main workbench at `1280x780`, represented by `src/App.tsx` and previewed by `design-plans/ui-refresh-v1.html`.
-- Problem: the visible workbench renders eight font sizes from 8px to 19px, with 15 visible text elements below 11px; peer actions mix Unicode, text glyphs, local SVGs, and CSS-drawn icons; lists and controls redefine gray values, radii, dimensions, and hover states.
-- Design evidence: `src/App.css` contains 21 distinct font-size declarations or token forms, including 74 occurrences of literal 7px, 8px, and 9px values. `src/styles/tokens.css` defines a partial runtime system, while `DESIGN.md` now defines the accepted target contract.
-- Owner: global primitives belong in `src/styles/tokens.css`; the high-frequency composition remains in `src/App.tsx` and `src/App.css`; timeline presentation belongs to `src/features/threads/ConversationTimeline.tsx` and `src/features/threads/ConversationTimeline.css`; history belongs to `src/features/threads/ThreadHistoryList.tsx`; Composer controls belong to `src/features/composer/`.
-- Scope and affected surfaces: primary shell chrome, history rows, current-thread header, conversation timeline, Composer, inspector, popovers, and destructive confirmations.
-- Uncertainty: the design decision is resolved; exact component extraction boundaries must be confirmed against each implementation-stage diff so `App.tsx` is not expanded further.
+- Audited surface: the primary workbench conversation timeline, left Session history, and model advanced-settings dialog.
+- Design sources: accepted `DESIGN.md`, runtime `src/styles/tokens.css`, rendered reference `design-plans/ui-refresh-v1.html`, the user-provided timeline screenshot, and the current production consumers traced below.
+- Documented decisions: conversation text is 15px/24px; process content is 13px/20px; metadata is 11px/16px; Session rows are fixed 40px with 13px labels and 11px metadata; assistant output is unframed with a 2px activity line; file references use information blue and success/danger colors only for additions/deletions; meaningful text never falls below 11px.
+- Governing owners and consumers: `src/styles/tokens.css` owns the scale and palette; `src/App.css` currently owns effective timeline, history, and modal presentation; `ConversationTurn.tsx`, `TurnActivityGroup.tsx`, `TurnFileChanges.tsx`, `ThreadHistoryList.tsx`, and `ModelSettingsPanel.tsx` own behavior and structure.
+- Explicit exceptions: code, file paths, durations, and identifiers use the mono family; conversation prose uses the UI family.
 
 ## Findings
 
 | # | Problem | Evidence | Proposed change | Scope | Confidence |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Typography has no enforceable UI hierarchy | 74 declarations at 7-9px and eight rendered sizes in the empty workbench | Replace component-local sizes with the six roles in `DESIGN.md`; meaningful text floors at 11px | Entire workbench chrome and conversation metadata | High |
-| 2 | Icon language and control geometry are fragmented | Unicode, text approximations, local SVGs, and CSS icons represent peer actions | Adopt one 16px Lucide icon contract and shared 28/32px button primitives | Toolbars, session rows, Composer, menus, timeline actions | High |
-| 3 | Lists, buttons, and surfaces do not share a state system | Repeated literal grays, radii, borders, and hover rules remain outside tokens | Introduce semantic surface/state tokens and shared row/button/menu variants before visual tuning | Tokens, session history, inspector lists, popovers, Composer controls | High |
+| 1 | Timeline typography and semantic color only partially match the accepted design | The main answer already resolves to 15px/24px, but `TurnFileChanges` still resolves labels and paths to 11px, uses the `±` text glyph, and relies on legacy local colors; process/file separators use `#302f29` rather than `--border-subtle`. The accepted prototype specifies 13px/20px process content, 12px file rows, blue file icons, green additions, red deletions, and token-owned separators. | Keep answer text at 15px/24px, normalize process/file content to the documented roles, replace the file glyph with the existing Lucide icon language, and consume semantic tokens for separators and file states. | Conversation timeline, collapsed process group, completed file summary, message metadata | High |
+| 2 | Session history text is undersized and its state palette drifts from the workbench contract | `.thread-list .thread-main` is a 40px row, but its title inherits the broad 12px list rule and metadata is explicitly 10px; running/pin/branch styles use hardcoded lime/brown values. `DESIGN.md` requires 13px primary labels, 11px metadata, token-owned selected/hover states, and a stable 40px row. | Assign title and metadata roles explicitly, preserve fixed row geometry and action overlay, and replace local state colors with the existing semantic tokens. | Active, pinned, running, branched, long-title, and right-click Session rows | High |
+| 3 | Model advanced settings remains on a legacy modal scale and palette | `.settings-modal` uses a 16px radius and hardcoded brown surfaces/borders; field labels are 10px, help text 9px, inputs 11px, and the heading is 19px. These values contradict the 11px minimum, 12/13/14px UI roles, 8px panel radius, and graphite semantic surfaces in `DESIGN.md`. | Restyle the existing dialog with the current token scale: 14px title, 13px fields/inputs, 11px descriptions, 8px modal radius, graphite surfaces, semantic focus ring, and existing button variants. | Gateway URL, API key, custom model ID, provider capability summary, verbosity selector, error state, footer actions | High |
 
 ## Improve first
 
-Implement the typography and control-geometry foundation first. Adjusting individual colors or rows before replacing 7-9px text and unstable icon/button dimensions would preserve the root inconsistency and force another cleanup pass.
+Reconcile the timeline first. It is the primary reading surface, the main prose scale is already correct, and the remaining work is a bounded migration of process/file typography, separators, icons, and semantic state colors without changing message ordering or app-server behavior.
 
 ## Design decision
 
-Adopt the **Quiet Graphite Workbench** direction defined in `DESIGN.md` and rendered in `design-plans/ui-refresh-v1.html`. Preserve the current three-region information architecture and all app-server behavior. Replace the fragmented visual foundation with a six-role type scale, semantic graphite surfaces, one consistent icon family, fixed control geometry, unframed navigation lists, and an integrated assistant timeline. Use lime only for the primary local action or active mode; use blue, amber, red, and green only for semantic states.
+Complete the accepted Quiet Graphite Workbench migration through existing owners rather than introduce a second component system. Use the exact type/color/geometry roles already present in `src/styles/tokens.css`; treat `ui-refresh-v1.html` as a visual exemplar only. The three stages are independently reviewable and must not change Session ordering, model persistence, message grouping, queue/steer, or app-server event semantics.
 
 ## Reuse
 
-- `src/styles/tokens.css` remains the single runtime owner of global color, typography, spacing, radius, control-height, shadow, and motion values.
-- `src/features/threads/ThreadHistoryList.tsx` remains the session-row behavior owner, including hover actions, selection, archive, deletion, and copied identifiers.
-- `src/features/threads/ConversationTimeline.tsx`, `ConversationTurn.tsx`, `TurnActivityGroup.tsx`, `TurnActivityItem.tsx`, and `TurnFileChanges.tsx` remain the timeline behavior owners.
-- `src/features/composer/ComposerAddMenu.tsx`, `ComposerIntentControl.tsx`, and `SendModeControl.tsx` remain the Composer behavior owners.
-- `src/shared/useDismissiblePopover.ts` remains the outside-click and Escape behavior owner for non-modal popovers.
-- Exemplar: `design-plans/ui-refresh-v1.html` defines target visual composition and breakpoint behavior; it is not production code and must not be imported.
+- `--text-conversation`, `--text-conversation-small`, `--text-ui`, `--text-label`, and `--text-meta` from `src/styles/tokens.css`.
+- `--text-primary`, `--text-secondary`, `--text-muted`, `--accent-info`, `--accent-success`, `--accent-danger`, and graphite surface/border tokens.
+- Existing Lucide dependency and icon geometry: 16px, 1.75px stroke, `currentColor`.
+- Existing behavior owners: `ConversationTurn`, `TurnActivityGroup`, `TurnFileChanges`, `ThreadHistoryList`, and `ModelSettingsPanel`.
+- Exemplar: the assistant turn, process group, file changes, Session list, and dialog rules in `design-plans/ui-refresh-v1.html`.
 
-No new product behavior primitive is required. A small shared icon-button implementation is justified only if it replaces multiple existing action-button contracts without moving their business behavior out of current feature owners.
+No new behavior primitive is required. Shared CSS utilities are justified only where they replace an effective legacy selector without changing markup ownership.
 
 ## Changes
 
-1. `src/styles/tokens.css`
-   - Change: reconcile current `--ui-*` values with the semantic roles and exact target values in `DESIGN.md`; add missing spacing, type, icon, radius, control, focus, and motion tokens without maintaining two aliases indefinitely.
-   - Preserve: dark-first product identity and existing semantic status meanings.
-   - Verify: computed styles expose no meaningful text below 11px and no feature-local global palette.
+1. `src/App.css`, `src/features/threads/ConversationTimeline.css`, `src/features/threads/TurnFileChanges.tsx`
+   - Change: keep assistant prose at 15px/24px and the 2px activity line; set process summaries/details to 13px/20px; set metadata to 11px/16px with tabular numbers and at least 6px separation; use `--border-subtle` for process/file separators; present file rows at 12px mono with an information-blue file icon and semantic addition/deletion counts.
+   - Preserve: timeline virtualization, raw app-server order, completed-process folding, command drawers, answer streaming, copy/fork controls, file aggregation, and Diff counts.
+   - Verify: the screenshot hierarchy is reproduced without adding cards around assistant responses or changing the placement of user messages and queued Composer rows.
 
-2. `package.json`, lockfile, and the smallest shared UI owner selected during implementation
-   - Change: add `lucide-react`; standardize production action icons at 16px, 1.75px stroke, and `currentColor`; consolidate icon, ghost, secondary, primary, and danger button geometry.
-   - Preserve: accessible names, current click behavior, 300ms tooltip intent, disabled states, and keyboard focus.
-   - Verify: no standard action in the traced workbench uses Unicode, emoji, a text approximation, or a second icon treatment.
+2. `src/App.css`, `src/features/threads/ThreadHistoryList.tsx`
+   - Change: make `.thread-title` explicitly 13px/20px and row metadata 11px/16px; keep 40px rows; use token-owned selected, hover, running, pinned, and branch colors; maintain a fade/action overlay that truncates before controls.
+   - Preserve: pinned-first ordering, branch depth, active/running state, archive/delete behavior, context menu, tooltips, and click target geometry.
+   - Verify: long Chinese/Latin names do not overlap actions and title/metadata baselines remain stable on hover.
 
-3. `src/features/threads/ThreadHistoryList.tsx` and its effective styles
-   - Change: implement fixed 40px rows, a stable 56px right action slot, single-line ellipsis before actions, a 2px selected indicator, and shared hover/pressed/focus states.
-   - Preserve: thread order, pinning, archive/delete confirmation, copy/fork behavior, and row hit targets.
-   - Verify: long Chinese and Latin titles do not overlap actions or change row height at all four target viewports.
+3. `src/App.css`, `src/features/models/ModelSettingsPanel.tsx`
+   - Change: migrate the dialog to token-owned graphite surfaces and an 8px radius; use a 14px/20px title, 13px/20px field labels and inputs, and 11px/16px descriptions/status; replace the `×` close glyph with the existing Lucide close icon; use the established focus ring and primary/secondary button geometry.
+   - Preserve: Windows Credential Manager handling, hidden API key, validation, provider capability read, restart decision, verbosity selection, cancel/outside-click behavior, and save behavior.
+   - Verify: long Base URLs/model IDs remain readable, help text never drops below 11px, and validation does not resize or obscure footer actions.
 
-4. `src/features/threads/ConversationTimeline.css` and the existing thread presentation components
-   - Change: use 15px/24px conversation text, 13px/20px process content, metadata at 11px/16px with at least 6px separation, an unframed assistant activity line, one completed process group, and one end-of-turn file-change summary.
-   - Preserve: app-server event order, streaming, scroll anchoring, virtualization, command expansion, current-turn progress, queue behavior, and raw content semantics.
-   - Verify: completing a turn only changes process-group presentation and does not reorder or drop events.
-
-5. `src/App.tsx`, `src/App.css`, and `src/features/composer/`
-   - Change: normalize Composer and current-thread header against the prototype: one bounded Composer surface, stable 32px send control, mutually exclusive Goal/Plan slot, left utility group, right model group, and compact queued-message rows.
-   - Preserve: attachments, slash commands, file mentions, workspace selection, permission/model changes, queue, steer, keyboard shortcuts, and Session continuity.
-   - Verify: hover, focus, loading, and mode changes never resize or move the send control.
-
-6. `src/features/runtime/StatusInspector.tsx`, `src/features/runtime/RuntimeLogPanel.css`, `src/features/diff/DiffInspector.css`, and existing overlay styles
-   - Change: apply one tab, list-row, menu, and popover surface contract; use one structural border between regions; remove nested decorative frames.
-   - Preserve: diagnostics, log limits, Diff navigation, external-click dismissal, Escape handling, and modal destructive confirmation.
-   - Verify: inspector defaults closed from 900px through 1179px, and both side regions become independent overlays below 900px.
-
-7. Tests and legacy cleanup
-   - Change: add visual/DOM coverage for shared button geometry, history rows, Composer states, menus, and timeline grouping; delete legacy selectors and icon implementations only after their final consumer migrates.
-   - Preserve: all behavioral tests and app-server protocol boundaries.
-   - Verify: Knip finds no abandoned modules or exports and the production CSS has no unused parallel token family introduced by this refresh.
+4. Tests and status documentation
+   - Change: extend DOM tests only where markup/icon replacement changes observable structure; update `docs/status/ui-shell-status.md` and `docs/status/PROJECT_STATUS.md` after each implemented stage, not during planning.
+   - Preserve: current behavioral assertions.
+   - Verify: no generated app-server types or protocol code change.
 
 ## Scope
 
-- Inherit: all primary workbench consumers that currently receive global `App.css` and `tokens.css` styles.
-- Verify: empty, loading, error, active turn, completed turn, queued input, destructive confirmation, long title, long path, wide Diff, and no-workspace states.
-- Exclude: app-server protocol, Runtime process lifecycle, Session persistence, workspace semantics, approval policy, model behavior, queue/steer behavior, light theme, marketing surfaces, and a component-framework migration.
+- Inherit: all timeline turns, Session history states, and model advanced-settings states that consume the effective selectors above.
+- Verify: empty/active/completed/failed turns, long Markdown, process groups, file changes, long Session titles, pinned/running rows, default/custom provider settings, validation errors, and four target viewport sizes.
+- Exclude: app-server event semantics, Session identity/order, model/provider behavior, queue/steer logic, Composer workspace behavior, inspector, Diff implementation, and light theme.
 
 ## Validation
 
-- Product: create and resume a Session; switch models and permissions without creating a new Session; queue and steer messages; add files; open a process group; inspect file changes; archive/delete through confirmation.
-- Interface: capture `1440x900`, `1280x780`, `1024x720`, and `900x700`; test the longest Session title and model ID; verify focus order, 300ms tooltips, outside click, Escape, selected/hover states, reduced motion, and Chinese/Latin baselines.
-- System: confirm global values come from `src/styles/tokens.css`, existing behavior owners remain in their feature modules, and the prototype is never imported by production code.
-- Repository: `pnpm test:quality` -> TypeScript, Vitest, production build, Knip, Rust checks, Clippy, and diff checks pass; `pnpm desktop:build` -> desktop debug build succeeds after each coherent implementation stage.
+- Product: run a multi-step task that produces commentary, commands, a final answer, and file changes; pin/open a long Session; open model advanced settings with default and custom provider values.
+- Interface: compare at `1440x900`, `1280x780`, `1024x720`, and `900x700`; verify Chinese/Latin baselines, line wrapping, metadata spacing, long paths, hover action overlays, keyboard focus, and validation states.
+- System: confirm every new effective value resolves through `src/styles/tokens.css` and no parallel palette/type scale is introduced.
+- Repository: `pnpm test:quality` → all TypeScript, Vitest, build, Knip, Rust, Clippy, and diff checks pass; `pnpm desktop:build` → debug desktop binary builds successfully.
 
 ## Stop conditions
 
-- Stop if a visual change requires changing app-server event semantics, Session identity, queue/steer behavior, or approval behavior.
-- Stop and split the stage if a non-mechanical diff exceeds roughly 500 changed lines or total review size exceeds 800 lines.
-- Stop if a shared primitive would move business behavior out of the current feature owner or create a second runtime token system.
-- Stop if the four viewport checks require shrinking meaningful text below 11px or controls below the documented dimensions.
+- Stop if a visual change requires changing app-server payloads, event order, Session sorting, model persistence, queue/steer behavior, or credential handling.
+- Stop and split the implementation if any stage exceeds roughly 300 non-mechanical changed lines.
+- Stop if a shared primitive would move business behavior out of the existing feature owner.
 
 ## Design documentation
 
-- `DESIGN.md` is the accepted target contract and must be updated only when an implementation decision intentionally changes the reusable product language.
-- `docs/status/ui-shell-status.md` and `docs/status/PROJECT_STATUS.md` should record production progress only after an implementation stage is merged and verified; the existence of this plan or prototype is not evidence that production UI has changed.
-
-## Prototype validation
-
-- `1280x780`: three regions visible; body and main region remain exactly viewport-sized; Composer bottom is 38px above the viewport edge.
-- `1024x720`: inspector is hidden; sidebar is 232px; Composer remains fully visible; no body overflow.
-- `900x700`: inspector is hidden; sidebar remains visible at the documented threshold; no tested button, row, header, or Composer control overflows its box.
-- `design-plans/ui-refresh-v1.html` is a static design artifact only. It intentionally contains no production imports, no app-server calls, and no behavior implementation.
+- After implementation and visual validation, update `docs/status/ui-shell-status.md` and `docs/status/PROJECT_STATUS.md` with the completed stages.
+- `DESIGN.md` already contains the governing decisions; do not change it unless implementation proves a reusable rule must change.

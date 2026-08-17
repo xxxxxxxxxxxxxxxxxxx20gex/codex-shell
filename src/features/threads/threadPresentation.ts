@@ -4,7 +4,7 @@ export function threadTitle(thread: Thread) {
   return thread.name?.trim() || thread.preview.trim() || "未命名会话";
 }
 
-/** Keep forked sessions next to their source session while preserving server recency order. */
+/** Put pinned sessions first, then keep the remaining fork branches in server recency order. */
 export function orderThreadsByBranch(threads: Thread[]): Thread[] {
   const byId = new Map(threads.map((thread) => [thread.id, thread]));
   const children = new Map<string, Thread[]>();
@@ -31,7 +31,10 @@ export function orderThreadsByBranch(threads: Thread[]): Thread[] {
   };
   roots.forEach(append);
   threads.forEach(append);
-  return ordered;
+  return [
+    ...ordered.filter((thread) => thread.isPinned),
+    ...ordered.filter((thread) => !thread.isPinned),
+  ];
 }
 
 export function threadBranchDepth(thread: Thread, threads: Thread[]): number {

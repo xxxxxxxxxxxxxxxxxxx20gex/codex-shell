@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import {
   ArrowUpRight,
+  Clock3,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -45,6 +46,7 @@ import {
 import { DiffInspector } from "./features/diff/DiffInspector";
 import { ModelSettingsPanel } from "./features/models/ModelSettingsPanel";
 import { ModelQuickPicker } from "./features/models/ModelQuickPicker";
+import { modelIdDisplayName } from "./features/models/modelPresentation";
 import type { ModelSettings } from "./features/models/types";
 import { RuntimeLogPanel } from "./features/runtime/RuntimeLogPanel";
 import { RuntimeNoticeBanner } from "./features/runtime/RuntimeNoticeBanner";
@@ -511,7 +513,6 @@ function App() {
             onUnarchive={(threadId) => void session.unarchiveThread(threadId)}
             onDelete={(threadId) => void session.deleteThread(threadId)}
             onShowArchived={session.showArchivedHistory}
-            onRefresh={() => void session.refreshHistory()}
             onLoadMore={() => void session.loadMoreHistory()}
           />
           <div className="sidebar-footer"><div className="avatar">本</div><span><strong>本地模式</strong><small>Windows · 个人使用</small></span></div>
@@ -592,10 +593,12 @@ function App() {
                 <div className="queued-turns-heading"><span>待发送 · {session.queuedTurns.length}</span>{session.running
                   ? <small>当前回答完成后依次发送</small>
                   : <button type="button" onClick={() => void session.resumeQueued()} title="继续发送队列">继续发送</button>}</div>
-                {session.queuedTurns.map((queued, index) => {
+                {session.queuedTurns.map((queued) => {
                   const label = queuedTurnLabel(queued);
                   return <div className="queued-turn" key={queued.id}>
-                    <span><i>{index + 1}</i>{label}</span>
+                    <Clock3 className="queued-turn-icon" aria-hidden="true" />
+                    <span>{label}</span>
+                    <small className="queued-turn-status">等待中</small>
                     {session.canSteer && <button type="button" onClick={() => void steerQueuedTurn(queued)} aria-label={`引导发送待发送消息：${label}`} title="引导发送"><ArrowUpRight aria-hidden="true" /></button>}
                     <button type="button" onClick={() => session.removeQueued(queued.id)} aria-label={`取消待发送消息：${label}`} title="取消待发送"><X aria-hidden="true" /></button>
                   </div>;
@@ -628,7 +631,7 @@ function App() {
                 </div>
                 <div className="composer-actions">
                   <div className="model-picker-anchor">
-                    <button className="model-button" onClick={() => setModelPickerOpen((open) => !open)} title="选择模型与推理强度"><span>{modelDisplayName ?? settings.modelId}</span>{settings.reasoningEffort && <small>{settings.reasoningEffort}</small>}<ChevronDown className="chevron-icon" aria-hidden="true" /></button>
+                    <button className="model-button" onClick={() => setModelPickerOpen((open) => !open)} title="选择模型与推理强度"><span>{modelDisplayName ?? modelIdDisplayName(settings.modelId)}</span>{settings.reasoningEffort && <small>{settings.reasoningEffort}</small>}<ChevronDown className="chevron-icon" aria-hidden="true" /></button>
                     {modelPickerOpen && <ModelQuickPicker settings={settings} loadModels={session.listModels} onChange={changeModelSettings} onDisplayName={setModelDisplayName} onAdvanced={() => { setModelPickerOpen(false); setSettingsOpen(true); }} onClose={() => setModelPickerOpen(false)} />}
                   </div>
                   <SendModeControl
