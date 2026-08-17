@@ -24,6 +24,18 @@
   --font-size-ui: 13px;
   --font-size-heading: 14px;
   --font-size-content: 15px;
+  --text-meta: 11px;
+  --text-label: 12px;
+  --text-ui: 13px;
+  --text-title: 14px;
+  --text-conversation: 15px;
+  --text-conversation-small: 13px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
   --control-height-compact: 28px;
   --control-height: 32px;
   --control-height-large: 40px;
