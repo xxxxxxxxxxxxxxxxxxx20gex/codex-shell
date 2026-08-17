@@ -9,6 +9,7 @@ import {
   Square,
   X,
 } from "lucide-react";
+import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import "./App.css";
 import { PermissionModeSelector } from "./features/approvals/PermissionModeSelector";
 import { AttachmentGallery } from "./features/attachments/AttachmentGallery";
@@ -36,7 +37,7 @@ import { FileMentionMenu } from "./features/workspaces/FileMentionMenu";
 import { WorkspaceExplorer } from "./features/workspaces/WorkspaceExplorer";
 import { WorkspaceSelector } from "./features/workspaces/WorkspaceSelector";
 import "./styles/tokens.css";
-import { resolveProjectRelativePath } from "./features/workspaces/workspaceState";
+import { isPathWithinRoot, resolveLinkedProjectPath, resolveProjectRelativePath } from "./features/workspaces/workspaceState";
 
 function App() {
   const {
@@ -112,6 +113,18 @@ function App() {
     handleComposerKeyDown,
     toggleSkill,
   } = useAppController();
+
+  async function openConversationPath(path: string) {
+    const resolvedPath = currentProjectPath
+      ? resolveLinkedProjectPath(currentProjectPath, path)
+      : null;
+    if (!resolvedPath) throw new Error("相对文件路径需要先选择项目");
+    if (currentProjectPath && isPathWithinRoot(currentProjectPath, resolvedPath)) {
+      openWorkspaceExplorer(resolvedPath);
+      return;
+    }
+    await revealItemInDir(resolvedPath);
+  }
 
   return (
     <main className="app-shell">
@@ -193,6 +206,8 @@ function App() {
               activeItemTurnIds={session.activeItemTurnIds}
               mcpProgressByItemId={session.mcpProgressByItemId}
               readFile={session.readWorkspaceFile}
+              onOpenPath={openConversationPath}
+              onOpenError={setUiError}
             />
           ) : (
             <div className="timeline"><div className="conversation-empty"><div className="agent-avatar">CS</div><h2>Codex Shell</h2><p>原生 Codex app-server 工作台</p></div></div>

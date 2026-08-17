@@ -23,6 +23,8 @@ interface Props {
   activeItemTurnIds: Record<string, string>;
   mcpProgressByItemId: Record<string, McpToolCallProgressNotification>;
   readFile?: (path: string) => Promise<string>;
+  onOpenPath?: (path: string) => void | Promise<void>;
+  onOpenError?: (message: string) => void;
 }
 
 type UserMessageItem = Extract<ThreadItem, { type: "userMessage" }>;
@@ -91,6 +93,8 @@ export function ConversationTurn({
   activeItemTurnIds,
   mcpProgressByItemId,
   readFile,
+  onOpenPath,
+  onOpenError,
 }: Props) {
   const items = turn.items;
   const blocks = orderedTurnBlocks(items);
@@ -179,6 +183,8 @@ export function ConversationTurn({
                         turnId={turn.id}
                         activeItemTurnIds={activeItemTurnIds}
                         mcpProgressByItemId={mcpProgressByItemId}
+                        onOpenPath={onOpenPath}
+                        onOpenError={onOpenError}
                       />
                     ))}
                   </div>
@@ -194,13 +200,15 @@ export function ConversationTurn({
                 turnId={turn.id}
                 activeItemTurnIds={activeItemTurnIds}
                 mcpProgressByItemId={mcpProgressByItemId}
+                onOpenPath={onOpenPath}
+                onOpenError={onOpenError}
               />
           )}
           {block.type === "answer" && (
             <div className={`agent-block${block.item.id === firstAgentMessageId ? "" : " agent-block-continuation"}`}>
               {block.item.id === firstAgentMessageId && <div className="agent-accent" aria-hidden="true" />}
               <div className="agent-content">
-                <MarkdownContent className={block.item.text ? "agent-response" : "agent-response pending"}>
+                <MarkdownContent className={block.item.text ? "agent-response" : "agent-response pending"} onOpenPath={onOpenPath} onOpenError={onOpenError}>
                   {block.item.text || "正在等待模型响应…"}
                 </MarkdownContent>
                 {block.item.id === lastAgentMessageId && answerTiming && (

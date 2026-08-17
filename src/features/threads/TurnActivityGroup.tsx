@@ -16,9 +16,11 @@ interface Props {
   turnId: string;
   activeItemTurnIds: Record<string, string>;
   mcpProgressByItemId: Record<string, McpToolCallProgressNotification>;
+  onOpenPath?: (path: string) => void | Promise<void>;
+  onOpenError?: (message: string) => void;
 }
 
-export function TurnActivityGroup({ items, active, turnActive, startedAt, durationMs, showHeader, turnId, activeItemTurnIds, mcpProgressByItemId }: Props) {
+export function TurnActivityGroup({ items, active, turnActive, startedAt, durationMs, showHeader, turnId, activeItemTurnIds, mcpProgressByItemId, onOpenPath, onOpenError }: Props) {
   const [now, setNow] = useState(Date.now);
   useEffect(() => {
     if (!turnActive || startedAt === null) return;
@@ -60,7 +62,7 @@ export function TurnActivityGroup({ items, active, turnActive, startedAt, durati
         {activityBlocks.map((item) => item.type === "commandDrawer" ? (
           <CommandDrawer items={item.items} key={`command-drawer:${item.items[0].id}`} />
         ) : item.type === "agentMessage" ? (
-          <MarkdownContent className="turn-commentary" key={item.id}>{item.text}</MarkdownContent>
+          <MarkdownContent className="turn-commentary" key={item.id} onOpenPath={onOpenPath} onOpenError={onOpenError}>{item.text}</MarkdownContent>
         ) : (
           <TurnActivityItem item={item} key={item.id} />
         ))}

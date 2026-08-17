@@ -1,8 +1,11 @@
 // @vitest-environment happy-dom
 
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { McpStatusPanel } from "./McpStatusPanel";
+
+vi.mock("@tauri-apps/plugin-opener", () => ({ openUrl: vi.fn() }));
 
 afterEach(cleanup);
 
@@ -58,5 +61,27 @@ describe("McpStatusPanel", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: "OAuth 登录" }));
     expect(await screen.findByText("MCP 服务器返回了不安全的 OAuth 地址")).toBeTruthy();
+  });
+
+  it("opens a safe OAuth URL with the system opener", async () => {
+    render(
+      <McpStatusPanel
+        loadServers={vi.fn(async () => [{
+          name: "safe",
+          serverInfo: null,
+          tools: {},
+          resources: [],
+          resourceTemplates: [],
+          authStatus: "notLoggedIn" as const,
+        }])}
+        loginServer={vi.fn(async () => "https://example.com/oauth")}
+        reloadServers={vi.fn()}
+        readResource={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(await screen.findByRole("button", { name: "OAuth 登录" }));
+    await waitFor(() => expect(openUrl).toHaveBeenCalledWith("https://example.com/oauth"));
   });
 });

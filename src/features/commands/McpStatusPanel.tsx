@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { RefreshCw, Server, X } from "lucide-react";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import type { McpServerStatus } from "../../generated/app-server/v2/McpServerStatus";
 import type { ResourceContent } from "../../generated/app-server/ResourceContent";
 import { errorMessage } from "../../shared/errors";
@@ -62,7 +63,7 @@ export function McpStatusPanel({ loadServers, loginServer, reloadServers, readRe
       const url = safeHttpUrl(await loginServer(name));
       if (!url) throw new Error("MCP 服务器返回了不安全的 OAuth 地址");
       setAuthorizationUrl(url);
-      window.open(url, "_blank", "noopener,noreferrer");
+      await openUrl(url);
     } catch (value) {
       setError(errorMessage(value));
     } finally {
@@ -100,7 +101,7 @@ export function McpStatusPanel({ loadServers, loginServer, reloadServers, readRe
     <div className="command-panel-list">
       {loading && <p>正在读取 MCP 状态…</p>}{error && <p className="error">{error}</p>}
       {!loading && !error && servers.length === 0 && <p>当前没有配置 MCP 服务器。</p>}
-      {authorizationUrl && <p className="mcp-auth-link">浏览器未打开？<a href={authorizationUrl} target="_blank" rel="noreferrer">继续 OAuth 登录</a></p>}
+      {authorizationUrl && <p className="mcp-auth-link">浏览器未打开？<a href={authorizationUrl} target="_blank" rel="noreferrer" onClick={(event) => { event.preventDefault(); void openUrl(authorizationUrl).catch((value) => setError(errorMessage(value))); }}>继续 OAuth 登录</a></p>}
       {resourcePreview && <div className="mcp-resource-preview"><button onClick={() => setResourcePreview("")}>关闭预览</button><pre>{resourcePreview}</pre></div>}
       {servers.map((server) => {
         const tools = Object.keys(server.tools);

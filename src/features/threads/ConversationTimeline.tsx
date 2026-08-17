@@ -17,6 +17,8 @@ interface Props {
   activeItemTurnIds?: Record<string, string>;
   mcpProgressByItemId?: Record<string, McpToolCallProgressNotification>;
   readFile?: (path: string) => Promise<string>;
+  onOpenPath?: (path: string) => void | Promise<void>;
+  onOpenError?: (message: string) => void;
 }
 
 interface UserTurnLink {
@@ -47,6 +49,8 @@ export function ConversationTimeline({
   activeItemTurnIds = EMPTY_ACTIVE_ITEMS,
   mcpProgressByItemId = EMPTY_MCP_PROGRESS,
   readFile,
+  onOpenPath,
+  onOpenError,
 }: Props) {
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const followLatestRef = useRef(true);
@@ -173,6 +177,8 @@ export function ConversationTimeline({
               activeItemTurnIds={activeItemTurnIds}
               mcpProgressByItemId={mcpProgressByItemId}
               readFile={readFile}
+              onOpenPath={onOpenPath}
+              onOpenError={onOpenError}
             />
           </div>
         )}

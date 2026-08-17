@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   activeFileMentionQuery,
+  isPathWithinRoot,
   isDefaultProjectPath,
   joinProjectPath,
   replaceActiveFileMention,
   resolveFileSearchPath,
+  resolveLinkedProjectPath,
   resolveProjectRelativePath,
   projectRelativePath,
 } from "./workspaceState";
@@ -39,6 +41,15 @@ describe("workspace paths", () => {
     expect(resolveProjectRelativePath("C:\\work", "src/App.tsx")).toBe("C:\\work\\src\\App.tsx");
     expect(resolveProjectRelativePath("C:\\work", "../secret.txt")).toBeNull();
     expect(resolveProjectRelativePath("C:\\work", "D:\\other.txt")).toBeNull();
+  });
+
+  it("resolves linked files without allowing relative traversal", () => {
+    expect(resolveLinkedProjectPath("C:\\work", "src/App.tsx")).toBe("C:\\work\\src\\App.tsx");
+    expect(resolveLinkedProjectPath("C:\\work", "D:/shared/readme.md")).toBe("D:/shared/readme.md");
+    expect(resolveLinkedProjectPath("C:\\work", "../secret.txt")).toBeNull();
+    expect(resolveLinkedProjectPath("C:\\work", "C:\\work\\..\\secret.txt")).toBeNull();
+    expect(isPathWithinRoot("C:\\work", "C:\\work\\src\\App.tsx")).toBe(true);
+    expect(isPathWithinRoot("C:\\work", "C:\\workspace\\App.tsx")).toBe(false);
   });
 
   it("renders paths relative to the selected workspace", () => {

@@ -1,9 +1,12 @@
 // @vitest-environment happy-dom
 
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ServerInteractionDialog } from "./ServerInteractionDialog";
 import { ServerInteractionStore } from "./serverInteractionStore";
+
+vi.mock("@tauri-apps/plugin-opener", () => ({ openUrl: vi.fn() }));
 
 afterEach(cleanup);
 
@@ -118,5 +121,27 @@ describe("ServerInteractionDialog", () => {
 
     expect(screen.getByText("服务器返回了不安全的链接，已阻止打开。")).toBeTruthy();
     expect(screen.getByRole("button", { name: "已打开，继续" }).hasAttribute("disabled")).toBe(true);
+  });
+
+  it("opens safe MCP elicitation URLs with the system opener", () => {
+    const store = new ServerInteractionStore();
+    void store.request("mcp-url-safe", {
+      kind: "mcpElicitation",
+      params: {
+        mode: "url",
+        threadId: "thread-1",
+        turnId: null,
+        serverName: "safe",
+        message: "open",
+        url: "https://example.com/authorize",
+        elicitationId: "request-2",
+        _meta: null,
+      },
+    });
+    render(<ServerInteractionDialog store={store} />);
+
+    fireEvent.click(screen.getByRole("link", { name: "https://example.com/authorize" }));
+
+    expect(openUrl).toHaveBeenCalledWith("https://example.com/authorize");
   });
 });

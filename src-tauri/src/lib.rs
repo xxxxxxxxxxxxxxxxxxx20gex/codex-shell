@@ -11,6 +11,7 @@ use app_server::AppServerState;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
         .manage(AppServerState::default())
         .invoke_handler(tauri::generate_handler![
             app_server::app_server_send,

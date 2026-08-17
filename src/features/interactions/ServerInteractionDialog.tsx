@@ -1,4 +1,5 @@
 import { useState, useSyncExternalStore } from "react";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { errorMessage } from "../../shared/errors";
 import type { JsonValue } from "../runtime/appServerClient";
 import { safeHttpUrl } from "../../shared/externalUrl";
@@ -264,6 +265,15 @@ function McpFormInteraction({ interaction, store }: Props & { interaction: Serve
     }
   }
 
+  async function openInteractionUrl(url: string) {
+    setJsonError("");
+    try {
+      await openUrl(url);
+    } catch (openError) {
+      setJsonError(errorMessage(openError));
+    }
+  }
+
   if (params.mode === "url") {
     const url = safeHttpUrl(params.url);
     return (
@@ -272,7 +282,7 @@ function McpFormInteraction({ interaction, store }: Props & { interaction: Serve
         <h2 id="interaction-title">服务器请求打开链接</h2>
         <p>{params.message}</p>
         {url
-          ? <a className="interaction-url" href={url} target="_blank" rel="noreferrer">{url}</a>
+          ? <a className="interaction-url" href={url} target="_blank" rel="noreferrer" onClick={(event) => { event.preventDefault(); void openInteractionUrl(url); }}>{url}</a>
           : <p className="interaction-error">服务器返回了不安全的链接，已阻止打开。</p>}
         <footer>
           <button className="secondary-button danger-button" onClick={store.declineCurrent}>拒绝</button>

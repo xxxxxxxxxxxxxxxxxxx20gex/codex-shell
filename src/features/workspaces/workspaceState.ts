@@ -32,6 +32,25 @@ export function resolveProjectRelativePath(root: string, relativePath: string) {
   return parts.reduce(joinProjectPath, root);
 }
 
+function isAbsoluteLocalPath(path: string) {
+  return /^(?:[a-zA-Z]:[\\/]|\\\\)/.test(path);
+}
+
+function hasParentTraversal(path: string) {
+  return path.split(/[\\/]/).some((part) => part === "..");
+}
+
+export function isPathWithinRoot(root: string, path: string) {
+  const normalizedRoot = root.replace(/\\/g, "/").replace(/\/+$/, "").toLowerCase();
+  const normalizedPath = path.replace(/\\/g, "/").replace(/\/+$/, "").toLowerCase();
+  return normalizedPath === normalizedRoot || normalizedPath.startsWith(`${normalizedRoot}/`);
+}
+
+export function resolveLinkedProjectPath(root: string, path: string) {
+  if (isAbsoluteLocalPath(path)) return hasParentTraversal(path) ? null : path;
+  return resolveProjectRelativePath(root, path);
+}
+
 export function projectRelativePath(root: string, path: string) {
   const normalizedRoot = root.replace(/[\\/]+$/, "");
   if (path.toLowerCase() === normalizedRoot.toLowerCase()) return projectName(root);
