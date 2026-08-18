@@ -31,7 +31,7 @@ button { color: inherit; }
 button:disabled { cursor: not-allowed; }
 button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; }
 
-.app-shell { width: 100%; height: 100%; background: var(--surface-canvas); }
+.app-shell { display: grid; width: 100%; height: 100%; grid-template-rows: 32px minmax(0, 1fr); background: var(--surface-canvas); }
 .agent-avatar { display: grid; place-items: center; width: 29px; height: 29px; border-radius: var(--radius-panel); color: var(--accent-ink); background: var(--accent-action); font-weight: 600; }
 
 .workspace-grid { position: relative; display: grid; min-height: 0; height: 100%; overflow: hidden; grid-template-columns: var(--sidebar-width) minmax(520px, 1fr) var(--inspector-width); transition: grid-template-columns .18s ease; }

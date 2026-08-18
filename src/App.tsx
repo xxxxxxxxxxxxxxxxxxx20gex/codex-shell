@@ -38,6 +38,7 @@ import { threadTitle } from "./features/threads/threadPresentation";
 import { FileMentionMenu } from "./features/workspaces/FileMentionMenu";
 import { WorkspaceExplorer } from "./features/workspaces/WorkspaceExplorer";
 import { WorkspaceSelector } from "./features/workspaces/WorkspaceSelector";
+import { WindowTitleBar } from "./features/window/WindowTitleBar";
 import "./styles/tokens.css";
 import { isPathWithinRoot, resolveLinkedProjectPath, resolveProjectRelativePath } from "./features/workspaces/workspaceState";
 
@@ -134,6 +135,7 @@ function App() {
 
   return (
     <main className="app-shell" data-theme={personalization.theme}>
+      <WindowTitleBar />
       <section
         ref={workspaceGridRef}
         className={`workspace-grid ${sidebarOpen ? "" : "sidebar-hidden"} ${inspectorOpen ? "" : "inspector-hidden"} ${resizingPanel ? "resizing" : ""}`}

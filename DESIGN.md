@@ -1,7 +1,7 @@
 # Codex Shell Design Standard
 
 > Status: Target contract v1. Production UI may still contain legacy values until the UI refresh is implemented.
-> Last updated: 2026-08-17.
+> Last updated: 2026-08-18.
 
 ## Product Character
 
@@ -186,6 +186,14 @@ Radii:
 - Menu rows are at least `32px` high, with icon, label, optional description, and shortcut in stable columns.
 - Dialogs use a clear title, short explanation only when necessary, and right-aligned actions.
 - Clicking outside closes non-modal popovers; destructive confirmation remains modal.
+
+## Window Chrome
+
+- Windows uses a 32px product-owned frameless title bar instead of native decorations.
+- The whole non-interactive title-bar area remains draggable; double-click toggles maximize and restore.
+- Minimize, maximize/restore, and close stay in a fixed right-side control group and call Tauri window APIs directly.
+- Window buttons are borderless and rectangular. Only the close button uses danger color, and only on hover.
+- The custom title bar does not promise the Windows 11 native Snap Layout hover menu; resizing and explicit maximize/restore remain available.
 
 ## Conversation Timeline
 
