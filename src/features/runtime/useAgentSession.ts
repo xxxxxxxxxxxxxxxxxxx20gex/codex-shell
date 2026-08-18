@@ -39,12 +39,11 @@ export function updateRetryingError(
   return { threadId: change.threadId, message: change.message };
 }
 
-export function visibleSessionError(
-  persistentError: string,
+export function visibleRetryingMessage(
   retryingError: RetryingError | null,
   activeThreadId: string | null,
 ) {
-  return retryingError?.threadId === activeThreadId ? retryingError.message : persistentError;
+  return retryingError?.threadId === activeThreadId ? retryingError.message : "";
 }
 
 function useStableStore<T>(create: () => T) {
@@ -366,7 +365,8 @@ export function useAgentSession(
     activeItemTurnIds: sessionState.activeItemTurnIds,
     mcpProgressByItemId: sessionState.mcpProgressByItemId,
     tokenUsage: sessionState.tokenUsage,
-    error: visibleSessionError(error, retryingError, sessionState.thread?.id ?? null),
+    error,
+    retryingMessage: visibleRetryingMessage(retryingError, sessionState.thread?.id ?? null),
     runtimeLogStore,
     runtimeNoticeStore,
     interactionStore,

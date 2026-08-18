@@ -12,6 +12,7 @@ interface Props {
   turnActive: boolean;
   startedAt: number | null;
   durationMs: number | null;
+  retryingMessage?: string | null;
   showHeader: boolean;
   turnId: string;
   activeItemTurnIds: Record<string, string>;
@@ -20,7 +21,7 @@ interface Props {
   onOpenError?: (message: string) => void;
 }
 
-export function TurnActivityGroup({ items, active, turnActive, startedAt, durationMs, showHeader, turnId, activeItemTurnIds, mcpProgressByItemId, onOpenPath, onOpenError }: Props) {
+export function TurnActivityGroup({ items, active, turnActive, startedAt, durationMs, retryingMessage = null, showHeader, turnId, activeItemTurnIds, mcpProgressByItemId, onOpenPath, onOpenError }: Props) {
   const [now, setNow] = useState(Date.now);
   useEffect(() => {
     if (!turnActive || startedAt === null) return;
@@ -57,6 +58,7 @@ export function TurnActivityGroup({ items, active, turnActive, startedAt, durati
       {showHeader && <div className="turn-work-status">
         <span className={`turn-activity-indicator${turnActive ? " active" : ""}`} aria-hidden="true" />
         <strong>{`${turnActive ? "正在处理" : "已处理"}${duration}`}</strong>
+        {turnActive && retryingMessage && <small className="turn-retry-status">{retryingMessage}</small>}
       </div>}
       <div className="turn-activity-list">
         {activityBlocks.map((item) => item.type === "commandDrawer" ? (

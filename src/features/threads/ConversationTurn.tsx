@@ -17,6 +17,7 @@ import { userMessagePresentation } from "../runtime/userMessagePresentation";
 interface Props {
   turn: Turn;
   active: boolean;
+  retryingMessage?: string | null;
   canFork: boolean;
   onFork?: () => void;
   plan?: TurnPlanUpdatedNotification;
@@ -87,6 +88,7 @@ function lastActivityBlockIndex(blocks: TurnBlock[]) {
 export function ConversationTurn({
   turn,
   active,
+  retryingMessage = null,
   canFork,
   onFork,
   plan,
@@ -179,6 +181,7 @@ export function ConversationTurn({
                         turnActive={false}
                         startedAt={turn.startedAt}
                         durationMs={durationMs}
+                        retryingMessage={retryingMessage}
                         showHeader={false}
                         turnId={turn.id}
                         activeItemTurnIds={activeItemTurnIds}
@@ -196,6 +199,7 @@ export function ConversationTurn({
                 turnActive={active}
                 startedAt={turn.startedAt}
                 durationMs={durationMs}
+                retryingMessage={retryingMessage}
                 showHeader={blockIndex === firstActivityBlockIndex}
                 turnId={turn.id}
                 activeItemTurnIds={activeItemTurnIds}
@@ -246,6 +250,7 @@ export function ConversationTurn({
             {answerTiming && (
               <div className="message-timing agent-message-timing">{answerTiming}</div>
             )}
+            {retryingMessage && <div className="turn-retry-status standalone">{retryingMessage}</div>}
           </div>
         </div>
       )}

@@ -15,6 +15,7 @@ The design direction is **Quiet Graphite Workbench**:
 - compact controls with stable geometry and predictable alignment;
 - assistant output integrated into the timeline instead of boxed into repeated cards.
 - assistant responses use one 2px action marker at the first answer line; completed responses do not carry a full-height gray rail, and continuation blocks do not repeat the marker.
+- elapsed durations use compact `s`/`m s` units, and transient reconnect notices stay inside the active process status instead of occupying the Composer error slot.
 
 ## Source Of Truth
 

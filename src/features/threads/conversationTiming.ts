@@ -15,19 +15,10 @@ export function formatMessageTimestamp(timestamp: number | null) {
 }
 
 export function formatTurnDuration(durationMs: number) {
-  const milliseconds = Math.max(0, Math.round(durationMs));
-  if (milliseconds < 1000) return `${milliseconds} 毫秒`;
-  if (milliseconds < 60_000) {
-    const seconds = (milliseconds / 1000).toFixed(1).replace(/\.0$/, "");
-    return `${seconds} 秒`;
-  }
-
-  const totalSeconds = Math.round(milliseconds / 1000);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const totalSeconds = Math.max(0, Math.round(durationMs / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  if (hours > 0) return `${hours} 小时 ${minutes} 分 ${pad(seconds)} 秒`;
-  return `${minutes} 分 ${pad(seconds)} 秒`;
+  return minutes > 0 ? `${minutes}m ${pad(seconds)}s` : `${seconds}s`;
 }
 
 export function turnDurationMs(turn: Turn) {

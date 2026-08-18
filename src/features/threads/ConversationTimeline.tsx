@@ -10,6 +10,7 @@ import "./ConversationTimeline.css";
 interface Props {
   turns: Turn[];
   running: boolean;
+  retryingMessage?: string | null;
   threadId?: string | null;
   forkDisabled?: boolean;
   onFork?: (threadId: string, lastTurnId: string) => void;
@@ -42,6 +43,7 @@ function userTurnLinks(turns: Turn[]): UserTurnLink[] {
 export function ConversationTimeline({
   turns,
   running,
+  retryingMessage = null,
   threadId = null,
   forkDisabled = false,
   onFork,
@@ -171,6 +173,7 @@ export function ConversationTimeline({
             <ConversationTurn
               turn={turn}
               active={running && turnIndex === turns.length - 1}
+              retryingMessage={running && turnIndex === turns.length - 1 ? retryingMessage : null}
               canFork={Boolean(onFork && threadId && !forkDisabled && turn.status !== "inProgress" && !(running && turnIndex === turns.length - 1))}
               onFork={threadId && onFork ? () => onFork(threadId, turn.id) : undefined}
               plan={plansByTurnId[turn.id]}

@@ -12,7 +12,7 @@ const activity: ThreadItem = {
   content: [],
 };
 
-function renderActivity(turnActive: boolean, startedAt: number | null, durationMs: number | null) {
+function renderActivity(turnActive: boolean, startedAt: number | null, durationMs: number | null, retryingMessage: string | null = null) {
   return render(
     <TurnActivityGroup
       items={[activity]}
@@ -20,6 +20,7 @@ function renderActivity(turnActive: boolean, startedAt: number | null, durationM
       turnActive={turnActive}
       startedAt={startedAt}
       durationMs={durationMs}
+      retryingMessage={retryingMessage}
       showHeader
       turnId="turn-1"
       activeItemTurnIds={{}}
@@ -40,16 +41,37 @@ describe("TurnActivityGroup timing", () => {
     const startedAt = Date.now() / 1_000 - 5;
 
     renderActivity(true, startedAt, null);
-    expect(screen.getByText("正在处理 5 秒")).toBeTruthy();
+    expect(screen.getByText("正在处理 5s")).toBeTruthy();
 
     act(() => vi.advanceTimersByTime(1_000));
-    expect(screen.getByText("正在处理 6 秒")).toBeTruthy();
+    expect(screen.getByText("正在处理 6s")).toBeTruthy();
   });
 
   it("freezes the final duration after completion", () => {
     renderActivity(false, 100, 8_421);
 
-    expect(screen.getByText("已处理 8.4 秒")).toBeTruthy();
+    expect(screen.getByText("已处理 8s")).toBeTruthy();
+  });
+
+  it("keeps a reconnect notice inside the active process status", () => {
+    const view = renderActivity(true, Date.now() / 1_000, null, "Reconnecting... 1/5");
+
+    expect(screen.getByText("Reconnecting... 1/5").closest(".turn-work-status")).toBeTruthy();
+    view.rerender(
+      <TurnActivityGroup
+        items={[activity]}
+        active={false}
+        turnActive={false}
+        startedAt={100}
+        durationMs={8_000}
+        retryingMessage="Reconnecting... 1/5"
+        showHeader
+        turnId="turn-1"
+        activeItemTurnIds={{}}
+        mcpProgressByItemId={{}}
+      />,
+    );
+    expect(screen.queryByText("Reconnecting... 1/5")).toBeNull();
   });
 
   it("clears its timer when removed", () => {

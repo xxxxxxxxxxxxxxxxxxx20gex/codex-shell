@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   sendOrQueue,
   updateRetryingError,
-  visibleSessionError,
+  visibleRetryingMessage,
 } from "./useAgentSession";
 
 describe("retrying error lifecycle", () => {
@@ -13,7 +13,7 @@ describe("retrying error lifecycle", () => {
       message: "Reconnecting... 1/5",
     });
 
-    expect(visibleSessionError("", retrying, "thread-1")).toBe("Reconnecting... 1/5");
+    expect(visibleRetryingMessage(retrying, "thread-1")).toBe("Reconnecting... 1/5");
     expect(updateRetryingError(retrying, { type: "settled", threadId: "thread-1" })).toBeNull();
   });
 
@@ -23,7 +23,7 @@ describe("retrying error lifecycle", () => {
       message: "Reconnecting... 2/5",
     };
 
-    expect(visibleSessionError("other error", retrying, "thread-2")).toBe("other error");
+    expect(visibleRetryingMessage(retrying, "thread-2")).toBe("");
     expect(updateRetryingError(retrying, { type: "settled", threadId: "thread-2" })).toEqual(retrying);
   });
 });

@@ -15,6 +15,7 @@ import {
   Zap,
 } from "lucide-react";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
+import { formatTurnDuration } from "./conversationTiming";
 
 interface Props {
   item: ThreadItem;
@@ -22,7 +23,7 @@ interface Props {
 
 function durationLabel(durationMs: number | null) {
   if (durationMs === null) return "";
-  return durationMs < 1000 ? `${durationMs} ms` : `${(durationMs / 1000).toFixed(1)} 秒`;
+  return formatTurnDuration(durationMs);
 }
 
 function jsonPreview(value: unknown) {

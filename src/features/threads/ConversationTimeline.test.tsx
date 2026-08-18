@@ -54,8 +54,8 @@ describe("conversation timing", () => {
   });
 
   it("formats short and long durations", () => {
-    expect(formatTurnDuration(8421)).toBe("8.4 秒");
-    expect(formatTurnDuration(65_234)).toBe("1 分 05 秒");
+    expect(formatTurnDuration(8421)).toBe("8s");
+    expect(formatTurnDuration(65_234)).toBe("1m 05s");
     expect(turnDurationMs({ ...completedTurn(), durationMs: null })).toBe(8_000);
   });
 
@@ -63,7 +63,7 @@ describe("conversation timing", () => {
     const markup = renderTurn(completedTurn());
 
     expect(markup).toContain("2026/08/07 10:20:30");
-    expect(markup).toContain("2026/08/07 10:20:38 · 8.4 秒");
+    expect(markup).toContain("2026/08/07 10:20:38 · 8s");
     expect(markup).not.toContain("发送于");
     expect(markup).not.toContain("回答于");
     expect(markup).not.toContain("耗时");
@@ -131,7 +131,7 @@ describe("conversation timing", () => {
     expect(markup).toContain("运行命令");
     expect(markup).toContain("pnpm test");
     expect(markup).toContain("16 tests passed");
-    expect(markup).toContain("已处理 8.4 秒");
+    expect(markup).toContain("已处理 8s");
     expect(markup).toContain('class="turn-activity-stream"');
     expect(markup).toContain('class="activity-card activity-command-card"');
     expect(markup).not.toContain('class="activity-card activity-command-card" open=""');
@@ -204,7 +204,7 @@ describe("conversation timing", () => {
     const markup = renderTurn({ ...completedTurn(), items: [reasoning, answer] });
 
     expect(markup).toContain('class="turn-process-disclosure"');
-    expect(markup).toContain("已处理 8.4 秒");
+    expect(markup).toContain("已处理 8s");
     expect(markup).toContain("检查完成");
     expect(markup).toContain("最终回答");
     expect(markup).not.toContain('class="turn-process-disclosure" open=""');
@@ -324,7 +324,7 @@ describe("conversation timing", () => {
     const answer: ThreadItem = { type: "agentMessage", id: "answer-1", text: "检查完成。", phase: "final_answer", memoryCitation: null };
     const markup = renderTurn({ ...completedTurn(), items: [commentary, reasoning, answer] });
 
-    expect(markup).toContain("已处理 8.4 秒");
+    expect(markup).toContain("已处理 8s");
     expect(markup).toContain('class="turn-commentary"');
     expect(markup).toContain("我先检查项目结构。");
     expect(markup).toContain('class="activity-reasoning-note"');
@@ -352,7 +352,7 @@ describe("conversation timing", () => {
 
     expect(markup).not.toContain("分析过程");
     expect(markup).toContain("正在核对实现。");
-    expect(markup).toContain("已处理 8.4 秒");
+    expect(markup).toContain("已处理 8s");
   });
 
   it("keeps live progress for active reasoning even before it has content", () => {

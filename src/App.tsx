@@ -211,6 +211,7 @@ function App() {
               key={session.thread?.id ?? "new"}
               turns={session.turns}
               running={session.running}
+              retryingMessage={session.retryingMessage}
               threadId={session.thread?.id}
               forkDisabled={session.submitting || session.openingThreadId !== null || session.threadActionId !== null}
               onFork={(threadId, lastTurnId) => void session.forkThread(threadId, lastTurnId)}
