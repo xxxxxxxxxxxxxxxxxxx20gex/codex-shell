@@ -14,6 +14,7 @@ The design direction is **Quiet Graphite Workbench**:
 - one lime action accent, with blue, amber, and red reserved for semantic states;
 - compact controls with stable geometry and predictable alignment;
 - assistant output integrated into the timeline instead of boxed into repeated cards.
+- assistant responses use one 2px action marker at the first answer line; completed responses do not carry a full-height gray rail, and continuation blocks do not repeat the marker.
 
 ## Source Of Truth
 

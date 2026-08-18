@@ -79,8 +79,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .agent-block { display: grid; grid-template-columns: 2px minmax(0, 1fr); gap: 14px; margin-top: 28px; }
 .agent-block-continuation { margin-top: 0; }
 .agent-block-continuation .agent-content { grid-column: 2; }
-.agent-accent { width: 2px; align-self: stretch; min-height: 32px; border-radius: 2px; background: var(--border-strong); }
-.conversation-turn[data-status="inProgress"] .agent-block:last-of-type .agent-accent { background: color-mix(in srgb, var(--accent-action) 24%, var(--border-strong)); }
+.agent-accent { width: 2px; height: 24px; align-self: start; min-height: 24px; border-radius: 2px; background: var(--accent-action); }
 .agent-response { color: var(--text-primary); font-size: var(--conversation-font-size); line-height: 24px; overflow-wrap: anywhere; }
 .agent-response > :first-child, .turn-commentary > :first-child { margin-top: 0; }
 .agent-response > :last-child, .turn-commentary > :last-child { margin-bottom: 0; }
