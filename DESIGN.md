@@ -132,6 +132,7 @@ Stable dimensions:
 - sidebar target width: `248px`, inspector target width: `288px`;
 - conversation readable width: `760px` to `820px`;
 - composer maximum width: `860px`.
+- queued messages are a sibling panel immediately above the composer; queue rows must not be nested inside the composer input surface;
 
 Radii:
 

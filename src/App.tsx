@@ -240,6 +240,21 @@ function App() {
               onChange={changeProject}
               onError={setUiError}
             />}
+            {session.queuedTurns.length > 0 && <div className="queued-turns" aria-label="待发送消息">
+              <div className="queued-turns-heading"><span>待发送 · {session.queuedTurns.length}</span>{session.running
+                ? <small>当前回答完成后依次发送</small>
+                : <button type="button" onClick={() => void session.resumeQueued()} title="继续发送队列">继续发送</button>}</div>
+              {session.queuedTurns.map((queued) => {
+                const label = queuedTurnLabel(queued);
+                return <div className="queued-turn" key={queued.id}>
+                  <Clock3 className="queued-turn-icon" aria-hidden="true" />
+                  <span>{label}</span>
+                  <small className="queued-turn-status">等待中</small>
+                  {session.canSteer && <button type="button" onClick={() => void steerQueuedTurn(queued)} aria-label={`引导发送待发送消息：${label}`} title="引导发送"><ArrowUpRight aria-hidden="true" /></button>}
+                  <button type="button" onClick={() => session.removeQueued(queued.id)} aria-label={`取消待发送消息：${label}`} title="取消待发送"><X aria-hidden="true" /></button>
+                </div>;
+              })}
+            </div>}
             <div ref={composerRef} className="composer has-context-heatbar">
               <ContextHeatBar usage={session.tokenUsage} hasThread={Boolean(session.thread)} running={session.running} onCompact={() => runSlashCommand("compact", "", false)} />
               {skills.length > 0 && <div className="mention-chips">
@@ -252,21 +267,6 @@ function App() {
                 onRemoveFile={(path) => setMentions((current) => current.filter((item) => item.path !== path))}
                 onRemoveImage={(index) => setImages((current) => current.filter((_, itemIndex) => itemIndex !== index))}
               />
-              {session.queuedTurns.length > 0 && <div className="queued-turns" aria-label="待发送消息">
-                <div className="queued-turns-heading"><span>待发送 · {session.queuedTurns.length}</span>{session.running
-                  ? <small>当前回答完成后依次发送</small>
-                  : <button type="button" onClick={() => void session.resumeQueued()} title="继续发送队列">继续发送</button>}</div>
-                {session.queuedTurns.map((queued) => {
-                  const label = queuedTurnLabel(queued);
-                  return <div className="queued-turn" key={queued.id}>
-                    <Clock3 className="queued-turn-icon" aria-hidden="true" />
-                    <span>{label}</span>
-                    <small className="queued-turn-status">等待中</small>
-                    {session.canSteer && <button type="button" onClick={() => void steerQueuedTurn(queued)} aria-label={`引导发送待发送消息：${label}`} title="引导发送"><ArrowUpRight aria-hidden="true" /></button>}
-                    <button type="button" onClick={() => session.removeQueued(queued.id)} aria-label={`取消待发送消息：${label}`} title="取消待发送"><X aria-hidden="true" /></button>
-                  </div>;
-                })}
-              </div>}
               <textarea value={draft} onChange={(event) => { setDraft(event.target.value); setUiError(""); setCommandNotice(""); setSlashMenuDismissed(false); }} onPaste={(event) => void handleComposerPaste(event)} onKeyDown={handleComposerKeyDown} placeholder={session.running ? "输入下一条消息，当前回答完成后发送…" : composerIntent === "goal" ? "描述你的目标，最好包含可衡量的结果…" : composerIntent === "plan" ? "描述需要分析和规划的任务…" : currentProjectPath ? "交给 Codex 一个任务，输入 / 使用命令，输入 @ 引用文件…" : "正在准备默认项目目录…"} />
               {currentProjectPath && mentionQuery !== null && <FileMentionMenu query={mentionQuery} results={mentionResults} loading={mentionLoading} onSelect={selectMention} />}
               {slashMenuVisible && <SlashCommandMenu query={slashQuery ?? ""} selectedIndex={slashSelectedIndex} hasThread={Boolean(session.thread)} running={session.running} onSelect={(id) => void runSlashCommand(id)} />}

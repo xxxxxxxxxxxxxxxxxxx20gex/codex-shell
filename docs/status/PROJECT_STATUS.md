@@ -33,7 +33,7 @@
 
 ### Composer 与能力入口
 
-- Composer 左侧为统一 `+` 菜单和权限，右侧为模型、推理强度和发送；模型与权限只在悬停或聚焦时显示交互区域。
+- Composer 上方的待发送 Queue 是独立面板，输入框不再与队列共用边框；Composer 左侧为统一 `+` 菜单和权限，右侧为模型、推理强度和发送；模型与权限只在悬停或聚焦时显示交互区域。
 - `+` 菜单统一提供文件、Skills、MCP、压缩、计划、目标和 Review；键入 `/` 仍支持过滤、方向键选择和 Enter 执行。
 - Goal 与 Plan 是 Composer 中互斥的单标签模式：Goal 在主输入框定义目标并复用原生 continuation，Plan 使用 `collaborationMode=plan`；进入 Plan 会清除活动 Goal，不存在 Shell 自建 Goal 执行循环。
 - 权限按 app-server 原生沙盒分为只读、工作区写入、完全访问；自动风险审查是独立审批者设置，默认仍为完全访问。
