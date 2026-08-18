@@ -1,4 +1,4 @@
-use super::{ModelSettings, normalize_settings};
+use super::{ModelSettings, PersonalizationSettings, normalize_preferences, normalize_settings};
 
 #[test]
 fn reads_legacy_settings_without_serializing_the_template() {
@@ -12,6 +12,20 @@ fn reads_legacy_settings_without_serializing_the_template() {
     assert_eq!(settings.verbosity, None);
     let serialized = serde_json::to_value(settings).expect("settings should serialize");
     assert_eq!(serialized.get("capabilityTemplate"), None);
+}
+
+#[test]
+fn normalizes_personalization_without_inventing_instructions() {
+    assert_eq!(
+        normalize_preferences(PersonalizationSettings {
+            custom_instructions: "  Lead with the outcome.  ".to_string(),
+            theme: "unexpected".to_string(),
+        }),
+        PersonalizationSettings {
+            custom_instructions: "Lead with the outcome.".to_string(),
+            theme: "dark".to_string(),
+        }
+    );
 }
 
 #[test]

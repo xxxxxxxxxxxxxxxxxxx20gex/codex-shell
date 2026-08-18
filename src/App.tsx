@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   MessageSquarePlus,
+  Settings,
   Sparkles,
   Square,
   X,
@@ -24,6 +25,7 @@ import { DiffInspector } from "./features/diff/DiffInspector";
 import { ModelSettingsPanel } from "./features/models/ModelSettingsPanel";
 import { ModelQuickPicker } from "./features/models/ModelQuickPicker";
 import { modelIdDisplayName } from "./features/models/modelPresentation";
+import { PreferencesPanel } from "./features/preferences/PreferencesPanel";
 import { RuntimeLogPanel } from "./features/runtime/RuntimeLogPanel";
 import { RuntimeNoticeBanner } from "./features/runtime/RuntimeNoticeBanner";
 import { StatusInspector } from "./features/runtime/StatusInspector";
@@ -56,10 +58,14 @@ function App() {
     session,
     settingsOpen,
     setSettingsOpen,
+    preferencesOpen,
+    setPreferencesOpen,
     modelPickerOpen,
     setModelPickerOpen,
     settings,
     setSettings,
+    personalization,
+    savePersonalization,
     modelDisplayName,
     setModelDisplayName,
     changeModelSettings,
@@ -127,7 +133,7 @@ function App() {
   }
 
   return (
-    <main className="app-shell">
+    <main className="app-shell" data-theme={personalization.theme}>
       <section
         ref={workspaceGridRef}
         className={`workspace-grid ${sidebarOpen ? "" : "sidebar-hidden"} ${inspectorOpen ? "" : "inspector-hidden"} ${resizingPanel ? "resizing" : ""}`}
@@ -163,7 +169,10 @@ function App() {
             onShowArchived={session.showArchivedHistory}
             onLoadMore={() => void session.loadMoreHistory()}
           />
-          <div className="sidebar-footer"><div className="avatar">本</div><span><strong>本地模式</strong><small>Windows · 个人使用</small></span></div>
+          <button className="sidebar-footer" onClick={() => setPreferencesOpen(true)} aria-label="打开设置" title="设置">
+            <Settings aria-hidden="true" />
+            <span><strong>{providerDisplayName(settings.baseUrl)}</strong></span>
+          </button>
         </aside>
 
         <div
@@ -341,10 +350,21 @@ function App() {
       </section>
 
       {settingsOpen && <ModelSettingsPanel settings={settings} loadProviderCapabilities={session.readModelProviderCapabilities} onClose={() => setSettingsOpen(false)} onSave={(next, requiresRestart = false) => { setSettings(next); setModelDisplayName(null); setSettingsOpen(false); if (requiresRestart) void session.restart(); }} />}
+      {preferencesOpen && <PreferencesPanel settings={personalization} onClose={() => setPreferencesOpen(false)} onSave={async (next) => { await savePersonalization(next); setPreferencesOpen(false); }} />}
       <ServerInteractionDialog store={session.interactionStore} />
       {workspaceExplorerOpen && currentProjectPath && <WorkspaceExplorer rootPath={currentProjectPath} initialFilePath={workspaceExplorerInitialPath} onClose={() => setWorkspaceExplorerOpen(false)} readDirectory={session.readWorkspaceDirectory} readFile={session.readWorkspaceFile} watchPath={session.watchWorkspacePath} />}
     </main>
   );
+}
+
+function providerDisplayName(baseUrl: string) {
+  try {
+    const host = new URL(baseUrl).hostname;
+    const label = host.split(".")[0]?.replace(/-/g, "_");
+    return label || "设置";
+  } catch {
+    return "设置";
+  }
 }
 
 export default App;

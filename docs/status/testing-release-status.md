@@ -2,9 +2,9 @@
 
 - 模块职责：维护类型检查、单元测试、集成测试、Windows 构建与发行物。
 - 当前状态：类型、前端单元、Rust 路径/provider 单元和后台 app-server smoke 已覆盖；发布流水线未建立。
-- 最近变更：新增桌面链接导航回归测试，覆盖网页、MCP OAuth、服务端 URL、本机绝对路径、项目相对路径、`file://` 解码、目录穿越和危险协议拒绝；保留模型切换预采样压缩及 Steer 顺序测试。
+- 最近变更：新增通用设置和个性化指令回归测试，覆盖设置分类边界、外观切换、配置规范化，以及自定义提示词只进入新 Session 的 `thread/start.developerInstructions`；保留链接导航、模型切换预采样压缩及 Steer 顺序测试。
 - 当前接口：`pnpm typecheck`、`pnpm lint`、`pnpm test`、`pnpm test:quality`、`pnpm build`、`pnpm rust:check`、`pnpm runtime:probe-goal`、`pnpm desktop:build`；独立测试脚本统一位于 `tests/scripts`。
 - 已知问题：没有 CI、签名、MSI/NSIS 和干净机器 UAC/sidecar 验证；仍缺 Runtime 版本不匹配和三栏拖拽的自动化覆盖。
 - 下一步：配置不含密钥的 CI 基线，并在干净 Windows 环境验证安装后的动态 sidecar 路径。
-- 验证证据：2026-08-17 完整 `pnpm test:quality` 以退出码 0 完成：ESLint 零 warning、51 个 Vitest 文件、220 项测试、TypeScript、Vite production build、Knip、`cargo check`、12 项 Rust 单元测试、严格 Clippy 和 `git diff --check` 全部通过；`pnpm desktop:build` 成功生成桌面 debug 可执行文件。
-- 最后更新：2026-08-17
+- 验证证据：2026-08-18 完整 `pnpm test:quality` 以退出码 0 完成：ESLint 零 warning、52 个 Vitest 文件、223 项测试、TypeScript、Vite production build、Knip、`cargo check`、13 项 Rust 单元测试、严格 Clippy 和 `git diff --check` 全部通过；`pnpm desktop:build` 成功生成桌面 debug 可执行文件。
+- 最后更新：2026-08-18

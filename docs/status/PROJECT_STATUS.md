@@ -3,7 +3,7 @@
 - 当前阶段：Milestone 2 - P0 桌面编程工作台
 - 总体状态：核心对话、Session、工具活动、审批、文件、Diff 和模型配置可用；发布工程与 Runtime 恢复能力尚未完成。
 - 文档原则：本文件只记录跨模块当前基线、风险和下一里程碑；历史变更以 Git 提交和各模块状态文档为准，不在此累积功能流水账。
-- 最后更新：2026-08-17
+- 最后更新：2026-08-18
 
 ## 当前基线
 
@@ -12,6 +12,7 @@
 - 生产界面已完成 Quiet Graphite Workbench 设计系统收敛：画布、侧栏、面板、边框、文字、状态色和上下文热力刻度均由 `src/styles/tokens.css` 统一拥有；有意义文本从 11px/16px 起步，标准图标统一为 Lucide 16px/1.75px，组件圆角使用 4/6/8px 角色。
 - 主会话使用固定 48px 标题栏；时间线最大可读宽度 820px；Composer 最大宽度 860px 并居中；侧栏默认 248px，检查器默认 288px 且默认收起。1180px 以下检查器以 overlay 打开，900px 以下侧栏也以独立 overlay 打开，不再通过 `display:none` 删除功能入口。
 - 助手回答生成中的侧线使用低饱和黄绿色，完成后回落为石墨灰。`App.tsx`、`useAppController.ts` 和 `App.css` 均保持在约 500 行以内，Explorer、Command、Runtime 等样式由 feature 自有文件承载；此次不改变 app-server 消息顺序、Session 排序、模型配置、凭据或 Queue/Steer 行为。
+- 侧栏底部根据 Base URL 动态显示当前 provider 简称并打开通用设置；通用设置仅承载个性化提示词与深色/浅色/跟随系统外观，模型网关仍由 Composer 模型菜单的高级入口管理。
 
 ### 架构与隔离
 
@@ -25,6 +26,7 @@
 - 支持 Thread 创建、只读打开、按需 Resume、分页历史、重命名、固定、归档、恢复、删除、按任一已完成 Turn 精确 Fork，以及 rollout 路径/ID 复制。Session 变更使用同步互斥锁和 token 丢弃过期响应，不与发送、切换或其他 Session 操作并发；历史列表中置顶与归档直接展示并可点击，其他操作通过右键菜单进入；归档无需二次确认，永久删除仍需二次确认，刷新按钮已移除。
 - 多个 Session 可并行运行；当前 Session 的普通补充消息进入每 Session 最多 10 条的内存 Queue，显式 `Ctrl/Cmd+Shift+Enter` 使用原生 `turn/steer`。
 - 模型、推理强度、沙盒范围和审批者随下一次 `turn/start` 生效，不因参数切换创建新 Session；Queue 会快照入队时的权限和模型设置。
+- 个性化提示词独立保存到应用配置目录，只在创建新 Session 时通过原生 `developerInstructions` 传递；不会改写已有 Session，也不会在空配置时增加 Shell 提示词。
 - 前端只保留当前 Session 最近 200 个 Turn，关联 Diff、Plan 和流式状态同步裁剪。
 
 ### Composer 与能力入口
@@ -60,7 +62,7 @@
 
 ## 验证基线
 
-- 2026-08-17：完整 `pnpm test:quality` 通过，覆盖 ESLint 零 warning、51 个 Vitest 文件、220 项测试、TypeScript、Vite production build、Knip、`git diff --check`、`cargo check`、12 项 Rust 单元测试和严格 Clippy；桌面 debug 构建成功。Headless Edge 最近一次已验证 1440×900、1280×780、1024×720、900×700 和 899×700 的布局边界。
+- 2026-08-18：完整 `pnpm test:quality` 通过，覆盖 ESLint 零 warning、52 个 Vitest 文件、223 项测试、TypeScript、Vite production build、Knip、`git diff --check`、`cargo check`、13 项 Rust 单元测试和严格 Clippy；桌面 debug 构建成功。Headless Edge 最近一次已验证 1440×900、1280×780、1024×720、900×700 和 899×700 的布局边界。
 - 静态审查：Knip 未发现无效文件、导出或依赖；生产 TypeScript/CSS/Rust 未发现达到 6 行/60 tokens 的重复块。jscpd 报告 13 处重复全部位于测试夹具与场景搭建，整体重复行占 0.92%。
 - `pnpm audit --prod` 无已知漏洞；源码扫描未发现 PAT、API Key、用户密钥或开发机绝对路径。
 - 真实 app-server smoke 已覆盖多 Turn 恢复、并行 Thread、文件 RPC、Skills/MCP/Goal、Plan 和第三方兼容网关；这些证据对应固定 Runtime，不代表最新版 Codex 源码能力。

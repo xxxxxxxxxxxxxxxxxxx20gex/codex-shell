@@ -7,3 +7,10 @@ export interface ModelSettings {
   reasoningEffort: ReasoningEffort | null;
   verbosity: Verbosity | null;
 }
+
+export type ThemePreference = "dark" | "light" | "system";
+
+export interface PersonalizationSettings {
+  customInstructions: string;
+  theme: ThemePreference;
+}

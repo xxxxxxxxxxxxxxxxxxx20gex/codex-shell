@@ -20,6 +20,8 @@ pub fn run() {
             codex_home::set_codex_home,
             config::load_model_settings,
             config::save_model_settings,
+            config::load_personalization_settings,
+            config::save_personalization_settings,
             credentials::save_api_key,
             workspace::get_default_project_directory,
         ])

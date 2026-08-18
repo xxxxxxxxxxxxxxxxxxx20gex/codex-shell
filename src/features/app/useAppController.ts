@@ -23,7 +23,7 @@ import {
 } from "../composer/composerIntent";
 import { useComposerDropPaths } from "../composer/useComposerDropPaths";
 import { useResizablePanels } from "../layout/useResizablePanels";
-import type { ModelSettings } from "../models/types";
+import type { ModelSettings, PersonalizationSettings } from "../models/types";
 import {
   sendOrQueue,
   type FileMention,
@@ -48,6 +48,11 @@ const initialSettings: ModelSettings = {
   verbosity: "low",
 };
 
+const initialPersonalization: PersonalizationSettings = {
+  customInstructions: "",
+  theme: "dark",
+};
+
 export function queuedTurnLabel(turn: { text: string; mentions: FileMention[]; images?: ImageAttachment[] }) {
   if (turn.text) return turn.text;
   return [...turn.mentions, ...(turn.images ?? [])].map((attachment) => attachment.name).join("、") || "附件";
@@ -55,8 +60,10 @@ export function queuedTurnLabel(turn: { text: string; mentions: FileMention[]; i
 
 export function useAppController() {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [modelPickerOpen, setModelPickerOpen] = useState(false);
   const [settings, setSettings] = useState(initialSettings);
+  const [personalization, setPersonalization] = useState(initialPersonalization);
   const [modelDisplayName, setModelDisplayName] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [permissionMode, setPermissionMode] = useState<PermissionMode>(DEFAULT_PERMISSION_MODE);
@@ -81,7 +88,7 @@ export function useAppController() {
   const composerRef = useRef<HTMLDivElement>(null);
   const panels = useResizablePanels();
   const newThreadCwd = pendingProjectPath ?? defaultProjectDirectory?.path ?? null;
-  const session = useAgentSession(settings, permissionMode, approvalReviewer, newThreadCwd);
+  const session = useAgentSession(settings, permissionMode, approvalReviewer, newThreadCwd, personalization);
   const searchFiles = session.searchFiles;
   const currentProjectPath = session.thread?.cwd ? String(session.thread.cwd) : newThreadCwd;
   const usingDefaultProjectDirectory = Boolean(
@@ -113,9 +120,17 @@ export function useAppController() {
     }
   }
 
+  async function savePersonalization(next: PersonalizationSettings) {
+    if ("__TAURI_INTERNALS__" in window) {
+      await invoke("save_personalization_settings", { settings: next });
+    }
+    setPersonalization(next);
+  }
+
   useEffect(() => {
     if (!("__TAURI_INTERNALS__" in window)) return;
     void invoke<ModelSettings>("load_model_settings").then(setSettings).catch(() => undefined);
+    void invoke<PersonalizationSettings>("load_personalization_settings").then(setPersonalization).catch(() => undefined);
     void invoke<DefaultProjectDirectory>("get_default_project_directory")
       .then(setDefaultProjectDirectory)
       .catch((error) => setUiError(errorMessage(error)));
@@ -431,10 +446,14 @@ export function useAppController() {
     session,
     settingsOpen,
     setSettingsOpen,
+    preferencesOpen,
+    setPreferencesOpen,
     modelPickerOpen,
     setModelPickerOpen,
     settings,
     setSettings,
+    personalization,
+    savePersonalization,
     modelDisplayName,
     setModelDisplayName,
     changeModelSettings,

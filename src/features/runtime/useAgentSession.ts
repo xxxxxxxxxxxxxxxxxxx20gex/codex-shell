@@ -5,7 +5,7 @@ import type { WindowsSandboxSetupMode } from "../../generated/app-server/v2/Wind
 import { errorMessage } from "../../shared/errors";
 import type { ServerInteractionStore } from "../interactions/serverInteractionStore";
 import { ServerInteractionStore as InteractionStore } from "../interactions/serverInteractionStore";
-import type { ModelSettings } from "../models/types";
+import type { ModelSettings, PersonalizationSettings } from "../models/types";
 import type { ApprovalReviewerMode, PermissionMode } from "../approvals/permissionModes";
 import { AppServerClient } from "./appServerClient";
 import { RuntimeLogStore } from "./runtimeLogStore";
@@ -31,6 +31,7 @@ export function useAgentSession(
   permissionMode: PermissionMode,
   approvalReviewer: ApprovalReviewerMode,
   projectCwd: string | null,
+  personalization: PersonalizationSettings = { customInstructions: "", theme: "dark" },
 ) {
   const clientRef = useRef<AppServerClient | null>(null);
   clientRef.current ??= new AppServerClient();
@@ -86,6 +87,7 @@ export function useAgentSession(
     clientRef,
     ensureConnected,
     settings,
+    personalization,
     permissionMode,
     approvalReviewer,
     projectCwd,

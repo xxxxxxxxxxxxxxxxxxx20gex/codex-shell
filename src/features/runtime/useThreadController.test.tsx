@@ -115,6 +115,10 @@ function setup() {
       reasoningEffort: "none" as const,
       verbosity: "low" as const,
     },
+    personalization: {
+      customInstructions: "",
+      theme: "dark" as const,
+    },
     permissionMode: "workspace" as PermissionMode,
     approvalReviewer: "user" as ApprovalReviewerMode,
     projectCwd: "C:\\work",
@@ -220,6 +224,27 @@ describe("useThreadController", () => {
       approvalPolicy: "on-request",
       approvalsReviewer: "user",
       sandboxPolicy: { type: "readOnly", networkAccess: false },
+    }), undefined);
+  });
+
+  it("passes custom instructions only when creating a new Session", async () => {
+    const { client, props } = setup();
+    props.personalization = {
+      customInstructions: "Answer with the conclusion first.",
+      theme: "dark",
+    };
+    const { result } = renderHook(() => useThreadController(props));
+    await waitFor(() => expect(client.listThreads).toHaveBeenCalled());
+
+    await act(async () => {
+      expect(await result.current.send("start personalized Session")).toBe(true);
+    });
+
+    expect(client.startThread).toHaveBeenCalledWith(expect.objectContaining({
+      developerInstructions: "Answer with the conclusion first.",
+    }));
+    expect(client.startTurn).toHaveBeenCalledWith(expect.not.objectContaining({
+      developerInstructions: expect.anything(),
     }), undefined);
   });
 

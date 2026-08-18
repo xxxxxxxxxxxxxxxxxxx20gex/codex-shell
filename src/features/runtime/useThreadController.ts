@@ -15,7 +15,7 @@ import type { TurnCompletedNotification } from "../../generated/app-server/v2/Tu
 import type { TurnStartedNotification } from "../../generated/app-server/v2/TurnStartedNotification";
 import { errorMessage } from "../../shared/errors";
 import type { ApprovalReviewerMode, PermissionMode } from "../approvals/permissionModes";
-import type { ModelSettings } from "../models/types";
+import type { ModelSettings, PersonalizationSettings } from "../models/types";
 import type { AppServerClient } from "./appServerClient";
 import type { AgentSessionAction } from "./sessionState";
 import type { FileMention, ImageAttachment, SkillMention } from "./sessionInput";
@@ -32,6 +32,7 @@ interface Props {
   clientRef: MutableRefObject<AppServerClient | null>;
   ensureConnected: EnsureConnected;
   settings: ModelSettings;
+  personalization?: PersonalizationSettings;
   permissionMode: PermissionMode;
   approvalReviewer: ApprovalReviewerMode;
   projectCwd: string | null;
@@ -73,6 +74,7 @@ export function useThreadController(props: Props) {
     setError,
     setSubmitting,
     settings,
+    personalization = { customInstructions: "", theme: "dark" },
     submitting,
   } = props;
   const threadIdRef = useRef<string | null>(null);
@@ -154,6 +156,7 @@ export function useThreadController(props: Props) {
     ensureConnected: ensureConnected,
     ensureActiveThread,
     settings: settings,
+    personalization,
     permissionMode: permissionMode,
     approvalReviewer: approvalReviewer,
     projectCwd: projectCwd,

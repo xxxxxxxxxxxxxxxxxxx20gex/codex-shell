@@ -2,9 +2,9 @@
 
 - 模块职责：提供 Windows 桌面三栏智能体工作台和响应式布局。
 - 当前状态：P0 三栏工作台已接入完整执行时间线、统一服务端交互、Diff、原生 Review、模型目录、多 Session 并行和项目目录实时刷新；生产 UI 已按 `design-plans/ui-refresh-v1.html` 完成首轮结构化迁移。
-- 最近变更：统一修复桌面链接跳转：消息 Markdown、MCP OAuth 和服务端 URL 请求通过 Tauri 官方 Opener 交给默认浏览器；项目内文件链接进入 Shell 只读文件预览，项目外绝对路径仅在资源管理器中定位，不直接执行。危险协议、目录穿越和缺少项目时的相对路径会被拒绝并显示错误。
-- 当前接口：`App`、三栏布局、`StatusInspector`、Runtime Log/Notice、`ServerInteractionDialog`、Tauri Opener、工作区浏览器、`ComposerAddMenu`、`ComposerIntentControl`、slash/Skill/MCP/Review 面板、时间线、Diff 和模型设置。
+- 最近变更：侧栏底部静态“本地模式”改为与当前网关名称对应的设置入口；通用设置只包含个性化提示词与外观，网关和自定义模型继续留在模型菜单的高级设置中。外观支持深色、浅色和跟随 Windows，设置弹层支持外部点击与 Escape 关闭。
+- 当前接口：`App`、三栏布局、`PreferencesPanel`、`StatusInspector`、Runtime Log/Notice、`ServerInteractionDialog`、Tauri Opener、工作区浏览器、`ComposerAddMenu`、`ComposerIntentControl`、slash/Skill/MCP/Review 面板、时间线、Diff 和模型设置。
 - 已知问题：文件搜索和会话操作尚未完成全键盘导航；拖拽分隔线尚未支持键盘调宽；Shell Queue、Tauri IPC 错误与运行状态仍缺完整无障碍播报；Headless 浏览器不具备 Tauri transport，因此只能验证布局与样式，真实 IPC 仍以桌面构建和桌面 smoke 为准。
 - 下一步：补齐分隔线键盘宽度调节、文件/会话键盘导航和运行状态无障碍播报；随后逐步把仍位于 `App.css` 的 Composer/时间线样式继续迁回 feature owner，但不再以末尾覆盖方式迁移。
 - 验证证据：静态检查确认生产 CSS 无 7–10px 字号、Token 文件之外无十六进制色、无旧的末尾覆盖块，手写生产 TS/TSX/CSS 均未超过约 500 行；Headless Edge 已检查 1440×900、1280×780、1024×720、900×700 和 899×700 布局。完整门禁结果记录于测试状态文档。
-- 最后更新：2026-08-17
+- 最后更新：2026-08-18

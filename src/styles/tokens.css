@@ -22,6 +22,8 @@
   --context-warm: #e2aa45;
   --context-hot: #ed5b4f;
   --context-marker: #f1f3f1;
+  --theme-preview-dark: #151719;
+  --theme-preview-light: #f3f5f2;
   --font-ui: "Segoe UI Variable Text", "Segoe UI", Inter, "Microsoft YaHei UI", sans-serif;
   --font-mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
   --font-size-caption: 11px;
@@ -83,4 +85,54 @@
   --ui-shadow-popover: var(--shadow-popover);
   --ui-shadow-panel: 0 8px 22px rgb(0 0 0 / 18%);
   --ui-motion-fast: var(--motion-fast);
+}
+
+/* The preference page exposes the same three choices as Codex. Keep the
+   light palette semantic so components do not need theme-specific styles. */
+[data-theme="light"] {
+  color-scheme: light;
+  --surface-canvas: #f7f8f6;
+  --surface-sidebar: #eef0ed;
+  --surface-panel: #ffffff;
+  --surface-raised: #e5e9e5;
+  --surface-selected: #dce4d8;
+  --border-subtle: #d7ddd7;
+  --border-default: #c5cdc5;
+  --border-strong: #9ea99f;
+  --text-primary: #1c211d;
+  --text-secondary: #424a44;
+  --text-muted: #687269;
+  --text-disabled: #9ba49c;
+  --accent-action: #628b19;
+  --accent-info: #176995;
+  --accent-warning: #956d12;
+  --accent-danger: #ae423a;
+  --accent-success: #317c48;
+  --context-marker: #1c211d;
+  --ui-accent-ink: #f7faf3;
+}
+
+@media (prefers-color-scheme: light) {
+  [data-theme="system"] {
+    color-scheme: light;
+    --surface-canvas: #f7f8f6;
+    --surface-sidebar: #eef0ed;
+    --surface-panel: #ffffff;
+    --surface-raised: #e5e9e5;
+    --surface-selected: #dce4d8;
+    --border-subtle: #d7ddd7;
+    --border-default: #c5cdc5;
+    --border-strong: #9ea99f;
+    --text-primary: #1c211d;
+    --text-secondary: #424a44;
+    --text-muted: #687269;
+    --text-disabled: #9ba49c;
+    --accent-action: #628b19;
+    --accent-info: #176995;
+    --accent-warning: #956d12;
+    --accent-danger: #ae423a;
+    --accent-success: #317c48;
+    --context-marker: #1c211d;
+    --ui-accent-ink: #f7faf3;
+  }
 }

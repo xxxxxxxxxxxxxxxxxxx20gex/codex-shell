@@ -100,6 +100,14 @@ Rules:
 - Avoid pure white, pure black, gradients, glow decoration, and large tinted backgrounds.
 - Destructive controls stay neutral until hover or confirmation, then use danger semantics.
 
+### Appearance modes
+
+- The application offers dark, light, and Windows-system appearance preferences.
+- Dark remains the default and follows the Quiet Graphite Workbench palette above.
+- Light mode uses the same semantic surface, border, text, and accent roles; feature CSS must never branch on a theme name.
+- System mode resolves through `prefers-color-scheme` and must remain live when Windows changes its appearance.
+- Theme preview colors are tokens owned by `src/styles/tokens.css`; feature styles do not introduce literal colors.
+
 ## Spacing And Geometry
 
 Use a 4px base rhythm:

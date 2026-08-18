@@ -11,7 +11,7 @@ import {
   type ApprovalReviewerMode,
   type PermissionMode,
 } from "../approvals/permissionModes";
-import type { ModelSettings } from "../models/types";
+import type { ModelSettings, PersonalizationSettings } from "../models/types";
 import type { AppServerClient } from "./appServerClient";
 import { buildUserInput, type FileMention, type ImageAttachment, type SkillMention } from "./sessionInput";
 import type { AgentSessionAction } from "./sessionState";
@@ -26,6 +26,7 @@ interface Props {
   ensureConnected: () => Promise<AppServerClient>;
   ensureActiveThread: () => Promise<{ client: AppServerClient; threadId: string }>;
   settings: ModelSettings;
+  personalization?: PersonalizationSettings;
   permissionMode: PermissionMode;
   approvalReviewer: ApprovalReviewerMode;
   projectCwd: string | null;
@@ -111,6 +112,7 @@ export function useTurnExecution(props: Props) {
           approvalPolicy: permissions.approvalPolicy,
           approvalsReviewer: getApprovalsReviewer(props.permissionMode, props.approvalReviewer),
           sandbox: permissions.sandbox,
+          developerInstructions: props.personalization?.customInstructions || null,
           ephemeral: false,
         });
         threadId = response.thread.id;
