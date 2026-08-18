@@ -80,7 +80,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .agent-block-continuation { margin-top: 0; }
 .agent-block-continuation .agent-content { grid-column: 2; }
 .agent-accent { width: 2px; height: 18px; align-self: start; min-height: 0; margin-top: 3px; border-radius: 2px; background: var(--accent-action); }
-.agent-response { color: var(--text-primary); font-size: var(--conversation-font-size); line-height: 24px; overflow-wrap: anywhere; }
+.agent-response { margin: 0; color: var(--text-primary); font-size: var(--conversation-font-size); line-height: 24px; overflow-wrap: anywhere; }
 .agent-response > :first-child, .turn-commentary > :first-child { margin-top: 0; }
 .agent-response > :last-child, .turn-commentary > :last-child { margin-bottom: 0; }
 .agent-response p, .turn-commentary p { margin: 0 0 13px; }
