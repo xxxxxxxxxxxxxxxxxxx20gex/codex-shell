@@ -12,6 +12,7 @@
 - 生产界面已完成 Quiet Graphite Workbench 设计系统收敛：画布、侧栏、面板、边框、文字、状态色和上下文热力刻度均由 `src/styles/tokens.css` 统一拥有；有意义文本从 11px/16px 起步，标准图标统一为 Lucide 16px/1.75px，组件圆角使用 4/6/8px 角色。
 - 主会话使用固定 48px 标题栏；时间线最大可读宽度 820px；Composer 最大宽度 860px 并居中；侧栏默认 248px，检查器默认 288px 且默认收起。1180px 以下检查器以 overlay 打开，900px 以下侧栏也以独立 overlay 打开，不再通过 `display:none` 删除功能入口。
 - Windows 使用 32px 产品自绘无边框标题栏，保留窗口拖动、双击切换最大化、最小化、最大化/还原和关闭；窗口 capability 限制为上述必要动作。
+- 产品标题只在窗口标题栏出现一次；侧栏顶部采用无边框图标+文字操作，当前提供新建对话，插件入口作为禁用的扩展预留。
 - 助手回答生成中的侧线使用低饱和黄绿色，完成后回落为石墨灰。`App.tsx`、`useAppController.ts` 和 `App.css` 均保持在约 500 行以内，Explorer、Command、Runtime 等样式由 feature 自有文件承载；此次不改变 app-server 消息顺序、Session 排序、模型配置、凭据或 Queue/Steer 行为。
 - 侧栏底部根据 Base URL 动态显示当前 provider 简称并打开通用设置；通用设置仅承载个性化提示词与深色/浅色/跟随系统外观，模型网关仍由 Composer 模型菜单的高级入口管理。
 

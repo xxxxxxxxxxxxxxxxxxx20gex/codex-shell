@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   MessageSquarePlus,
+  Puzzle,
   Settings,
   Sparkles,
   Square,
@@ -142,16 +143,16 @@ function App() {
         style={workspaceGridStyle}
       >
         <aside className="sidebar panel">
-          <header className="sidebar-header">
-            <span className="brand-mark" aria-hidden="true">C</span>
-            <strong>Codex Shell</strong>
-          </header>
-          <div className="new-task-wrap">
-            <button className="new-task" onClick={startNewTask} disabled={session.submitting || session.openingThreadId !== null || session.threadActionId !== null}>
+          <nav className="sidebar-actions" aria-label="主要操作">
+            <button className="sidebar-action" onClick={startNewTask} disabled={session.submitting || session.openingThreadId !== null || session.threadActionId !== null}>
               <MessageSquarePlus aria-hidden="true" />
               <span>新建对话</span>
             </button>
-          </div>
+            <button className="sidebar-action" type="button" disabled title="插件功能预留">
+              <Puzzle aria-hidden="true" />
+              <span>插件</span>
+            </button>
+          </nav>
           <ThreadHistoryList
             threads={session.history}
             archived={session.historyArchived}

@@ -178,6 +178,12 @@ Radii:
 - Long labels fade or truncate before actions. Do not place actions on a second row.
 - Empty lists provide one clear next action; loading uses structural placeholders without layout shifts.
 
+### Primary sidebar actions
+
+- The product title belongs to the frameless window title bar and is not repeated inside the sidebar.
+- Sidebar primary actions use borderless icon-and-label rows, not framed buttons.
+- The initial action set is intentionally limited to New conversation and Plugins; Plugins may remain disabled while its implementation is not available.
+
 ## Panels, Menus, And Dialogs
 
 - Sidebar and inspector are full-height structural regions, not floating cards.

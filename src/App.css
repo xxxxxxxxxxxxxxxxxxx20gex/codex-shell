@@ -39,16 +39,13 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .panel { min-width: 0; min-height: 0; background: var(--surface-sidebar); }
 .sidebar { grid-column: 1; display: flex; overflow: hidden; flex-direction: column; padding: 0; border-right: 1px solid var(--border-subtle); }
 .sidebar-hidden .sidebar { padding: 0; border-right: 0; visibility: hidden; }
-.sidebar-header { display: flex; height: 48px; flex: 0 0 48px; align-items: center; gap: 8px; padding: 0 12px; border-bottom: 1px solid var(--border-subtle); }
-.sidebar-header strong { min-width: 0; overflow: hidden; color: var(--text-secondary); font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-.brand-mark { display: grid; width: 24px; height: 24px; flex: 0 0 24px; place-items: center; border: 1px solid var(--border-default); border-radius: var(--radius-control); color: var(--accent-action); font-size: var(--text-label); font-weight: 600; }
-.new-task-wrap { padding: 12px; }
+.sidebar-actions { display: flex; flex: 0 0 auto; flex-direction: column; gap: 2px; padding: 8px 10px 10px; }
+.sidebar-action { display: flex; width: 100%; min-height: 36px; align-items: center; gap: 12px; padding: 0 10px; border: 0; border-radius: var(--radius-control); color: var(--text-secondary); text-align: left; background: transparent; font-size: var(--text-ui); cursor: pointer; transition: color var(--motion-fast), background-color var(--motion-fast); }
+.sidebar-action:hover { color: var(--text-primary); background: var(--surface-raised); }
+.sidebar-action:focus-visible { background: var(--surface-raised); }
+.sidebar-action:disabled { color: var(--text-disabled); cursor: default; }
+.sidebar-action svg { width: 18px; height: 18px; flex: 0 0 18px; stroke-width: 1.75; }
 .primary-button { border: 0; border-radius: var(--ui-control-radius); color: var(--accent-ink); background: var(--accent); font-weight: 700; cursor: pointer; }
-.new-task { display: flex; width: 100%; height: 32px; align-items: center; justify-content: center; gap: 8px; padding: 0 10px; border: 1px solid var(--border-default); border-radius: var(--radius-control); color: var(--text-primary); text-align: left; background: var(--surface-panel); font-size: 13px; font-weight: 500; cursor: pointer; transition: color var(--motion-fast), background-color var(--motion-fast), border-color var(--motion-fast); }
-.new-task:hover { border-color: var(--border-strong); background: var(--surface-raised); }
-.new-task:focus-visible { background: var(--surface-raised); }
-.new-task:disabled { opacity: .48; }
-.new-task svg { width: 17px; height: 17px; flex: 0 0 17px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.35; }
 .thread-list button { display: flex; align-items: center; width: 100%; border: 0; border-radius: var(--ui-control-radius); text-align: left; background: transparent; cursor: pointer; }
 .sidebar-footer span { display: flex; min-width: 0; flex-direction: column; }
 .sidebar-footer strong { font-size: 13px; font-weight: 600; }
