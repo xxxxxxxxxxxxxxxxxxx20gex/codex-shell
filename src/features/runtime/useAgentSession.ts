@@ -20,6 +20,33 @@ import { useWorkspaceFiles } from "./useWorkspaceFiles";
 
 export type { FileMention, ImageAttachment, SkillMention } from "./sessionInput";
 
+export interface RetryingError {
+  threadId: string;
+  message: string;
+}
+
+export type RetryingErrorChange =
+  | { type: "retrying"; threadId: string; message: string }
+  | { type: "settled"; threadId: string }
+  | { type: "clear" };
+
+export function updateRetryingError(
+  current: RetryingError | null,
+  change: RetryingErrorChange,
+): RetryingError | null {
+  if (change.type === "clear") return null;
+  if (change.type === "settled") return current?.threadId === change.threadId ? null : current;
+  return { threadId: change.threadId, message: change.message };
+}
+
+export function visibleSessionError(
+  persistentError: string,
+  retryingError: RetryingError | null,
+  activeThreadId: string | null,
+) {
+  return retryingError?.threadId === activeThreadId ? retryingError.message : persistentError;
+}
+
 function useStableStore<T>(create: () => T) {
   const storeRef = useRef<T | null>(null);
   storeRef.current ??= create();
@@ -39,6 +66,7 @@ export function useAgentSession(
   const [codexHome, setCodexHome] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [retryingError, dispatchRetryingError] = useReducer(updateRetryingError, null);
   const [windowsSandboxReadiness, setWindowsSandboxReadiness] = useState<WindowsSandboxReadiness | null>(null);
   const runtimeLogStore = useStableStore(() => new RuntimeLogStore());
   const runtimeNoticeStore = useStableStore(() => new RuntimeNoticeStore());
@@ -124,12 +152,24 @@ export function useAgentSession(
       currentThreadId,
       dispatch,
       onTurnStarted,
-      onTurnCompleted,
+      onTurnCompleted: (notification) => {
+        onTurnCompleted(notification);
+        dispatchRetryingError({ type: "settled", threadId: notification.threadId });
+      },
       onError: (notification) => {
         if (notification.threadId === currentThreadId()) {
-          setError(notification.error.message);
+          if (notification.willRetry) {
+            dispatchRetryingError({
+              type: "retrying",
+              threadId: notification.threadId,
+              message: notification.error.message,
+            });
+          } else {
+            setError(notification.error.message);
+          }
         }
         if (!notification.willRetry) {
+          dispatchRetryingError({ type: "settled", threadId: notification.threadId });
           markThreadStopped(notification.threadId);
           if (notification.threadId === currentThreadId()) setSubmitting(false);
         }
@@ -214,6 +254,7 @@ export function useAgentSession(
         message: notification.error ?? (notification.status === "ready" ? "服务器已就绪。" : "服务器启动状态已更新。"),
       }),
       onStopped: () => {
+        dispatchRetryingError({ type: "clear" });
         setCodexHome("");
         setWindowsSandboxReadiness(null);
         sandboxReadinessCheckedRef.current = false;
@@ -283,6 +324,7 @@ export function useAgentSession(
 
   const restart = useCallback(async () => {
     const threadIdToRestore = currentThreadId();
+    dispatchRetryingError({ type: "clear" });
     setSubmitting(false);
     clearRunningTurns();
     interactionStore.clear();
@@ -324,7 +366,7 @@ export function useAgentSession(
     activeItemTurnIds: sessionState.activeItemTurnIds,
     mcpProgressByItemId: sessionState.mcpProgressByItemId,
     tokenUsage: sessionState.tokenUsage,
-    error,
+    error: visibleSessionError(error, retryingError, sessionState.thread?.id ?? null),
     runtimeLogStore,
     runtimeNoticeStore,
     interactionStore,

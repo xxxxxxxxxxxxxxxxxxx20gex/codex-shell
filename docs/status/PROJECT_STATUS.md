@@ -64,7 +64,7 @@
 
 ## 验证基线
 
-- 2026-08-18：代码健康审查后完整 `pnpm test:quality` 通过，覆盖 ESLint 零 warning、53 个 Vitest 文件、227 项测试、TypeScript、Vite production build、Knip、`git diff --check`、`cargo check`、13 项 Rust 单元测试和严格 Clippy；无边框桌面 debug 构建成功。审查修复了 app-server 监听器初始化失败后的重连状态和旧反向请求 disposer 误删新 handler 的风险，并合并了归档/删除的重复清理流程。Headless Edge 最近一次已验证 1440×900、1280×780、1024×720、900×700 和 899×700 的布局边界。
+- 2026-08-18：代码健康审查及可重试错误生命周期修复后完整 `pnpm test:quality` 通过，覆盖 ESLint 零 warning、53 个 Vitest 文件、229 项测试、TypeScript、Vite production build、Knip、`git diff --check`、`cargo check`、13 项 Rust 单元测试和严格 Clippy；无边框桌面 debug 构建成功。`error.willRetry=true` 只在匹配 Turn 重试期间展示，完成后自动清除且不跨 Session；同时修复了 app-server 监听器初始化失败后的状态恢复和旧 disposer 误删新 handler 的风险。Headless Edge 最近一次已验证 1440×900、1280×780、1024×720、900×700 和 899×700 的布局边界。
 - 静态审查：Knip 未发现无效文件、导出或依赖；归档/删除清理流程的 TypeScript 重复已合并。jscpd 仅保留主题系统中深色与浅色语义变量的 1 处 CSS 重复（21 行，整体重复行占 0.21%），属于媒体查询下的必要主题覆盖。
 - `pnpm audit --prod` 无已知漏洞；源码扫描未发现 PAT、API Key、用户密钥或开发机绝对路径。
 - 真实 app-server smoke 已覆盖多 Turn 恢复、并行 Thread、文件 RPC、Skills/MCP/Goal、Plan 和第三方兼容网关；这些证据对应固定 Runtime，不代表最新版 Codex 源码能力。

@@ -1,5 +1,32 @@
 import { describe, expect, it, vi } from "vitest";
-import { sendOrQueue } from "./useAgentSession";
+import {
+  sendOrQueue,
+  updateRetryingError,
+  visibleSessionError,
+} from "./useAgentSession";
+
+describe("retrying error lifecycle", () => {
+  it("clears a retry banner when the matching Turn settles", () => {
+    const retrying = updateRetryingError(null, {
+      type: "retrying",
+      threadId: "thread-1",
+      message: "Reconnecting... 1/5",
+    });
+
+    expect(visibleSessionError("", retrying, "thread-1")).toBe("Reconnecting... 1/5");
+    expect(updateRetryingError(retrying, { type: "settled", threadId: "thread-1" })).toBeNull();
+  });
+
+  it("does not leak retry banners into another Session or clear unrelated retries", () => {
+    const retrying = {
+      threadId: "thread-1",
+      message: "Reconnecting... 2/5",
+    };
+
+    expect(visibleSessionError("other error", retrying, "thread-2")).toBe("other error");
+    expect(updateRetryingError(retrying, { type: "settled", threadId: "thread-2" })).toEqual(retrying);
+  });
+});
 
 describe("sendOrQueue", () => {
   it("queues a follow-up while the active Turn is running", async () => {
