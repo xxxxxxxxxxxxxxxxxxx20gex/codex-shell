@@ -113,7 +113,10 @@ export function useThreadActions({
     }
   }, [beginAction, dispatch, ensureConnected, finishAction, isCurrent, replaceInHistory, setError]);
 
-  const archiveThread = useCallback(async (threadId: string) => {
+  const removeThreadFromServer = useCallback(async (
+    threadId: string,
+    remove: (client: AppServerClient, threadId: string) => Promise<unknown>,
+  ) => {
     if (isThreadRunning(threadId)) return false;
     const token = beginAction(threadId);
     if (!token) return false;
@@ -121,19 +124,24 @@ export function useThreadActions({
     try {
       const client = await ensureConnected();
       if (!isCurrent(token)) return false;
-      await client.archiveThread({ threadId });
+      await remove(client, threadId);
       if (!isCurrent(token)) return false;
       clearQueuedThread(threadId);
       if (threadId === threadIdRef.current) clearActiveThread();
       removeFromHistory(threadId);
       return true;
-    } catch (archiveError) {
-      if (isCurrent(token)) setError(errorMessage(archiveError));
+    } catch (removeError) {
+      if (isCurrent(token)) setError(errorMessage(removeError));
       return false;
     } finally {
       finishAction(token);
     }
   }, [beginAction, clearActiveThread, clearQueuedThread, ensureConnected, finishAction, isCurrent, isThreadRunning, removeFromHistory, setError, threadIdRef]);
+
+  const archiveThread = useCallback(
+    (threadId: string) => removeThreadFromServer(threadId, (client, id) => client.archiveThread({ threadId: id })),
+    [removeThreadFromServer],
+  );
 
   const unarchiveThread = useCallback(async (threadId: string) => {
     const token = beginAction(threadId);
@@ -154,27 +162,10 @@ export function useThreadActions({
     }
   }, [beginAction, ensureConnected, finishAction, isCurrent, removeFromHistory, setError]);
 
-  const deleteThread = useCallback(async (threadId: string) => {
-    if (isThreadRunning(threadId)) return false;
-    const token = beginAction(threadId);
-    if (!token) return false;
-    setError("");
-    try {
-      const client = await ensureConnected();
-      if (!isCurrent(token)) return false;
-      await client.deleteThread({ threadId });
-      if (!isCurrent(token)) return false;
-      clearQueuedThread(threadId);
-      if (threadId === threadIdRef.current) clearActiveThread();
-      removeFromHistory(threadId);
-      return true;
-    } catch (deleteError) {
-      if (isCurrent(token)) setError(errorMessage(deleteError));
-      return false;
-    } finally {
-      finishAction(token);
-    }
-  }, [beginAction, clearActiveThread, clearQueuedThread, ensureConnected, finishAction, isCurrent, isThreadRunning, removeFromHistory, setError, threadIdRef]);
+  const deleteThread = useCallback(
+    (threadId: string) => removeThreadFromServer(threadId, (client, id) => client.deleteThread({ threadId: id })),
+    [removeThreadFromServer],
+  );
 
   const forkThread = useCallback(async (threadId: string, lastTurnId?: string) => {
     if (!lastTurnId && isThreadRunning(threadId)) return false;

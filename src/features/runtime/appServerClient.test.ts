@@ -26,6 +26,27 @@ describe("AppServerClient", () => {
     expect(client.serverInfo?.codexHome).toBe("C:\\app\\codex-home");
   });
 
+  it("returns to stopped after transport listener setup fails", async () => {
+    class FailingListenerTransport extends FakeTransport {
+      shouldFail = true;
+
+      override async onMessage(handler: Parameters<FakeTransport["onMessage"]>[0]) {
+        if (this.shouldFail) throw new Error("listener setup failed");
+        return super.onMessage(handler);
+      }
+    }
+
+    const transport = new FailingListenerTransport();
+    const client = new AppServerClient(transport);
+
+    await expect(client.start()).rejects.toThrow("listener setup failed");
+    expect(client.connectionStatus).toBe("stopped");
+
+    transport.shouldFail = false;
+    await expect(client.start()).resolves.toBeUndefined();
+    expect(client.connectionStatus).toBe("ready");
+  });
+
   it("matches responses to pending requests", async () => {
     const transport = new FakeTransport();
     const client = new AppServerClient(transport);
@@ -156,6 +177,21 @@ describe("AppServerClient", () => {
 
     await vi.waitFor(() => expect(handler).toHaveBeenCalledWith({ question: "value" }, "request-42"));
     expect(transport.sent.some((message) => message.id === "request-42")).toBe(false);
+  });
+
+  it("does not let an older reverse-request disposer remove a replacement handler", async () => {
+    const transport = new FakeTransport();
+    const client = new AppServerClient(transport);
+    await client.start();
+    const first = client.onReverseRequest("test/approval", async () => ({ decision: "old" }));
+    client.onReverseRequest("test/approval", async () => ({ decision: "new" }));
+    first();
+
+    transport.emit({ id: "server-2", method: "test/approval", params: {} });
+
+    await vi.waitFor(() => {
+      expect(transport.sent).toContainEqual({ id: "server-2", result: { decision: "new" } });
+    });
   });
 
   it("uses stable app-server methods for P0 workspace and thread operations", async () => {

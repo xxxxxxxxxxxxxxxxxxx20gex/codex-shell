@@ -174,7 +174,12 @@ export class AppServerClient {
     const handlers = this.notificationHandlers.get(method) ?? new Set();
     handlers.add(handler);
     this.notificationHandlers.set(method, handlers);
-    return () => handlers.delete(handler);
+    return () => {
+      handlers.delete(handler);
+      if (handlers.size === 0 && this.notificationHandlers.get(method) === handlers) {
+        this.notificationHandlers.delete(method);
+      }
+    };
   }
 
   onLog(handler: LogHandler) {
@@ -184,7 +189,11 @@ export class AppServerClient {
 
   onReverseRequest(method: string, handler: ReverseRequestHandler) {
     this.reverseRequestHandlers.set(method, handler);
-    return () => this.reverseRequestHandlers.delete(method);
+    return () => {
+      if (this.reverseRequestHandlers.get(method) === handler) {
+        this.reverseRequestHandlers.delete(method);
+      }
+    };
   }
 
   onProtocolError(handler: ProtocolErrorHandler) {
@@ -329,8 +338,8 @@ export class AppServerClient {
 
   private async startConnection() {
     this.status = "starting";
-    await this.attachTransportListeners();
     try {
+      await this.attachTransportListeners();
       this.activeProcess = await this.transport.start();
       this.initializeResponse = await this.requestRaw<InitializeResponse>("initialize", {
         clientInfo: { name: "codex-shell", title: "Codex Shell", version: "0.1.0" },
