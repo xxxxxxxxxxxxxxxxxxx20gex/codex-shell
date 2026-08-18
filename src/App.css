@@ -126,7 +126,8 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .queued-turn > span { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .queued-turn-icon { width: 18px; height: 18px; flex: none; color: var(--text-secondary); stroke-width: 1.55; }
 .queued-turn-status { flex: none; color: var(--accent); font-size: var(--conversation-font-size-meta); white-space: nowrap; }
-.queued-turn button { display: grid; width: 20px; height: 20px; flex: none; place-items: center; border: 0; border-radius: 4px; color: var(--text-tertiary); background: transparent; font-size: 12px; }
+.queued-turn button { display: grid; width: 20px; height: 20px; flex: none; place-items: center; padding: 0; border: 0; border-radius: 4px; color: var(--text-tertiary); background: transparent; font-size: 12px; line-height: 0; }
+.queued-turn button svg { display: block; width: 16px; height: 16px; flex: none; stroke-width: 1.75; }
 .queued-turn button:hover { color: var(--text-primary); background: var(--surface-raised); }
 .composer-toolbar { display: flex; min-width: 0; min-height: 40px; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 6px; }
 .composer-tools { display: flex; min-width: 0; align-items: center; gap: 4px; }
