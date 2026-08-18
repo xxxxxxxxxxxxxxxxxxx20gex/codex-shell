@@ -226,6 +226,8 @@ Radii:
 - From `900px` to `1179px`, inspector defaults closed and opens as an overlay.
 - Below `900px`, sidebar and inspector are independent overlays; the conversation and composer remain primary.
 - Resizers remain keyboard reachable and do not overlap row text.
+- Panel visibility controls stay hidden during normal use and reveal only when the divider is hovered, focused, or actively resized; collapsed-panel controls remain visible so the panel can be restored.
+- Full-screen modal backdrops sit above resizers and window chrome, so background panel controls cannot show through or receive pointer input.
 - No text or control may shrink below the defined minimum sizes to preserve a three-column layout.
 
 ## Acceptance Checklist
