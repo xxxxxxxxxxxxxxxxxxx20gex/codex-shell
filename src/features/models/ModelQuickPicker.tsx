@@ -37,8 +37,8 @@ export function ModelQuickPicker({ settings, loadModels, onChange, onDisplayName
   }, [loadModels, onDisplayName, settings.modelId]);
 
   const selected = useMemo(() => models.find((model) => model.model === settings.modelId || model.id === settings.modelId), [models, settings.modelId]);
-  const efforts = selected?.supportedReasoningEfforts.map((option) => option.reasoningEffort)
-    ?? (settings.reasoningEffort ? [settings.reasoningEffort] : []);
+  const efforts = selected?.supportedReasoningEfforts
+    ?? (settings.reasoningEffort ? [{ reasoningEffort: settings.reasoningEffort, description: settings.reasoningEffort }] : []);
 
   return (
     <div ref={rootRef} className="model-picker-popover" role="dialog" aria-label="模型选择">
@@ -52,7 +52,7 @@ export function ModelQuickPicker({ settings, loadModels, onChange, onDisplayName
       {efforts.length > 0 && <div className="model-picker-section">
         <span className="model-picker-label">推理强度</span>
         <div className="model-picker-options compact">
-          {efforts.map((effort) => <button key={effort} className={settings.reasoningEffort === effort ? "active" : ""} onClick={() => onChange({ ...settings, reasoningEffort: effort })}>{effort}</button>)}
+          {efforts.map((option) => <button key={option.reasoningEffort} title={option.description} className={settings.reasoningEffort === option.reasoningEffort ? "active" : ""} onClick={() => onChange({ ...settings, reasoningEffort: option.reasoningEffort })}>{option.reasoningEffort}</button>)}
         </div>
       </div>}
       <button className="model-picker-advanced" onClick={onAdvanced}>高级设置 <ChevronRight aria-hidden="true" /></button>

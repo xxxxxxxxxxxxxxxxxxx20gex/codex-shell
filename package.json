@@ -12,6 +12,7 @@
     "test": "vitest run",
     "runtime:stage": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stage-runtime.ps1",
     "runtime:probe-goal": "node tests/scripts/probe-goal-runtime.mjs",
+    "runtime:probe-model-parameters": "node tests/scripts/probe-model-parameters.mjs",
     "protocol:generate": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/generate-protocol.ps1",
     "rust:check": "powershell -NoProfile -ExecutionPolicy Bypass -File tests/scripts/check-rust.ps1",
     "test:quality": "powershell -NoProfile -ExecutionPolicy Bypass -File tests/scripts/run-quality-gates.ps1",

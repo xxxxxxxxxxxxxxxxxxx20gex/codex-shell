@@ -30,6 +30,7 @@ describe("ModelSettingsPanel", () => {
 
     expect(screen.getByText("网关与自定义模型")).toBeTruthy();
     expect(screen.getByDisplayValue("custom-model")).toBeTruthy();
+    expect(screen.getByText(/仅在模型支持时生效/)).toBeTruthy();
     expect(screen.queryByText("能力模板")).toBeNull();
   });
 
