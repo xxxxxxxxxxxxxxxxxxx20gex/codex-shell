@@ -476,4 +476,5 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  .turn-activity-indicator.active { animation-duration: 1.6s !important; animation-iteration-count: infinite !important; }
 }
