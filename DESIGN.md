@@ -1,7 +1,7 @@
 # Codex Shell Design Standard
 
 > Status: Target contract v1. Production UI may still contain legacy values until the UI refresh is implemented.
-> Last updated: 2026-08-18.
+> Last updated: 2026-08-19.
 
 ## Product Character
 
@@ -152,6 +152,13 @@ Radii:
 - Icon-only buttons require an accessible name and a tooltip after approximately `300ms` hover.
 - Use one icon for one concept across the app: add, close, send, archive, delete, copy, fork, plan, goal, settings, collapse, and expand must not have local variants.
 - Chevron orientation communicates expansion state; do not use chevrons as decorative separators.
+
+### Product mark
+
+- The Codex Shell application mark is the negative-core `CS` monogram defined in `assets/branding/cs-app-icon.svg`.
+- The white outer `C`, lime inner `S`, and lime terminal dot sit on the graphite raised surface; the mark uses the same neutral and action colors as the product UI.
+- Platform icons are generated from the SVG master through the Tauri icon generator. Do not hand-edit individual PNG, ICO, or ICNS derivatives.
+- Keep the transparent outer margin and rounded-square silhouette intact so the mark remains legible in Windows taskbar, shortcut, and installer sizes.
 
 ## Controls
 

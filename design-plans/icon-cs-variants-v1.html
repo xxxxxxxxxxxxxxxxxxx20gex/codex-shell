@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Codex Shell CS Mark Variants</title>
+  <style>
+    :root { color-scheme: dark; font-family: "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #f1f3f1; background: #101112; }
+    main { width: min(1180px, 100%); min-height: 920px; margin: 0 auto; padding: 42px 40px 48px; }
+    header { margin-bottom: 30px; }
+    h1 { margin: 0; font-size: 30px; font-weight: 600; }
+    header p { margin: 8px 0 0; color: #909691; font-size: 14px; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    article { min-width: 0; padding: 18px; border: 1px solid #272a2b; border-radius: 8px; background: #141617; }
+    .meta { display: flex; align-items: baseline; justify-content: space-between; }
+    .meta b { color: #b8d957; font: 600 12px/16px "Cascadia Code", Consolas, monospace; }
+    .meta span { color: #606561; font-size: 11px; }
+    h2 { margin: 7px 0 4px; font-size: 17px; font-weight: 600; }
+    .desc { height: 40px; margin: 0; color: #909691; font-size: 12px; line-height: 20px; }
+    .stage { display: grid; height: 230px; margin: 16px 0 12px; place-items: center; border: 1px solid #272a2b; border-radius: 8px; background: #191b1c; }
+    .icon { width: 172px; height: 172px; filter: drop-shadow(0 18px 24px rgb(0 0 0 / 30%)); }
+    .small { display: flex; align-items: center; gap: 13px; padding: 9px 12px; border-radius: 6px; background: #101112; color: #909691; font: 11px/16px "Cascadia Code", Consolas, monospace; }
+    .small svg { flex: none; }
+    footer { margin-top: 26px; padding-top: 18px; border-top: 1px solid #272a2b; color: #606561; font-size: 12px; }
+  </style>
+</head>
+<body>
+<main>
+  <header><h1>CS 字标 · 衍生方向</h1><p>保留母版识别基因，比较六种笔画结构与 Shell 语义 · 每版附 32px 实际预览</p></header>
+  <section class="grid">
+    <article>
+      <div class="meta"><b>A</b><span>REFINED ORIGINAL</span></div><h2>平衡母版</h2><p class="desc">收紧原版比例，让 C 与 S 的视觉重量更均衡。</p>
+      <div class="stage"><svg class="icon" viewBox="0 0 192 192">
+        <rect x="8" y="8" width="176" height="176" rx="38" fill="#202324" stroke="#35393a" stroke-width="3"/>
+        <path d="M132 55c-10-10-23-15-39-15-31 0-54 24-54 56s23 56 54 56c17 0 31-6 41-17" fill="none" stroke="#f1f3f1" stroke-width="15" stroke-linecap="round"/>
+        <path d="M128 63c-9-8-20-12-31-12-14 0-24 7-24 17 0 12 11 16 27 20 20 5 35 13 35 32 0 15-12 27-30 31" fill="none" stroke="#b8d957" stroke-width="14" stroke-linecap="round"/>
+      </svg></div>
+      <div class="small"><svg width="32" height="32" viewBox="0 0 192 192"><rect x="8" y="8" width="176" height="176" rx="38" fill="#202324"/><path d="M132 55c-10-10-23-15-39-15-31 0-54 24-54 56s23 56 54 56c17 0 31-6 41-17" fill="none" stroke="#f1f3f1" stroke-width="18" stroke-linecap="round"/><path d="M128 63c-9-8-20-12-31-12-14 0-24 7-24 17 0 12 11 16 27 20 20 5 35 13 35 32 0 15-12 27-30 31" fill="none" stroke="#b8d957" stroke-width="17" stroke-linecap="round"/></svg>32px · 最接近原选择</div>
+    </article>
+
+    <article>
+      <div class="meta"><b>B</b><span>CONTINUOUS RIBBON</span></div><h2>连续带</h2><p class="desc">C 的尾端自然接入 S，形成一笔完成的品牌轨迹。</p>
+      <div class="stage"><svg class="icon" viewBox="0 0 192 192">
+        <rect x="8" y="8" width="176" height="176" rx="38" fill="#202324" stroke="#35393a" stroke-width="3"/>
+        <path d="M133 55c-11-10-24-15-40-15-32 0-55 24-55 56s23 56 55 56c14 0 27-4 37-12" fill="none" stroke="#f1f3f1" stroke-width="15" stroke-linecap="round"/>
+        <path d="M130 140c14-7 23-18 23-31 0-18-14-25-34-30-18-5-31-9-31-20 0-10 9-17 22-17 11 0 21 4 29 11" fill="none" stroke="#b8d957" stroke-width="15" stroke-linecap="round"/>
+        <path d="M130 140c-7 6-16 10-27 11" fill="none" stroke="#b8d957" stroke-width="15" stroke-linecap="round"/>
+      </svg></div>
+      <div class="small"><svg width="32" height="32" viewBox="0 0 192 192"><rect x="8" y="8" width="176" height="176" rx="38" fill="#202324"/><path d="M133 55c-11-10-24-15-40-15-32 0-55 24-55 56s23 56 55 56c14 0 27-4 37-12" fill="none" stroke="#f1f3f1" stroke-width="18" stroke-linecap="round"/><path d="M130 140c14-7 23-18 23-31 0-18-14-25-34-30-18-5-31-9-31-20 0-10 9-17 22-17 11 0 21 4 29 11" fill="none" stroke="#b8d957" stroke-width="18" stroke-linecap="round"/></svg>32px · 流动感更强</div>
+    </article>
+
+    <article>
+      <div class="meta"><b>C</b><span>SHELL CURSOR</span></div><h2>光标收尾</h2><p class="desc">在字标下方加入短光标，将 Shell 语义藏进品牌图形。</p>
+      <div class="stage"><svg class="icon" viewBox="0 0 192 192">
+        <rect x="8" y="8" width="176" height="176" rx="38" fill="#202324" stroke="#35393a" stroke-width="3"/>
+        <path d="M133 55c-10-10-23-15-39-15-31 0-54 23-54 55s23 55 54 55c15 0 27-4 37-12" fill="none" stroke="#f1f3f1" stroke-width="15" stroke-linecap="round"/>
+        <path d="M129 61c-9-7-19-11-30-11-15 0-25 7-25 17 0 12 12 16 28 20 20 5 34 12 34 30 0 12-7 22-19 28" fill="none" stroke="#b8d957" stroke-width="14" stroke-linecap="round"/>
+        <path d="M105 151h30" stroke="#b8d957" stroke-width="10" stroke-linecap="round"/>
+      </svg></div>
+      <div class="small"><svg width="32" height="32" viewBox="0 0 192 192"><rect x="8" y="8" width="176" height="176" rx="38" fill="#202324"/><path d="M133 55c-10-10-23-15-39-15-31 0-54 23-54 55s23 55 54 55c15 0 27-4 37-12" fill="none" stroke="#f1f3f1" stroke-width="18" stroke-linecap="round"/><path d="M129 61c-9-7-19-11-30-11-15 0-25 7-25 17 0 12 12 16 28 20 20 5 34 12 34 30 0 12-7 22-19 28" fill="none" stroke="#b8d957" stroke-width="17" stroke-linecap="round"/><path d="M105 151h30" stroke="#b8d957" stroke-width="12" stroke-linecap="round"/></svg>32px · Shell 指向明确</div>
+    </article>
+
+    <article>
+      <div class="meta"><b>D</b><span>INTERLOCK</span></div><h2>咬合字环</h2><p class="desc">C 与 S 在中心穿插，结构更紧凑，图标感最强。</p>
+      <div class="stage"><svg class="icon" viewBox="0 0 192 192">
+        <rect x="8" y="8" width="176" height="176" rx="38" fill="#202324" stroke="#35393a" stroke-width="3"/>
+        <path d="M137 61c-10-13-25-20-43-20-31 0-54 23-54 55s23 55 54 55c18 0 33-7 43-21" fill="none" stroke="#f1f3f1" stroke-width="16" stroke-linecap="round"/>
+        <path d="M132 59c-8-7-18-10-29-10-15 0-25 7-25 18 0 13 12 17 29 21 18 5 30 11 30 28 0 16-13 27-32 27-12 0-23-4-31-11" fill="none" stroke="#b8d957" stroke-width="15" stroke-linecap="round"/>
+        <path d="M82 91h25" stroke="#202324" stroke-width="20"/><path d="M82 91h25" stroke="#b8d957" stroke-width="15" stroke-linecap="round"/>
+      </svg></div>
+      <div class="small"><svg width="32" height="32" viewBox="0 0 192 192"><rect x="8" y="8" width="176" height="176" rx="38" fill="#202324"/><path d="M137 61c-10-13-25-20-43-20-31 0-54 23-54 55s23 55 54 55c18 0 33-7 43-21" fill="none" stroke="#f1f3f1" stroke-width="19" stroke-linecap="round"/><path d="M132 59c-8-7-18-10-29-10-15 0-25 7-25 18 0 13 12 17 29 21 18 5 30 11 30 28 0 16-13 27-32 27-12 0-23-4-31-11" fill="none" stroke="#b8d957" stroke-width="18" stroke-linecap="round"/></svg>32px · 紧凑、有张力</div>
+    </article>
+
+    <article>
+      <div class="meta"><b>E</b><span>MONOLINE</span></div><h2>等线字印</h2><p class="desc">统一笔宽和圆角，偏工程工具，克制且容易系统化。</p>
+      <div class="stage"><svg class="icon" viewBox="0 0 192 192">
+        <rect x="8" y="8" width="176" height="176" rx="38" fill="#202324" stroke="#35393a" stroke-width="3"/>
+        <path d="M137 58c-10-11-24-17-42-17-32 0-56 24-56 55s24 55 56 55c18 0 32-6 42-18" fill="none" stroke="#f1f3f1" stroke-width="12" stroke-linecap="round"/>
+        <path d="M130 61c-9-8-19-12-31-12-16 0-27 8-27 20 0 13 12 18 29 22 19 5 32 12 32 28 0 15-13 25-31 25-13 0-24-4-33-12" fill="none" stroke="#b8d957" stroke-width="12" stroke-linecap="round"/>
+      </svg></div>
+      <div class="small"><svg width="32" height="32" viewBox="0 0 192 192"><rect x="8" y="8" width="176" height="176" rx="38" fill="#202324"/><path d="M137 58c-10-11-24-17-42-17-32 0-56 24-56 55s24 55 56 55c18 0 32-6 42-18" fill="none" stroke="#f1f3f1" stroke-width="15" stroke-linecap="round"/><path d="M130 61c-9-8-19-12-31-12-16 0-27 8-27 20 0 13 12 18 29 22 19 5 32 12 32 28 0 15-13 25-31 25-13 0-24-4-33-12" fill="none" stroke="#b8d957" stroke-width="15" stroke-linecap="round"/></svg>32px · 最克制</div>
+    </article>
+
+    <article>
+      <div class="meta"><b>F</b><span>NEGATIVE CORE</span></div><h2>负形核心</h2><p class="desc">把 S 压缩到 C 的内部，轮廓稳定，适合更小任务栏尺寸。</p>
+      <div class="stage"><svg class="icon" viewBox="0 0 192 192">
+        <rect x="8" y="8" width="176" height="176" rx="38" fill="#202324" stroke="#35393a" stroke-width="3"/>
+        <path d="M137 57c-11-11-25-17-43-17-32 0-55 24-55 56s23 56 55 56c18 0 33-6 43-18" fill="none" stroke="#f1f3f1" stroke-width="17" stroke-linecap="round"/>
+        <path d="M120 66c-7-6-15-9-24-9-12 0-20 6-20 14 0 10 9 13 23 17 15 4 25 10 25 23 0 12-10 21-25 21-10 0-19-3-26-9" fill="none" stroke="#b8d957" stroke-width="13" stroke-linecap="round"/>
+        <circle cx="137" cy="134" r="6" fill="#b8d957"/>
+      </svg></div>
+      <div class="small"><svg width="32" height="32" viewBox="0 0 192 192"><rect x="8" y="8" width="176" height="176" rx="38" fill="#202324"/><path d="M137 57c-11-11-25-17-43-17-32 0-55 24-55 56s23 56 55 56c18 0 33-6 43-18" fill="none" stroke="#f1f3f1" stroke-width="20" stroke-linecap="round"/><path d="M120 66c-7-6-15-9-24-9-12 0-20 6-20 14 0 10 9 13 23 17 15 4 25 10 25 23 0 12-10 21-25 21-10 0-19-3-26-9" fill="none" stroke="#b8d957" stroke-width="16" stroke-linecap="round"/></svg>32px · 轮廓最稳</div>
+    </article>
+  </section>
+  <footer>CS 字标衍生稿 v1 · 尚未替换应用图标 · 选择字母后可继续做细节与颜色精修</footer>
+</main>
+</body>
+</html>

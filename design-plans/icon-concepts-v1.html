@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Codex Shell Icon Concepts</title>
+  <style>
+    :root { color-scheme: dark; font-family: "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #f1f3f1; background: #101112; }
+    main { width: 1600px; min-height: 1050px; margin: 0 auto; padding: 54px 64px 60px; }
+    header { display: flex; align-items: end; justify-content: space-between; margin-bottom: 34px; }
+    h1 { margin: 0; font-size: 30px; font-weight: 600; letter-spacing: 0; }
+    header p { margin: 8px 0 0; color: #909691; font-size: 14px; }
+    .palette { display: flex; align-items: center; gap: 10px; color: #909691; font-size: 12px; }
+    .swatch { width: 18px; height: 18px; border: 1px solid #35393a; border-radius: 4px; }
+    .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+    article { min-width: 0; padding: 22px 18px 18px; border: 1px solid #272a2b; border-radius: 8px; background: #141617; }
+    .number { color: #b8d957; font: 600 12px/16px "Cascadia Code", Consolas, monospace; }
+    h2 { margin: 7px 0 4px; font-size: 17px; font-weight: 600; }
+    .tagline { min-height: 40px; margin: 0; color: #909691; font-size: 12px; line-height: 20px; }
+    .stage { display: grid; height: 278px; margin: 20px 0 18px; place-items: center; border: 1px solid #272a2b; border-radius: 8px; background: #191b1c; }
+    .icon { width: 184px; height: 184px; filter: drop-shadow(0 16px 22px rgb(0 0 0 / 28%)); }
+    .sizes { display: flex; align-items: center; gap: 14px; min-height: 48px; padding: 10px 12px; border-radius: 6px; background: #101112; }
+    .sizes svg { flex: 0 0 auto; }
+    .sizes span { color: #909691; font: 11px/16px "Cascadia Code", Consolas, monospace; }
+    .traits { margin: 14px 0 0; color: #c5cac6; font-size: 12px; line-height: 20px; }
+    footer { display: flex; justify-content: space-between; margin-top: 28px; padding-top: 18px; border-top: 1px solid #272a2b; color: #606561; font-size: 12px; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div><h1>Codex Shell · 应用图标方向</h1><p>五个可独立发展的矢量概念 · 优先验证 Windows 任务栏与桌面小尺寸识别</p></div>
+    <div class="palette"><i class="swatch" style="background:#101112"></i><i class="swatch" style="background:#202324"></i><i class="swatch" style="background:#b8d957"></i><i class="swatch" style="background:#73b7e8"></i></div>
+  </header>
+  <section class="grid">
+    <article>
+      <div class="number">01</div><h2>终端脉冲</h2><p class="tagline">Shell 提示符与活动光标组合，最直接表达“可执行智能体”。</p>
+      <div class="stage">
+        <svg class="icon" viewBox="0 0 192 192" aria-label="终端脉冲图标">
+          <rect x="8" y="8" width="176" height="176" rx="38" fill="#202324" stroke="#35393a" stroke-width="3"/>
+          <path d="M49 62 82 95 49 128" fill="none" stroke="#f1f3f1" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M92 128h45" fill="none" stroke="#b8d957" stroke-width="14" stroke-linecap="round"/>
+          <circle cx="143" cy="128" r="7" fill="#b8d957" opacity=".42"/>
+        </svg>
+      </div>
+      <div class="sizes">
+        <svg width="32" height="32" viewBox="0 0 192 192"><rect x="8" y="8" width="176" height="176" rx="38" fill="#202324" stroke="#484d4e" stroke-width="4"/><path d="M49 62 82 95 49 128" fill="none" stroke="#f1f3f1" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/><path d="M92 128h45" stroke="#b8d957" stroke-width="16" stroke-linecap="round"/></svg>
+        <span>32px · 强识别</span>
+      </div><p class="traits">关键词：终端、执行、清晰、经典</p>
+    </article>
+
+    <article>
+      <div class="number">02</div><h2>双层会话</h2><p class="tagline">两个交叠的对话面形成 S 形负空间，强调多轮与并行。</p>
+      <div class="stage">
+        <svg class="icon" viewBox="0 0 192 192" aria-label="双层会话图标">
+          <rect x="8" y="8" width="176" height="176" rx="38" fill="#202324" stroke="#35393a" stroke-width="3"/>
+          <path d="M45 49h76c17 0 27 10 27 25v20H84c-16 0-27 10-27 26v18l-20 16V77c0-17 10-28 28-28Z" fill="#73b7e8"/>
+          <path d="M70 98h57c18 0 28 10 28 27v18l-21-14H87c-16 0-26-9-26-24 0-4 3-7 9-7Z" fill="#b8d957"/>
+          <path d="M82 75h39" stroke="#101112" stroke-width="8" stroke-linecap="round" opacity=".78"/>
+          <path d="M83 115h42" stroke="#101112" stroke-width="8" stroke-linecap="round" opacity=".78"/>
+        </svg>
+      </div>
+      <div class="sizes">
+        <svg width="32" height="32" viewBox="0 0 192 192"><rect x="8" y="8" width="176" height="176" rx="38" fill="#202324"/><path d="M45 49h76c17 0 27 10 27 25v20H84c-16 0-27 10-27 26v18l-20 16V77c0-17 10-28 28-28Z" fill="#73b7e8"/><path d="M70 98h57c18 0 28 10 28 27v18l-21-14H87c-16 0-26-9-26-24 0-4 3-7 9-7Z" fill="#b8d957"/></svg>
+        <span>32px · 双语义</span>
+      </div><p class="traits">关键词：对话、并行、层次、协作</p>
+    </article>
+
+    <article>
+      <div class="number">03</div><h2>工作台核心</h2><p class="tagline">四块工作区围绕智能核心，表达可组合的开发工作台。</p>
+      <div class="stage">
+        <svg class="icon" viewBox="0 0 192 192" aria-label="工作台核心图标">
+          <rect x="8" y="8" width="176" height="176" rx="38" fill="#202324" stroke="#35393a" stroke-width="3"/>
+          <path d="M43 48h46v41H43zM103 48h46v41h-46zM43 103h46v41H43zM103 103h46v41h-46z" fill="none" stroke="#c5cac6" stroke-width="9" stroke-linejoin="round"/>
+          <rect x="73" y="72" width="46" height="46" rx="13" fill="#101112" stroke="#b8d957" stroke-width="7"/>
+          <circle cx="96" cy="95" r="8" fill="#b8d957"/>
+        </svg>
+      </div>
+      <div class="sizes">
+        <svg width="32" height="32" viewBox="0 0 192 192"><rect x="8" y="8" width="176" height="176" rx="38" fill="#202324"/><path d="M43 48h46v41H43zM103 48h46v41h-46zM43 103h46v41H43zM103 103h46v41h-46z" fill="none" stroke="#c5cac6" stroke-width="12"/><rect x="73" y="72" width="46" height="46" rx="13" fill="#101112" stroke="#b8d957" stroke-width="9"/></svg>
+        <span>32px · 系统感</span>
+      </div><p class="traits">关键词：工作台、模块、核心、可靠</p>
+    </article>
+
+    <article>
+      <div class="number">04</div><h2>CS 字标</h2><p class="tagline">C 与 S 合成连续轨迹，作为独立产品最具品牌专属性。</p>
+      <div class="stage">
+        <svg class="icon" viewBox="0 0 192 192" aria-label="CS 字标图标">
+          <rect x="8" y="8" width="176" height="176" rx="38" fill="#202324" stroke="#35393a" stroke-width="3"/>
+          <path d="M132 55c-10-10-23-15-39-15-31 0-54 24-54 56s23 56 54 56c17 0 31-6 41-17" fill="none" stroke="#f1f3f1" stroke-width="15" stroke-linecap="round"/>
+          <path d="M128 63c-9-8-20-12-31-12-14 0-24 7-24 17 0 12 11 16 27 20 20 5 35 13 35 32 0 14-10 25-25 30" fill="none" stroke="#b8d957" stroke-width="14" stroke-linecap="round"/>
+          <circle cx="105" cy="151" r="7" fill="#b8d957"/>
+        </svg>
+      </div>
+      <div class="sizes">
+        <svg width="32" height="32" viewBox="0 0 192 192"><rect x="8" y="8" width="176" height="176" rx="38" fill="#202324"/><path d="M132 55c-10-10-23-15-39-15-31 0-54 24-54 56s23 56 54 56c17 0 31-6 41-17" fill="none" stroke="#f1f3f1" stroke-width="18" stroke-linecap="round"/><path d="M128 63c-9-8-20-12-31-12-14 0-24 7-24 17 0 12 11 16 27 20 20 5 35 13 35 32 0 14-10 25-25 30" fill="none" stroke="#b8d957" stroke-width="17" stroke-linecap="round"/></svg>
+        <span>32px · 品牌性</span>
+      </div><p class="traits">关键词：Codex Shell、字标、连续、独有</p>
+    </article>
+
+    <article>
+      <div class="number">05</div><h2>智能体路径</h2><p class="tagline">从输入到分支再汇聚的执行路径，突出自主任务编排。</p>
+      <div class="stage">
+        <svg class="icon" viewBox="0 0 192 192" aria-label="智能体路径图标">
+          <rect x="8" y="8" width="176" height="176" rx="38" fill="#202324" stroke="#35393a" stroke-width="3"/>
+          <path d="M52 95h37M89 95c16 0 14-34 31-34h20M89 95c16 0 14 35 31 35h20" fill="none" stroke="#c5cac6" stroke-width="11" stroke-linecap="round"/>
+          <circle cx="48" cy="95" r="14" fill="#73b7e8"/>
+          <circle cx="143" cy="61" r="14" fill="#b8d957"/>
+          <circle cx="143" cy="130" r="14" fill="#b8d957"/>
+          <circle cx="91" cy="95" r="8" fill="#101112" stroke="#f1f3f1" stroke-width="6"/>
+        </svg>
+      </div>
+      <div class="sizes">
+        <svg width="32" height="32" viewBox="0 0 192 192"><rect x="8" y="8" width="176" height="176" rx="38" fill="#202324"/><path d="M52 95h37M89 95c16 0 14-34 31-34h20M89 95c16 0 14 35 31 35h20" fill="none" stroke="#c5cac6" stroke-width="14" stroke-linecap="round"/><circle cx="48" cy="95" r="16" fill="#73b7e8"/><circle cx="143" cy="61" r="16" fill="#b8d957"/><circle cx="143" cy="130" r="16" fill="#b8d957"/></svg>
+        <span>32px · 智能体感</span>
+      </div><p class="traits">关键词：路径、分支、编排、智能体</p>
+    </article>
+  </section>
+  <footer><span>候选稿 v1 · 仅用于方向选择，未替换当前应用图标</span><span>Quiet Graphite Workbench palette</span></footer>
+</main>
+</body>
+</html>
