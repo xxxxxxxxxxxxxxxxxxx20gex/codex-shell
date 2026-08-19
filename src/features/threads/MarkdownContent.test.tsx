@@ -45,3 +45,31 @@ describe("MarkdownContent links", () => {
     expect(view.getByText("unsafe")).toBeTruthy();
   });
 });
+
+describe("MarkdownContent code blocks", () => {
+  it("renders fenced code as a labeled, copyable structure", async () => {
+    const writeText = vi.fn(async () => undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+    const view = render(
+      <MarkdownContent>{["```python", "print('hello')", "```", "", "```", "plain text", "```"].join("\n")}</MarkdownContent>,
+    );
+
+    expect(view.getByText("Python")).toBeTruthy();
+    expect(view.getByText("纯文本")).toBeTruthy();
+    const copyButtons = view.getAllByRole("button", { name: "复制代码" });
+    fireEvent.click(copyButtons[0]);
+
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith("print('hello')"));
+    expect(view.getByRole("button", { name: "已复制代码" })).toBeTruthy();
+  });
+
+  it("keeps inline code inline instead of wrapping it in a block card", () => {
+    const view = render(<MarkdownContent>Use `pnpm test` here.</MarkdownContent>);
+
+    expect(view.container.querySelector(".markdown-code-block")).toBeNull();
+    expect(view.container.querySelector("code")?.textContent).toBe("pnpm test");
+  });
+});

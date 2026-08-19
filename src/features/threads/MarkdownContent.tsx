@@ -1,7 +1,10 @@
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { isValidElement, type ReactElement, type ReactNode } from "react";
 import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { errorMessage } from "../../shared/errors";
+import { MarkdownCodeBlock } from "./MarkdownCodeBlock";
+import "./MarkdownContent.css";
 
 interface Props {
   children: string;
@@ -83,6 +86,10 @@ export function MarkdownContent({ children, className, onOpenPath, onOpenError }
         skipHtml
         urlTransform={safeUrlTransform}
         components={{
+          pre: ({ children: codeElement }) => {
+            if (!isValidElement(codeElement)) return <pre>{codeElement}</pre>;
+            return <MarkdownCodeBlock codeElement={codeElement as ReactElement<{ children?: ReactNode; className?: string }>} />;
+          },
           a: ({ children: label, href, ...props }) => {
             const target = href ? markdownLinkTarget(href) : null;
             if (!href || !target) return <span>{label}</span>;

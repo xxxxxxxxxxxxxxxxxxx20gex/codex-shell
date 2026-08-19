@@ -80,12 +80,12 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .agent-block-continuation { margin-top: 0; }
 .agent-block-continuation .agent-content { grid-column: 2; }
 .agent-accent { width: 2px; height: 18px; align-self: start; min-height: 0; margin-top: 3px; border-radius: 2px; background: var(--accent-action); }
-.agent-response { margin: 0; color: var(--text-primary); font-size: var(--conversation-font-size); line-height: 24px; overflow-wrap: anywhere; }
+.agent-response { margin: 0; color: var(--text-conversation-primary); font-size: var(--conversation-font-size); line-height: 24px; overflow-wrap: anywhere; }
 .agent-response > :first-child, .turn-commentary > :first-child { margin-top: 0; }
 .agent-response > :last-child, .turn-commentary > :last-child { margin-bottom: 0; }
 .agent-response p, .turn-commentary p { margin: 0 0 13px; }
-.agent-response h1, .agent-response h2, .agent-response h3 { margin: 20px 0 9px; color: var(--text-primary); font-weight: 650; line-height: 1.35; }
-.agent-response h1 { font-size: 24px; }.agent-response h2 { font-size: 20px; }.agent-response h3 { font-size: 18px; }
+.agent-response h1, .agent-response h2, .agent-response h3 { margin: 22px 0 10px; color: var(--text-conversation-primary); font-weight: 600; line-height: 1.35; }
+.agent-response h1 { font-size: 24px; }.agent-response h2 { font-size: 20px; }.agent-response h3 { font-size: 17px; }
 .agent-response ul, .agent-response ol, .turn-commentary ul, .turn-commentary ol { margin: 8px 0 13px; padding-left: 22px; }
 .agent-response li, .turn-commentary li { margin: 3px 0; }
 .agent-response blockquote { margin: 10px 0; padding-left: 12px; border-left: 2px solid var(--border-strong); color: var(--text-muted); }

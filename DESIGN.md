@@ -75,6 +75,7 @@ Rules:
 | Token | Value | Role |
 | --- | --- | --- |
 | `--text-primary` | `#F1F3F1` | primary content |
+| `--text-conversation-primary` | `#F6F7F5` | long-form assistant output with slightly higher reading contrast |
 | `--text-secondary` | `#C5CAC6` | labels and supporting content |
 | `--text-muted` | `#909691` | metadata and inactive content |
 | `--text-disabled` | `#606561` | disabled content |
@@ -213,6 +214,7 @@ Radii:
 - Timestamps and duration sit at least 6px away from message content.
 - File changes appear once at the end of the turn, grouped by file with semantic status color.
 - Streaming indicators must not resize the message column or steal focus.
+- Fenced Markdown code renders as one bounded structure with a language header (`纯文本` when unspecified), a copy action, and a monospaced scrollable body; inline code remains inline.
 
 ## Composer
 

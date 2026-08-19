@@ -1,0 +1,65 @@
+.markdown-code-block {
+  overflow: hidden;
+  margin: 12px 0 16px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-panel);
+  background: var(--surface-raised);
+}
+
+.markdown-code-block > header {
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px 0 12px;
+  border-bottom: 1px solid var(--border-default);
+  color: var(--text-muted);
+  background: var(--surface-raised);
+  font-size: var(--text-label);
+  line-height: 16px;
+}
+
+.markdown-code-block > header button {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  color: var(--text-muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.markdown-code-block > header button:hover,
+.markdown-code-block > header button:focus-visible {
+  color: var(--text-primary);
+  background: var(--surface-selected);
+}
+
+.markdown-code-block > header svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 1.75;
+}
+
+.agent-response .markdown-code-block pre,
+.turn-commentary .markdown-code-block pre {
+  max-height: 440px;
+  overflow: auto;
+  margin: 0;
+  padding: 13px 12px;
+  border: 0;
+  border-radius: 0;
+  color: var(--text-conversation-primary);
+  background: var(--surface-selected);
+  font: var(--conversation-font-size-small)/20px var(--font-mono);
+  tab-size: 2;
+}
+
+.agent-response .markdown-code-block pre code,
+.turn-commentary .markdown-code-block pre code {
+  color: inherit;
+  white-space: pre;
+}
