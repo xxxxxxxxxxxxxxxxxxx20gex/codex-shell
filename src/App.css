@@ -97,7 +97,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .agent-response th, .agent-response td { padding: 6px 9px; border: 1px solid var(--ui-line); text-align: left; }
 .agent-response th { background: var(--surface-raised); }
 .agent-response hr { margin: 18px 0; border: 0; border-top: 1px solid var(--ui-line); }
-.agent-response.pending { color: var(--muted); }
 .message-timing { color: var(--text-muted); font: var(--text-meta)/16px var(--font-mono); font-variant-numeric: tabular-nums; }
 .user-message-timing { margin: 8px 3px 0; text-align: right; }
 .agent-message-timing { margin-top: 8px; }
@@ -356,7 +355,6 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .turn-work-status { display: flex; min-height: 36px; align-items: center; gap: 9px; padding: 4px 3px 8px; border-bottom: 1px solid var(--border-subtle); }
 .turn-work-status strong { color: var(--text-muted); font-size: 13px; font-weight: 500; }
 .turn-retry-status { overflow: hidden; color: var(--accent-warning); font: var(--text-meta)/16px var(--font-mono); text-overflow: ellipsis; white-space: nowrap; }
-.turn-retry-status.standalone { display: block; margin-top: 8px; }
 .turn-process-disclosure { margin: 15px 0 13px 16px; color: var(--text-secondary); }
 .turn-process-disclosure > summary { display: grid; min-height: 36px; grid-template-columns: 6px minmax(0,1fr) 14px; align-items: center; gap: 9px; padding: 4px 3px 8px; border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); cursor: pointer; list-style: none; }
 .turn-process-disclosure > summary::-webkit-details-marker { display: none; }
@@ -368,7 +366,7 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .turn-process-content .turn-activity-stream { margin-top: 8px; margin-bottom: 8px; }
 .turn-process-content .turn-activity-stream:first-child { margin-top: 0; }
 .turn-process-content .turn-activity-list { padding-top: 5px; }
-.turn-activity-indicator { position: relative; width: 5px; height: 5px; flex: 0 0 auto; border-radius: 999px; background: var(--text-disabled); }
+.turn-activity-indicator { width: 5px; height: 5px; flex: 0 0 auto; border-radius: 999px; background: var(--text-disabled); }
 .turn-activity-indicator.active { background: var(--accent-action); animation: activity-breathe 1.6s ease-in-out infinite; }
 .turn-activity-list { padding: 12px 0 3px; }
 .turn-commentary { margin: 0 8px 12px 0; color: var(--text-primary); font-size: var(--conversation-font-size-secondary); line-height: 20px; overflow-wrap: anywhere; }

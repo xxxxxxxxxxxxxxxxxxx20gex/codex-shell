@@ -169,7 +169,7 @@ Radii:
 - Keyboard focus uses a 2px `--accent-info` ring with 2px offset.
 - Hover feedback: `120ms`; popover entry: `160ms`; no interaction exceeds `200ms`.
 - Animate only opacity and transform for transient overlays.
-- Respect `prefers-reduced-motion`.
+- Respect `prefers-reduced-motion`. The active Turn indicator is the only documented exception: its fixed 5px dot may continue a slow opacity-only status pulse because it has no movement, scaling, or layout effect.
 - Hover must not move, resize, or reflow controls.
 
 ## Lists And Navigation

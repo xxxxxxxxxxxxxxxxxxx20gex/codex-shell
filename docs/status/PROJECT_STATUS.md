@@ -3,7 +3,7 @@
 - 当前阶段：Milestone 2 - P0 桌面编程工作台
 - 总体状态：核心对话、Session、工具活动、审批、文件、Diff 和模型配置可用；发布工程与 Runtime 恢复能力尚未完成。
 - 文档原则：本文件只记录跨模块当前基线、风险和下一里程碑；历史变更以 Git 提交和各模块状态文档为准，不在此累积功能流水账。
-- 最后更新：2026-08-18
+- 最后更新：2026-08-19
 
 ## 当前基线
 
@@ -13,7 +13,7 @@
 - 主会话使用固定 48px 标题栏；时间线最大可读宽度 820px；Composer 最大宽度 860px 并居中；侧栏默认 248px，检查器默认 288px 且默认收起。1180px 以下检查器以 overlay 打开，900px 以下侧栏也以独立 overlay 打开，不再通过 `display:none` 删除功能入口。
 - Windows 使用 32px 产品自绘无边框标题栏，保留窗口拖动、双击切换最大化、最小化、最大化/还原和关闭；窗口 capability 限制为上述必要动作。
 - 产品标题只在窗口标题栏出现一次；侧栏顶部采用无边框图标+文字操作，当前提供新建对话，插件入口作为禁用的扩展预留。
-- 助手回答生成中的侧线使用低饱和黄绿色，完成后回落为石墨灰。`App.tsx`、`useAppController.ts` 和 `App.css` 均保持在约 500 行以内，Explorer、Command、Runtime 等样式由 feature 自有文件承载；此次不改变 app-server 消息顺序、Session 排序、模型配置、凭据或 Queue/Steer 行为。
+- Turn 从发送成功起统一显示“正在处理 + 实时耗时”，活动状态使用固定 5px 实心点进行透明度呼吸；真实回答出现后才在首个回答块首行显示亮色 2px 标记，完成态不增加贯穿正文的灰色侧轨。`App.tsx`、`useAppController.ts` 和 `App.css` 均保持在约 500 行以内，Explorer、Command、Runtime 等样式由 feature 自有文件承载。
 - 侧栏底部根据 Base URL 动态显示当前 provider 简称并打开通用设置；通用设置仅承载个性化提示词与深色/浅色/跟随系统外观，模型网关仍由 Composer 模型菜单的高级入口管理。
 
 ### 架构与隔离
@@ -64,7 +64,7 @@
 
 ## 验证基线
 
-- 2026-08-19：原生高级模型参数接入后 `pnpm test:quality` 通过，覆盖 53 个 Vitest 文件/235 项测试、14 项 Rust 测试、TypeScript、ESLint、Vite production build、Knip、Cargo check、严格 Clippy 和 diff 检查。真实网关探针确认推理强度、回答冗余度、推理摘要与模型目录声明的 Priority 服务层级进入上游 Responses 请求；默认值不覆盖 Core/模型目录。
+- 2026-08-19：当前基线 `pnpm test:quality` 通过，覆盖 53 个 Vitest 文件/236 项测试、14 项 Rust 测试、TypeScript、ESLint、Vite production build、Knip、Cargo check、严格 Clippy 和 diff 检查。真实网关探针确认推理强度、回答冗余度、推理摘要与模型目录声明的 Priority 服务层级进入上游 Responses 请求；默认值不覆盖 Core/模型目录。
 - 2026-08-18：代码健康审查及可重试错误生命周期修复后完整 `pnpm test:quality` 通过，覆盖 ESLint 零 warning、53 个 Vitest 文件、229 项测试、TypeScript、Vite production build、Knip、`git diff --check`、`cargo check`、13 项 Rust 单元测试和严格 Clippy；无边框桌面 debug 构建成功。`error.willRetry=true` 只在匹配 Turn 重试期间展示，完成后自动清除且不跨 Session；同时修复了 app-server 监听器初始化失败后的状态恢复和旧 disposer 误删新 handler 的风险。Headless Edge 最近一次已验证 1440×900、1280×780、1024×720、900×700 和 899×700 的布局边界。
 - 静态审查：Knip 未发现无效文件、导出或依赖；归档/删除清理流程的 TypeScript 重复已合并。jscpd 仅保留主题系统中深色与浅色语义变量的 1 处 CSS 重复（21 行，整体重复行占 0.21%），属于媒体查询下的必要主题覆盖。
 - `pnpm audit --prod` 无已知漏洞；源码扫描未发现 PAT、API Key、用户密钥或开发机绝对路径。
