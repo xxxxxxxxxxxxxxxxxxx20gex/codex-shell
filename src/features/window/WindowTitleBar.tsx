@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Copy, Minus, Square, X } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { ProductMark } from "../../shared/ProductMark";
 import "./WindowTitleBar.css";
 
 function isTauri() {
@@ -46,7 +47,7 @@ export function WindowTitleBar() {
       onDoubleClick={() => run("toggle")}
     >
       <div className="window-title" data-tauri-drag-region>
-        <span className="window-title-mark" aria-hidden="true">C</span>
+        <ProductMark className="window-title-mark" />
         <span data-tauri-drag-region>Codex Shell</span>
       </div>
       <div className="window-controls">

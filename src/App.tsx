@@ -40,6 +40,7 @@ import { FileMentionMenu } from "./features/workspaces/FileMentionMenu";
 import { WorkspaceExplorer } from "./features/workspaces/WorkspaceExplorer";
 import { WorkspaceSelector } from "./features/workspaces/WorkspaceSelector";
 import { WindowTitleBar } from "./features/window/WindowTitleBar";
+import { ProductMark } from "./shared/ProductMark";
 import "./styles/tokens.css";
 import { isPathWithinRoot, resolveLinkedProjectPath, resolveProjectRelativePath } from "./features/workspaces/workspaceState";
 
@@ -223,7 +224,7 @@ function App() {
               onOpenError={setUiError}
             />
           ) : (
-            <div className="timeline"><div className="conversation-empty"><div className="agent-avatar">CS</div><h2>Codex Shell</h2><p>原生 Codex app-server 工作台</p></div></div>
+            <div className="timeline"><div className="conversation-empty"><ProductMark className="conversation-empty-mark" /><h2>Codex Shell</h2><p>原生 Codex app-server 工作台</p></div></div>
           )}
           <div className="composer-wrap">
             <RuntimeNoticeBanner

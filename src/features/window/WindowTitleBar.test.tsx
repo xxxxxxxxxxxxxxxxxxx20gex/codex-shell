@@ -2,6 +2,7 @@
 
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import productMarkUrl from "../../../assets/branding/cs-app-icon.svg";
 import { WindowTitleBar } from "./WindowTitleBar";
 
 const appWindow = vi.hoisted(() => ({
@@ -27,6 +28,13 @@ afterEach(() => {
 });
 
 describe("WindowTitleBar", () => {
+  it("uses the shared CS product mark", () => {
+    const { container } = render(<WindowTitleBar />);
+    const mark = container.querySelector<HTMLImageElement>(".window-title-mark");
+    expect(mark?.getAttribute("src")).toBe(productMarkUrl);
+    expect(mark?.getAttribute("aria-hidden")).toBe("true");
+  });
+
   it("keeps all native window actions on the frameless shell", async () => {
     render(<WindowTitleBar />);
 
