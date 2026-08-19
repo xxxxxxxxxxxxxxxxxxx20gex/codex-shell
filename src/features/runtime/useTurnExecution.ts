@@ -64,6 +64,8 @@ function startTurn(
     input,
     model: settings.modelId,
     effort: settings.reasoningEffort,
+    summary: settings.reasoningSummary,
+    serviceTier: settings.serviceTier,
     approvalPolicy: permissions.approvalPolicy,
     approvalsReviewer: getApprovalsReviewer(permissionMode, approvalReviewer),
     sandboxPolicy: getTurnSandboxPolicy(permissionMode),

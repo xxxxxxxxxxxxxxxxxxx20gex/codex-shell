@@ -11,7 +11,9 @@ const settings = {
   baseUrl: "https://example.test/v1",
   modelId: "gpt-current",
   reasoningEffort: "medium" as const,
+  reasoningSummary: "auto" as const,
   verbosity: "low" as const,
+  serviceTier: "default" as const,
 };
 
 function model(id: string): Model {

@@ -179,8 +179,20 @@ fn app_server_arguments(
             format!("model_reasoning_effort={reasoning_effort}"),
         ]);
     }
+    if let Some(reasoning_summary) = &settings.reasoning_summary {
+        arguments.extend([
+            "-c".to_string(),
+            format!("model_reasoning_summary={reasoning_summary}"),
+        ]);
+    }
     if let Some(verbosity) = &settings.verbosity {
         arguments.extend(["-c".to_string(), format!("model_verbosity={verbosity}")]);
+    }
+    if !settings.service_tier.is_empty() {
+        arguments.extend([
+            "-c".to_string(),
+            format!("service_tier=\"{}\"", settings.service_tier),
+        ]);
     }
     Ok(arguments)
 }

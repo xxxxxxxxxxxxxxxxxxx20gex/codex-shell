@@ -44,8 +44,10 @@ import { useDismissiblePopover } from "../../shared/useDismissiblePopover";
 const initialSettings: ModelSettings = {
   baseUrl: "https://api.openai.com/v1",
   modelId: "gpt-5.6-sol",
-  reasoningEffort: "low",
-  verbosity: "low",
+  reasoningEffort: null,
+  reasoningSummary: null,
+  verbosity: null,
+  serviceTier: "default",
 };
 
 const initialPersonalization: PersonalizationSettings = {

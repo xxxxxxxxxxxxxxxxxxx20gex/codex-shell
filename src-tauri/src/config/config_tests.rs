@@ -1,6 +1,15 @@
 use super::{ModelSettings, PersonalizationSettings, normalize_preferences, normalize_settings};
 
 #[test]
+fn defaults_to_core_managed_model_parameters() {
+    let settings = ModelSettings::default();
+    assert_eq!(settings.reasoning_effort, None);
+    assert_eq!(settings.reasoning_summary, None);
+    assert_eq!(settings.verbosity, None);
+    assert_eq!(settings.service_tier, "default");
+}
+
+#[test]
 fn reads_legacy_settings_without_serializing_the_template() {
     let settings: ModelSettings = serde_json::from_str(
         r#"{"baseUrl":"https://example.test/v1","modelId":"custom","capabilityTemplate":"openai-compatible-basic","reasoningEffort":"high","verbosity":"low"}"#,
@@ -10,6 +19,8 @@ fn reads_legacy_settings_without_serializing_the_template() {
     let settings = normalize_settings(settings);
     assert_eq!(settings.reasoning_effort, None);
     assert_eq!(settings.verbosity, None);
+    assert_eq!(settings.reasoning_summary, None);
+    assert_eq!(settings.service_tier, "default");
     let serialized = serde_json::to_value(settings).expect("settings should serialize");
     assert_eq!(serialized.get("capabilityTemplate"), None);
 }
@@ -35,7 +46,9 @@ fn normalizes_user_entered_model_settings() {
         model_id: "  custom-model  ".to_string(),
         legacy_capability_template: None,
         reasoning_effort: Some("high".to_string()),
+        reasoning_summary: Some("unexpected".to_string()),
         verbosity: Some("low".to_string()),
+        service_tier: "unsupported".to_string(),
     };
 
     assert_eq!(
@@ -45,7 +58,9 @@ fn normalizes_user_entered_model_settings() {
             model_id: "custom-model".to_string(),
             legacy_capability_template: None,
             reasoning_effort: Some("high".to_string()),
+            reasoning_summary: None,
             verbosity: Some("low".to_string()),
+            service_tier: "default".to_string(),
         }
     );
 }

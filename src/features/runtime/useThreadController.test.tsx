@@ -113,7 +113,9 @@ function setup() {
       baseUrl: "https://example.test/v1",
       modelId: "gpt-test",
       reasoningEffort: "none" as const,
+      reasoningSummary: "auto" as const,
       verbosity: "low" as const,
+      serviceTier: "default" as const,
     },
     personalization: {
       customInstructions: "",
@@ -153,6 +155,8 @@ describe("useThreadController", () => {
     expect(client.resumeThread).toHaveBeenCalledWith({ threadId: "thread-a" });
     expect(client.startTurn).toHaveBeenCalledWith(expect.objectContaining({
       threadId: "thread-a",
+      summary: "auto",
+      serviceTier: "default",
       approvalPolicy: "on-request",
       approvalsReviewer: "user",
       sandboxPolicy: {

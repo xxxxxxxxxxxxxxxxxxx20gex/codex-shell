@@ -14,7 +14,15 @@ pub struct ModelSettings {
     #[serde(default, rename = "capabilityTemplate", skip_serializing)]
     pub(crate) legacy_capability_template: Option<String>,
     pub reasoning_effort: Option<String>,
+    #[serde(default)]
+    pub reasoning_summary: Option<String>,
     pub verbosity: Option<String>,
+    #[serde(default = "default_service_tier")]
+    pub service_tier: String,
+}
+
+fn default_service_tier() -> String {
+    "default".to_string()
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -49,8 +57,10 @@ impl Default for ModelSettings {
             base_url: "https://api.openai.com/v1".to_string(),
             model_id: "gpt-5.6-sol".to_string(),
             legacy_capability_template: None,
-            reasoning_effort: Some("low".to_string()),
-            verbosity: Some("low".to_string()),
+            reasoning_effort: None,
+            reasoning_summary: None,
+            verbosity: None,
+            service_tier: default_service_tier(),
         }
     }
 }
@@ -84,6 +94,14 @@ pub fn read_settings(app: &AppHandle) -> Result<ModelSettings, String> {
 fn normalize_settings(mut settings: ModelSettings) -> ModelSettings {
     settings.base_url = settings.base_url.trim().to_string();
     settings.model_id = settings.model_id.trim().to_string();
+    if settings.reasoning_summary.as_deref().is_some_and(|summary| {
+        !matches!(summary, "auto" | "concise" | "detailed" | "none")
+    }) {
+        settings.reasoning_summary = None;
+    }
+    if !matches!(settings.service_tier.as_str(), "default" | "priority" | "flex") {
+        settings.service_tier = default_service_tier();
+    }
     if settings.legacy_capability_template.as_deref() == Some("openai-compatible-basic") {
         settings.reasoning_effort = None;
         settings.verbosity = None;

@@ -37,7 +37,7 @@
 - `+` 菜单统一提供文件、Skills、MCP、压缩、计划、目标和 Review；键入 `/` 仍支持过滤、方向键选择和 Enter 执行。
 - Goal 与 Plan 是 Composer 中互斥的单标签模式：Goal 在主输入框定义目标并复用原生 continuation，Plan 使用 `collaborationMode=plan`；进入 Plan 会清除活动 Goal，不存在 Shell 自建 Goal 执行循环。
 - 权限按 app-server 原生沙盒分为只读、工作区写入、完全访问；自动风险审查是独立审批者设置，默认仍为完全访问。
-- 模型目录和推理强度来自 `model/list`；网关、API Key、自定义模型和回答冗余度位于高级设置。
+- 模型目录和推理强度来自 `model/list`；网关、API Key、自定义模型、推理摘要、回答冗余度和模型目录声明的服务层级位于高级设置。新安装默认不覆盖 Core/模型目录参数，不展示当前 Core 无法传给上游的伪设置。
 
 ### 时间线、文件与诊断
 
@@ -64,6 +64,7 @@
 
 ## 验证基线
 
+- 2026-08-19：原生高级模型参数接入后 `pnpm test:quality` 通过，覆盖 53 个 Vitest 文件/235 项测试、14 项 Rust 测试、TypeScript、ESLint、Vite production build、Knip、Cargo check、严格 Clippy 和 diff 检查。真实网关探针确认推理强度、回答冗余度、推理摘要与模型目录声明的 Priority 服务层级进入上游 Responses 请求；默认值不覆盖 Core/模型目录。
 - 2026-08-18：代码健康审查及可重试错误生命周期修复后完整 `pnpm test:quality` 通过，覆盖 ESLint 零 warning、53 个 Vitest 文件、229 项测试、TypeScript、Vite production build、Knip、`git diff --check`、`cargo check`、13 项 Rust 单元测试和严格 Clippy；无边框桌面 debug 构建成功。`error.willRetry=true` 只在匹配 Turn 重试期间展示，完成后自动清除且不跨 Session；同时修复了 app-server 监听器初始化失败后的状态恢复和旧 disposer 误删新 handler 的风险。Headless Edge 最近一次已验证 1440×900、1280×780、1024×720、900×700 和 899×700 的布局边界。
 - 静态审查：Knip 未发现无效文件、导出或依赖；归档/删除清理流程的 TypeScript 重复已合并。jscpd 仅保留主题系统中深色与浅色语义变量的 1 处 CSS 重复（21 行，整体重复行占 0.21%），属于媒体查询下的必要主题覆盖。
 - `pnpm audit --prod` 无已知漏洞；源码扫描未发现 PAT、API Key、用户密钥或开发机绝对路径。

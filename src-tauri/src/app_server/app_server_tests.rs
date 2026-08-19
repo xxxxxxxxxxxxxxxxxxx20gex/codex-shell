@@ -8,7 +8,9 @@ fn builds_environment_authenticated_gateway_provider() {
         model_id: "model-id".to_string(),
         legacy_capability_template: None,
         reasoning_effort: None,
+        reasoning_summary: None,
         verbosity: None,
+        service_tier: "default".to_string(),
     };
 
     let arguments = app_server_arguments(&settings, "\"model-id\"")
@@ -33,6 +35,8 @@ fn builds_environment_authenticated_gateway_provider() {
             "model_providers.codex_shell_gateway.env_key=\"OPENAI_API_KEY\"",
             "-c",
             "model_providers.codex_shell_gateway.requires_openai_auth=false",
+            "-c",
+            "service_tier=\"default\"",
         ]
     );
 }
@@ -44,7 +48,9 @@ fn includes_explicit_model_parameters() {
         model_id: "model-id".to_string(),
         legacy_capability_template: None,
         reasoning_effort: Some("high".to_string()),
+        reasoning_summary: Some("detailed".to_string()),
         verbosity: Some("medium".to_string()),
+        service_tier: "priority".to_string(),
     };
 
     let arguments =
@@ -54,6 +60,10 @@ fn includes_explicit_model_parameters() {
         "-c".to_string(),
         "model_reasoning_effort=high".to_string(),
         "-c".to_string(),
+        "model_reasoning_summary=detailed".to_string(),
+        "-c".to_string(),
         "model_verbosity=medium".to_string(),
+        "-c".to_string(),
+        "service_tier=\"priority\"".to_string(),
     ]));
 }

@@ -291,6 +291,9 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .template-detail span { color: var(--text-muted); }.template-detail p { margin: 6px 0 0; color: var(--text-secondary); font-size: var(--text-meta); }
 .segmented { display: grid; grid-template-columns: repeat(6, 1fr); overflow: hidden; border: 1px solid var(--border-default); border-radius: var(--radius-control); }
 .segmented.three { grid-template-columns: repeat(3, 1fr); }
+.segmented.four { grid-template-columns: repeat(4, 1fr); }
+.segmented.five { grid-template-columns: repeat(5, 1fr); }
+.segmented.two { grid-template-columns: repeat(2, 1fr); }
 .segmented button { min-height: 32px; padding: 6px 8px; border: 0; border-right: 1px solid var(--border-default); color: var(--text-muted); background: var(--surface-canvas); font: var(--text-label)/16px var(--font-ui); cursor: pointer; }
 .segmented button:hover { color: var(--text-primary); background: var(--surface-raised); }
 .segmented button:last-child { border: 0; }.segmented button.active { color: var(--ui-accent-ink); background: var(--accent-action); font-weight: 600; }
