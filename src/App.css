@@ -369,22 +369,14 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .turn-process-content .turn-activity-stream:first-child { margin-top: 0; }
 .turn-process-content .turn-activity-list { padding-top: 5px; }
 .turn-activity-indicator { position: relative; width: 5px; height: 5px; flex: 0 0 auto; border-radius: 999px; background: var(--text-disabled); }
-.turn-activity-indicator.active { background: var(--accent-action); }
-.turn-activity-indicator.active::after {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: var(--accent-action);
-  content: "";
-  animation: activity-breathe 1.6s ease-in-out infinite;
-}
+.turn-activity-indicator.active { background: var(--accent-action); animation: activity-breathe 1.6s ease-in-out infinite; }
 .turn-activity-list { padding: 12px 0 3px; }
 .turn-commentary { margin: 0 8px 12px 0; color: var(--text-primary); font-size: var(--conversation-font-size-secondary); line-height: 20px; overflow-wrap: anywhere; }
 .turn-native-progress { margin: 8px 0 2px; color: var(--text-quiet); font-size: var(--conversation-font-size-small); }
 @keyframes activity-pulse { 50% { opacity: .5; } }
 @keyframes activity-breathe {
-  0%, 100% { opacity: .2; transform: scale(.7); }
-  50% { opacity: .55; transform: scale(1.8); }
+  0%, 100% { opacity: .3; }
+  50% { opacity: 1; }
 }
 .activity-card { margin: 10px 0 10px 16px; overflow: hidden; border: 1px solid var(--border-subtle); border-radius: var(--radius-panel); background: var(--surface-sidebar); }
 .turn-activity-list .activity-card { margin: 2px 0; border-color: transparent; border-radius: var(--radius-sm); background: transparent; }
