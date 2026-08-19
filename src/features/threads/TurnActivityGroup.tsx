@@ -30,7 +30,7 @@ export function TurnActivityGroup({ items, active, turnActive, startedAt, durati
     return () => window.clearInterval(interval);
   }, [startedAt, turnActive]);
 
-  if (items.length === 0) return null;
+  if (items.length === 0 && !showHeader) return null;
   const elapsedMs = turnActive && startedAt !== null
     ? Math.max(0, now - startedAt * 1_000)
     : durationMs;
@@ -60,7 +60,7 @@ export function TurnActivityGroup({ items, active, turnActive, startedAt, durati
         <strong>{`${turnActive ? "正在处理" : "已处理"}${duration}`}</strong>
         {turnActive && retryingMessage && <small className="turn-retry-status">{retryingMessage}</small>}
       </div>}
-      <div className="turn-activity-list">
+      {activityBlocks.length > 0 && <div className="turn-activity-list">
         {activityBlocks.map((item) => item.type === "commandDrawer" ? (
           <CommandDrawer items={item.items} key={`command-drawer:${item.items[0].id}`} />
         ) : item.type === "agentMessage" ? (
@@ -69,7 +69,7 @@ export function TurnActivityGroup({ items, active, turnActive, startedAt, durati
           <TurnActivityItem item={item} key={item.id} />
         ))}
         {activeProgress && <div className="turn-native-progress">{activeProgress}</div>}
-      </div>
+      </div>}
     </section>
   );
 }

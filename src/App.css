@@ -368,12 +368,24 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .turn-process-content .turn-activity-stream { margin-top: 8px; margin-bottom: 8px; }
 .turn-process-content .turn-activity-stream:first-child { margin-top: 0; }
 .turn-process-content .turn-activity-list { padding-top: 5px; }
-.turn-activity-indicator { width: 6px; height: 6px; border-radius: 999px; background: var(--text-disabled); }
-.turn-activity-indicator.active { background: var(--accent-action); animation: activity-pulse 1.4s ease-in-out infinite; }
+.turn-activity-indicator { position: relative; width: 6px; height: 6px; flex: 0 0 auto; border-radius: 999px; background: var(--text-disabled); }
+.turn-activity-indicator.active { background: var(--accent-action); }
+.turn-activity-indicator.active::after {
+  position: absolute;
+  inset: -4px;
+  border: 1px solid var(--accent-action);
+  border-radius: 50%;
+  content: "";
+  animation: activity-breathe 1.6s ease-in-out infinite;
+}
 .turn-activity-list { padding: 12px 0 3px; }
 .turn-commentary { margin: 0 8px 12px 0; color: var(--text-primary); font-size: var(--conversation-font-size-secondary); line-height: 20px; overflow-wrap: anywhere; }
 .turn-native-progress { margin: 8px 0 2px; color: var(--text-quiet); font-size: var(--conversation-font-size-small); }
 @keyframes activity-pulse { 50% { opacity: .5; } }
+@keyframes activity-breathe {
+  0%, 100% { opacity: .15; transform: scale(.6); }
+  50% { opacity: .65; transform: scale(1); }
+}
 .activity-card { margin: 10px 0 10px 16px; overflow: hidden; border: 1px solid var(--border-subtle); border-radius: var(--radius-panel); background: var(--surface-sidebar); }
 .turn-activity-list .activity-card { margin: 2px 0; border-color: transparent; border-radius: var(--radius-sm); background: transparent; }
 .activity-command-card { margin-top: 6px; margin-bottom: 6px; border-color: transparent; border-radius: var(--radius-sm); background: transparent; }
@@ -417,11 +429,6 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .turn-file-changes li code { overflow: hidden; color: var(--text-secondary); font: var(--text-label)/20px var(--font-mono); text-overflow: ellipsis; white-space: nowrap; }
 .turn-file-changes .added { color: var(--accent-success); }
 .turn-file-changes .removed { color: var(--accent-danger); }
-.turn-progress { display: flex; min-width: 0; align-items: center; gap: 7px; margin: 10px 0 10px 16px; color: var(--text-secondary); font-size: var(--conversation-font-size-small); }
-.turn-progress strong { overflow: hidden; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
-.turn-progress small { flex: 0 0 auto; color: var(--text-quiet); font-size: var(--conversation-font-size-meta); }
-.turn-progress-pulse { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 rgba(180,208,107,.5); animation: turn-progress-pulse 1.6s ease-out infinite; }
-@keyframes turn-progress-pulse { 70% { box-shadow: 0 0 0 5px rgba(180,208,107,0); } 100% { box-shadow: 0 0 0 0 rgba(180,208,107,0); } }
 
 .mention-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 7px; }.mention-chips > span { padding: 4px 5px 4px 7px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); color: var(--text-secondary); background: var(--surface-raised); font-size: var(--text-meta); }.mention-chips button { margin-left: 5px; padding: 0; border: 0; color: var(--text-muted); background: transparent; cursor: pointer; }
 .mention-chips > span.skill-chip { border-color: color-mix(in srgb, var(--accent-info) 40%, var(--border-default)); color: var(--accent-info); background: var(--surface-raised); }

@@ -102,11 +102,22 @@ describe("conversation timing", () => {
     expect(markup).toContain('aria-label="分叉 Session"');
   });
 
-  it("shows an in-progress answer label", () => {
-    const turn = { ...completedTurn(), status: "inProgress", completedAt: null, durationMs: null } as Turn;
+  it("shows one unified processing state before the first visible activity", () => {
+    const emptyAgent: ThreadItem = {
+      type: "agentMessage",
+      id: "agent-empty",
+      text: "",
+      phase: null,
+      memoryCitation: null,
+    };
+    const turn = { ...completedTurn(), items: [completedTurn().items[0], emptyAgent], status: "inProgress", completedAt: null, durationMs: null } as Turn;
     const markup = renderTurn(turn, true);
 
-    expect(markup).toContain("生成中");
+    expect(markup).toContain("正在处理");
+    expect(markup).toContain('class="turn-activity-stream" role="status"');
+    expect(markup).not.toContain("正在等待模型响应");
+    expect(markup).not.toContain("生成中");
+    expect(markup).not.toContain('class="agent-accent"');
   });
 
   it("renders app-server command activity instead of hiding it", () => {
@@ -379,7 +390,7 @@ describe("conversation timing", () => {
       />,
     );
 
-    expect(markup).toContain("正在分析问题");
+    expect(markup).toContain("正在处理");
     expect(markup).not.toContain("分析过程");
     expect(markup).not.toContain("turn-activity-group");
   });

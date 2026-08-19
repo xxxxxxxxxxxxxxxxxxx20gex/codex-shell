@@ -29,6 +29,22 @@ function renderActivity(turnActive: boolean, startedAt: number | null, durationM
   );
 }
 
+function renderEmptyActivity(startedAt: number) {
+  return render(
+    <TurnActivityGroup
+      items={[]}
+      active
+      turnActive
+      startedAt={startedAt}
+      durationMs={null}
+      showHeader
+      turnId="turn-1"
+      activeItemTurnIds={{}}
+      mcpProgressByItemId={{}}
+    />,
+  );
+}
+
 describe("TurnActivityGroup timing", () => {
   afterEach(() => {
     cleanup();
@@ -45,6 +61,16 @@ describe("TurnActivityGroup timing", () => {
 
     act(() => vi.advanceTimersByTime(1_000));
     expect(screen.getByText("正在处理 6s")).toBeTruthy();
+  });
+
+  it("renders the processing header before the first activity item", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-14T10:00:05Z"));
+    const startedAt = Date.now() / 1_000 - 5;
+
+    renderEmptyActivity(startedAt);
+    expect(screen.getByText("正在处理 5s")).toBeTruthy();
+    expect(screen.queryByText("正在等待模型响应")).toBeNull();
   });
 
   it("freezes the final duration after completion", () => {

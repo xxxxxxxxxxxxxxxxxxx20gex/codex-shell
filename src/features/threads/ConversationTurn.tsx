@@ -8,7 +8,6 @@ import { agentMessageTiming, formatTurnDuration, turnDurationMs, userMessageTimi
 import { TurnActivityGroup } from "./TurnActivityGroup";
 import { TurnFileChanges } from "./TurnFileChanges";
 import { TurnPlanView } from "./TurnPlanView";
-import { TurnProgressIndicator } from "./TurnProgressIndicator";
 import { writeClipboardText } from "./clipboard";
 import { MarkdownContent } from "./MarkdownContent";
 import { AttachmentGallery } from "../attachments/AttachmentGallery";
@@ -36,9 +35,12 @@ type TurnBlock =
   | { type: "activity"; items: ThreadItem[] };
 
 function hasVisibleContent(item: ThreadItem) {
-  return item.type !== "reasoning"
-    || item.summary.some((part) => part.trim().length > 0)
-    || item.content.some((part) => part.trim().length > 0);
+  if (item.type === "reasoning") {
+    return item.summary.some((part) => part.trim().length > 0)
+      || item.content.some((part) => part.trim().length > 0);
+  }
+  if (item.type === "agentMessage") return item.text.trim().length > 0;
+  return true;
 }
 
 function orderedTurnBlocks(items: ThreadItem[]) {
@@ -100,10 +102,8 @@ export function ConversationTurn({
 }: Props) {
   const items = turn.items;
   const blocks = orderedTurnBlocks(items);
-  const hasActiveProcess = items.some((item) => activeItemTurnIds[item.id] === turn.id
-    && item.type !== "userMessage" && item.type !== "agentMessage");
   const firstUserMessageId = items.find((item) => item.type === "userMessage")?.id;
-  const answerItems = items.filter((item): item is Extract<ThreadItem, { type: "agentMessage" }> => item.type === "agentMessage" && item.phase !== "commentary");
+  const answerItems = items.filter((item): item is Extract<ThreadItem, { type: "agentMessage" }> => item.type === "agentMessage" && item.phase !== "commentary" && hasVisibleContent(item));
   const activityItems = items.filter((item) => hasVisibleContent(item)
     && item.type !== "userMessage"
     && item.type !== "fileChange"
@@ -212,8 +212,8 @@ export function ConversationTurn({
             <div className={`agent-block${block.item.id === firstAgentMessageId ? "" : " agent-block-continuation"}`}>
               {block.item.id === firstAgentMessageId && <div className="agent-accent" aria-hidden="true" />}
               <div className="agent-content">
-                <MarkdownContent className={block.item.text ? "agent-response" : "agent-response pending"} onOpenPath={onOpenPath} onOpenError={onOpenError}>
-                  {block.item.text || "正在等待模型响应…"}
+                <MarkdownContent className="agent-response" onOpenPath={onOpenPath} onOpenError={onOpenError}>
+                  {block.item.text}
                 </MarkdownContent>
                 {block.item.id === lastAgentMessageId && answerTiming && (
                   <div className="message-timing agent-message-timing">{answerTiming}</div>
@@ -233,26 +233,21 @@ export function ConversationTurn({
           )}
         </Fragment>
       ))}
-      {active && activityItems.length === 0 && (
-        <TurnProgressIndicator
-          turn={turn}
+      {active && answerItems.length === 0 && activityItems.length === 0 && (
+        <TurnActivityGroup
+          items={[]}
+          active
+          turnActive
+          startedAt={turn.startedAt}
+          durationMs={durationMs}
+          retryingMessage={retryingMessage}
+          showHeader
+          turnId={turn.id}
           activeItemTurnIds={activeItemTurnIds}
           mcpProgressByItemId={mcpProgressByItemId}
+          onOpenPath={onOpenPath}
+          onOpenError={onOpenError}
         />
-      )}
-      {active && answerItems.length === 0 && activityItems.length === 0 && (
-        <div className="agent-block">
-          <div className="agent-accent" aria-hidden="true" />
-          <div className="agent-content">
-            <p className="agent-response pending">
-              {hasActiveProcess ? "正在处理任务…" : "正在等待模型响应…"}
-            </p>
-            {answerTiming && (
-              <div className="message-timing agent-message-timing">{answerTiming}</div>
-            )}
-            {retryingMessage && <div className="turn-retry-status standalone">{retryingMessage}</div>}
-          </div>
-        </div>
       )}
       {fileChangeItems.length > 0 && <TurnFileChanges items={fileChangeItems} />}
       {turn.error && <div className="turn-error">{turn.error.message}</div>}
