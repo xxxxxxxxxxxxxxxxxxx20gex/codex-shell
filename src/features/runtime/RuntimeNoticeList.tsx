@@ -9,11 +9,11 @@ interface Props {
 export function RuntimeNoticeList({ store }: Props) {
   const notices = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
   return (
-    <div className="inspector-card runtime-notice-list">
-      <div className="card-title">
+    <section className="preferences-runtime-card runtime-notice-list">
+      <header>
         <span>运行提示</span>
         <button type="button" disabled={notices.length === 0} onClick={store.clear}>清空</button>
-      </div>
+      </header>
       {notices.length === 0 ? <p>当前没有 app-server 警告。</p> : notices.slice().reverse().map((notice) => (
         <article key={notice.id} data-kind={notice.kind}>
           <div><strong>{notice.title}</strong><button type="button" onClick={() => store.dismiss(notice.id)} aria-label="忽略"><X aria-hidden="true" /></button></div>
@@ -21,6 +21,6 @@ export function RuntimeNoticeList({ store }: Props) {
           {notice.path && <code>{notice.path}</code>}
         </article>
       ))}
-    </div>
+    </section>
   );
 }

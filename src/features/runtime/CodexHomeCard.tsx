@@ -42,11 +42,11 @@ export function CodexHomeCard({ path, disabled, onRestart }: Props) {
   }
 
   return (
-    <div className="inspector-card codex-home-card">
-      <div className="card-title">
+    <section className="preferences-runtime-card codex-home-card">
+      <header>
         <span>CODEX_HOME</span>
         <i>{path ? "isolated" : "waiting"}</i>
-      </div>
+      </header>
       <strong>{path || "等待 app-server 初始化"}</strong>
       <p>默认使用 ~/.codex-shell，与官方 ~/.codex 完全隔离。切换自定义目录不会移动或合并已有数据。</p>
       {error && <small className="codex-home-error">{error}</small>}
@@ -55,6 +55,6 @@ export function CodexHomeCard({ path, disabled, onRestart }: Props) {
         <button className="secondary-button" disabled={unavailable} onClick={() => void applyPath(null)}>恢复默认</button>
       </div>
       {disabled && <small className="codex-home-note">请等待所有对话执行完成后再切换目录。</small>}
-    </div>
+    </section>
   );
 }

@@ -237,21 +237,6 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .inspector-heading { display: flex; height: 48px; align-items: center; justify-content: space-between; padding: 0 12px; border-bottom: 1px solid var(--border-subtle); }
 .inspector-heading strong { font-size: var(--text-ui); font-weight: 600; }
 .inspector-heading span { color: var(--text-muted); font-size: var(--text-meta); }
-.inspector-card { margin: 14px 12px 0; padding: 12px; border: 1px solid var(--border-subtle); border-radius: var(--radius-control); background: transparent; }
-.card-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 11px; color: var(--text-muted); font-size: var(--text-meta); }
-.card-title button { border: 0; color: var(--accent-action); background: transparent; font-size: var(--text-meta); cursor: pointer; }
-.card-title i { color: var(--accent-warning); font-style: normal; }
-.inspector-card > strong { font: var(--text-label)/16px var(--font-mono); }
-.inspector-card > p { margin: 8px 0 0; color: var(--text-muted); font-size: var(--text-meta); line-height: 16px; }
-.codex-home-card > strong { display: block; overflow-wrap: anywhere; line-height: 1.65; }
-.codex-home-actions { display: flex; gap: 6px; margin-top: 11px; }
-.codex-home-actions button { min-height: 28px; padding: 4px 9px; font-size: var(--text-meta); }
-.codex-home-error, .codex-home-note { display: block; margin-top: 8px; font-size: var(--text-meta); line-height: 16px; }
-.codex-home-error { color: var(--red); }
-.codex-home-note { color: var(--text-muted); }
-.workspace-status-card > strong { display: block; overflow-wrap: anywhere; line-height: 1.65; }
-.status-card-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 11px; }
-.status-card-actions button { min-height: 28px; padding: 4px 9px; font-size: var(--text-meta); }
 
 .modal-backdrop { position: fixed; z-index: 40; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(5,5,4,.72); backdrop-filter: blur(8px); }
 .confirmation-backdrop { position: fixed; z-index: 30; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(5,5,4,.78); backdrop-filter: blur(9px); }
@@ -435,10 +420,6 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .context-heatbar:disabled .context-heatbar-tooltip em { color: var(--text-muted); }
 @keyframes context-heatbar-pulse { from { opacity: .48; } to { opacity: 1; } }
 .file-mention-menu { position: absolute; z-index: 9; right: 10px; bottom: 45px; left: 10px; max-height: 250px; overflow-y: auto; border: 1px solid var(--border-default); border-radius: var(--radius-panel); background: var(--surface-panel); box-shadow: var(--shadow-popover); }.file-mention-menu header { display: flex; justify-content: space-between; padding: 8px 10px; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); font-size: var(--text-meta); }.file-mention-menu header small { color: var(--text-muted); }.file-mention-menu > p { margin: 0; padding: 12px 10px; color: var(--text-muted); font-size: var(--text-meta); }.file-mention-menu button { display: flex; width: 100%; flex-direction: column; gap: 3px; padding: 8px 10px; border: 0; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); text-align: left; background: transparent; cursor: pointer; }.file-mention-menu button:hover { background: var(--surface-selected); }.file-mention-menu button strong { font-size: var(--text-meta); }.file-mention-menu button small { overflow: hidden; color: var(--text-muted); font: var(--text-meta)/16px var(--font-mono); text-overflow: ellipsis; white-space: nowrap; }
-.inspector-tabs { display: grid; height: 48px; grid-template-columns: repeat(3, 1fr); align-items: end; gap: 0; padding: 0 8px; border-bottom: 1px solid var(--border-subtle); }
-.inspector-tabs button { position: relative; height: 40px; padding: 0 8px; border: 0; border-radius: 0; color: var(--text-muted); background: transparent; font-size: 12px; cursor: pointer; }
-.inspector-tabs button:hover, .inspector-tabs button.active { color: var(--text-primary); background: transparent; }
-.inspector-tabs button.active::after { position: absolute; right: 10px; bottom: 0; left: 10px; height: 2px; background: var(--accent-action); content: ""; }
 
 
 .composer-actions {

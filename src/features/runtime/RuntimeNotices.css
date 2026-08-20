@@ -10,4 +10,3 @@
 .runtime-notice-list article button { border: 0; color: var(--text-muted); background: transparent; cursor: pointer; }
 .runtime-notice-list article p, .runtime-notice-list article code { overflow-wrap: anywhere; color: var(--text-muted); font-size: var(--text-meta); line-height: 16px; }
 .runtime-notice-list article[data-kind="warning"] strong, .runtime-notice-list article[data-kind="security"] strong { color: var(--accent-danger); }
-.sandbox-status-card > button { margin-top: 10px; min-height: 28px; padding: 4px 9px; font-size: var(--text-meta); }

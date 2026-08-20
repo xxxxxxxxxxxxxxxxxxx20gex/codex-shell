@@ -1,10 +1,10 @@
-.runtime-log-panel { min-height: 0; overflow: auto; padding: 12px; }
-.runtime-log-panel > header { position: sticky; z-index: 1; top: -12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 0 9px; background: var(--panel); }
+.runtime-log-panel { min-height: 0; }
+.runtime-log-panel > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .runtime-log-panel > header div { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
 .runtime-log-panel > header strong { font-size: var(--text-title); }
 .runtime-log-panel > header small { color: var(--text-muted); font-size: var(--text-meta); }
 .runtime-log-panel > header button { min-height: var(--control-height-compact); padding: 0 8px; font-size: var(--text-label); }
-.runtime-log-panel > p { margin: 0 0 10px; color: var(--accent-warning); font-size: var(--text-label); line-height: 1.55; }
+.runtime-log-panel > p { margin: 0 0 10px; color: var(--accent-warning); font-size: var(--text-label); line-height: 20px; }
 .runtime-log-empty { padding: 18px 10px; border: 1px dashed var(--border-default); border-radius: var(--radius-panel); color: var(--text-muted); font-size: var(--text-label); line-height: 1.7; }
 .runtime-log-entries { display: grid; gap: 6px; }
 .runtime-log-entries article { padding: 7px 8px; border-left: 2px solid var(--border-strong); border-radius: 0 var(--radius-control) var(--radius-control) 0; background: var(--surface-sidebar); }

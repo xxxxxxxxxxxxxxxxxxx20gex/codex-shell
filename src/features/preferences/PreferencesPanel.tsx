@@ -1,15 +1,29 @@
 import { useEffect, useState } from "react";
-import { Palette, Save, UserRound, X } from "lucide-react";
+import { Activity, Palette, Save, ServerCog, UserRound, X } from "lucide-react";
+import type { WindowsSandboxReadiness } from "../../generated/app-server/v2/WindowsSandboxReadiness";
+import type { WindowsSandboxSetupMode } from "../../generated/app-server/v2/WindowsSandboxSetupMode";
 import type { PersonalizationSettings, ThemePreference } from "../models/types";
+import type { RuntimeLogStore } from "../runtime/runtimeLogStore";
+import type { RuntimeNoticeStore } from "../runtime/runtimeNoticeStore";
+import { DiagnosticsPreferences } from "./DiagnosticsPreferences";
+import { RuntimePreferences } from "./RuntimePreferences";
 import "./PreferencesPanel.css";
 
 interface Props {
   settings: PersonalizationSettings;
+  initialSection?: PreferencesSection;
+  codexHome: string;
+  codexHomeDisabled: boolean;
+  windowsSandboxReadiness: WindowsSandboxReadiness | null;
+  noticeStore: RuntimeNoticeStore;
+  logStore: RuntimeLogStore;
+  onSetupWindowsSandbox: (mode: WindowsSandboxSetupMode) => Promise<boolean>;
+  onRestart: () => Promise<void>;
   onClose: () => void;
   onSave: (settings: PersonalizationSettings) => Promise<void>;
 }
 
-type Section = "personalization" | "appearance";
+export type PreferencesSection = "personalization" | "appearance" | "runtime" | "diagnostics";
 
 const themeOptions: Array<{ value: ThemePreference; label: string; description: string }> = [
   { value: "dark", label: "深色", description: "适合长时间工作" },
@@ -17,8 +31,20 @@ const themeOptions: Array<{ value: ThemePreference; label: string; description: 
   { value: "system", label: "跟随系统", description: "使用 Windows 外观设置" },
 ];
 
-export function PreferencesPanel({ settings, onClose, onSave }: Props) {
-  const [section, setSection] = useState<Section>("personalization");
+export function PreferencesPanel({
+  settings,
+  initialSection = "personalization",
+  codexHome,
+  codexHomeDisabled,
+  windowsSandboxReadiness,
+  noticeStore,
+  logStore,
+  onSetupWindowsSandbox,
+  onRestart,
+  onClose,
+  onSave,
+}: Props) {
+  const [section, setSection] = useState<PreferencesSection>(initialSection);
   const [draft, setDraft] = useState(settings);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState("");
@@ -55,16 +81,19 @@ export function PreferencesPanel({ settings, onClose, onSave }: Props) {
           <nav className="preferences-nav" aria-label="设置分类">
             <button className={section === "personalization" ? "active" : ""} onClick={() => setSection("personalization")}><UserRound aria-hidden="true" /><span>个性化提示词</span></button>
             <button className={section === "appearance" ? "active" : ""} onClick={() => setSection("appearance")}><Palette aria-hidden="true" /><span>外观</span></button>
+            <button className={section === "runtime" ? "active" : ""} onClick={() => setSection("runtime")}><ServerCog aria-hidden="true" /><span>运行环境</span></button>
+            <button className={section === "diagnostics" ? "active" : ""} onClick={() => setSection("diagnostics")}><Activity aria-hidden="true" /><span>诊断</span></button>
           </nav>
           <div className="preferences-content">
-            {section === "personalization" ? (
+            {section === "personalization" && (
               <div className="preferences-section">
                 <h3>个性化提示词</h3>
                 <p>告诉 Codex 你希望它如何协作。保存后只会在新建对话时作为原生 developer instructions 发送。</p>
                 <label className="preferences-field"><span>自定义提示词</span><textarea value={draft.customInstructions} onChange={(event) => setDraft({ ...draft, customInstructions: event.target.value })} placeholder="例如：回答时优先给出结论，代码改动前先说明风险。" rows={8} /></label>
                 <small className="preferences-hint">不会改写历史 Session，也不会注入到已经开始的对话中。</small>
               </div>
-            ) : (
+            )}
+            {section === "appearance" && (
               <div className="preferences-section">
                 <h3>外观</h3>
                 <p>选择 Codex Shell 的界面主题。</p>
@@ -73,6 +102,8 @@ export function PreferencesPanel({ settings, onClose, onSave }: Props) {
                 </div>
               </div>
             )}
+            {section === "runtime" && <RuntimePreferences codexHome={codexHome} codexHomeDisabled={codexHomeDisabled} windowsSandboxReadiness={windowsSandboxReadiness} onSetupWindowsSandbox={onSetupWindowsSandbox} onRestart={onRestart} />}
+            {section === "diagnostics" && <DiagnosticsPreferences noticeStore={noticeStore} logStore={logStore} />}
             {status && <div className="form-status">{status}</div>}
           </div>
         </div>

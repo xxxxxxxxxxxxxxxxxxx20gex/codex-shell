@@ -27,9 +27,7 @@ import { ModelSettingsPanel } from "./features/models/ModelSettingsPanel";
 import { ModelQuickPicker } from "./features/models/ModelQuickPicker";
 import { modelIdDisplayName } from "./features/models/modelPresentation";
 import { PreferencesPanel } from "./features/preferences/PreferencesPanel";
-import { RuntimeLogPanel } from "./features/runtime/RuntimeLogPanel";
 import { RuntimeNoticeBanner } from "./features/runtime/RuntimeNoticeBanner";
-import { StatusInspector } from "./features/runtime/StatusInspector";
 import { queuedTurnLabel, useAppController } from "./features/app/useAppController";
 import { ServerInteractionDialog } from "./features/interactions/ServerInteractionDialog";
 import { ConversationTimeline } from "./features/threads/ConversationTimeline";
@@ -63,6 +61,8 @@ function App() {
     setSettingsOpen,
     preferencesOpen,
     setPreferencesOpen,
+    preferencesSection,
+    openPreferences,
     modelPickerOpen,
     setModelPickerOpen,
     settings,
@@ -77,7 +77,6 @@ function App() {
     permissionMode,
     approvalReviewer,
     pendingProjectPath,
-    defaultProjectDirectory,
     workspaceExplorerOpen,
     setWorkspaceExplorerOpen,
     workspaceExplorerInitialPath,
@@ -98,12 +97,8 @@ function App() {
     setComposerIntent,
     setSlashMenuDismissed,
     slashSelectedIndex,
-    inspectorTab,
-    setInspectorTab,
     composerRef,
     currentProjectPath,
-    usingDefaultProjectDirectory,
-    projectSource,
     mentionQuery,
     slashQuery,
     slashMenuVisible,
@@ -173,7 +168,7 @@ function App() {
             onShowArchived={session.showArchivedHistory}
             onLoadMore={() => void session.loadMoreHistory()}
           />
-          <button className="sidebar-footer" onClick={() => setPreferencesOpen(true)} aria-label="打开设置" title="设置">
+          <button className="sidebar-footer" onClick={() => openPreferences()} aria-label="打开设置" title="设置">
             <Settings aria-hidden="true" />
             <span><strong>{providerDisplayName(settings.baseUrl)}</strong></span>
           </button>
@@ -229,10 +224,7 @@ function App() {
           <div className="composer-wrap">
             <RuntimeNoticeBanner
               store={session.runtimeNoticeStore}
-              onShowStatus={() => {
-                setInspectorOpen(true);
-                setInspectorTab("status");
-              }}
+              onShowStatus={() => openPreferences("diagnostics")}
             />
             {(session.error || uiError) && <div className="composer-error">{session.error || uiError}</div>}
             {commandNotice && <div className="composer-notice">{commandNotice}</div>}
@@ -337,25 +329,29 @@ function App() {
         </div>
 
         <aside className="inspector panel">
-          <div className="inspector-heading inspector-tabs">
-            <button className={inspectorTab === "changes" ? "active" : ""} onClick={() => setInspectorTab("changes")}>变更</button>
-            <button className={inspectorTab === "status" ? "active" : ""} onClick={() => setInspectorTab("status")}>状态</button>
-            <button className={inspectorTab === "logs" ? "active" : ""} onClick={() => setInspectorTab("logs")}>日志</button>
-          </div>
-          {inspectorTab === "changes" ? <DiffInspector diff={currentDiff} onOpenFile={currentProjectPath ? (path) => {
+          <div className="inspector-heading"><strong>文件变更</strong></div>
+          <DiffInspector diff={currentDiff} onOpenFile={currentProjectPath ? (path) => {
             const filePath = resolveProjectRelativePath(currentProjectPath, path);
             if (filePath) openWorkspaceExplorer(filePath);
             else setUiError("Diff 文件不在当前项目内，无法预览");
-          } : undefined} /> : inspectorTab === "logs" ? (
-            <RuntimeLogPanel store={session.runtimeLogStore} />
-          ) : (
-            <StatusInspector turnCount={session.turns.length} threadId={session.thread?.id ?? null} projectPath={currentProjectPath} projectSource={projectSource} usingDefaultProjectDirectory={usingDefaultProjectDirectory} canUseDefaultProjectDirectory={Boolean(defaultProjectDirectory && !session.thread)} codexHome={session.codexHome} codexHomeDisabled={session.runningThreadCount > 0 || session.submitting} noticeStore={session.runtimeNoticeStore} windowsSandboxReadiness={session.windowsSandboxReadiness} onBrowseProject={() => openWorkspaceExplorer()} onUseDefaultProjectDirectory={() => changeProject(null)} onSetupWindowsSandbox={session.setupWindowsSandbox} onRestart={session.restart} />
-          )}
+          } : undefined} />
         </aside>
       </section>
 
       {settingsOpen && <ModelSettingsPanel settings={settings} loadModels={session.listModels} loadProviderCapabilities={session.readModelProviderCapabilities} onClose={() => setSettingsOpen(false)} onSave={(next, requiresRestart = false) => { setSettings(next); setModelDisplayName(null); setSettingsOpen(false); if (requiresRestart) void session.restart(); }} />}
-      {preferencesOpen && <PreferencesPanel settings={personalization} onClose={() => setPreferencesOpen(false)} onSave={async (next) => { await savePersonalization(next); setPreferencesOpen(false); }} />}
+      {preferencesOpen && <PreferencesPanel
+        settings={personalization}
+        initialSection={preferencesSection}
+        codexHome={session.codexHome}
+        codexHomeDisabled={session.runningThreadCount > 0 || session.submitting}
+        windowsSandboxReadiness={session.windowsSandboxReadiness}
+        noticeStore={session.runtimeNoticeStore}
+        logStore={session.runtimeLogStore}
+        onSetupWindowsSandbox={session.setupWindowsSandbox}
+        onRestart={session.restart}
+        onClose={() => setPreferencesOpen(false)}
+        onSave={async (next) => { await savePersonalization(next); setPreferencesOpen(false); }}
+      />}
       <ServerInteractionDialog store={session.interactionStore} />
       {workspaceExplorerOpen && currentProjectPath && <WorkspaceExplorer rootPath={currentProjectPath} initialFilePath={workspaceExplorerInitialPath} onClose={() => setWorkspaceExplorerOpen(false)} readDirectory={session.readWorkspaceDirectory} readFile={session.readWorkspaceFile} watchPath={session.watchWorkspacePath} />}
     </main>

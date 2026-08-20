@@ -29,7 +29,7 @@ function logLevel(line: string) {
 export function RuntimeLogPanel({ store }: Props) {
   const entries = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
   return (
-    <section className="runtime-log-panel" aria-label="app-server 实时日志">
+    <section className="preferences-runtime-card runtime-log-panel" aria-label="app-server 实时日志">
       <header>
         <div><strong>app-server stderr</strong><small>最近 {entries.length}/200 条</small></div>
         <button className="secondary-button" type="button" disabled={entries.length === 0} onClick={store.clear}>清空</button>

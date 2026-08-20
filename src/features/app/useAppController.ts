@@ -24,6 +24,7 @@ import {
 import { useComposerDropPaths } from "../composer/useComposerDropPaths";
 import { useResizablePanels } from "../layout/useResizablePanels";
 import type { ModelSettings, PersonalizationSettings } from "../models/types";
+import type { PreferencesSection } from "../preferences/PreferencesPanel";
 import {
   sendOrQueue,
   type FileMention,
@@ -34,7 +35,6 @@ import {
 import {
   activeFileMentionQuery,
   type DefaultProjectDirectory,
-  isDefaultProjectPath,
   replaceActiveFileMention,
   resolveFileSearchPath,
 } from "../workspaces/workspaceState";
@@ -63,6 +63,7 @@ export function queuedTurnLabel(turn: { text: string; mentions: FileMention[]; i
 export function useAppController() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [preferencesSection, setPreferencesSection] = useState<PreferencesSection>("personalization");
   const [modelPickerOpen, setModelPickerOpen] = useState(false);
   const [settings, setSettings] = useState(initialSettings);
   const [personalization, setPersonalization] = useState(initialPersonalization);
@@ -85,7 +86,6 @@ export function useAppController() {
   const [composerIntent, setComposerIntent] = useState<ComposerIntent>("default");
   const [slashMenuDismissed, setSlashMenuDismissed] = useState(false);
   const [slashSelectedIndex, setSlashSelectedIndex] = useState(0);
-  const [inspectorTab, setInspectorTab] = useState<"changes" | "status" | "logs">("changes");
   const mentionRequestRef = useRef(0);
   const composerRef = useRef<HTMLDivElement>(null);
   const panels = useResizablePanels();
@@ -93,14 +93,6 @@ export function useAppController() {
   const session = useAgentSession(settings, permissionMode, approvalReviewer, newThreadCwd, personalization);
   const searchFiles = session.searchFiles;
   const currentProjectPath = session.thread?.cwd ? String(session.thread.cwd) : newThreadCwd;
-  const usingDefaultProjectDirectory = Boolean(
-    currentProjectPath
-    && defaultProjectDirectory
-    && isDefaultProjectPath(currentProjectPath, defaultProjectDirectory.rootPath),
-  );
-  const projectSource: "waiting" | "default" | "thread" | "selected" = currentProjectPath
-    ? (usingDefaultProjectDirectory ? "default" : session.thread ? "thread" : "selected")
-    : "waiting";
   const mentionQuery = activeFileMentionQuery(draft);
   const typedSlashQuery = activeSlashCommandQuery(draft);
   const slashQuery = slashMenuDismissed ? null : typedSlashQuery;
@@ -443,6 +435,11 @@ export function useAppController() {
       : [...current, skill]);
   }
 
+  function openPreferences(section: PreferencesSection = "personalization") {
+    setPreferencesSection(section);
+    setPreferencesOpen(true);
+  }
+
   return {
     ...panels,
     session,
@@ -450,6 +447,8 @@ export function useAppController() {
     setSettingsOpen,
     preferencesOpen,
     setPreferencesOpen,
+    preferencesSection,
+    openPreferences,
     modelPickerOpen,
     setModelPickerOpen,
     settings,
@@ -464,7 +463,6 @@ export function useAppController() {
     permissionMode,
     approvalReviewer,
     pendingProjectPath,
-    defaultProjectDirectory,
     workspaceExplorerOpen,
     setWorkspaceExplorerOpen,
     workspaceExplorerInitialPath,
@@ -485,12 +483,8 @@ export function useAppController() {
     setComposerIntent,
     setSlashMenuDismissed,
     slashSelectedIndex,
-    inspectorTab,
-    setInspectorTab,
     composerRef,
     currentProjectPath,
-    usingDefaultProjectDirectory,
-    projectSource,
     mentionQuery,
     slashQuery,
     slashMenuVisible,
