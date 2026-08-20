@@ -246,6 +246,7 @@ Radii:
 
 - No meaningful text below `11px`.
 - No component-local hardcoded color when a semantic token exists.
+- Transitional aliases may cover only non-color migration roles; theme-sensitive colors consume canonical semantic Tokens directly.
 - No standard action represented by Unicode or emoji.
 - No nested cards or double borders.
 - Button, icon, and row geometry is stable across hover, loading, and selection.

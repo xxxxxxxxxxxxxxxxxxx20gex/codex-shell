@@ -9,7 +9,7 @@
 
 ### UI 设计基线
 
-- 生产界面已完成 Quiet Graphite Workbench 设计系统收敛：画布、侧栏、面板、边框、文字、状态色和上下文热力刻度均由 `src/styles/tokens.css` 统一拥有；有意义文本从 11px/16px 起步，标准图标统一为 Lucide 16px/1.75px，组件圆角使用 4/6/8px 角色。
+- 生产界面已完成 Quiet Graphite Workbench 设计系统收敛：画布、侧栏、面板、边框、文字、状态色和上下文热力刻度均由 `src/styles/tokens.css` 统一拥有；主题敏感颜色直接消费 canonical Token，不再通过会冻结根级深色计算值的过渡别名；有意义文本从 11px/16px 起步，标准图标统一为 Lucide 16px/1.75px，组件圆角使用 4/6/8px 角色。
 - 主会话使用固定 48px 标题栏；时间线最大可读宽度 820px；Composer 最大宽度 860px 并居中；侧栏默认 248px，检查器默认 288px 且默认收起。1180px 以下检查器以 overlay 打开，900px 以下侧栏也以独立 overlay 打开，不再通过 `display:none` 删除功能入口。
 - Windows 使用 32px 产品自绘无边框标题栏，保留窗口拖动、双击切换最大化、最小化、最大化/还原和关闭；窗口 capability 限制为上述必要动作。
 - 产品标题只在窗口标题栏出现一次；侧栏顶部采用无边框图标+文字操作，当前提供新建对话，插件入口作为禁用的扩展预留。
@@ -64,6 +64,7 @@
 
 ## 验证基线
 
+- 2026-08-20：浅色与跟随系统主题的颜色别名迁移后，`pnpm test:quality` 通过，覆盖 52 个 Vitest 文件/238 项测试、14 项 Rust 测试、TypeScript、ESLint、Vite production build、Knip、Cargo check、严格 Clippy 和 diff 检查；浏览器运行时确认浅色选中背景、正文、边框和强调色分别解析为 `#dce4d8`、`#1c211d`、`#d7ddd7` 和 `#628b19`，深色 Token 保持原值，1440×900、1280×780、1024×720 和 900×700 无页面级横向溢出。
 - 2026-08-20：右栏收敛为单一文件变更审查区，环境与诊断能力迁入设置；当前基线 `pnpm test:quality` 通过，覆盖 52 个 Vitest 文件/238 项测试、14 项 Rust 测试、TypeScript、ESLint、Vite production build、Knip、Cargo check、严格 Clippy 和 diff 检查。
 - 2026-08-18：代码健康审查及可重试错误生命周期修复后完整 `pnpm test:quality` 通过，覆盖 ESLint 零 warning、53 个 Vitest 文件、229 项测试、TypeScript、Vite production build、Knip、`git diff --check`、`cargo check`、13 项 Rust 单元测试和严格 Clippy；无边框桌面 debug 构建成功。`error.willRetry=true` 只在匹配 Turn 重试期间展示，完成后自动清除且不跨 Session；同时修复了 app-server 监听器初始化失败后的状态恢复和旧 disposer 误删新 handler 的风险。Headless Edge 最近一次已验证 1440×900、1280×780、1024×720、900×700 和 899×700 的布局边界。
 - 静态审查：Knip 未发现无效文件、导出或依赖；归档/删除清理流程的 TypeScript 重复已合并。jscpd 仅保留主题系统中深色与浅色语义变量的 1 处 CSS 重复（21 行，整体重复行占 0.21%），属于媒体查询下的必要主题覆盖。

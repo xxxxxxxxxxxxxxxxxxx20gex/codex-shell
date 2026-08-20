@@ -54,27 +54,8 @@
   --shadow-popover: 0 14px 32px rgb(0 0 0 / 32%);
   --motion-fast: 120ms ease;
 
-  /* Transitional aliases for component styles that are migrated incrementally. */
-  --ui-bg: var(--surface-canvas);
-  --ui-panel: var(--surface-sidebar);
-  --ui-panel-raised: var(--surface-panel);
-  --ui-panel-overlay: var(--surface-raised);
-  --ui-surface-control: var(--surface-panel);
-  --ui-surface-active: var(--surface-selected);
-  --ui-surface-hover: var(--surface-raised);
-  --ui-surface-selected: var(--surface-selected);
-  --ui-line: var(--border-subtle);
-  --ui-line-strong: var(--border-default);
-  --ui-line-subtle: var(--border-subtle);
-  --ui-text-primary: var(--text-primary);
-  --ui-text-secondary: var(--text-secondary);
-  --ui-text-muted: var(--text-muted);
-  --ui-text-quiet: var(--text-muted);
-  --ui-text-control: var(--text-secondary);
-  --ui-text-disabled: var(--text-disabled);
-  --ui-accent: var(--accent-action);
+  /* Transitional aliases are limited to non-color migration roles. */
   --ui-accent-ink: #151812;
-  --ui-danger: var(--accent-danger);
   --conversation-font-size: var(--font-size-content);
   --conversation-font-size-secondary: var(--font-size-ui);
   --conversation-font-size-small: var(--font-size-control);

@@ -9,7 +9,7 @@
 .runtime-log-entries { display: grid; gap: 6px; }
 .runtime-log-entries article { padding: 7px 8px; border-left: 2px solid var(--border-strong); border-radius: 0 var(--radius-control) var(--radius-control) 0; background: var(--surface-sidebar); }
 .runtime-log-entries article[data-level="warning"] { border-left-color: var(--accent-warning); }
-.runtime-log-entries article[data-level="error"] { border-left-color: var(--red); }
+.runtime-log-entries article[data-level="error"] { border-left-color: var(--accent-danger); }
 .runtime-log-entries article[data-level="debug"], .runtime-log-entries article[data-level="trace"] { opacity: .72; }
 .runtime-log-entries time { display: block; margin-bottom: 4px; color: var(--text-muted); font: var(--text-meta) "Cascadia Code", Consolas, monospace; }
 .runtime-log-entries pre { overflow-wrap: anywhere; margin: 0; color: var(--text-secondary); font: var(--text-label)/1.55 "Cascadia Code", Consolas, monospace; white-space: pre-wrap; }
