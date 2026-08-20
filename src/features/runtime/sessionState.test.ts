@@ -553,4 +553,138 @@ describe("agentSessionReducer", () => {
     expect(unchanged).toBe(loaded);
     expect(active.thread?.status).toEqual({ type: "active", activeFlags: [] });
   });
+
+  it("updates authoritative settings and goals only for the loaded thread", () => {
+    const loaded = agentSessionReducer(initialAgentSessionState, {
+      type: "loadThread",
+      thread: thread(),
+    });
+    const threadSettings = {
+      cwd: "C:\\work",
+      approvalPolicy: "never",
+      approvalsReviewer: "user",
+      sandboxPolicy: { type: "dangerFullAccess" },
+      activePermissionProfile: null,
+      model: "gpt-test",
+      modelProvider: "openai",
+      serviceTier: null,
+      effort: null,
+      summary: null,
+      collaborationMode: {
+        mode: "default",
+        settings: { model: "gpt-test", reasoning_effort: null, developer_instructions: null },
+      },
+      personality: null,
+    } as const;
+    const unchanged = agentSessionReducer(loaded, {
+      type: "threadSettingsUpdated",
+      notification: { threadId: "thread-other", threadSettings },
+    });
+    const withSettings = agentSessionReducer(unchanged, {
+      type: "threadSettingsUpdated",
+      notification: { threadId: "thread-1", threadSettings },
+    });
+    const goal = {
+      threadId: "thread-1",
+      objective: "完成 P1",
+      status: "active",
+      tokenBudget: null,
+      tokensUsed: 0,
+      timeUsedSeconds: 0,
+      createdAt: 1,
+      updatedAt: 1,
+    } as const;
+    const withGoal = agentSessionReducer(withSettings, {
+      type: "threadGoalUpdated",
+      notification: { threadId: "thread-1", goal },
+    });
+    const cleared = agentSessionReducer(withGoal, { type: "threadGoalCleared", threadId: "thread-1" });
+
+    expect(unchanged).toBe(loaded);
+    expect(withSettings.threadSettings).toEqual(threadSettings);
+    expect(withGoal.threadGoal).toEqual(goal);
+    expect(cleared.threadGoal).toBeNull();
+  });
+
+  it("merges auto-review lifecycle and never stores terminal stdin", () => {
+    const loaded = agentSessionReducer(initialAgentSessionState, {
+      type: "loadThread",
+      thread: thread([turn("turn-1")]),
+    });
+    const review = {
+      status: "inProgress" as const,
+      riskLevel: "medium" as const,
+      userAuthorization: null,
+      rationale: null,
+    };
+    const action = {
+      type: "command" as const,
+      source: "shell" as const,
+      command: "pnpm test",
+      cwd: "C:\\work",
+    };
+    const started = agentSessionReducer(loaded, {
+      type: "autoApprovalReviewStarted",
+      notification: {
+        threadId: "thread-1",
+        turnId: "turn-1",
+        startedAtMs: 100,
+        reviewId: "review-1",
+        targetItemId: "command-1",
+        review,
+        action,
+      },
+    });
+    const repeatedStart = agentSessionReducer(started, {
+      type: "autoApprovalReviewStarted",
+      notification: {
+        threadId: "thread-1",
+        turnId: "turn-1",
+        startedAtMs: 100,
+        reviewId: "review-1",
+        targetItemId: "command-1",
+        review,
+        action,
+      },
+    });
+    const completionNotification = {
+      threadId: "thread-1",
+      turnId: "turn-1",
+      startedAtMs: 100,
+      completedAtMs: 200,
+      reviewId: "review-1",
+      targetItemId: "command-1",
+      decisionSource: "agent" as const,
+      review: { ...review, status: "approved" as const },
+      action,
+    };
+    const completed = agentSessionReducer(repeatedStart, {
+      type: "autoApprovalReviewCompleted",
+      notification: completionNotification,
+    });
+    const terminal = agentSessionReducer(completed, {
+      type: "terminalInteraction",
+      notification: {
+        threadId: "thread-1",
+        turnId: "turn-1",
+        itemId: "command-1",
+        processId: "42",
+        stdin: "super-secret\n",
+      },
+    });
+
+    expect(terminal.processEventsByTurnId["turn-1"]).toMatchObject([
+      { kind: "autoApprovalReview", reviewId: "review-1", status: "completed", reviewStatus: "approved" },
+      { kind: "terminalInteraction", itemId: "command-1", processId: "42", stdinLength: 13 },
+    ]);
+    const completionWithoutStart = agentSessionReducer(loaded, {
+      type: "autoApprovalReviewCompleted",
+      notification: completionNotification,
+    });
+    expect(repeatedStart.processEventsByTurnId["turn-1"]).toHaveLength(1);
+    expect(completionWithoutStart.processEventsByTurnId["turn-1"]).toMatchObject([
+      { kind: "autoApprovalReview", reviewId: "review-1", status: "completed" },
+    ]);
+    expect(JSON.stringify(terminal.processEventsByTurnId)).not.toContain("super-secret");
+  });
 });

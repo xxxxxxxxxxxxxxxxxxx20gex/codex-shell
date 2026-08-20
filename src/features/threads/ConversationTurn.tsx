@@ -12,6 +12,7 @@ import { writeClipboardText } from "./clipboard";
 import { MarkdownContent } from "./MarkdownContent";
 import { AttachmentGallery } from "../attachments/AttachmentGallery";
 import { userMessagePresentation } from "../runtime/userMessagePresentation";
+import type { ThreadProcessEvent } from "../runtime/sessionState";
 
 interface Props {
   turn: Turn;
@@ -22,6 +23,7 @@ interface Props {
   plan?: TurnPlanUpdatedNotification;
   activeItemTurnIds: Record<string, string>;
   mcpProgressByItemId: Record<string, McpToolCallProgressNotification>;
+  processEvents?: ThreadProcessEvent[];
   readFile?: (path: string) => Promise<string>;
   onOpenPath?: (path: string) => void | Promise<void>;
   onOpenError?: (message: string) => void;
@@ -96,6 +98,7 @@ export function ConversationTurn({
   plan,
   activeItemTurnIds,
   mcpProgressByItemId,
+  processEvents = [],
   readFile,
   onOpenPath,
   onOpenError,
@@ -186,6 +189,7 @@ export function ConversationTurn({
                         turnId={turn.id}
                         activeItemTurnIds={activeItemTurnIds}
                         mcpProgressByItemId={mcpProgressByItemId}
+                        processEvents={activityBlock === activityBlocks[0] ? processEvents : []}
                         onOpenPath={onOpenPath}
                         onOpenError={onOpenError}
                       />
@@ -204,6 +208,7 @@ export function ConversationTurn({
                 turnId={turn.id}
                 activeItemTurnIds={activeItemTurnIds}
                 mcpProgressByItemId={mcpProgressByItemId}
+                processEvents={blockIndex === firstActivityBlockIndex ? processEvents : []}
                 onOpenPath={onOpenPath}
                 onOpenError={onOpenError}
               />
@@ -245,6 +250,7 @@ export function ConversationTurn({
           turnId={turn.id}
           activeItemTurnIds={activeItemTurnIds}
           mcpProgressByItemId={mcpProgressByItemId}
+          processEvents={processEvents}
           onOpenPath={onOpenPath}
           onOpenError={onOpenError}
         />

@@ -341,6 +341,9 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .turn-activity-list { padding: 12px 0 3px; }
 .turn-commentary { margin: 0 8px 12px 0; color: var(--text-primary); font-size: var(--conversation-font-size-secondary); line-height: 20px; overflow-wrap: anywhere; }
 .turn-native-progress { margin: 8px 0 2px; color: var(--text-muted); font-size: var(--conversation-font-size-small); }
+.turn-process-events { display: grid; gap: 5px; margin: 6px 0 2px; }
+.turn-process-event { display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: var(--conversation-font-size-small); }
+.turn-process-event svg { width: 15px; height: 15px; flex: 0 0 auto; color: var(--accent-action); stroke-width: 1.75; }
 @keyframes activity-pulse { 50% { opacity: .5; } }
 @keyframes activity-breathe {
   0%, 100% { opacity: .3; }

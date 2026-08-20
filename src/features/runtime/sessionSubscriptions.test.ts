@@ -15,6 +15,9 @@ function handlers(overrides: Partial<Handlers> = {}): Handlers {
     onTurnCompleted: () => undefined,
     onError: () => undefined,
     onThreadName: () => undefined,
+    onThreadSettings: () => undefined,
+    onThreadGoalUpdated: () => undefined,
+    onThreadGoalCleared: () => undefined,
     onThreadStarted: () => undefined,
     onThreadStatus: () => undefined,
     onThreadArchived: () => undefined,
@@ -170,5 +173,62 @@ describe("session subscriptions", () => {
 
     dispose();
     store.dispose();
+  });
+
+  it("consumes authoritative thread state and active-thread process notifications", async () => {
+    const transport = new FakeTransport();
+    const client = new AppServerClient(transport);
+    const actions: AgentSessionAction[] = [];
+    const settingsThreads: string[] = [];
+    const goalEvents: string[] = [];
+    await client.start();
+    const dispose = subscribeToSessionEvents(client, handlers({
+      dispatch: (action) => actions.push(action),
+      onThreadSettings: (notification) => settingsThreads.push(notification.threadId),
+      onThreadGoalUpdated: (notification) => goalEvents.push(`updated:${notification.threadId}`),
+      onThreadGoalCleared: (notification) => goalEvents.push(`cleared:${notification.threadId}`),
+    }));
+
+    transport.emit({ method: "thread/settings/updated", params: { threadId: "thread-background", threadSettings: {} } });
+    transport.emit({ method: "thread/goal/updated", params: { threadId: "thread-active", turnId: null, goal: {} } });
+    transport.emit({ method: "thread/goal/cleared", params: { threadId: "thread-active" } });
+    const reviewStarted = {
+      threadId: "thread-active",
+      turnId: "turn-1",
+      reviewId: "review-1",
+      startedAtMs: 100,
+      targetItemId: "command-1",
+      review: {},
+      action: {},
+    };
+    const reviewCompleted = { ...reviewStarted, completedAtMs: 200, decisionSource: "agent" };
+    transport.emit({ method: "item/autoApprovalReview/started", params: reviewStarted });
+    transport.emit({ method: "item/autoApprovalReview/completed", params: reviewCompleted });
+    transport.emit({
+      method: "item/commandExecution/terminalInteraction",
+      params: { threadId: "thread-other", turnId: "turn-1", itemId: "command-1", processId: "42", stdin: "ignored" },
+    });
+    transport.emit({
+      method: "item/commandExecution/terminalInteraction",
+      params: { threadId: "thread-active", turnId: "turn-1", itemId: "command-1", processId: "42", stdin: "secret" },
+    });
+
+    expect(settingsThreads).toEqual(["thread-background"]);
+    expect(goalEvents).toEqual(["updated:thread-active", "cleared:thread-active"]);
+    expect(actions).toEqual([
+      { type: "autoApprovalReviewStarted", notification: reviewStarted },
+      { type: "autoApprovalReviewCompleted", notification: reviewCompleted },
+      {
+        type: "terminalInteraction",
+        notification: {
+          threadId: "thread-active",
+          turnId: "turn-1",
+          itemId: "command-1",
+          processId: "42",
+          stdin: "secret",
+        },
+      },
+    ]);
+    dispose();
   });
 });

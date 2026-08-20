@@ -3,7 +3,7 @@ import { Virtuoso, type ListRange, type VirtuosoHandle } from "react-virtuoso";
 import type { McpToolCallProgressNotification } from "../../generated/app-server/v2/McpToolCallProgressNotification";
 import type { Turn } from "../../generated/app-server/v2/Turn";
 import type { TurnPlanUpdatedNotification } from "../../generated/app-server/v2/TurnPlanUpdatedNotification";
-import { userMessageText } from "../runtime/sessionState";
+import { userMessageText, type ThreadProcessEvent } from "../runtime/sessionState";
 import { ConversationTurn } from "./ConversationTurn";
 import "./ConversationTimeline.css";
 
@@ -17,6 +17,7 @@ interface Props {
   plansByTurnId?: Record<string, TurnPlanUpdatedNotification>;
   activeItemTurnIds?: Record<string, string>;
   mcpProgressByItemId?: Record<string, McpToolCallProgressNotification>;
+  processEventsByTurnId?: Record<string, ThreadProcessEvent[]>;
   readFile?: (path: string) => Promise<string>;
   onOpenPath?: (path: string) => void | Promise<void>;
   onOpenError?: (message: string) => void;
@@ -30,6 +31,7 @@ interface UserTurnLink {
 const EMPTY_PLANS: Record<string, TurnPlanUpdatedNotification> = {};
 const EMPTY_ACTIVE_ITEMS: Record<string, string> = {};
 const EMPTY_MCP_PROGRESS: Record<string, McpToolCallProgressNotification> = {};
+const EMPTY_PROCESS_EVENTS: Record<string, ThreadProcessEvent[]> = {};
 
 function userTurnLinks(turns: Turn[]): UserTurnLink[] {
   return turns.flatMap((turn, index) => {
@@ -50,6 +52,7 @@ export function ConversationTimeline({
   plansByTurnId = EMPTY_PLANS,
   activeItemTurnIds = EMPTY_ACTIVE_ITEMS,
   mcpProgressByItemId = EMPTY_MCP_PROGRESS,
+  processEventsByTurnId = EMPTY_PROCESS_EVENTS,
   readFile,
   onOpenPath,
   onOpenError,
@@ -60,7 +63,7 @@ export function ConversationTimeline({
   const [atBottom, setAtBottom] = useState(true);
   const [hasNewActivity, setHasNewActivity] = useState(false);
   const [visibleStartIndex, setVisibleStartIndex] = useState(Math.max(0, turns.length - 1));
-  const previousActivityRef = useRef({ running, turns });
+  const previousActivityRef = useRef({ running, turns, processEventsByTurnId });
   const links = useMemo(() => userTurnLinks(turns), [turns]);
 
   const activeLinkIndex = useMemo(() => {
@@ -74,17 +77,21 @@ export function ConversationTimeline({
 
   useEffect(() => {
     const previous = previousActivityRef.current;
-    previousActivityRef.current = { running, turns };
-    if (!atBottom && (previous.running !== running || previous.turns !== turns)) {
+    previousActivityRef.current = { running, turns, processEventsByTurnId };
+    if (!atBottom && (
+      previous.running !== running
+      || previous.turns !== turns
+      || previous.processEventsByTurnId !== processEventsByTurnId
+    )) {
       setHasNewActivity(true);
     }
-  }, [atBottom, running, turns]);
+  }, [atBottom, processEventsByTurnId, running, turns]);
 
   useEffect(() => () => scrollerCleanupRef.current?.(), []);
 
   useLayoutEffect(() => {
     if (followLatestRef.current) virtuosoRef.current?.autoscrollToBottom();
-  }, [activeItemTurnIds, mcpProgressByItemId, plansByTurnId, running, turns]);
+  }, [activeItemTurnIds, mcpProgressByItemId, plansByTurnId, processEventsByTurnId, running, turns]);
 
   const handleAtBottomChange = useCallback((nextAtBottom: boolean) => {
     setAtBottom(nextAtBottom);
@@ -179,6 +186,7 @@ export function ConversationTimeline({
               plan={plansByTurnId[turn.id]}
               activeItemTurnIds={activeItemTurnIds}
               mcpProgressByItemId={mcpProgressByItemId}
+              processEvents={processEventsByTurnId[turn.id] ?? []}
               readFile={readFile}
               onOpenPath={onOpenPath}
               onOpenError={onOpenError}

@@ -45,7 +45,7 @@
 - 运行中显示“正在处理”和实时耗时，完成后冻结服务端或本地生命周期计算出的最终耗时；长 Session 使用可变高度虚拟列表。人在底部时流式回答和活动高度变化持续贴底，主动上滑后停止自动跟随，“返回最新”直接定位到最后消息底部。
 - 新 Thread 未选择项目时使用 `Documents/Codex-Shell/YYYY-MM-DD`，自定义项目只在首条消息前可选；已有 Thread 始终使用服务端返回的 `cwd`。
 - 支持文件/图片附件、剪贴板图片、拖拽、`@` 文件引用、项目浏览和预览、目录 watch、实时/历史 Diff、上下文 Token 热力条与原生压缩。
-- app-server stderr、Warning、Guardian、配置、弃用、模型和 Sandbox 通知均已消费；日志、通知、资源预览、用户输入和可见 Turn 均有硬上限。
+- app-server stderr、Warning、Guardian、配置、弃用、模型、Sandbox、Thread settings/Goal、自动审批审查和终端交互通知均已消费；自动审查只保留稳定安全摘要，命令 stdin 只保留字符数；日志、通知、资源预览、用户输入、过程事件和可见 Turn 均有硬上限。
 
 ## 当前风险
 
@@ -64,11 +64,5 @@
 
 ## 验证基线
 
-- 2026-08-20：Runtime 对齐到 `0.148.0-alpha.15` 并启用同版 Code Mode Host；真实低推理 `gpt-5.6-sol` 网关 Turn 产生两次 `commandExecution` 后正常完成。`pnpm test:quality` 覆盖 52 个 Vitest 文件/238 项测试、14 项 Rust 测试、TypeScript、ESLint、Vite production build、Knip、Cargo check、严格 Clippy 和 diff 检查并全部通过。
-
-- 2026-08-20：浅色与跟随系统主题的颜色别名迁移后，`pnpm test:quality` 通过，覆盖 52 个 Vitest 文件/238 项测试、14 项 Rust 测试、TypeScript、ESLint、Vite production build、Knip、Cargo check、严格 Clippy 和 diff 检查；浏览器运行时确认浅色选中背景、正文、边框和强调色分别解析为 `#dce4d8`、`#1c211d`、`#d7ddd7` 和 `#628b19`，深色 Token 保持原值，1440×900、1280×780、1024×720 和 900×700 无页面级横向溢出。
-- 2026-08-20：右栏收敛为单一文件变更审查区，环境与诊断能力迁入设置；当前基线 `pnpm test:quality` 通过，覆盖 52 个 Vitest 文件/238 项测试、14 项 Rust 测试、TypeScript、ESLint、Vite production build、Knip、Cargo check、严格 Clippy 和 diff 检查。
-- 2026-08-18：代码健康审查及可重试错误生命周期修复后完整 `pnpm test:quality` 通过，覆盖 ESLint 零 warning、53 个 Vitest 文件、229 项测试、TypeScript、Vite production build、Knip、`git diff --check`、`cargo check`、13 项 Rust 单元测试和严格 Clippy；无边框桌面 debug 构建成功。`error.willRetry=true` 只在匹配 Turn 重试期间展示，完成后自动清除且不跨 Session；同时修复了 app-server 监听器初始化失败后的状态恢复和旧 disposer 误删新 handler 的风险。Headless Edge 最近一次已验证 1440×900、1280×780、1024×720、900×700 和 899×700 的布局边界。
-- 静态审查：Knip 未发现无效文件、导出或依赖；归档/删除清理流程的 TypeScript 重复已合并。jscpd 仅保留主题系统中深色与浅色语义变量的 1 处 CSS 重复（21 行，整体重复行占 0.21%），属于媒体查询下的必要主题覆盖。
-- `pnpm audit --prod` 无已知漏洞；源码扫描未发现 PAT、API Key、用户密钥或开发机绝对路径。
-- 真实 app-server smoke 已覆盖多 Turn 恢复、并行 Thread、文件 RPC、Skills/MCP/Goal、Plan 和第三方兼容网关；这些证据对应固定 Runtime，不代表最新版 Codex 源码能力。
+- 2026-08-20：固定 Runtime `0.148.0-alpha.15` 的 P1 通知对齐后，`pnpm test:quality` 覆盖 53 个 Vitest 文件/242 项测试、14 项 Rust 测试、TypeScript、ESLint、Vite production build、Knip、Cargo check、严格 Clippy 和 diff 检查并全部通过。真实网关探针确认 low 至 ultra、三档 verbosity、四种 summary 和 Priority 参数继续正确进入 `/v1/responses`。
+- 静态审查当前未发现无效文件、导出或依赖；源码扫描未发现 PAT、API Key、用户密钥或开发机绝对路径。真实 app-server smoke 已覆盖多 Turn 恢复、并行 Thread、文件 RPC、Skills/MCP/Goal、Plan 和本机工具；这些证据只对应固定 Runtime，不代表 Codex 最新开发分支。

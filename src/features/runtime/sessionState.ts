@@ -8,10 +8,15 @@ import type { PlanDeltaNotification } from "../../generated/app-server/v2/PlanDe
 import type { ReasoningSummaryTextDeltaNotification } from "../../generated/app-server/v2/ReasoningSummaryTextDeltaNotification";
 import type { ReasoningTextDeltaNotification } from "../../generated/app-server/v2/ReasoningTextDeltaNotification";
 import type { Thread } from "../../generated/app-server/v2/Thread";
+import type { ThreadSettings } from "../../generated/app-server/v2/ThreadSettings";
+import type { ThreadGoal } from "../../generated/app-server/v2/ThreadGoal";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import type { ThreadStatus } from "../../generated/app-server/v2/ThreadStatus";
 import type { ThreadTokenUsage } from "../../generated/app-server/v2/ThreadTokenUsage";
 import type { ThreadTokenUsageUpdatedNotification } from "../../generated/app-server/v2/ThreadTokenUsageUpdatedNotification";
+import type { ItemGuardianApprovalReviewCompletedNotification } from "../../generated/app-server/v2/ItemGuardianApprovalReviewCompletedNotification";
+import type { ItemGuardianApprovalReviewStartedNotification } from "../../generated/app-server/v2/ItemGuardianApprovalReviewStartedNotification";
+import type { TerminalInteractionNotification } from "../../generated/app-server/v2/TerminalInteractionNotification";
 import type { Turn } from "../../generated/app-server/v2/Turn";
 import type { TurnCompletedNotification } from "../../generated/app-server/v2/TurnCompletedNotification";
 import type { TurnDiffUpdatedNotification } from "../../generated/app-server/v2/TurnDiffUpdatedNotification";
@@ -30,7 +35,30 @@ export interface AgentSessionState {
   activeItemTurnIds: Record<string, string>;
   mcpProgressByItemId: Record<string, McpToolCallProgressNotification>;
   tokenUsage: ThreadTokenUsage | null;
+  threadSettings: ThreadSettings | null;
+  threadGoal: ThreadGoal | null;
+  processEventsByTurnId: Record<string, ThreadProcessEvent[]>;
 }
+
+/** Safe, display-oriented summaries of unstable runtime notifications. */
+export type ThreadProcessEvent =
+  | {
+      kind: "autoApprovalReview";
+      reviewId: string;
+      status: "started" | "completed";
+      startedAtMs: number;
+      completedAtMs?: number;
+      reviewStatus: string;
+      riskLevel: string | null;
+      decisionSource?: string;
+      targetItemId: string | null;
+    }
+  | {
+      kind: "terminalInteraction";
+      itemId: string;
+      processId: string;
+      stdinLength: number;
+    };
 
 export type AgentSessionAction =
   | { type: "clear" }
@@ -53,6 +81,12 @@ export type AgentSessionAction =
   | { type: "turnDiffUpdated"; notification: TurnDiffUpdatedNotification }
   | { type: "turnPlanUpdated"; notification: TurnPlanUpdatedNotification }
   | { type: "tokenUsageUpdated"; notification: ThreadTokenUsageUpdatedNotification }
+  | { type: "threadSettingsUpdated"; notification: { threadId: string; threadSettings: ThreadSettings } }
+  | { type: "threadGoalUpdated"; notification: { threadId: string; goal: ThreadGoal } }
+  | { type: "threadGoalCleared"; threadId: string }
+  | { type: "autoApprovalReviewStarted"; notification: ItemGuardianApprovalReviewStartedNotification }
+  | { type: "autoApprovalReviewCompleted"; notification: ItemGuardianApprovalReviewCompletedNotification }
+  | { type: "terminalInteraction"; notification: TerminalInteractionNotification }
   | { type: "turnCompleted"; notification: TurnCompletedNotification; completedAt: number };
 
 export const initialAgentSessionState: AgentSessionState = {
@@ -63,6 +97,9 @@ export const initialAgentSessionState: AgentSessionState = {
   activeItemTurnIds: {},
   mcpProgressByItemId: {},
   tokenUsage: null,
+  threadSettings: null,
+  threadGoal: null,
+  processEventsByTurnId: {},
 };
 
 function boundedTurns(turns: Turn[]) {
@@ -95,7 +132,74 @@ function withTurns(state: AgentSessionState, turns: Turn[]): AgentSessionState {
       Object.entries(state.mcpProgressByItemId)
         .filter(([, notification]) => visibleTurnIds.has(notification.turnId)),
     ),
+    processEventsByTurnId: Object.fromEntries(
+      Object.entries(state.processEventsByTurnId).filter(([turnId]) => visibleTurnIds.has(turnId)),
+    ),
   };
+}
+
+function appendProcessEvent(
+  eventsByTurnId: Record<string, ThreadProcessEvent[]>,
+  turnId: string,
+  event: ThreadProcessEvent,
+) {
+  const current = eventsByTurnId[turnId] ?? [];
+  return { ...eventsByTurnId, [turnId]: [...current, event].slice(-100) };
+}
+
+function upsertReviewStarted(
+  eventsByTurnId: Record<string, ThreadProcessEvent[]>,
+  notification: ItemGuardianApprovalReviewStartedNotification,
+) {
+  const events = eventsByTurnId[notification.turnId] ?? [];
+  const event: ThreadProcessEvent = {
+    kind: "autoApprovalReview",
+    reviewId: notification.reviewId,
+    status: "started",
+    startedAtMs: notification.startedAtMs,
+    reviewStatus: notification.review.status,
+    riskLevel: notification.review.riskLevel,
+    targetItemId: notification.targetItemId,
+  };
+  const existingIndex = events.findIndex(
+    (current) => current.kind === "autoApprovalReview" && current.reviewId === notification.reviewId,
+  );
+  if (existingIndex < 0) return appendProcessEvent(eventsByTurnId, notification.turnId, event);
+  const next = [...events];
+  next[existingIndex] = event;
+  return { ...eventsByTurnId, [notification.turnId]: next };
+}
+
+function updateReviewEvent(
+  eventsByTurnId: Record<string, ThreadProcessEvent[]>,
+  notification: ItemGuardianApprovalReviewCompletedNotification,
+) {
+  const events = eventsByTurnId[notification.turnId] ?? [];
+  const existing = events.some(
+    (event) => event.kind === "autoApprovalReview" && event.reviewId === notification.reviewId,
+  );
+  const next = events.map((event) => event.kind === "autoApprovalReview" && event.reviewId === notification.reviewId
+    ? {
+        ...event,
+        status: "completed" as const,
+        completedAtMs: notification.completedAtMs,
+        reviewStatus: notification.review.status,
+        riskLevel: notification.review.riskLevel,
+        decisionSource: notification.decisionSource,
+      }
+    : event);
+  if (existing) return { ...eventsByTurnId, [notification.turnId]: next };
+  return appendProcessEvent(eventsByTurnId, notification.turnId, {
+    kind: "autoApprovalReview",
+    reviewId: notification.reviewId,
+    status: "completed",
+    startedAtMs: notification.startedAtMs,
+    completedAtMs: notification.completedAtMs,
+    reviewStatus: notification.review.status,
+    riskLevel: notification.review.riskLevel,
+    decisionSource: notification.decisionSource,
+    targetItemId: notification.targetItemId,
+  });
 }
 
 function upsertTurn(turns: Turn[], turn: Turn) {
@@ -287,12 +391,25 @@ export function agentSessionReducer(
         activeItemTurnIds: {},
         mcpProgressByItemId: {},
         tokenUsage: null,
+        threadSettings: null,
+        threadGoal: null,
+        processEventsByTurnId: {},
       };
     }
     case "updateThread":
       return state.thread?.id === action.thread.id
         ? { ...state, thread: { ...action.thread, turns: [] } }
         : state;
+    case "threadSettingsUpdated":
+      return state.thread?.id === action.notification.threadId
+        ? { ...state, threadSettings: action.notification.threadSettings }
+        : state;
+    case "threadGoalUpdated":
+      return state.thread?.id === action.notification.threadId
+        ? { ...state, threadGoal: action.notification.goal }
+        : state;
+    case "threadGoalCleared":
+      return state.thread?.id === action.threadId ? { ...state, threadGoal: null } : state;
     case "renameThread":
       return state.thread?.id === action.threadId
         ? { ...state, thread: { ...state.thread, name: action.name } }
@@ -452,6 +569,35 @@ export function agentSessionReducer(
       };
     case "tokenUsageUpdated":
       return { ...state, tokenUsage: action.notification.tokenUsage };
+    case "autoApprovalReviewStarted": {
+      const { notification } = action;
+      if (state.thread?.id !== notification.threadId) return state;
+      return {
+        ...state,
+        processEventsByTurnId: upsertReviewStarted(state.processEventsByTurnId, notification),
+      };
+    }
+    case "autoApprovalReviewCompleted": {
+      const { notification } = action;
+      if (state.thread?.id !== notification.threadId) return state;
+      return {
+        ...state,
+        processEventsByTurnId: updateReviewEvent(state.processEventsByTurnId, notification),
+      };
+    }
+    case "terminalInteraction": {
+      const { notification } = action;
+      if (state.thread?.id !== notification.threadId) return state;
+      return {
+        ...state,
+        processEventsByTurnId: appendProcessEvent(state.processEventsByTurnId, notification.turnId, {
+          kind: "terminalInteraction",
+          itemId: notification.itemId,
+          processId: notification.processId,
+          stdinLength: notification.stdin.length,
+        }),
+      };
+    }
     case "turnCompleted": {
       const completedTurnId = action.notification.turn.id;
       return withTurns(

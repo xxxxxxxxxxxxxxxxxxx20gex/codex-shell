@@ -9,6 +9,8 @@ import type { FileChangePatchUpdatedNotification } from "../../generated/app-ser
 import type { FileChangeRequestApprovalParams } from "../../generated/app-server/v2/FileChangeRequestApprovalParams";
 import type { GuardianWarningNotification } from "../../generated/app-server/v2/GuardianWarningNotification";
 import type { ItemCompletedNotification } from "../../generated/app-server/v2/ItemCompletedNotification";
+import type { ItemGuardianApprovalReviewCompletedNotification } from "../../generated/app-server/v2/ItemGuardianApprovalReviewCompletedNotification";
+import type { ItemGuardianApprovalReviewStartedNotification } from "../../generated/app-server/v2/ItemGuardianApprovalReviewStartedNotification";
 import type { ItemStartedNotification } from "../../generated/app-server/v2/ItemStartedNotification";
 import type { McpToolCallProgressNotification } from "../../generated/app-server/v2/McpToolCallProgressNotification";
 import type { McpServerElicitationRequestParams } from "../../generated/app-server/v2/McpServerElicitationRequestParams";
@@ -22,6 +24,10 @@ import type { PlanDeltaNotification } from "../../generated/app-server/v2/PlanDe
 import type { ReasoningSummaryTextDeltaNotification } from "../../generated/app-server/v2/ReasoningSummaryTextDeltaNotification";
 import type { ReasoningTextDeltaNotification } from "../../generated/app-server/v2/ReasoningTextDeltaNotification";
 import type { ThreadNameUpdatedNotification } from "../../generated/app-server/v2/ThreadNameUpdatedNotification";
+import type { ThreadGoalUpdatedNotification } from "../../generated/app-server/v2/ThreadGoalUpdatedNotification";
+import type { ThreadGoalClearedNotification } from "../../generated/app-server/v2/ThreadGoalClearedNotification";
+import type { ThreadSettingsUpdatedNotification } from "../../generated/app-server/v2/ThreadSettingsUpdatedNotification";
+import type { TerminalInteractionNotification } from "../../generated/app-server/v2/TerminalInteractionNotification";
 import type { ServerRequestResolvedNotification } from "../../generated/app-server/v2/ServerRequestResolvedNotification";
 import type { ThreadArchivedNotification } from "../../generated/app-server/v2/ThreadArchivedNotification";
 import type { ThreadClosedNotification } from "../../generated/app-server/v2/ThreadClosedNotification";
@@ -49,6 +55,9 @@ interface Handlers {
   onTurnCompleted: (notification: TurnCompletedNotification) => void;
   onError: (notification: ErrorNotification) => void;
   onThreadName: (notification: ThreadNameUpdatedNotification) => void;
+  onThreadSettings: (notification: ThreadSettingsUpdatedNotification) => void;
+  onThreadGoalUpdated: (notification: ThreadGoalUpdatedNotification) => void;
+  onThreadGoalCleared: (notification: ThreadGoalClearedNotification) => void;
   onThreadStarted: (notification: ThreadStartedNotification) => void;
   onThreadStatus: (notification: ThreadStatusChangedNotification) => void;
   onThreadArchived: (notification: ThreadArchivedNotification) => void;
@@ -99,6 +108,9 @@ export function subscribeToSessionEvents(client: AppServerClient, handlers: Hand
     client.onNotification("turn/completed", (params) => handlers.onTurnCompleted(params as TurnCompletedNotification)),
     client.onNotification("error", (params) => handlers.onError(params as ErrorNotification)),
     client.onNotification("thread/name/updated", (params) => handlers.onThreadName(params as ThreadNameUpdatedNotification)),
+    client.onNotification("thread/settings/updated", (params) => handlers.onThreadSettings(params as ThreadSettingsUpdatedNotification)),
+    client.onNotification("thread/goal/updated", (params) => handlers.onThreadGoalUpdated(params as ThreadGoalUpdatedNotification)),
+    client.onNotification("thread/goal/cleared", (params) => handlers.onThreadGoalCleared(params as ThreadGoalClearedNotification)),
     client.onNotification("thread/started", (params) => handlers.onThreadStarted(params as ThreadStartedNotification)),
     client.onNotification("thread/status/changed", (params) => handlers.onThreadStatus(params as ThreadStatusChangedNotification)),
     client.onNotification("thread/archived", (params) => handlers.onThreadArchived(params as ThreadArchivedNotification)),
@@ -119,6 +131,9 @@ export function subscribeToSessionEvents(client: AppServerClient, handlers: Hand
     client.onNotification("mcpServer/oauthLogin/completed", (params) => handlers.onMcpOauthLoginCompleted(params as McpServerOauthLoginCompletedNotification)),
     client.onNotification("mcpServer/startupStatus/updated", (params) => handlers.onMcpServerStatusUpdated(params as McpServerStatusUpdatedNotification)),
     client.onNotification("thread/tokenUsage/updated", (params) => onActive<ThreadTokenUsageUpdatedNotification>(params, (notification) => handlers.dispatch({ type: "tokenUsageUpdated", notification }))),
+    client.onNotification("item/autoApprovalReview/started", (params) => onActive<ItemGuardianApprovalReviewStartedNotification>(params, (notification) => handlers.dispatch({ type: "autoApprovalReviewStarted", notification }))),
+    client.onNotification("item/autoApprovalReview/completed", (params) => onActive<ItemGuardianApprovalReviewCompletedNotification>(params, (notification) => handlers.dispatch({ type: "autoApprovalReviewCompleted", notification }))),
+    client.onNotification("item/commandExecution/terminalInteraction", (params) => onActive<TerminalInteractionNotification>(params, (notification) => handlers.dispatch({ type: "terminalInteraction", notification }))),
     client.onNotification("app-server/stopped", handlers.onStopped),
     client.onLog(handlers.onRuntimeLog),
     client.onProtocolError(handlers.onProtocolError),

@@ -214,6 +214,7 @@ function App() {
               plansByTurnId={session.plansByTurnId}
               activeItemTurnIds={session.activeItemTurnIds}
               mcpProgressByItemId={session.mcpProgressByItemId}
+              processEventsByTurnId={session.processEventsByTurnId}
               readFile={session.readWorkspaceFile}
               onOpenPath={openConversationPath}
               onOpenError={setUiError}

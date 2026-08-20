@@ -5,6 +5,8 @@ import { formatTurnDuration } from "./conversationTiming";
 import { CommandDrawer } from "./CommandDrawer";
 import { TurnActivityItem } from "./TurnActivityItem";
 import { MarkdownContent } from "./MarkdownContent";
+import type { ThreadProcessEvent } from "../runtime/sessionState";
+import { TurnProcessEvents } from "./TurnProcessEvents";
 
 interface Props {
   items: ThreadItem[];
@@ -17,11 +19,12 @@ interface Props {
   turnId: string;
   activeItemTurnIds: Record<string, string>;
   mcpProgressByItemId: Record<string, McpToolCallProgressNotification>;
+  processEvents?: ThreadProcessEvent[];
   onOpenPath?: (path: string) => void | Promise<void>;
   onOpenError?: (message: string) => void;
 }
 
-export function TurnActivityGroup({ items, active, turnActive, startedAt, durationMs, retryingMessage = null, showHeader, turnId, activeItemTurnIds, mcpProgressByItemId, onOpenPath, onOpenError }: Props) {
+export function TurnActivityGroup({ items, active, turnActive, startedAt, durationMs, retryingMessage = null, showHeader, turnId, activeItemTurnIds, mcpProgressByItemId, processEvents = [], onOpenPath, onOpenError }: Props) {
   const [now, setNow] = useState(Date.now);
   useEffect(() => {
     if (!turnActive || startedAt === null) return;
@@ -30,7 +33,7 @@ export function TurnActivityGroup({ items, active, turnActive, startedAt, durati
     return () => window.clearInterval(interval);
   }, [startedAt, turnActive]);
 
-  if (items.length === 0 && !showHeader) return null;
+  if (items.length === 0 && processEvents.length === 0 && !showHeader) return null;
   const elapsedMs = turnActive && startedAt !== null
     ? Math.max(0, now - startedAt * 1_000)
     : durationMs;
@@ -60,7 +63,7 @@ export function TurnActivityGroup({ items, active, turnActive, startedAt, durati
         <strong>{`${turnActive ? "正在处理" : "已处理"}${duration}`}</strong>
         {turnActive && retryingMessage && <small className="turn-retry-status">{retryingMessage}</small>}
       </div>}
-      {activityBlocks.length > 0 && <div className="turn-activity-list">
+      {(activityBlocks.length > 0 || processEvents.length > 0) && <div className="turn-activity-list">
         {activityBlocks.map((item) => item.type === "commandDrawer" ? (
           <CommandDrawer items={item.items} key={`command-drawer:${item.items[0].id}`} />
         ) : item.type === "agentMessage" ? (
@@ -69,6 +72,7 @@ export function TurnActivityGroup({ items, active, turnActive, startedAt, durati
           <TurnActivityItem item={item} key={item.id} />
         ))}
         {activeProgress && <div className="turn-native-progress">{activeProgress}</div>}
+        <TurnProcessEvents events={processEvents} />
       </div>}
     </section>
   );
