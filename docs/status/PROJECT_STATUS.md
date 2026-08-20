@@ -64,5 +64,5 @@
 
 ## 验证基线
 
-- 2026-08-20：固定 Runtime `0.148.0-alpha.15` 的 P1 通知对齐后，`pnpm test:quality` 覆盖 53 个 Vitest 文件/242 项测试、14 项 Rust 测试、TypeScript、ESLint、Vite production build、Knip、Cargo check、严格 Clippy 和 diff 检查并全部通过。真实网关探针确认 low 至 ultra、三档 verbosity、四种 summary 和 Priority 参数继续正确进入 `/v1/responses`。
+- 2026-08-20：固定 Runtime `0.148.0-alpha.15` 的 P1 通知对齐及时间线滚动竞态修复后，`pnpm test:quality` 覆盖 53 个 Vitest 文件/245 项测试、14 项 Rust 测试、TypeScript、ESLint、Vite production build、Knip、Cargo check、严格 Clippy 和 diff 检查并全部通过。真实网关探针确认 low 至 ultra、三档 verbosity、四种 summary 和 Priority 参数继续正确进入 `/v1/responses`。
 - 静态审查当前未发现无效文件、导出或依赖；源码扫描未发现 PAT、API Key、用户密钥或开发机绝对路径。真实 app-server smoke 已覆盖多 Turn 恢复、并行 Thread、文件 RPC、Skills/MCP/Goal、Plan 和本机工具；这些证据只对应固定 Runtime，不代表 Codex 最新开发分支。

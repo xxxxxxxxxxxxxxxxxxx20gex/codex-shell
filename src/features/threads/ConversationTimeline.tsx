@@ -59,6 +59,8 @@ export function ConversationTimeline({
 }: Props) {
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const followLatestRef = useRef(true);
+  const atBottomRef = useRef(true);
+  const pointerScrollingRef = useRef(false);
   const scrollerCleanupRef = useRef<(() => void) | null>(null);
   const [atBottom, setAtBottom] = useState(true);
   const [hasNewActivity, setHasNewActivity] = useState(false);
@@ -94,8 +96,9 @@ export function ConversationTimeline({
   }, [activeItemTurnIds, mcpProgressByItemId, plansByTurnId, processEventsByTurnId, running, turns]);
 
   const handleAtBottomChange = useCallback((nextAtBottom: boolean) => {
+    atBottomRef.current = nextAtBottom;
     setAtBottom(nextAtBottom);
-    if (nextAtBottom) {
+    if (nextAtBottom && !pointerScrollingRef.current) {
       followLatestRef.current = true;
       setHasNewActivity(false);
     }
@@ -108,7 +111,6 @@ export function ConversationTimeline({
 
     const eventTarget: EventTarget = scroller;
     const scrollTop = () => scroller instanceof Window ? scroller.scrollY : scroller.scrollTop;
-    let pointerScrolling = false;
     let previousScrollTop = scrollTop();
     const stopFollowing = () => {
       followLatestRef.current = false;
@@ -116,18 +118,29 @@ export function ConversationTimeline({
     const handleWheel = (event: Event) => {
       if ((event as WheelEvent).deltaY < 0) stopFollowing();
     };
-    const handlePointerDown = () => {
-      pointerScrolling = true;
+    const handlePointerDown = (event: Event) => {
+      const pointerEvent = event as PointerEvent;
+      if (event.target !== event.currentTarget && pointerEvent.pointerType !== "touch") return;
+      pointerScrollingRef.current = true;
+      stopFollowing();
     };
     const handlePointerUp = () => {
-      pointerScrolling = false;
+      if (!pointerScrollingRef.current) return;
+      pointerScrollingRef.current = false;
+      if (atBottomRef.current) {
+        followLatestRef.current = true;
+        setHasNewActivity(false);
+      }
     };
     const handleKeyDown = (event: Event) => {
       if (["ArrowUp", "PageUp", "Home"].includes((event as KeyboardEvent).key)) stopFollowing();
     };
     const handleScroll = () => {
       const nextScrollTop = scrollTop();
-      if (pointerScrolling && nextScrollTop < previousScrollTop - 1) stopFollowing();
+      if (pointerScrollingRef.current && nextScrollTop < previousScrollTop - 1) {
+        atBottomRef.current = false;
+        stopFollowing();
+      }
       previousScrollTop = nextScrollTop;
     };
     eventTarget.addEventListener("wheel", handleWheel, { passive: true });

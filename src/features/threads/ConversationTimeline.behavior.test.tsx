@@ -233,4 +233,44 @@ describe("ConversationTimeline navigation", () => {
 
     expect(virtuoso.autoscrollToBottom).not.toHaveBeenCalled();
   });
+
+  it("does not fight a scrollbar thumb while the reader drags downward", () => {
+    const initialTurns = [turn("1", "第一问")];
+    const view = render(<ConversationTimeline turns={initialTurns} running />);
+    const scroller = screen.getByTestId("virtual-list");
+    Object.defineProperty(scroller, "scrollTop", { configurable: true, writable: true, value: 40 });
+    fireEvent.scroll(scroller);
+    fireEvent.pointerDown(scroller);
+    scroller.scrollTop = 100;
+    fireEvent.scroll(scroller);
+    virtuoso.autoscrollToBottom.mockClear();
+
+    view.rerender(<ConversationTimeline turns={[turn("1", "第一问，回答继续增长")]} running />);
+
+    expect(virtuoso.autoscrollToBottom).not.toHaveBeenCalled();
+  });
+
+  it("does not re-enable following when bottom is reported during an active drag", () => {
+    const initialTurns = [turn("1", "第一问")];
+    const view = render(<ConversationTimeline turns={initialTurns} running />);
+    const scroller = screen.getByTestId("virtual-list");
+    fireEvent.pointerDown(scroller);
+    act(() => virtuoso.atBottomStateChange?.(true));
+    virtuoso.autoscrollToBottom.mockClear();
+
+    view.rerender(<ConversationTimeline turns={[turn("1", "第一问，回答继续增长")]} running />);
+
+    expect(virtuoso.autoscrollToBottom).not.toHaveBeenCalled();
+  });
+
+  it("keeps following when the reader only clicks message content", () => {
+    const initialTurns = [turn("1", "第一问")];
+    const view = render(<ConversationTimeline turns={initialTurns} running />);
+    fireEvent.pointerDown(screen.getByText("第一问"));
+    virtuoso.autoscrollToBottom.mockClear();
+
+    view.rerender(<ConversationTimeline turns={[turn("1", "第一问，回答继续增长")]} running />);
+
+    expect(virtuoso.autoscrollToBottom).toHaveBeenCalledTimes(1);
+  });
 });
