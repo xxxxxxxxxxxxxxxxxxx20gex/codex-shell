@@ -2,7 +2,7 @@
 
 - 模块职责：管理项目目录（Thread `cwd`）、线程列表、创建、恢复与切换。
 - 当前状态：新 Thread 使用发送首条消息前选择的自定义项目，未选择时使用 `Documents/Codex-Shell/YYYY-MM-DD` 默认项目目录；自定义选择不跨新对话持久化。已有 Thread 始终使用服务端返回的不可变 `cwd`，文件浏览、文件附件和相对路径解析均以该目录为根。每个非运行中的历史 Turn 都可通过原生 `thread/fork(lastTurnId)` 从该轮末尾创建分支。
-- 最近变更：消息中的项目相对路径和项目内绝对路径可直接打开工作区只读预览；项目外绝对路径通过系统资源管理器定位。路径归一化明确区分工作区包含关系，拒绝 `..` 穿越，避免把模型输出中的路径当成可执行文件直接启动。Session 原子操作与永久删除确认行为保持不变；归档与永久删除共享同一套服务端移除后的队列、当前线程和历史列表清理流程，减少重复状态处理。
+- 最近变更：会话置顶对齐新版 app-server 的内置 Pinned Thread Section，通过 `thread/section/move` 写入并由 `Thread.section` 判断；不再依赖已删除的 `isPinned` 元数据。分支顺序和置顶优先展示保持现有行为。
 - 当前接口：Rust `get_default_project_directory`，以及 `WorkspaceSelector`、`WorkspaceExplorer`、`ThreadHistoryList`、`useWorkspaceFiles`、`useThreadController` 和 `useThreadActions`。
 - 已知问题：尚未提供显式的最近项目列表；文件预览会在前端截断前先跨 IPC 读取完整文件；`useThreadController` 已降到约 405 行，继续扩展 Thread 通知路由前仍应优先按生命周期职责拆分。
 - 下一步：增加断线后的 Session 恢复、最近项目列表和 Git 摘要。

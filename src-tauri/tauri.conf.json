@@ -30,6 +30,7 @@
     "targets": "all",
     "externalBin": [
       "binaries/codex",
+      "binaries/codex-code-mode-host",
       "binaries/codex-windows-sandbox-setup",
       "binaries/codex-command-runner"
     ],

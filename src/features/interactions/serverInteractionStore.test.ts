@@ -61,6 +61,7 @@ describe("ServerInteractionStore", () => {
         itemId: "item-2",
         questions: [],
         autoResolutionMs: null,
+        isBlocking: true,
       },
     });
 

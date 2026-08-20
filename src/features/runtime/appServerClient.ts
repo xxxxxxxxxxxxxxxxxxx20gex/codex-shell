@@ -50,6 +50,8 @@ import type { ThreadStartParams } from "../../generated/app-server/v2/ThreadStar
 import type { ThreadStartResponse } from "../../generated/app-server/v2/ThreadStartResponse";
 import type { ThreadSetNameParams } from "../../generated/app-server/v2/ThreadSetNameParams";
 import type { ThreadSetNameResponse } from "../../generated/app-server/v2/ThreadSetNameResponse";
+import type { ThreadSectionMoveParams } from "../../generated/app-server/v2/ThreadSectionMoveParams";
+import type { ThreadSectionMoveResponse } from "../../generated/app-server/v2/ThreadSectionMoveResponse";
 import type { ThreadUnarchiveParams } from "../../generated/app-server/v2/ThreadUnarchiveParams";
 import type { ThreadUnarchiveResponse } from "../../generated/app-server/v2/ThreadUnarchiveResponse";
 import type { ThreadUnsubscribeParams } from "../../generated/app-server/v2/ThreadUnsubscribeParams";
@@ -231,6 +233,10 @@ export class AppServerClient {
 
   updateThreadMetadata(params: ThreadMetadataUpdateParams) {
     return this.request<ThreadMetadataUpdateResponse>("thread/metadata/update", params);
+  }
+
+  moveThreadToSection(params: ThreadSectionMoveParams) {
+    return this.request<ThreadSectionMoveResponse>("thread/section/move", params);
   }
 
   archiveThread(params: ThreadArchiveParams) {

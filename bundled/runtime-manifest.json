@@ -1,17 +1,21 @@
-{
-  "schemaVersion": 1,
-  "version": "codex-cli 0.146.0-alpha.9.2",
-  "target": "x86_64-pc-windows-msvc",
-  "fileName": "codex-x86_64-pc-windows-msvc.exe",
-  "sha256": "ecd7a3eaff5e42723dbba03b5c91514b3986b5db5cbca8f34619620b5356f31f",
-  "helpers": [
-    {
-      "fileName": "codex-windows-sandbox-setup-x86_64-pc-windows-msvc.exe",
-      "sha256": "a82bc08cf63f59bb5d157dcccb2141dea630985552866082b824384a54673e2a"
-    },
-    {
-      "fileName": "codex-command-runner-x86_64-pc-windows-msvc.exe",
-      "sha256": "957fd1e2749fe930685c87874aa7b42ada6cd4a60f6bdc0823c17bcebae7849c"
-    }
-  ]
+﻿{
+    "schemaVersion":  1,
+    "version":  "codex-cli 0.148.0-alpha.15",
+    "target":  "x86_64-pc-windows-msvc",
+    "fileName":  "codex-x86_64-pc-windows-msvc.exe",
+    "sha256":  "17e4fed6d6676ae0b894a7c39821dd1c50c1a786eefb05362a3f9fda678af466",
+    "helpers":  [
+                    {
+                        "fileName":  "codex-code-mode-host-x86_64-pc-windows-msvc.exe",
+                        "sha256":  "fd831924b75e2583e582864d5ea4e8f167536ce33ab82aba8addef96b446d2df"
+                    },
+                    {
+                        "fileName":  "codex-windows-sandbox-setup-x86_64-pc-windows-msvc.exe",
+                        "sha256":  "5536747e359cb60c199deee112327baa6a7af10ab9381279db6608c7b1dd9fae"
+                    },
+                    {
+                        "fileName":  "codex-command-runner-x86_64-pc-windows-msvc.exe",
+                        "sha256":  "eed9f651d8bbb1db1aa61728bfa3a7fc8df166f58d681eb51a84d033b9249a37"
+                    }
+                ]
 }

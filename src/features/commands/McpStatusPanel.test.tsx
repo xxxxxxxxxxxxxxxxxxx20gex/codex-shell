@@ -20,6 +20,7 @@ describe("McpStatusPanel", () => {
       <McpStatusPanel
         loadServers={vi.fn(async () => [{
           name: "docs",
+          pluginId: null,
           serverInfo: null,
           tools: {},
           resources: [{ name: "large", title: "Large docs", uri: "docs://large" }],
@@ -46,6 +47,7 @@ describe("McpStatusPanel", () => {
       <McpStatusPanel
         loadServers={vi.fn(async () => [{
           name: "unsafe",
+          pluginId: null,
           serverInfo: null,
           tools: {},
           resources: [],
@@ -68,6 +70,7 @@ describe("McpStatusPanel", () => {
       <McpStatusPanel
         loadServers={vi.fn(async () => [{
           name: "safe",
+          pluginId: null,
           serverInfo: null,
           tools: {},
           resources: [],

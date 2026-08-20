@@ -1,5 +1,11 @@
 import type { Thread } from "../../generated/app-server/v2/Thread";
 
+export const PINNED_THREAD_SECTION_ID = "01984de2-8f74-7c91-a3b2-5c5e937cf318";
+
+export function isThreadPinned(thread: Thread) {
+  return thread.section?.id === PINNED_THREAD_SECTION_ID;
+}
+
 export function threadTitle(thread: Thread) {
   return thread.name?.trim() || thread.preview.trim() || "未命名会话";
 }
@@ -32,8 +38,8 @@ export function orderThreadsByBranch(threads: Thread[]): Thread[] {
   roots.forEach(append);
   threads.forEach(append);
   return [
-    ...ordered.filter((thread) => thread.isPinned),
-    ...ordered.filter((thread) => !thread.isPinned),
+    ...ordered.filter(isThreadPinned),
+    ...ordered.filter((thread) => !isThreadPinned(thread)),
   ];
 }
 

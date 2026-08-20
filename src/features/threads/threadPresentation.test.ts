@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Thread } from "../../generated/app-server/v2/Thread";
 import {
   orderThreadsByBranch,
+  PINNED_THREAD_SECTION_ID,
   threadBranchDepth,
   threadReference,
   threadReferenceKind,
@@ -49,9 +50,9 @@ describe("thread presentation", () => {
   it("moves pinned sessions to the top while preserving relative order", () => {
     const threads = [
       thread("recent"),
-      thread("pinned-older", { isPinned: true }),
+      thread("pinned-older", { section: { id: PINNED_THREAD_SECTION_ID, name: "Pinned", appearance: null } }),
       thread("older"),
-      thread("pinned-oldest", { isPinned: true }),
+      thread("pinned-oldest", { section: { id: PINNED_THREAD_SECTION_ID, name: "Pinned", appearance: null } }),
     ];
 
     expect(orderThreadsByBranch(threads).map((item) => item.id)).toEqual([

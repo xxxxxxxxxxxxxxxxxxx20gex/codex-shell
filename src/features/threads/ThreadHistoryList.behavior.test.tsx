@@ -14,7 +14,8 @@ function thread(id: string): Thread {
     name: id,
     preview: id,
     path: null,
-    isPinned: false,
+    section: null,
+    sectionEnteredAt: null,
     updatedAt: 1,
     cwd: "C:\\work",
   } as Thread;

@@ -253,6 +253,21 @@ describe("AppServerClient", () => {
     });
     transport.emit({ id: archiveRequest.id, result: {} });
     await expect(archive).resolves.toEqual({});
+
+    const pin = client.moveThreadToSection({
+      threadId: "thread-1",
+      sectionId: "01984de2-8f74-7c91-a3b2-5c5e937cf318",
+    });
+    const pinRequest = transport.sent[transport.sent.length - 1];
+    expect(pinRequest).toMatchObject({
+      method: "thread/section/move",
+      params: {
+        threadId: "thread-1",
+        sectionId: "01984de2-8f74-7c91-a3b2-5c5e937cf318",
+      },
+    });
+    transport.emit({ id: pinRequest.id, result: {} });
+    await expect(pin).resolves.toEqual({});
   });
 
   it("uses native v2 methods for thread, model, review, steering, and MCP workflows", async () => {

@@ -12,6 +12,7 @@ import type { Thread } from "../../generated/app-server/v2/Thread";
 import { writeClipboardText } from "./clipboard";
 import { SessionActionConfirmDialog } from "./SessionActionConfirmDialog";
 import {
+  isThreadPinned,
   threadReference,
   threadReferenceKind,
   threadTitle,
@@ -135,12 +136,12 @@ export function ThreadHistoryList(props: Props) {
                   ? `${threadTitle(thread)}\n恢复 Session 后可打开`
                   : `${threadTitle(thread)}\n${thread.cwd}`}
               >
-                <span className="thread-title">{thread.isPinned && <Pin className="thread-pin-indicator" aria-hidden="true" fill="currentColor" />}{threadTitle(thread)}</span>
+                <span className="thread-title">{isThreadPinned(thread) && <Pin className="thread-pin-indicator" aria-hidden="true" fill="currentColor" />}{threadTitle(thread)}</span>
                 <small>{running ? "运行中" : dateFormatter.format(new Date(thread.updatedAt * 1000))}</small>
               </button>
               <div className={`thread-actions ${openActionThreadId === thread.id ? "menu-open" : ""}`} onPointerDown={(event) => event.stopPropagation()}>
                 {!props.archived && <>
-                  <ThreadActionButton disabled={busy} onClick={() => props.onTogglePin(thread)} label={thread.isPinned ? "取消置顶" : "置顶"}><Pin aria-hidden="true" fill={thread.isPinned ? "currentColor" : "none"} /></ThreadActionButton>
+                  <ThreadActionButton disabled={busy} onClick={() => props.onTogglePin(thread)} label={isThreadPinned(thread) ? "取消置顶" : "置顶"}><Pin aria-hidden="true" fill={isThreadPinned(thread) ? "currentColor" : "none"} /></ThreadActionButton>
                   <ThreadActionButton disabled={busy || running} onClick={() => props.onArchive(thread.id)} label={running ? "运行中无法归档" : "归档"}><Archive aria-hidden="true" /></ThreadActionButton>
                 </>}
                 <div className={`thread-action-menu ${openActionThreadId === thread.id ? "open" : ""}`} role="menu">

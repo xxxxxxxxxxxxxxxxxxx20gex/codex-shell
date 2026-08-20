@@ -15,6 +15,7 @@ interface Props {
 }
 
 const AUTH_LABELS: Record<McpServerStatus["authStatus"], string> = {
+  unknown: "未知",
   unsupported: "无需登录",
   notLoggedIn: "未登录",
   bearerToken: "Token",

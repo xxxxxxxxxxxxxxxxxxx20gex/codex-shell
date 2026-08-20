@@ -159,6 +159,8 @@ fn app_server_arguments(
         "app-server".to_string(),
         "--stdio".to_string(),
         "-c".to_string(),
+        "features.code_mode_host=true".to_string(),
+        "-c".to_string(),
         format!("model={encoded_model}"),
         "-c".to_string(),
         format!("model_provider=\"{PROVIDER_ID}\""),

@@ -20,6 +20,7 @@ describe("ServerInteractionDialog", () => {
         turnId: "turn-1",
         itemId: "item-1",
         autoResolutionMs: null,
+        isBlocking: true,
         questions: [
           {
             id: "scope",

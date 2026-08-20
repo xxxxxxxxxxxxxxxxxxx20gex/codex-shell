@@ -11,6 +11,10 @@ $sourceWasExplicit = $PSBoundParameters.ContainsKey("Source")
 $targetTriple = "x86_64-pc-windows-msvc"
 $helperDefinitions = @(
     [ordered]@{
+        sourceName = "codex-code-mode-host.exe"
+        targetName = "codex-code-mode-host-$targetTriple.exe"
+    },
+    [ordered]@{
         sourceName = "codex-windows-sandbox-setup.exe"
         targetName = "codex-windows-sandbox-setup-$targetTriple.exe"
     },
@@ -41,7 +45,7 @@ foreach ($helper in $helperDefinitions) {
         Test-Path -LiteralPath $_ -PathType Leaf
     } | Select-Object -First 1
     if (-not $helper.sourcePath) {
-        throw "固定 Runtime 缺少 elevated Windows Sandbox 所需文件：$($helper.sourceName)"
+        throw "The pinned Runtime is missing companion component: $($helper.sourceName)"
     }
     $helper.targetPath = Join-Path $stagingDirectory $helper.targetName
 }
@@ -57,12 +61,24 @@ try {
     if (-not $sourceWasExplicit -and (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
         $expectedVersion = (Get-Content -Raw -LiteralPath $manifestPath | ConvertFrom-Json).version
         if ($expectedVersion -and $version -ne $expectedVersion) {
-            throw "PATH Runtime 版本 $version 与项目固定版本 $expectedVersion 不一致；请显式传入 -Source 并重新生成协议后再升级。"
+            throw "PATH Runtime $version does not match pinned version $expectedVersion. Pass -Source explicitly and regenerate the protocol to upgrade."
         }
     }
 
     function Get-Sha256([string]$Path) {
-        return (Get-FileHash -Algorithm SHA256 -LiteralPath $Path).Hash.ToLowerInvariant()
+        $stream = [System.IO.File]::OpenRead($Path)
+        try {
+            $sha256 = [System.Security.Cryptography.SHA256]::Create()
+            try {
+                return ([System.BitConverter]::ToString($sha256.ComputeHash($stream))).Replace("-", "").ToLowerInvariant()
+            }
+            finally {
+                $sha256.Dispose()
+            }
+        }
+        finally {
+            $stream.Dispose()
+        }
     }
 
     $hash = Get-Sha256 $stagedTarget
@@ -89,7 +105,7 @@ try {
 
     Write-Output "Staged $version"
     Write-Output "SHA-256 $hash"
-    Write-Output "Staged elevated Windows Sandbox helpers"
+    Write-Output "Staged Code Mode Host and elevated Windows Sandbox helpers"
 }
 finally {
     if (Test-Path -LiteralPath $stagingDirectory) {

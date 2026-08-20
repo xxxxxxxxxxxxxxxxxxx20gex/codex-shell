@@ -22,6 +22,8 @@ fn builds_environment_authenticated_gateway_provider() {
             "app-server",
             "--stdio",
             "-c",
+            "features.code_mode_host=true",
+            "-c",
             "model=\"model-id\"",
             "-c",
             "model_provider=\"codex_shell_gateway\"",

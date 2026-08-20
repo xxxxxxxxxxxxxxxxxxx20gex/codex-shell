@@ -26,7 +26,8 @@ function thread(turns: Turn[] = []): Thread {
     parentThreadId: null,
     preview: "历史任务",
     ephemeral: false,
-    isPinned: false,
+    section: null,
+    sectionEnteredAt: null,
     modelProvider: "openai",
     createdAt: 1,
     updatedAt: 2,
@@ -484,7 +485,7 @@ describe("agentSessionReducer", () => {
   });
 
   it("keeps native MCP progress only while its item is active", () => {
-    const mcpItem: ThreadItem = {
+    const mcpItem: Extract<ThreadItem, { type: "mcpToolCall" }> = {
       type: "mcpToolCall",
       id: "mcp-1",
       server: "docs",
@@ -493,6 +494,7 @@ describe("agentSessionReducer", () => {
       arguments: { query: "Codex" },
       appContext: null,
       pluginId: null,
+      readOnlyHint: null,
       result: null,
       error: null,
       durationMs: null,

@@ -10,7 +10,8 @@ function thread(id: string, path: string | null) {
     name: `Session ${id}`,
     preview: "",
     path,
-    isPinned: false,
+    section: null,
+    sectionEnteredAt: null,
     updatedAt: 1_786_334_400,
     cwd: "C:\\workspace",
   } as Thread;

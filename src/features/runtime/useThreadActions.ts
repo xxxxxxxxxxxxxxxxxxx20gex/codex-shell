@@ -3,6 +3,7 @@ import type { Thread } from "../../generated/app-server/v2/Thread";
 import { errorMessage } from "../../shared/errors";
 import type { AppServerClient } from "./appServerClient";
 import type { AgentSessionAction } from "./sessionState";
+import { isThreadPinned, PINNED_THREAD_SECTION_ID } from "../threads/threadPresentation";
 
 interface Props {
   threadIdRef: MutableRefObject<string | null>;
@@ -97,13 +98,23 @@ export function useThreadActions({
     try {
       const client = await ensureConnected();
       if (!isCurrent(token)) return false;
-      const response = await client.updateThreadMetadata({
+      const pinned = !isThreadPinned(thread);
+      await client.moveThreadToSection({
         threadId: thread.id,
-        isPinned: !thread.isPinned,
+        sectionId: pinned ? PINNED_THREAD_SECTION_ID : null,
       });
       if (!isCurrent(token)) return false;
-      replaceInHistory(response.thread);
-      dispatch({ type: "updateThread", thread: response.thread });
+      const updatedThread: Thread = {
+        ...thread,
+        section: pinned ? {
+          id: PINNED_THREAD_SECTION_ID,
+          name: "Pinned",
+          appearance: null,
+        } : null,
+        sectionEnteredAt: pinned ? Math.floor(Date.now() / 1000) : null,
+      };
+      replaceInHistory(updatedThread);
+      dispatch({ type: "updateThread", thread: updatedThread });
       return true;
     } catch (pinError) {
       if (isCurrent(token)) setError(errorMessage(pinError));

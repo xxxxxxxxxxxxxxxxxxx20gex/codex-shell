@@ -463,7 +463,7 @@ describe("conversation timing", () => {
   });
 
   it("surfaces the native active item and MCP progress in the conversation", () => {
-    const mcp: ThreadItem = {
+    const mcp: Extract<ThreadItem, { type: "mcpToolCall" }> = {
       type: "mcpToolCall",
       id: "mcp-1",
       server: "docs",
@@ -472,6 +472,7 @@ describe("conversation timing", () => {
       arguments: { query: "app-server" },
       appContext: null,
       pluginId: null,
+      readOnlyHint: null,
       result: null,
       error: null,
       durationMs: null,
