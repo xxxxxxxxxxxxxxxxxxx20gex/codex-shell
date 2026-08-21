@@ -175,6 +175,10 @@ export function ConversationTimeline({
     setHasNewActivity(false);
   }, []);
 
+  const followOutput = useCallback(() => (
+    followLatestRef.current && !pointerScrollingRef.current ? "auto" : false
+  ), []);
+
   return (
     <div className="timeline-shell">
       <Virtuoso
@@ -184,7 +188,7 @@ export function ConversationTimeline({
         atBottomThreshold={8}
         atBottomStateChange={handleAtBottomChange}
         computeItemKey={(_index, turn) => turn.id}
-        followOutput="auto"
+        followOutput={followOutput}
         initialTopMostItemIndex={Math.max(0, turns.length - 1)}
         rangeChanged={handleRangeChanged}
         scrollerRef={handleScrollerRef}

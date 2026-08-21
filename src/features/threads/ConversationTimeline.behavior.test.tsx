@@ -11,6 +11,7 @@ const virtuoso = vi.hoisted(() => ({
   autoscrollToBottom: vi.fn(),
   atBottomStateChange: null as ((atBottom: boolean) => void) | null,
   rangeChanged: null as ((range: { startIndex: number; endIndex: number }) => void) | null,
+  followOutput: null as ((atBottom: boolean) => "auto" | "smooth" | false) | null,
 }));
 
 vi.mock("react-virtuoso", () => ({
@@ -19,12 +20,14 @@ vi.mock("react-virtuoso", () => ({
     itemContent: (index: number, turn: Turn) => React.ReactNode;
     atBottomStateChange: (atBottom: boolean) => void;
     rangeChanged: (range: { startIndex: number; endIndex: number }) => void;
+    followOutput: ((atBottom: boolean) => "auto" | "smooth" | false);
     scrollerRef: (ref: HTMLElement | Window | null) => void;
   }, ref) => {
     const scrollerRef = useRef<HTMLDivElement>(null);
     const setScrollerRef = props.scrollerRef;
     virtuoso.atBottomStateChange = props.atBottomStateChange;
     virtuoso.rangeChanged = props.rangeChanged;
+    virtuoso.followOutput = props.followOutput;
     useImperativeHandle(ref, () => ({
       scrollToIndex: virtuoso.scrollToIndex,
       autoscrollToBottom: virtuoso.autoscrollToBottom,
@@ -78,6 +81,7 @@ describe("ConversationTimeline navigation", () => {
     virtuoso.autoscrollToBottom.mockReset();
     virtuoso.atBottomStateChange = null;
     virtuoso.rangeChanged = null;
+    virtuoso.followOutput = null;
   });
 
   it("navigates directly between user turns", () => {
@@ -261,6 +265,17 @@ describe("ConversationTimeline navigation", () => {
     view.rerender(<ConversationTimeline turns={[turn("1", "第一问，回答继续增长")]} running />);
 
     expect(virtuoso.autoscrollToBottom).not.toHaveBeenCalled();
+  });
+
+  it("disables Virtuoso followOutput while the scrollbar is being dragged", () => {
+    render(<ConversationTimeline turns={[turn("1", "第一问")]} running />);
+    const scroller = screen.getByTestId("virtual-list");
+    expect(virtuoso.followOutput?.(true)).toBe("auto");
+
+    fireEvent.pointerDown(scroller);
+
+    expect(virtuoso.followOutput?.(true)).toBe(false);
+    expect(virtuoso.followOutput?.(false)).toBe(false);
   });
 
   it("keeps following when the reader only clicks message content", () => {
