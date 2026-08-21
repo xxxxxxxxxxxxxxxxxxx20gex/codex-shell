@@ -61,6 +61,9 @@ export function ConversationTimeline({
   const followLatestRef = useRef(true);
   const atBottomRef = useRef(true);
   const pointerScrollingRef = useRef(false);
+  // Virtuoso reports native-scrollbar drags through its scrolling lifecycle even
+  // when WebView2 does not dispatch pointer events for the scrollbar thumb.
+  const virtuosoScrollingRef = useRef(false);
   const scrollerCleanupRef = useRef<(() => void) | null>(null);
   const [atBottom, setAtBottom] = useState(true);
   const [hasNewActivity, setHasNewActivity] = useState(false);
@@ -92,13 +95,18 @@ export function ConversationTimeline({
   useEffect(() => () => scrollerCleanupRef.current?.(), []);
 
   useLayoutEffect(() => {
-    if (followLatestRef.current) virtuosoRef.current?.autoscrollToBottom();
+    // Do not issue our own correction while a user/native scrollbar scroll is
+    // in progress.  This was the remaining source of the thumb jumping back
+    // when the conversation changed size during a drag.
+    if (followLatestRef.current && !pointerScrollingRef.current && !virtuosoScrollingRef.current) {
+      virtuosoRef.current?.autoscrollToBottom();
+    }
   }, [activeItemTurnIds, mcpProgressByItemId, plansByTurnId, processEventsByTurnId, running, turns]);
 
   const handleAtBottomChange = useCallback((nextAtBottom: boolean) => {
     atBottomRef.current = nextAtBottom;
     setAtBottom(nextAtBottom);
-    if (nextAtBottom && !pointerScrollingRef.current) {
+    if (nextAtBottom && !pointerScrollingRef.current && !virtuosoScrollingRef.current) {
       followLatestRef.current = true;
       setHasNewActivity(false);
     }
@@ -138,7 +146,7 @@ export function ConversationTimeline({
     const handleScroll = (event: Event) => {
       const nextScrollTop = scrollTop();
       const userInitiated = event.isTrusted === true;
-      if ((pointerScrollingRef.current || userInitiated) && nextScrollTop < previousScrollTop - 1) {
+      if ((pointerScrollingRef.current || virtuosoScrollingRef.current || userInitiated) && nextScrollTop < previousScrollTop - 1) {
         atBottomRef.current = false;
         stopFollowing();
       }
@@ -182,9 +190,19 @@ export function ConversationTimeline({
     setHasNewActivity(false);
   }, []);
 
-  const followOutput = useCallback(() => (
-    followLatestRef.current && !pointerScrollingRef.current ? "auto" : false
-  ), []);
+  const handleVirtuosoScrolling = useCallback((isScrolling: boolean) => {
+    virtuosoScrollingRef.current = isScrolling;
+    if (isScrolling) {
+      // This callback also fires for programmatic scrolling, but only the
+      // direction-aware scroll handler below disables follow mode. Keeping the
+      // lifecycle flag here is enough to suppress competing corrections.
+      return;
+    }
+    if (!pointerScrollingRef.current && atBottomRef.current) {
+      followLatestRef.current = true;
+      setHasNewActivity(false);
+    }
+  }, []);
 
   return (
     <div className="timeline-shell">
@@ -195,8 +213,13 @@ export function ConversationTimeline({
         atBottomThreshold={8}
         atBottomStateChange={handleAtBottomChange}
         computeItemKey={(_index, turn) => turn.id}
-        followOutput={followOutput}
+        // Virtuoso's built-in followOutput also follows SIZE_INCREASED events.
+        // That path can scroll the viewport while a native scrollbar thumb is
+        // being dragged. Follow output is therefore driven exclusively by the
+        // guarded effect above.
+        followOutput={false}
         initialTopMostItemIndex={Math.max(0, turns.length - 1)}
+        isScrolling={handleVirtuosoScrolling}
         rangeChanged={handleRangeChanged}
         scrollerRef={handleScrollerRef}
         itemContent={(turnIndex, turn) => (

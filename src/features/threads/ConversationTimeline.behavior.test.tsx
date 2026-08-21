@@ -11,7 +11,8 @@ const virtuoso = vi.hoisted(() => ({
   autoscrollToBottom: vi.fn(),
   atBottomStateChange: null as ((atBottom: boolean) => void) | null,
   rangeChanged: null as ((range: { startIndex: number; endIndex: number }) => void) | null,
-  followOutput: null as ((atBottom: boolean) => "auto" | "smooth" | false) | null,
+  followOutput: null as false | null,
+  isScrolling: null as ((isScrolling: boolean) => void) | null,
 }));
 
 vi.mock("react-virtuoso", () => ({
@@ -20,7 +21,8 @@ vi.mock("react-virtuoso", () => ({
     itemContent: (index: number, turn: Turn) => React.ReactNode;
     atBottomStateChange: (atBottom: boolean) => void;
     rangeChanged: (range: { startIndex: number; endIndex: number }) => void;
-    followOutput: ((atBottom: boolean) => "auto" | "smooth" | false);
+    followOutput: false;
+    isScrolling: (isScrolling: boolean) => void;
     scrollerRef: (ref: HTMLElement | Window | null) => void;
   }, ref) => {
     const scrollerRef = useRef<HTMLDivElement>(null);
@@ -28,6 +30,7 @@ vi.mock("react-virtuoso", () => ({
     virtuoso.atBottomStateChange = props.atBottomStateChange;
     virtuoso.rangeChanged = props.rangeChanged;
     virtuoso.followOutput = props.followOutput;
+    virtuoso.isScrolling = props.isScrolling;
     useImperativeHandle(ref, () => ({
       scrollToIndex: virtuoso.scrollToIndex,
       autoscrollToBottom: virtuoso.autoscrollToBottom,
@@ -82,6 +85,7 @@ describe("ConversationTimeline navigation", () => {
     virtuoso.atBottomStateChange = null;
     virtuoso.rangeChanged = null;
     virtuoso.followOutput = null;
+    virtuoso.isScrolling = null;
   });
 
   it("navigates directly between user turns", () => {
@@ -268,7 +272,6 @@ describe("ConversationTimeline navigation", () => {
 
     view.rerender(<ConversationTimeline turns={[turn("1", "第一问，回答继续增长")]} running />);
 
-    expect(virtuoso.followOutput?.(true)).toBe(false);
     expect(virtuoso.autoscrollToBottom).not.toHaveBeenCalled();
   });
 
@@ -285,26 +288,54 @@ describe("ConversationTimeline navigation", () => {
     expect(virtuoso.autoscrollToBottom).not.toHaveBeenCalled();
   });
 
-  it("disables Virtuoso followOutput while the scrollbar is being dragged", () => {
+  it("keeps Virtuoso followOutput disabled so size changes cannot steal the scrollbar", () => {
     render(<ConversationTimeline turns={[turn("1", "第一问")]} running />);
-    const scroller = screen.getByTestId("virtual-list");
-    expect(virtuoso.followOutput?.(true)).toBe("auto");
-
-    fireEvent.pointerDown(scroller);
-
-    expect(virtuoso.followOutput?.(true)).toBe(false);
-    expect(virtuoso.followOutput?.(false)).toBe(false);
+    expect(virtuoso.followOutput).toBe(false);
   });
 
   it.each(["mouseup", "blur"] as const)("restores bottom following when a native drag ends through %s", (eventName) => {
     render(<ConversationTimeline turns={[turn("1", "第一问")]} running />);
     const scroller = screen.getByTestId("virtual-list");
     fireEvent.pointerDown(scroller);
-    expect(virtuoso.followOutput?.(true)).toBe(false);
 
     fireEvent(window, new Event(eventName));
 
-    expect(virtuoso.followOutput?.(true)).toBe("auto");
+    expect(virtuoso.followOutput).toBe(false);
+  });
+
+  it("uses Virtuoso's scrolling lifecycle to stop follow mode during native scrollbar drags", () => {
+    const initialTurns = [turn("1", "第一问")];
+    const view = render(<ConversationTimeline turns={initialTurns} running />);
+    act(() => virtuoso.isScrolling?.(true));
+    virtuoso.autoscrollToBottom.mockClear();
+
+    view.rerender(<ConversationTimeline turns={[turn("1", "第一问，回答继续增长")]} running />);
+
+    expect(virtuoso.autoscrollToBottom).not.toHaveBeenCalled();
+  });
+
+  it("restores follow mode after native scrolling ends at the bottom", () => {
+    render(<ConversationTimeline turns={[turn("1", "第一问")]} running />);
+    act(() => {
+      virtuoso.isScrolling?.(true);
+      virtuoso.atBottomStateChange?.(true);
+      virtuoso.isScrolling?.(false);
+    });
+    virtuoso.autoscrollToBottom.mockClear();
+    expect(virtuoso.isScrolling).toBeTypeOf("function");
+  });
+
+  it("does not restore follow mode from a transient bottom report during native scrolling", () => {
+    const initialTurns = [turn("1", "第一问")];
+    const view = render(<ConversationTimeline turns={initialTurns} running />);
+    act(() => {
+      virtuoso.isScrolling?.(true);
+      virtuoso.atBottomStateChange?.(true);
+    });
+    virtuoso.autoscrollToBottom.mockClear();
+    view.rerender(<ConversationTimeline turns={[turn("1", "第一问，回答继续增长")]} running />);
+
+    expect(virtuoso.autoscrollToBottom).not.toHaveBeenCalled();
   });
 
   it("keeps following when the reader only clicks message content", () => {

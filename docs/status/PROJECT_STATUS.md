@@ -64,5 +64,5 @@
 
 ## 验证基线
 
-- 2026-08-21：固定 Runtime `0.148.0-alpha.15` 的 Thread 权威 settings/Goal 同步、审查状态单调更新及原生滚动条释放与可信 scroll 兜底完成；滚动修复定向 lint 与 18 项时间线测试通过，完整门禁中的 55 个 Vitest 文件/253 项测试、TypeScript、ESLint 和 Vite production build 已通过；Knip 因当前 Windows/Node Oxc parser 的 ArrayBuffer 分配错误短路，未产生无效代码报告，Rust 检查需在资源恢复后补跑。上一完整基线覆盖 55 个文件/252 项测试、14 项 Rust 测试、Knip、Cargo check、严格 Clippy 和 diff 检查并全部通过。本次构建约 611.78 kB，仍有 Vite bundle size warning。真实网关探针确认 low 至 ultra、三档 verbosity、四种 summary 和 Priority 参数继续正确进入 `/v1/responses`。
+- 2026-08-21：固定 Runtime `0.148.0-alpha.15` 的 Thread 权威 settings/Goal 同步、审查状态单调更新及原生滚动条释放与可信 scroll 兜底完成；Virtuoso 内置 `followOutput` 已关闭，时间线改用 `isScrolling` 生命周期和受保护的自有贴底；滚动修复定向 lint 与 21 项时间线测试通过，完整前端回归为 55 个文件/256 项测试，TypeScript、ESLint、Vite production build、Rust check 和 14 项 Rust 测试已通过；Knip 因当前 Windows/Node Oxc parser 的 ArrayBuffer 分配错误短路，未产生无效代码报告。本次构建约 611.89 kB，仍有 Vite bundle size warning。真实网关探针确认 low 至 ultra、三档 verbosity、四种 summary 和 Priority 参数继续正确进入 `/v1/responses`。
 - 静态审查当前未发现无效文件、导出或依赖；源码扫描未发现 PAT、API Key、用户密钥或开发机绝对路径。真实 app-server smoke 已覆盖多 Turn 恢复、并行 Thread、文件 RPC、Skills/MCP/Goal、Plan 和本机工具；这些证据只对应固定 Runtime，不代表 Codex 最新开发分支。
