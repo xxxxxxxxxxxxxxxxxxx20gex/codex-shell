@@ -10,8 +10,8 @@ Codex Shell 使用中性应用标识 `com.codexshell.desktop`，不会复用官�
 
 - 应用配置：`%APPDATA%\com.codexshell.desktop`
 - 本地数据：`%LOCALAPPDATA%\com.codexshell.desktop`
-- 独立 CODEX_HOME：`%LOCALAPPDATA%\com.codexshell.desktop\codex-home`
-- 默认工作区：`%LOCALAPPDATA%\com.codexshell.desktop\workspace`
+- 独立 CODEX_HOME：默认 `%USERPROFILE%\.codex-shell`，可在运行环境设置中改为其他隔离的绝对路径
+- 默认项目目录：`%USERPROFILE%\Documents\Codex-Shell\YYYY-MM-DD`
 
 因此会话、SQLite 数据库、日志、skills、缓存和临时文件都与官方 `%USERPROFILE%\.codex` 分离。历史列表读取独立 CODEX_HOME 中的非临时线程，不依赖 Runtime 对 session source 的具体标记。
 
@@ -45,6 +45,6 @@ pnpm runtime:stage
 pnpm protocol:generate
 ```
 
-项目规则与动态状态入口见 [AGENTS.md](AGENTS.md) 和 [docs/status/PROJECT_STATUS.md](docs/status/PROJECT_STATUS.md)。
+项目规则见 [AGENTS.md](AGENTS.md)，完整文档关系与动态状态入口见 [docs/README.md](docs/README.md)。
 
 独立测试与质量门禁脚本统一放在 [tests/scripts](tests/scripts)；源码旁的 `*.test.*` 与 Rust `*_tests.rs` 保持就地维护，方便复用模块夹具和类型。

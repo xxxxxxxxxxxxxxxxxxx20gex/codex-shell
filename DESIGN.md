@@ -215,7 +215,7 @@ Radii:
 ## Conversation Timeline
 
 - User messages are compact right-aligned bubbles sized to content, with a sensible maximum width.
-- Assistant turns are unframed and marked by a subtle 2px vertical activity line.
+- Assistant responses are unframed and use one subtle 2px action marker at the first answer line; completed responses do not carry a full-height rail.
 - Reasoning, commands, MCP calls, and file work collapse into one process group after completion.
 - Command output and diffs use the mono family and conversation-small size.
 - Timestamps and duration sit at least 6px away from message content.

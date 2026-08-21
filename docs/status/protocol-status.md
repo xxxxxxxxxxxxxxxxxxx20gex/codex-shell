@@ -7,4 +7,5 @@
 - 已知问题：尚未增加 CI drift 检查，JSON-RPC 信封仍使用本地最小类型；后续升级仍必须同时固定 Runtime、全部 companion binaries 和生成类型，不得只替换主程序。
 - 下一步：增加生成产物 drift 校验，并在 collaborationMode 转为稳定 API 后删除局部实验适配。
 - 验证证据：`pnpm protocol:generate` 从固定 Runtime 重新生成类型；TypeScript、238 项 Vitest 测试和生产构建通过，置顶客户端序列化测试确认使用 `thread/section/move`。
+- 相关决策：[ADR-001：使用原版 Codex app-server](../decisions/ADR-001-unmodified-codex-app-server.md)。
 - 最后更新：2026-08-14

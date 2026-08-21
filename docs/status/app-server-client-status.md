@@ -7,4 +7,5 @@
 - 已知问题：尚未实现自动断线重连和请求级取消。低优先级 Account、Plugin/App Marketplace、Hooks、Realtime 和 Feedback 仍未接入。
 - 下一步：优先增加断线后的可控恢复；再评估 Plugin/Apps 和 Hooks，避免为个人第三方网关产品引入无用的 OpenAI 账户面板。
 - 验证证据：订阅测试覆盖 Thread settings/Goal 权威通知、非当前 Thread 的自动审查与终端交互过滤、当前 Thread 分发，以及 `thread/section/move` 请求体；真实工具探针已确认 Code Mode Host 产生两次 `commandExecution`。所有探针只从环境接收凭据且不输出密钥。
+- 相关决策：[ADR-001：使用原版 Codex app-server](../decisions/ADR-001-unmodified-codex-app-server.md)。
 - 最后更新：2026-08-21

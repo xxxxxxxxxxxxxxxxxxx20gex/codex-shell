@@ -9,4 +9,5 @@
 - 已知问题：Runtime 二进制被 Git 忽略，公开仓库尚无可复现自动下载/构建流程；PATH 回退 Runtime 尚未验证与生成协议的版本/hash；旧 CODEX_HOME 迁移仍依赖同卷 `rename`，跨卷用户目录需要单独的可恢复复制方案；安装包中的 elevated UAC 实际设置流程、进程崩溃后的自动恢复尚未验证。实时 stderr 仅保存在当前窗口的有界内存中，应用退出后仍以 Core 的 SQLite 日志为长期诊断来源。
 - 下一步：建立固定上游版本的 `runtime:fetch` 或 `runtime:build`，并在干净 Windows 用户环境验证安装包的 UAC、sandbox readiness 和 elevated 命令执行闭环。
 - 验证证据：固定 `codex-cli 0.148.0-alpha.15` Runtime 与 manifest 一致，Code Mode Host、setup helper 和 command runner 均有独立 SHA-256；真实第三方网关探针在低推理模式下产生两次 `commandExecution` 并完成 Turn。独立 Cargo target 中 `cargo check`、14 项 Rust 单元测试和严格 Clippy 均通过。
+- 相关决策：[ADR-001：使用原版 Codex app-server](../decisions/ADR-001-unmodified-codex-app-server.md)、[ADR-002：隔离运行数据与凭据](../decisions/ADR-002-isolated-runtime-data.md)。
 - 最后更新：2026-08-20

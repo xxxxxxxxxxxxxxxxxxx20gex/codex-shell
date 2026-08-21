@@ -8,4 +8,5 @@
 - 已知问题：当前只有一个主凭据，尚未支持多服务配置档案。
 - 下一步：增加“测试连接”UI、友好鉴权错误和多配置档案设计。
 - 验证证据：Rust 接口只公开 `save_api_key` Tauri command，`read_api_key` 仅在后端启动模块内部调用；源码扫描未发现 PAT、API Key、用户密钥或开发机绝对路径，既有兼容网关 app-server smoke 已完成且未输出 Key。
+- 相关决策：[ADR-002：隔离运行数据与凭据](../decisions/ADR-002-isolated-runtime-data.md)。
 - 最后更新：2026-08-14
