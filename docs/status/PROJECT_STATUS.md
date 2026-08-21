@@ -3,7 +3,7 @@
 - 当前阶段：Milestone 2 - P0 桌面编程工作台
 - 总体状态：核心对话、Session、工具活动、审批、文件、Diff 和模型配置可用；发布工程与 Runtime 恢复能力尚未完成。
 - 文档原则：本文件只记录跨模块当前基线、风险和下一里程碑；历史变更以 Git 提交和各模块状态文档为准，不在此累积功能流水账。
-- 最后更新：2026-08-20
+- 最后更新：2026-08-21
 
 ## 当前基线
 
@@ -64,5 +64,5 @@
 
 ## 验证基线
 
-- 2026-08-21：固定 Runtime `0.148.0-alpha.15` 的 P1 通知对齐及 Virtuoso 内置跟随竞争修复后，`pnpm test:quality` 覆盖 53 个 Vitest 文件/246 项测试、14 项 Rust 测试、TypeScript、ESLint、Vite production build、Knip、Cargo check、严格 Clippy 和 diff 检查并全部通过。真实网关探针确认 low 至 ultra、三档 verbosity、四种 summary 和 Priority 参数继续正确进入 `/v1/responses`。
+- 2026-08-21：固定 Runtime `0.148.0-alpha.15` 的 Thread 权威 settings/Goal 同步、审查状态单调更新及原生滚动条释放兜底完成；`pnpm test:quality` 覆盖 55 个 Vitest 文件/252 项测试、14 项 Rust 测试、TypeScript、ESLint、Vite production build、Knip、Cargo check、严格 Clippy 和 diff 检查并全部通过。本次构建约 611.75 kB，仍有 Vite bundle size warning。真实网关探针确认 low 至 ultra、三档 verbosity、四种 summary 和 Priority 参数继续正确进入 `/v1/responses`。
 - 静态审查当前未发现无效文件、导出或依赖；源码扫描未发现 PAT、API Key、用户密钥或开发机绝对路径。真实 app-server smoke 已覆盖多 Turn 恢复、并行 Thread、文件 RPC、Skills/MCP/Goal、Plan 和本机工具；这些证据只对应固定 Runtime，不代表 Codex 最新开发分支。

@@ -662,7 +662,19 @@ describe("agentSessionReducer", () => {
       type: "autoApprovalReviewCompleted",
       notification: completionNotification,
     });
-    const terminal = agentSessionReducer(completed, {
+    const delayedStart = agentSessionReducer(completed, {
+      type: "autoApprovalReviewStarted",
+      notification: {
+        threadId: "thread-1",
+        turnId: "turn-1",
+        startedAtMs: 100,
+        reviewId: "review-1",
+        targetItemId: "command-1",
+        review,
+        action,
+      },
+    });
+    const terminal = agentSessionReducer(delayedStart, {
       type: "terminalInteraction",
       notification: {
         threadId: "thread-1",
@@ -682,6 +694,10 @@ describe("agentSessionReducer", () => {
       notification: completionNotification,
     });
     expect(repeatedStart.processEventsByTurnId["turn-1"]).toHaveLength(1);
+    expect(delayedStart.processEventsByTurnId).toBe(completed.processEventsByTurnId);
+    expect(delayedStart.processEventsByTurnId["turn-1"]).toMatchObject([
+      { kind: "autoApprovalReview", reviewId: "review-1", status: "completed" },
+    ]);
     expect(completionWithoutStart.processEventsByTurnId["turn-1"]).toMatchObject([
       { kind: "autoApprovalReview", reviewId: "review-1", status: "completed" },
     ]);

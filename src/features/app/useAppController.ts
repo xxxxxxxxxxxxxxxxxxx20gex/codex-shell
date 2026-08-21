@@ -40,6 +40,11 @@ import {
 } from "../workspaces/workspaceState";
 import { errorMessage } from "../../shared/errors";
 import { useDismissiblePopover } from "../../shared/useDismissiblePopover";
+import {
+  approvalReviewerFromThread,
+  modelSettingsFromThread,
+  permissionModeFromThread,
+} from "../runtime/authoritativeThreadSettings";
 
 const initialSettings: ModelSettings = {
   baseUrl: "https://api.openai.com/v1",
@@ -99,6 +104,9 @@ export function useAppController() {
   const collaborationMode = collaborationModeForIntent(composerIntent);
   const slashCommands = slashQuery === null ? [] : matchingSlashCommands(slashQuery);
   const slashMenuVisible = commandPanel === null && slashQuery !== null;
+  const authoritativeThreadSettings = session.threadSettings;
+  const activeThreadId = session.thread?.id ?? null;
+  const readAuthoritativeGoal = session.getThreadGoal;
   const currentDiff = useMemo(() => {
     for (let index = session.turns.length - 1; index >= 0; index -= 1) {
       const diff = session.diffsByTurnId[session.turns[index].id];
@@ -129,6 +137,19 @@ export function useAppController() {
       .then(setDefaultProjectDirectory)
       .catch((error) => setUiError(errorMessage(error)));
   }, []);
+
+  useEffect(() => {
+    if (!authoritativeThreadSettings) return;
+    setSettings((current) => modelSettingsFromThread(current, authoritativeThreadSettings));
+    setPermissionMode(permissionModeFromThread(authoritativeThreadSettings));
+    setApprovalReviewer(approvalReviewerFromThread(authoritativeThreadSettings));
+    setModelDisplayName(null);
+  }, [authoritativeThreadSettings]);
+
+  useEffect(() => {
+    if (!activeThreadId) return;
+    void readAuthoritativeGoal().catch((error) => setUiError(errorMessage(error)));
+  }, [activeThreadId, readAuthoritativeGoal]);
 
   useEffect(() => {
     const requestId = ++mentionRequestRef.current;
@@ -165,7 +186,7 @@ export function useAppController() {
     if (session.running) throw new Error("当前任务完成后才能切换计划或目标模式");
     const next = toggle ? toggleComposerIntent(composerIntent, selected) : selected;
     if (next === "plan" && composerIntent !== "plan" && session.thread) {
-      const activeGoal = await session.getThreadGoal();
+      const activeGoal = session.threadGoal ?? await session.getThreadGoal();
       if (activeGoal) await session.clearThreadGoal();
     }
     setComposerIntent(next);
@@ -183,6 +204,16 @@ export function useAppController() {
     setMentionResults([]);
     setComposerIntent("default");
     setCommandNotice("");
+  }
+
+  async function clearActiveGoal() {
+    try {
+      if (await session.clearThreadGoal()) {
+        setCommandNotice("当前 Session 的长期目标已清除。");
+      }
+    } catch (error) {
+      setUiError(errorMessage(error));
+    }
   }
 
   async function runSlashCommand(id: SlashCommandId, args = "", clearDraft = true) {
@@ -502,5 +533,6 @@ export function useAppController() {
     handleComposerPaste,
     handleComposerKeyDown,
     toggleSkill,
+    clearActiveGoal,
   };
 }

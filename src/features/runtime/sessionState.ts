@@ -165,6 +165,10 @@ function upsertReviewStarted(
     (current) => current.kind === "autoApprovalReview" && current.reviewId === notification.reviewId,
   );
   if (existingIndex < 0) return appendProcessEvent(eventsByTurnId, notification.turnId, event);
+  const existing = events[existingIndex];
+  if (existing.kind === "autoApprovalReview" && existing.status === "completed") {
+    return eventsByTurnId;
+  }
   const next = [...events];
   next[existingIndex] = event;
   return { ...eventsByTurnId, [notification.turnId]: next };

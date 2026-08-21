@@ -21,6 +21,7 @@ import { SkillPicker } from "./features/commands/SkillPicker";
 import { SendModeControl } from "./features/composer/SendModeControl";
 import { ComposerAddMenu } from "./features/composer/ComposerAddMenu";
 import { ComposerIntentControl } from "./features/composer/ComposerIntentControl";
+import { ComposerGoalStatus } from "./features/composer/ComposerGoalStatus";
 import { SlashCommandMenu } from "./features/commands/SlashCommandMenu";
 import { DiffInspector } from "./features/diff/DiffInspector";
 import { ModelSettingsPanel } from "./features/models/ModelSettingsPanel";
@@ -116,6 +117,7 @@ function App() {
     handleComposerPaste,
     handleComposerKeyDown,
     toggleSkill,
+    clearActiveGoal,
   } = useAppController();
 
   async function openConversationPath(path: string) {
@@ -285,6 +287,7 @@ function App() {
                     onReviewerChange={changeApprovalReviewer}
                   />
                   {composerIntent !== "default" && <ComposerIntentControl intent={composerIntent} onClear={() => { setComposerIntent("default"); setCommandNotice(""); }} />}
+                  {composerIntent === "default" && session.threadGoal && <ComposerGoalStatus goal={session.threadGoal} onClear={() => void clearActiveGoal()} />}
                   {session.activityLabel && <span className={`steer-mode-indicator ${session.canSteer ? "steerable" : ""}`}><i aria-hidden="true" />{session.activityLabel}</span>}
                 </div>
                 <div className="composer-actions">

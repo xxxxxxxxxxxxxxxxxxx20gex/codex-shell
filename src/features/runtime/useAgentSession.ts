@@ -307,6 +307,32 @@ export function useAgentSession(
     markThreadRunning,
     markThreadStopped,
   );
+  const {
+    getThreadGoal: readThreadGoal,
+    setThreadGoal: writeThreadGoal,
+    clearThreadGoal: removeThreadGoal,
+  } = agentCommands;
+  const getThreadGoal = useCallback(async () => {
+    const threadId = currentThreadId();
+    const goal = await readThreadGoal();
+    if (threadId) {
+      dispatch(goal
+        ? { type: "threadGoalUpdated", notification: { threadId, goal } }
+        : { type: "threadGoalCleared", threadId });
+    }
+    return goal;
+  }, [currentThreadId, readThreadGoal]);
+  const setThreadGoal = useCallback(async (objective: string) => {
+    const goal = await writeThreadGoal(objective);
+    dispatch({ type: "threadGoalUpdated", notification: { threadId: goal.threadId, goal } });
+    return goal;
+  }, [writeThreadGoal]);
+  const clearThreadGoal = useCallback(async () => {
+    const threadId = currentThreadId();
+    const cleared = await removeThreadGoal();
+    if (cleared && threadId) dispatch({ type: "threadGoalCleared", threadId });
+    return cleared;
+  }, [currentThreadId, removeThreadGoal]);
 
   const setupWindowsSandbox = useCallback(async (mode: WindowsSandboxSetupMode) => {
     try {
@@ -384,6 +410,9 @@ export function useAgentSession(
     watchWorkspacePath,
     ...threads,
     ...agentCommands,
+    getThreadGoal,
+    setThreadGoal,
+    clearThreadGoal,
     restart,
   };
 }

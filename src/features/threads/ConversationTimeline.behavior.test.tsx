@@ -278,6 +278,17 @@ describe("ConversationTimeline navigation", () => {
     expect(virtuoso.followOutput?.(false)).toBe(false);
   });
 
+  it.each(["mouseup", "blur"] as const)("restores bottom following when a native drag ends through %s", (eventName) => {
+    render(<ConversationTimeline turns={[turn("1", "第一问")]} running />);
+    const scroller = screen.getByTestId("virtual-list");
+    fireEvent.pointerDown(scroller);
+    expect(virtuoso.followOutput?.(true)).toBe(false);
+
+    fireEvent(window, new Event(eventName));
+
+    expect(virtuoso.followOutput?.(true)).toBe("auto");
+  });
+
   it("keeps following when the reader only clicks message content", () => {
     const initialTurns = [turn("1", "第一问")];
     const view = render(<ConversationTimeline turns={initialTurns} running />);

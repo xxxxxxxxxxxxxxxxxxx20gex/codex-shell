@@ -147,15 +147,21 @@ export function ConversationTimeline({
     eventTarget.addEventListener("pointerdown", handlePointerDown, { passive: true });
     eventTarget.addEventListener("keydown", handleKeyDown);
     eventTarget.addEventListener("scroll", handleScroll, { passive: true });
+    eventTarget.addEventListener("lostpointercapture", handlePointerUp, { passive: true });
     window.addEventListener("pointerup", handlePointerUp, { passive: true });
     window.addEventListener("pointercancel", handlePointerUp, { passive: true });
+    window.addEventListener("mouseup", handlePointerUp, { passive: true });
+    window.addEventListener("blur", handlePointerUp);
     scrollerCleanupRef.current = () => {
       eventTarget.removeEventListener("wheel", handleWheel);
       eventTarget.removeEventListener("pointerdown", handlePointerDown);
       eventTarget.removeEventListener("keydown", handleKeyDown);
       eventTarget.removeEventListener("scroll", handleScroll);
+      eventTarget.removeEventListener("lostpointercapture", handlePointerUp);
       window.removeEventListener("pointerup", handlePointerUp);
       window.removeEventListener("pointercancel", handlePointerUp);
+      window.removeEventListener("mouseup", handlePointerUp);
+      window.removeEventListener("blur", handlePointerUp);
     };
   }, []);
 
