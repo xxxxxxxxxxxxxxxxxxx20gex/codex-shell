@@ -147,6 +147,10 @@ export function useAppController() {
   }, [authoritativeThreadSettings]);
 
   useEffect(() => {
+    setUiError("");
+  }, [activeThreadId]);
+
+  useEffect(() => {
     if (!activeThreadId) return;
     void readAuthoritativeGoal().catch((error) => setUiError(errorMessage(error)));
   }, [activeThreadId, readAuthoritativeGoal]);

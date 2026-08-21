@@ -40,6 +40,7 @@ import { WorkspaceExplorer } from "./features/workspaces/WorkspaceExplorer";
 import { WorkspaceSelector } from "./features/workspaces/WorkspaceSelector";
 import { WindowTitleBar } from "./features/window/WindowTitleBar";
 import { ProductMark } from "./shared/ProductMark";
+import { TransientNotice } from "./shared/TransientNotice";
 import "./styles/tokens.css";
 import { isPathWithinRoot, resolveLinkedProjectPath, resolveProjectRelativePath } from "./features/workspaces/workspaceState";
 
@@ -229,7 +230,8 @@ function App() {
               store={session.runtimeNoticeStore}
               onShowStatus={() => openPreferences("diagnostics")}
             />
-            {(session.error || uiError) && <div className="composer-error">{session.error || uiError}</div>}
+            {session.error && <div className="composer-error" role="alert">{session.error}</div>}
+            <TransientNotice key={session.thread?.id ?? "new"} message={uiError} onDismiss={() => setUiError("")} />
             {commandNotice && <div className="composer-notice">{commandNotice}</div>}
             {!session.thread && <WorkspaceSelector
               path={pendingProjectPath}
