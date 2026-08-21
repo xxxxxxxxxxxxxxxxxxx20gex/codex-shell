@@ -254,6 +254,24 @@ describe("ConversationTimeline navigation", () => {
     expect(virtuoso.autoscrollToBottom).not.toHaveBeenCalled();
   });
 
+  it("stops following when a native scrollbar emits a trusted scroll without pointer events", () => {
+    const initialTurns = [turn("1", "第一问")];
+    const view = render(<ConversationTimeline turns={initialTurns} running />);
+    const scroller = screen.getByTestId("virtual-list");
+    Object.defineProperty(scroller, "scrollTop", { configurable: true, writable: true, value: 100 });
+    fireEvent.scroll(scroller);
+    scroller.scrollTop = 40;
+    const trustedScroll = new Event("scroll");
+    Object.defineProperty(trustedScroll, "isTrusted", { configurable: true, value: true });
+    scroller.dispatchEvent(trustedScroll);
+    virtuoso.autoscrollToBottom.mockClear();
+
+    view.rerender(<ConversationTimeline turns={[turn("1", "第一问，回答继续增长")]} running />);
+
+    expect(virtuoso.followOutput?.(true)).toBe(false);
+    expect(virtuoso.autoscrollToBottom).not.toHaveBeenCalled();
+  });
+
   it("does not re-enable following when bottom is reported during an active drag", () => {
     const initialTurns = [turn("1", "第一问")];
     const view = render(<ConversationTimeline turns={initialTurns} running />);

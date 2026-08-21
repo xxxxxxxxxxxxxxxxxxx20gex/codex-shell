@@ -135,9 +135,10 @@ export function ConversationTimeline({
     const handleKeyDown = (event: Event) => {
       if (["ArrowUp", "PageUp", "Home"].includes((event as KeyboardEvent).key)) stopFollowing();
     };
-    const handleScroll = () => {
+    const handleScroll = (event: Event) => {
       const nextScrollTop = scrollTop();
-      if (pointerScrollingRef.current && nextScrollTop < previousScrollTop - 1) {
+      const userInitiated = event.isTrusted === true;
+      if ((pointerScrollingRef.current || userInitiated) && nextScrollTop < previousScrollTop - 1) {
         atBottomRef.current = false;
         stopFollowing();
       }
