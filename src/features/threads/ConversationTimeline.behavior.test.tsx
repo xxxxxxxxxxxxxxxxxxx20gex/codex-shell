@@ -210,6 +210,16 @@ describe("ConversationTimeline navigation", () => {
     expect(virtuoso.autoscrollToBottom).toHaveBeenCalledTimes(1);
   });
 
+  it("does not reassert the bottom position for completed history", () => {
+    const initialTurns = [answeredTurn("turn-1", "第一问")];
+    const view = render(<ConversationTimeline turns={initialTurns} running={false} />);
+    virtuoso.autoscrollToBottom.mockClear();
+
+    view.rerender(<ConversationTimeline turns={[answeredTurn("turn-1", "第一问（已完成）")]} running={false} />);
+
+    expect(virtuoso.autoscrollToBottom).not.toHaveBeenCalled();
+  });
+
   it("does not mistake a layout-driven scroll correction for reader navigation", () => {
     const initialTurns = [turn("1", "第一问")];
     const view = render(<ConversationTimeline turns={initialTurns} running />);
@@ -268,6 +278,22 @@ describe("ConversationTimeline navigation", () => {
     const trustedScroll = new Event("scroll");
     Object.defineProperty(trustedScroll, "isTrusted", { configurable: true, value: true });
     scroller.dispatchEvent(trustedScroll);
+    virtuoso.autoscrollToBottom.mockClear();
+
+    view.rerender(<ConversationTimeline turns={[turn("1", "第一问，回答继续增长")]} running />);
+
+    expect(virtuoso.autoscrollToBottom).not.toHaveBeenCalled();
+  });
+
+  it("keeps a trusted native scrollbar lock while moving toward the bottom", () => {
+    const initialTurns = [turn("1", "第一问")];
+    const view = render(<ConversationTimeline turns={initialTurns} running />);
+    const scroller = screen.getByTestId("virtual-list");
+    Object.defineProperty(scroller, "scrollTop", { configurable: true, writable: true, value: 40 });
+    const trustedDownwardScroll = new Event("scroll");
+    Object.defineProperty(trustedDownwardScroll, "isTrusted", { configurable: true, value: true });
+    scroller.dispatchEvent(trustedDownwardScroll);
+    act(() => virtuoso.atBottomStateChange?.(true));
     virtuoso.autoscrollToBottom.mockClear();
 
     view.rerender(<ConversationTimeline turns={[turn("1", "第一问，回答继续增长")]} running />);

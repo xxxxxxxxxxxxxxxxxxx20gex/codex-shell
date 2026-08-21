@@ -61,6 +61,10 @@ export function ConversationTimeline({
   const followLatestRef = useRef(true);
   const atBottomRef = useRef(true);
   const pointerScrollingRef = useRef(false);
+  // WebView2 may briefly report `isScrolling=false` between native scrollbar
+  // thumb events. Keep a small event-driven lock so that gap cannot re-enable
+  // follow mode while the user is still dragging.
+  const nativeScrollLockRef = useRef(false);
   // Virtuoso reports native-scrollbar drags through its scrolling lifecycle even
   // when WebView2 does not dispatch pointer events for the scrollbar thumb.
   const virtuosoScrollingRef = useRef(false);
@@ -98,7 +102,10 @@ export function ConversationTimeline({
     // Do not issue our own correction while a user/native scrollbar scroll is
     // in progress.  This was the remaining source of the thumb jumping back
     // when the conversation changed size during a drag.
-    if (followLatestRef.current && !pointerScrollingRef.current && !virtuosoScrollingRef.current) {
+    // Completed history is immutable from the viewport's perspective. Do not
+    // re-assert the bottom position on unrelated renders after the user has
+    // navigated it; automatic following is only meaningful while a Turn runs.
+    if (running && followLatestRef.current && !pointerScrollingRef.current && !virtuosoScrollingRef.current && !nativeScrollLockRef.current) {
       virtuosoRef.current?.autoscrollToBottom();
     }
   }, [activeItemTurnIds, mcpProgressByItemId, plansByTurnId, processEventsByTurnId, running, turns]);
@@ -106,7 +113,7 @@ export function ConversationTimeline({
   const handleAtBottomChange = useCallback((nextAtBottom: boolean) => {
     atBottomRef.current = nextAtBottom;
     setAtBottom(nextAtBottom);
-    if (nextAtBottom && !pointerScrollingRef.current && !virtuosoScrollingRef.current) {
+    if (nextAtBottom && !pointerScrollingRef.current && !virtuosoScrollingRef.current && !nativeScrollLockRef.current) {
       followLatestRef.current = true;
       setHasNewActivity(false);
     }
@@ -120,8 +127,23 @@ export function ConversationTimeline({
     const eventTarget: EventTarget = scroller;
     const scrollTop = () => scroller instanceof Window ? scroller.scrollY : scroller.scrollTop;
     let previousScrollTop = scrollTop();
+    let nativeScrollUnlockTimer: ReturnType<typeof setTimeout> | null = null;
     const stopFollowing = () => {
       followLatestRef.current = false;
+    };
+    const releaseNativeScrollLock = () => {
+      nativeScrollLockRef.current = false;
+      nativeScrollUnlockTimer = null;
+      if (atBottomRef.current && !pointerScrollingRef.current && !virtuosoScrollingRef.current) {
+        followLatestRef.current = true;
+        setHasNewActivity(false);
+      }
+    };
+    const markNativeScroll = () => {
+      nativeScrollLockRef.current = true;
+      stopFollowing();
+      if (nativeScrollUnlockTimer !== null) clearTimeout(nativeScrollUnlockTimer);
+      nativeScrollUnlockTimer = setTimeout(releaseNativeScrollLock, 300);
     };
     const handleWheel = (event: Event) => {
       if ((event as WheelEvent).deltaY < 0) stopFollowing();
@@ -146,6 +168,7 @@ export function ConversationTimeline({
     const handleScroll = (event: Event) => {
       const nextScrollTop = scrollTop();
       const userInitiated = event.isTrusted === true;
+      if (userInitiated) markNativeScroll();
       if ((pointerScrollingRef.current || virtuosoScrollingRef.current || userInitiated) && nextScrollTop < previousScrollTop - 1) {
         atBottomRef.current = false;
         stopFollowing();
@@ -162,6 +185,8 @@ export function ConversationTimeline({
     window.addEventListener("mouseup", handlePointerUp, { passive: true });
     window.addEventListener("blur", handlePointerUp);
     scrollerCleanupRef.current = () => {
+      if (nativeScrollUnlockTimer !== null) clearTimeout(nativeScrollUnlockTimer);
+      nativeScrollLockRef.current = false;
       eventTarget.removeEventListener("wheel", handleWheel);
       eventTarget.removeEventListener("pointerdown", handlePointerDown);
       eventTarget.removeEventListener("keydown", handleKeyDown);
@@ -198,7 +223,7 @@ export function ConversationTimeline({
       // lifecycle flag here is enough to suppress competing corrections.
       return;
     }
-    if (!pointerScrollingRef.current && atBottomRef.current) {
+    if (!pointerScrollingRef.current && atBottomRef.current && !nativeScrollLockRef.current) {
       followLatestRef.current = true;
       setHasNewActivity(false);
     }
