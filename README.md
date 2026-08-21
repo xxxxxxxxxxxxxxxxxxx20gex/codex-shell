@@ -30,6 +30,13 @@ CS 不修改 Codex Core，也不在前端复制一套 Agent 执行循环。所�
 
 ## 快速开始
 
+### 下载 Windows 安装包
+
+稳定版安装器发布在 [GitHub Releases](https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/releases/tag/v0.1.0)：下载
+`codex-shell_0.1.0_x64-setup.exe` 后按向导安装。当前 Release 未进行代码签名，
+Windows SmartScreen 可能在首次运行时显示提示；这是个人二开项目，不代表 OpenAI
+官方产品或背书。
+
 ### 运行已构建的桌面端
 
 开发构建产物位于：
