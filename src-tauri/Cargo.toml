@@ -14,6 +14,13 @@ edition = "2024"
 name = "codex_shell_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+[profile.release]
+# Keep the distributable small and avoid retaining debug metadata in the
+# installer. The package script also limits Cargo concurrency for low-memory
+# Windows build hosts.
+debug = 0
+strip = "symbols"
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 

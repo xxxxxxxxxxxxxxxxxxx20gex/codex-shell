@@ -1,7 +1,7 @@
 # 项目总状态
 
 - 当前阶段：Milestone 2 - P0 桌面编程工作台
-- 总体状态：核心对话、Session、工具活动、审批、文件、Diff 和模型配置可用；发布工程与 Runtime 恢复能力尚未完成。
+- 总体状态：核心对话、Session、工具活动、审批、文件、Diff 和模型配置可用；已具备可复验的 NSIS Windows 安装包发布链路，签名、CI 与 Runtime 恢复能力尚未完成。
 - 文档边界：本文件只记录跨模块当前快照、项目级风险、下一里程碑和完整验证基线。模块行为和定向证据以 [模块状态索引](../README.md#当前状态) 为准，历史由 Git 保留。
 - 最后更新：2026-08-21
 
@@ -18,7 +18,7 @@
 ## 项目级风险
 
 - app-server 自动断线恢复尚未完成；代际隔离可以阻止旧进程事件污染新连接，但不会主动重启崩溃进程或恢复进行中的 Turn。
-- Runtime 二进制尚无可复现的获取或构建流水线；安装包、签名、CI、干净 Windows 环境的 UAC 和 sidecar 验证仍未完成。
+- Runtime 二进制尚无可复现的获取或构建流水线；安装包已可由本机固定 Runtime 生成 NSIS，但签名、CI、干净 Windows 环境的 UAC 和 sidecar 验证仍未完成。MSI 不是默认发布目标。
 - Shell Queue 只存在当前进程内，应用退出后不会恢复；MCP 配置编辑、Skills/Plugin 管理和显式连接诊断尚未完成。
 - 文件预览仍会先经 IPC 读取完整文件；超大 Diff、单个超长活动和二进制 Diff 缺少源端预算或专用视图。
 
@@ -36,5 +36,6 @@
 - 2026-08-21：固定 Runtime `0.148.0-alpha.15` 的 Thread 权威 settings/Goal 同步、审查状态单调更新及原生滚动条释放与可信 scroll 兜底完成；时间线移除 react-virtuoso，改用单一原生滚动容器、程序定位隔离、用户滚动 settle 锁、运行中受控贴底和 Session 切换重置；新增 Session 临时提示关闭/自动消失。
 - 定向滚动与临时提示测试通过；完整前端回归为 56 个文件/247 项测试，TypeScript、ESLint、Vite production build、Rust check 和 14 项 Rust 测试通过。当前构建约 555.91 kB，仍有 Vite bundle size warning。
 - Knip 因当前 Windows/Node Oxc parser 的 ArrayBuffer 分配错误短路，未产生无效代码报告；该结果不能作为无效代码检查通过的证据。
+- 2026-08-21：`pnpm desktop:package` 在低并发 release 配置下成功生成 NSIS 安装包；隔离临时目录静默安装检查主程序、4 个 Runtime/companion 文件和 LICENSE/NOTICE 资源存在，随后静默卸载成功。安装包未签名，正式公开分发前需完成签名和干净 Windows 验收。
 - 真实网关探针确认 low 至 ultra、三档 verbosity、四种 summary 和 Priority 参数正确进入 `/v1/responses`。真实 app-server smoke 已覆盖多 Turn 恢复、并行 Thread、文件 RPC、Skills/MCP/Goal、Plan 和本机工具；这些证据只对应固定 Runtime，不代表 Codex 最新开发分支。
 - 静态审查未发现 PAT、API Key、用户密钥或开发机绝对路径。

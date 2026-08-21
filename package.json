@@ -18,6 +18,7 @@
     "rust:check": "powershell -NoProfile -ExecutionPolicy Bypass -File tests/scripts/check-rust.ps1",
     "test:quality": "powershell -NoProfile -ExecutionPolicy Bypass -File tests/scripts/run-quality-gates.ps1",
     "desktop:build": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-desktop.ps1",
+    "desktop:package": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package-desktop.ps1",
     "preview": "vite preview",
     "tauri": "tauri"
   },

@@ -129,6 +129,17 @@ pnpm rust:check
 pnpm desktop:build
 ```
 
+生成可分发的 Windows 安装包：
+
+```powershell
+pnpm desktop:package
+```
+
+该命令会先校验并暂存固定 Runtime，再执行正式 Tauri bundle。NSIS 安装包位于
+`src-tauri/target/release/bundle/nsis/`。Runtime 的
+LICENSE/NOTICE 会随安装包一同带上；正式公开发布前仍应完成代码签名、第三方依赖
+许可清单和干净 Windows 环境验收。
+
 准备固定 Runtime 和协议类型：
 
 ```powershell
