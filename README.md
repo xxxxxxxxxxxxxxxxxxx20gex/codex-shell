@@ -110,6 +110,14 @@ CS 适合以下方向：
 
 ## 从源码运行
 
+### 分支与版本
+
+- `main`：个人项目的日常开发与稳定主线；
+- `release/vX.Y.Z`：对应已发布版本的冻结维护分支，并与同名 Git tag 对齐。
+
+日常改动直接提交到 `main`，通过质量门禁后正式发布。发布时从 `main` 创建版本分支
+和 tag，安装包与该 tag 保持一致。
+
 环境要求：Windows、Node.js、pnpm、Rust、Visual Studio C++ Build Tools，以及可用的 `codex.exe` Runtime。
 
 ```powershell
