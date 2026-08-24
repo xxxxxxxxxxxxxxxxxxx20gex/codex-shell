@@ -35,7 +35,7 @@
 ## 完整验证基线
 
 - 2026-08-21：固定 Runtime `0.148.0-alpha.15` 的 Thread 权威 settings/Goal 同步、审查状态单调更新及原生滚动条释放与可信 scroll 兜底完成；时间线移除 react-virtuoso，改用单一原生滚动容器、程序定位隔离、用户滚动 settle 锁、运行中受控贴底和 Session 切换重置；新增 Session 临时提示关闭/自动消失。
-- 2026-08-24：将选择项目后的“项目文件”入口迁移到右侧 inspector，并移除重复的右侧 Diff 面板；TypeScript、ESLint、56 个 Vitest 文件/247 项测试、Vite production build 和 Tauri debug build 通过。
+- 2026-08-24：将选择项目后的“项目文件”入口迁移到右侧 inspector，并移除重复的右侧 Diff 面板；随后将 WorkspaceExplorer 改为无背景模糊的可调宽右侧抽屉，增加扩大/缩小快捷按钮；TypeScript、ESLint、56 个 Vitest 文件/248 项测试、Vite production build 和 Tauri debug build 通过。
 - 定向滚动与临时提示测试通过；完整前端回归为 56 个文件/247 项测试，TypeScript、ESLint、Vite production build、Rust check 和 14 项 Rust 测试通过。当前构建约 555.91 kB，仍有 Vite bundle size warning。
 - Knip 因当前 Windows/Node Oxc parser 的 ArrayBuffer 分配错误短路，未产生无效代码报告；该结果不能作为无效代码检查通过的证据。
 - 2026-08-21：`pnpm desktop:package` 在低并发 release 配置下成功生成 NSIS 安装包；隔离临时目录静默安装检查主程序、4 个 Runtime/companion 文件和 LICENSE/NOTICE 资源存在，随后静默卸载成功。安装包未签名，正式公开分发前需完成签名和干净 Windows 验收。

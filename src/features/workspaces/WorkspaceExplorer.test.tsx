@@ -7,6 +7,26 @@ import type { DisposeWorkspaceWatch } from "../runtime/useWorkspaceFiles";
 import { WorkspaceExplorer } from "./WorkspaceExplorer";
 
 describe("WorkspaceExplorer", () => {
+  it("supports resizing the right drawer with explicit size controls", async () => {
+    const view = render(
+      <WorkspaceExplorer
+        rootPath="C:\\work"
+        onClose={() => undefined}
+        readDirectory={vi.fn(async () => [])}
+        readFile={vi.fn(async () => "")}
+        watchPath={vi.fn(async () => vi.fn())}
+      />,
+    );
+
+    const drawer = view.container.querySelector<HTMLElement>(".workspace-explorer-drawer");
+    const initialWidth = Math.max(420, Math.min(1200, window.innerWidth - 320));
+    expect(drawer?.style.getPropertyValue("--explorer-width")).toBe(`${initialWidth}px`);
+    fireEvent.click(screen.getByRole("button", { name: "缩小项目文件窗口" }));
+    expect(drawer?.style.getPropertyValue("--explorer-width")).toBe(`${initialWidth - 120}px`);
+    fireEvent.click(screen.getByRole("button", { name: "扩大项目文件窗口" }));
+    expect(drawer?.style.getPropertyValue("--explorer-width")).toBe(`${initialWidth}px`);
+  });
+
   it("watches expanded folders, refreshes changed files, and releases watches", async () => {
     const rootPath = "C:\\work";
     const srcPath = "C:\\work\\src";
