@@ -56,7 +56,6 @@ function pathsAffectFile(changedPaths: string[], filePath: string) {
 const DEFAULT_EXPLORER_WIDTH = 900;
 const EXPLORER_MIN_WIDTH = 420;
 const EXPLORER_MAX_WIDTH = 1200;
-const EXPLORER_WIDTH_STEP = 120;
 
 function maxExplorerWidth() {
   return Math.max(EXPLORER_MIN_WIDTH, Math.min(EXPLORER_MAX_WIDTH, window.innerWidth - 320));
@@ -193,10 +192,6 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
     event.currentTarget.setPointerCapture?.(event.pointerId);
   }
 
-  function adjustWidth(delta: number) {
-    setDrawerWidth((current) => clampExplorerWidth(current + delta));
-  }
-
   function toggleDirectory(path: string) {
     const isExpanded = expanded.has(path);
     setExpanded((current) => {
@@ -281,8 +276,8 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
         <header className="explorer-header">
           <div><span className="eyebrow">Project Explorer</span><strong>{projectName(rootPath)}</strong><small>{rootPath}</small>{watchError && <i className="explorer-watch-warning" title={watchError}>自动刷新不可用</i>}</div>
           <div className="explorer-actions">
-            <button className="explorer-size-button" onClick={() => adjustWidth(EXPLORER_WIDTH_STEP)} disabled={drawerWidth >= maxExplorerWidth()} aria-label="扩大项目文件窗口" title="扩大窗口"><ChevronsLeft aria-hidden="true" /></button>
-            <button className="explorer-size-button" onClick={() => adjustWidth(-EXPLORER_WIDTH_STEP)} disabled={drawerWidth <= EXPLORER_MIN_WIDTH} aria-label="缩小项目文件窗口" title="缩小窗口"><ChevronsRight aria-hidden="true" /></button>
+            <button className="explorer-size-button" onClick={() => setDrawerWidth(maxExplorerWidth())} disabled={drawerWidth >= maxExplorerWidth()} aria-label="扩大到最大宽度" title="扩大到最大宽度"><ChevronsLeft aria-hidden="true" /></button>
+            <button className="explorer-size-button" onClick={() => setDrawerWidth(EXPLORER_MIN_WIDTH)} disabled={drawerWidth <= EXPLORER_MIN_WIDTH} aria-label="缩小到最小宽度" title="缩小到最小宽度"><ChevronsRight aria-hidden="true" /></button>
             <button className="explorer-close" onClick={onClose} aria-label="关闭文件浏览器" title="关闭"><X aria-hidden="true" /></button>
           </div>
         </header>

@@ -21,9 +21,9 @@ describe("WorkspaceExplorer", () => {
     const drawer = view.container.querySelector<HTMLElement>(".workspace-explorer-drawer");
     const initialWidth = Math.max(420, Math.min(1200, window.innerWidth - 320));
     expect(drawer?.style.getPropertyValue("--explorer-width")).toBe(`${initialWidth}px`);
-    fireEvent.click(screen.getByRole("button", { name: "缩小项目文件窗口" }));
-    expect(drawer?.style.getPropertyValue("--explorer-width")).toBe(`${initialWidth - 120}px`);
-    fireEvent.click(screen.getByRole("button", { name: "扩大项目文件窗口" }));
+    fireEvent.click(screen.getByRole("button", { name: "缩小到最小宽度" }));
+    expect(drawer?.style.getPropertyValue("--explorer-width")).toBe("420px");
+    fireEvent.click(screen.getByRole("button", { name: "扩大到最大宽度" }));
     expect(drawer?.style.getPropertyValue("--explorer-width")).toBe(`${initialWidth}px`);
   });
 
