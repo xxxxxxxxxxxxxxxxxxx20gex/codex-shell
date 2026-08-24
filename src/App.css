@@ -234,6 +234,11 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .inspector-heading { display: flex; height: 48px; align-items: center; justify-content: space-between; padding: 0 12px; border-bottom: 1px solid var(--border-subtle); }
 .inspector-heading strong { font-size: var(--text-ui); font-weight: 600; }
 .inspector-heading span { color: var(--text-muted); font-size: var(--text-meta); }
+.inspector-project-button { display: flex; width: calc(100% - 24px); min-height: 40px; align-items: center; gap: 10px; margin: 12px; padding: 0 12px; border: 0; border-radius: var(--radius-control); color: var(--text-secondary); text-align: left; background: transparent; font-size: var(--text-ui); cursor: pointer; }
+.inspector-project-button:hover { color: var(--text-primary); background: var(--surface-raised); }
+.inspector-project-button:focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; }
+.inspector-project-button svg { width: 16px; height: 16px; flex: 0 0 16px; stroke-width: 1.75; }
+.inspector-project-empty { margin: 16px 12px; color: var(--text-muted); font-size: var(--text-label); line-height: 20px; }
 
 .modal-backdrop { position: fixed; z-index: 40; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(5,5,4,.72); backdrop-filter: blur(8px); }
 .confirmation-backdrop { position: fixed; z-index: 30; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(5,5,4,.78); backdrop-filter: blur(9px); }

@@ -1,9 +1,9 @@
 # Diff 与文件变更状态
 
-- 模块职责：展示当前项目文件修改、增删统计与可审查 diff。
-- 当前状态：app-server 实时 Diff 和历史文件变更审查视图已完成；右侧栏只负责文件变更审查，支持文件级状态摘要、选择与项目文件跳转。
-- 最近变更：删除右栏状态和日志页签后，`DiffInspector` 成为右栏唯一内容；其高度改为严格扣除 48px 固定标题，空态与审查内容完整占据剩余空间。项目文件跳转失败通过当前会话内的临时提示展示，支持手动关闭并在 5 秒后自动消失，切换 Session 不会保留旧提示。
-- 当前接口：`DiffInspector`、`parseUnifiedDiff`、`AgentSessionState.diffsByTurnId`。
+- 模块职责：消费 app-server 的项目文件修改事件，并为会话时间线提供增删统计与文件变更详情。
+- 当前状态：app-server 实时 Diff 和历史文件变更仍由状态层消费并在会话时间线展示；右侧 inspector 不再重复展示 Diff，改为提供项目文件浏览入口。
+- 最近变更：移除右侧重复的 `DiffInspector` 渲染，保留 `AgentSessionState.diffsByTurnId` 和会话时间线的文件变更展示；项目文件通过右侧 inspector 的 WorkspaceExplorer 入口打开。
+- 当前接口：`parseUnifiedDiff`、`AgentSessionState.diffsByTurnId` 和会话时间线的文件变更项。
 - 已知问题：尚未限制超大 Diff DOM 规模，也没有二进制文件专用提示和行号。
 - 下一步：增加大文件截断/虚拟化、二进制状态与复制补丁操作。
 - 验证证据：parser 测试覆盖多文件、增删计数及新增/删除/重命名语义；happy-dom 测试覆盖文件状态摘要和工作区跳转回调。

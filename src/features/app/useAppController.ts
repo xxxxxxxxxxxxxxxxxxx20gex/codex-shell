@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { FuzzyFileSearchResult } from "../../generated/app-server/FuzzyFileSearchResult";
 import {
@@ -107,14 +107,6 @@ export function useAppController() {
   const authoritativeThreadSettings = session.threadSettings;
   const activeThreadId = session.thread?.id ?? null;
   const readAuthoritativeGoal = session.getThreadGoal;
-  const currentDiff = useMemo(() => {
-    for (let index = session.turns.length - 1; index >= 0; index -= 1) {
-      const diff = session.diffsByTurnId[session.turns[index].id];
-      if (diff) return diff;
-    }
-    return "";
-  }, [session.diffsByTurnId, session.turns]);
-
   function changeModelSettings(next: ModelSettings) {
     setSettings(next);
     if ("__TAURI_INTERNALS__" in window) {
@@ -523,7 +515,6 @@ export function useAppController() {
     mentionQuery,
     slashQuery,
     slashMenuVisible,
-    currentDiff,
     runSlashCommand,
     submitWithMode,
     steerQueuedTurn,

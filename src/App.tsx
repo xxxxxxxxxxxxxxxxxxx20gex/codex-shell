@@ -24,7 +24,6 @@ import { ComposerAddMenu } from "./features/composer/ComposerAddMenu";
 import { ComposerIntentControl } from "./features/composer/ComposerIntentControl";
 import { ComposerGoalStatus } from "./features/composer/ComposerGoalStatus";
 import { SlashCommandMenu } from "./features/commands/SlashCommandMenu";
-import { DiffInspector } from "./features/diff/DiffInspector";
 import { ModelSettingsPanel } from "./features/models/ModelSettingsPanel";
 import { ModelQuickPicker } from "./features/models/ModelQuickPicker";
 import { modelIdDisplayName } from "./features/models/modelPresentation";
@@ -43,7 +42,7 @@ import { WindowTitleBar } from "./features/window/WindowTitleBar";
 import { ProductMark } from "./shared/ProductMark";
 import { TransientNotice } from "./shared/TransientNotice";
 import "./styles/tokens.css";
-import { isPathWithinRoot, resolveLinkedProjectPath, resolveProjectRelativePath } from "./features/workspaces/workspaceState";
+import { isPathWithinRoot, resolveLinkedProjectPath } from "./features/workspaces/workspaceState";
 
 function App() {
   const {
@@ -105,7 +104,6 @@ function App() {
     mentionQuery,
     slashQuery,
     slashMenuVisible,
-    currentDiff,
     runSlashCommand,
     submitWithMode,
     steerQueuedTurn,
@@ -152,16 +150,6 @@ function App() {
               <Puzzle aria-hidden="true" />
               <span>插件</span>
             </button>
-            {(pendingProjectPath || session.thread?.cwd) && <button
-              className="sidebar-action"
-              type="button"
-              onClick={() => openWorkspaceExplorer()}
-              aria-label={`打开项目文件：${currentProjectPath}`}
-              title={`${currentProjectPath}（打开项目文件）`}
-            >
-              <FolderOpen aria-hidden="true" />
-              <span>项目文件</span>
-            </button>}
           </nav>
           <ThreadHistoryList
             threads={session.history}
@@ -346,12 +334,21 @@ function App() {
         </div>
 
         <aside className="inspector panel">
-          <div className="inspector-heading"><strong>文件变更</strong></div>
-          <DiffInspector diff={currentDiff} onOpenFile={currentProjectPath ? (path) => {
-            const filePath = resolveProjectRelativePath(currentProjectPath, path);
-            if (filePath) openWorkspaceExplorer(filePath);
-            else setUiError("Diff 文件不在当前项目内，无法预览");
-          } : undefined} />
+          <div className="inspector-heading"><strong>项目文件</strong></div>
+          {(pendingProjectPath || session.thread?.cwd) && currentProjectPath ? (
+            <button
+              type="button"
+              className="inspector-project-button"
+              onClick={() => openWorkspaceExplorer()}
+              aria-label={`打开项目文件：${currentProjectPath}`}
+              title={`${currentProjectPath}（打开项目文件）`}
+            >
+              <FolderOpen aria-hidden="true" />
+              <span>打开项目文件</span>
+            </button>
+          ) : (
+            <div className="inspector-project-empty">选择项目后可以在这里浏览项目结构。</div>
+          )}
         </aside>
       </section>
 
