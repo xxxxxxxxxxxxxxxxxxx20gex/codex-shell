@@ -368,7 +368,13 @@ function App() {
           {inspectorView === "home" && <>
             <div className="inspector-heading"><div><span className="eyebrow">WORKSPACE TOOLS</span><strong>功能区</strong></div></div>
             <div className="inspector-home" aria-label="右侧功能入口">
-              <button type="button" className="inspector-feature-entry" onClick={() => setInspectorView("files")}>
+              <button type="button" className="inspector-feature-entry" onClick={() => {
+                if (currentProjectPath) {
+                  openWorkspaceExplorer();
+                } else {
+                  setInspectorView("files");
+                }
+              }}>
                 <span className="inspector-feature-icon"><FolderOpen aria-hidden="true" /></span>
                 <span><strong>项目文件</strong><small>浏览当前项目结构和文件内容</small></span>
                 <ChevronRight aria-hidden="true" />
@@ -382,9 +388,7 @@ function App() {
           </>}
           {inspectorView === "files" && <>
             <div className="inspector-heading inspector-detail-heading"><button type="button" className="inspector-back" onClick={() => setInspectorView("home")} aria-label="返回功能区"><ChevronLeft aria-hidden="true" /></button><div><span className="eyebrow">WORKSPACE</span><strong>项目文件</strong></div></div>
-            {(pendingProjectPath || session.thread?.cwd) && currentProjectPath ? (
-              <button type="button" className="inspector-project-button" onClick={() => openWorkspaceExplorer()} aria-label={`打开项目文件：${currentProjectPath}`} title={`${currentProjectPath}（打开项目文件）`}><FolderOpen aria-hidden="true" /><span>打开项目文件</span></button>
-            ) : <div className="inspector-project-empty">选择项目后可以在这里浏览项目结构。</div>}
+            <div className="inspector-project-empty">项目路径尚未准备好。选择项目或等待默认工作区加载后，再从功能区打开项目文件。</div>
           </>}
           {inspectorView === "chat" && <SideChatPanel chat={session.sideChat} maximized={sideChatMaximized} onToggleMaximize={() => setSideChatMaximized((value) => !value)} onBack={() => setInspectorView("home")} onClose={() => { setSideChatMaximized(false); void session.sideChat.close(); setInspectorView("home"); }} />}
         </aside>
