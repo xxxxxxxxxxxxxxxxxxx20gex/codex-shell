@@ -4,6 +4,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  FolderOpen,
   MessageSquarePlus,
   Puzzle,
   Settings,
@@ -151,6 +152,16 @@ function App() {
               <Puzzle aria-hidden="true" />
               <span>插件</span>
             </button>
+            {(pendingProjectPath || session.thread?.cwd) && <button
+              className="sidebar-action"
+              type="button"
+              onClick={() => openWorkspaceExplorer()}
+              aria-label={`打开项目文件：${currentProjectPath}`}
+              title={`${currentProjectPath}（打开项目文件）`}
+            >
+              <FolderOpen aria-hidden="true" />
+              <span>项目文件</span>
+            </button>}
           </nav>
           <ThreadHistoryList
             threads={session.history}
