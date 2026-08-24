@@ -130,9 +130,10 @@ function App() {
     const handleShortcut = (event: globalThis.KeyboardEvent) => {
       if (!(event.ctrlKey || event.metaKey) || !event.altKey || event.key.toLowerCase() !== "s") return;
       event.preventDefault();
-      setInspectorView("chat");
       setInspectorOpen(true);
-      void openSideChat();
+      void openSideChat().then((opened) => {
+        if (opened) setInspectorView("chat");
+      });
     };
     window.addEventListener("keydown", handleShortcut);
     return () => window.removeEventListener("keydown", handleShortcut);
@@ -353,7 +354,7 @@ function App() {
           </button>
         </div>
 
-        <aside className={`inspector panel ${inspectorView !== "home" ? "inspector-detail" : ""}`}>
+        <aside className={`inspector panel ${inspectorView !== "home" ? "inspector-detail" : ""} ${inspectorView === "chat" ? "inspector-chat" : ""}`}>
           {inspectorView === "home" && <>
             <div className="inspector-heading"><div><span className="eyebrow">WORKSPACE TOOLS</span><strong>功能区</strong></div></div>
             <div className="inspector-home" aria-label="右侧功能入口">
@@ -362,7 +363,7 @@ function App() {
                 <span><strong>项目文件</strong><small>浏览当前项目结构和文件内容</small></span>
                 <ChevronRight aria-hidden="true" />
               </button>
-              <button type="button" className="inspector-feature-entry" onClick={() => { setInspectorView("chat"); void session.sideChat.openChat(); }} disabled={session.sideChat.submitting}>
+              <button type="button" className="inspector-feature-entry" onClick={() => { void session.sideChat.openChat().then((opened) => { if (opened) setInspectorView("chat"); }); }} disabled={session.sideChat.submitting}>
                 <span className="inspector-feature-icon"><MessageCircle aria-hidden="true" /></span>
                 <span><strong>侧边聊天</strong><small>在独立只读线程中旁聊当前对话</small></span>
                 <ChevronRight aria-hidden="true" />

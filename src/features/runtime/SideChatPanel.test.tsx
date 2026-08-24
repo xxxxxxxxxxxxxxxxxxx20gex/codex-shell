@@ -49,4 +49,14 @@ describe("SideChatPanel", () => {
     expect(onToggleMaximize).toHaveBeenCalledTimes(1);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  it("does not submit while the ephemeral thread is still preparing", async () => {
+    const chat = fakeChat({ thread: null });
+    render(<SideChatPanel chat={chat} maximized={false} onToggleMaximize={vi.fn()} onClose={vi.fn()} />);
+    const textbox = screen.getByRole("textbox");
+    expect((textbox as HTMLTextAreaElement).disabled).toBe(true);
+    expect((screen.getByRole("button", { name: "发送" }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.change(textbox, { target: { value: "不会丢失" } });
+    expect(chat.send).not.toHaveBeenCalled();
+  });
 });

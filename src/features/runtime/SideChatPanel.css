@@ -10,8 +10,13 @@
 .side-chat-icon svg, .side-chat-send svg { width: 15px; height: 15px; stroke-width: 1.75; }
 .side-chat-error { margin: 8px 10px 0; padding: 8px 10px; border: 1px solid color-mix(in srgb, var(--accent-danger) 35%, var(--border-subtle)); border-radius: var(--radius-control); color: var(--accent-danger); background: color-mix(in srgb, var(--accent-danger) 8%, var(--surface-panel)); font-size: var(--text-meta); line-height: 16px; }
 .side-chat-body { display: flex; min-width: 0; min-height: 0; overflow: hidden; }
-.side-chat-body .timeline-shell { min-width: 0; min-height: 0; height: auto; flex: 1 1 auto; }
-.side-chat-body .timeline { min-height: 0; height: 100%; overflow-y: auto; overscroll-behavior: contain; }
+.side-chat-body .timeline-shell { display: grid; min-width: 0; min-height: 0; height: 100%; flex: 1 1 auto; grid-template-rows: minmax(0, 1fr); }
+.side-chat-body .timeline { min-width: 0; min-height: 0; height: auto; overflow-y: auto; overscroll-behavior: contain; }
+.side-chat-body .conversation-turn-frame { width: 100%; padding-right: 16px; padding-left: 16px; }
+.side-chat-body .conversation-turn-frame.first { padding-top: 20px; }
+.side-chat-body .conversation-turn-frame.last { padding-bottom: 28px; }
+.side-chat-body .conversation-turn-frame.separated { padding-top: 34px; }
+.side-chat-body .conversation-turn-frame.separated::before { top: 18px; }
 .side-chat-empty { display: grid; min-height: 100%; place-content: center; gap: 8px; padding: 24px; color: var(--text-muted); text-align: center; }
 .side-chat-empty strong { color: var(--text-secondary); font-size: var(--text-ui); }
 .side-chat-empty span { max-width: 260px; font-size: var(--text-meta); line-height: 17px; }

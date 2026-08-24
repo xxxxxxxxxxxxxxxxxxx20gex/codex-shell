@@ -94,6 +94,10 @@ export function useSideChat({
       return true;
     }
     operationRef.current = true;
+    // Keep the feature entry disabled while the ephemeral thread is being
+    // created. Otherwise the panel can render a Composer before it has a
+    // thread id and a first send is silently rejected.
+    setSubmitting(true);
     setError("");
     try {
       const client = await ensureConnected();
@@ -120,7 +124,10 @@ export function useSideChat({
             threadSource: "codex-shell-side-chat",
           });
       threadIdRef.current = response.thread.id;
-      dispatch({ type: "loadThread", thread: response.thread });
+      // A fork carries the parent turns for model context. They are not new
+      // side-chat messages and must not be rendered a second time in the
+      // inspector; subsequent notifications populate the isolated timeline.
+      dispatch({ type: "loadThread", thread: { ...response.thread, turns: [] } });
       setOpen(true);
       return true;
     } catch (openError) {
@@ -128,6 +135,7 @@ export function useSideChat({
       return false;
     } finally {
       operationRef.current = false;
+      setSubmitting(false);
     }
   }, [ensureConnected, mainThread, mainTurns, personalization?.customInstructions, settings.modelId, settings.serviceTier]);
 
