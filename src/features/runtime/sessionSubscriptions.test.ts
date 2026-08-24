@@ -231,4 +231,62 @@ describe("session subscriptions", () => {
     ]);
     dispose();
   });
+
+  it("isolates side-chat deltas while preserving global turn lifecycle tracking", async () => {
+    const transport = new FakeTransport();
+    const client = new AppServerClient(transport);
+    const mainActions: AgentSessionAction[] = [];
+    const sideActions: AgentSessionAction[] = [];
+    const globalStarted: string[] = [];
+    const sideStarted: string[] = [];
+    await client.start();
+    const dispose = subscribeToSessionEvents(client, handlers({
+      dispatch: (action) => mainActions.push(action),
+      onTurnStarted: (notification) => globalStarted.push(notification.threadId),
+      sideChat: {
+        currentThreadId: () => "thread-side",
+        dispatch: (action) => sideActions.push(action),
+        onTurnStarted: (notification) => sideStarted.push(notification.threadId),
+        onTurnCompleted: () => undefined,
+        onError: () => undefined,
+      },
+    }));
+
+    transport.emit({
+      method: "item/agentMessage/delta",
+      params: { threadId: "thread-side", turnId: "turn-side", itemId: "message-side", delta: "side" },
+    });
+    transport.emit({
+      method: "item/agentMessage/delta",
+      params: { threadId: "thread-active", turnId: "turn-main", itemId: "message-main", delta: "main" },
+    });
+    transport.emit({
+      method: "turn/started",
+      params: {
+        threadId: "thread-side",
+        turn: {
+          id: "turn-side",
+          items: [],
+          itemsView: "full",
+          status: "inProgress",
+          error: null,
+          startedAt: 1,
+          completedAt: null,
+          durationMs: null,
+        },
+      },
+    });
+
+    expect(mainActions).toEqual([{
+      type: "agentDelta",
+      notification: { threadId: "thread-active", turnId: "turn-main", itemId: "message-main", delta: "main" },
+    }]);
+    expect(sideActions).toEqual([{
+      type: "agentDelta",
+      notification: { threadId: "thread-side", turnId: "turn-side", itemId: "message-side", delta: "side" },
+    }]);
+    expect(globalStarted).toEqual(["thread-side"]);
+    expect(sideStarted).toEqual(["thread-side"]);
+    dispose();
+  });
 });

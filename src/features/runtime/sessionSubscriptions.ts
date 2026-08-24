@@ -84,29 +84,56 @@ interface Handlers {
     requestId: JsonRpcId,
     interaction: ServerInteractionPayload,
   ) => Promise<ReverseRequestResult>;
+  /** Optional secondary stream used by the Codex-style side chat. */
+  sideChat?: {
+    currentThreadId: () => string | null;
+    dispatch: (action: AgentSessionAction) => void;
+    onTurnStarted: (notification: TurnStartedNotification) => void;
+    onTurnCompleted: (notification: TurnCompletedNotification) => void;
+    onError: (notification: ErrorNotification) => void;
+  };
 }
 
 export function subscribeToSessionEvents(client: AppServerClient, handlers: Handlers) {
-  function onActive<T extends { threadId: string }>(params: unknown, apply: (notification: T) => void) {
+  function dispatchActive<T extends { threadId: string }>(
+    params: unknown,
+    mainAction: (notification: T) => AgentSessionAction,
+  ) {
     const notification = params as T;
-    if (notification.threadId === handlers.currentThreadId()) apply(notification);
+    if (notification.threadId === handlers.currentThreadId()) {
+      handlers.dispatch(mainAction(notification));
+    } else if (notification.threadId === handlers.sideChat?.currentThreadId()) {
+      handlers.sideChat.dispatch(mainAction(notification));
+    }
   }
 
   const disposers = [
-    client.onNotification("item/agentMessage/delta", (params) => onActive<AgentMessageDeltaNotification>(params, (notification) => handlers.dispatch({ type: "agentDelta", notification }))),
-    client.onNotification("item/plan/delta", (params) => onActive<PlanDeltaNotification>(params, (notification) => handlers.dispatch({ type: "planDelta", notification }))),
-    client.onNotification("item/commandExecution/outputDelta", (params) => onActive<CommandExecutionOutputDeltaNotification>(params, (notification) => handlers.dispatch({ type: "commandDelta", notification }))),
-    client.onNotification("item/mcpToolCall/progress", (params) => onActive<McpToolCallProgressNotification>(params, (notification) => handlers.dispatch({ type: "mcpProgress", notification }))),
-    client.onNotification("item/reasoning/summaryTextDelta", (params) => onActive<ReasoningSummaryTextDeltaNotification>(params, (notification) => handlers.dispatch({ type: "reasoningSummaryDelta", notification }))),
-    client.onNotification("item/reasoning/textDelta", (params) => onActive<ReasoningTextDeltaNotification>(params, (notification) => handlers.dispatch({ type: "reasoningTextDelta", notification }))),
-    client.onNotification("item/fileChange/patchUpdated", (params) => onActive<FileChangePatchUpdatedNotification>(params, (notification) => handlers.dispatch({ type: "fileChangeUpdated", notification }))),
-    client.onNotification("turn/diff/updated", (params) => onActive<TurnDiffUpdatedNotification>(params, (notification) => handlers.dispatch({ type: "turnDiffUpdated", notification }))),
-    client.onNotification("turn/plan/updated", (params) => onActive<TurnPlanUpdatedNotification>(params, (notification) => handlers.dispatch({ type: "turnPlanUpdated", notification }))),
-    client.onNotification("item/started", (params) => onActive<ItemStartedNotification>(params, (notification) => handlers.dispatch({ type: "itemStarted", notification }))),
-    client.onNotification("item/completed", (params) => onActive<ItemCompletedNotification>(params, (notification) => handlers.dispatch({ type: "itemCompleted", notification }))),
-    client.onNotification("turn/started", (params) => handlers.onTurnStarted(params as TurnStartedNotification)),
-    client.onNotification("turn/completed", (params) => handlers.onTurnCompleted(params as TurnCompletedNotification)),
-    client.onNotification("error", (params) => handlers.onError(params as ErrorNotification)),
+    client.onNotification("item/agentMessage/delta", (params) => dispatchActive<AgentMessageDeltaNotification>(params, (notification) => ({ type: "agentDelta", notification }))),
+    client.onNotification("item/plan/delta", (params) => dispatchActive<PlanDeltaNotification>(params, (notification) => ({ type: "planDelta", notification }))),
+    client.onNotification("item/commandExecution/outputDelta", (params) => dispatchActive<CommandExecutionOutputDeltaNotification>(params, (notification) => ({ type: "commandDelta", notification }))),
+    client.onNotification("item/mcpToolCall/progress", (params) => dispatchActive<McpToolCallProgressNotification>(params, (notification) => ({ type: "mcpProgress", notification }))),
+    client.onNotification("item/reasoning/summaryTextDelta", (params) => dispatchActive<ReasoningSummaryTextDeltaNotification>(params, (notification) => ({ type: "reasoningSummaryDelta", notification }))),
+    client.onNotification("item/reasoning/textDelta", (params) => dispatchActive<ReasoningTextDeltaNotification>(params, (notification) => ({ type: "reasoningTextDelta", notification }))),
+    client.onNotification("item/fileChange/patchUpdated", (params) => dispatchActive<FileChangePatchUpdatedNotification>(params, (notification) => ({ type: "fileChangeUpdated", notification }))),
+    client.onNotification("turn/diff/updated", (params) => dispatchActive<TurnDiffUpdatedNotification>(params, (notification) => ({ type: "turnDiffUpdated", notification }))),
+    client.onNotification("turn/plan/updated", (params) => dispatchActive<TurnPlanUpdatedNotification>(params, (notification) => ({ type: "turnPlanUpdated", notification }))),
+    client.onNotification("item/started", (params) => dispatchActive<ItemStartedNotification>(params, (notification) => ({ type: "itemStarted", notification }))),
+    client.onNotification("item/completed", (params) => dispatchActive<ItemCompletedNotification>(params, (notification) => ({ type: "itemCompleted", notification }))),
+    client.onNotification("turn/started", (params) => {
+      const notification = params as TurnStartedNotification;
+      handlers.onTurnStarted(notification);
+      if (notification.threadId === handlers.sideChat?.currentThreadId()) handlers.sideChat.onTurnStarted(notification);
+    }),
+    client.onNotification("turn/completed", (params) => {
+      const notification = params as TurnCompletedNotification;
+      handlers.onTurnCompleted(notification);
+      if (notification.threadId === handlers.sideChat?.currentThreadId()) handlers.sideChat.onTurnCompleted(notification);
+    }),
+    client.onNotification("error", (params) => {
+      const notification = params as ErrorNotification;
+      handlers.onError(notification);
+      if (notification.threadId === handlers.sideChat?.currentThreadId()) handlers.sideChat.onError(notification);
+    }),
     client.onNotification("thread/name/updated", (params) => handlers.onThreadName(params as ThreadNameUpdatedNotification)),
     client.onNotification("thread/settings/updated", (params) => handlers.onThreadSettings(params as ThreadSettingsUpdatedNotification)),
     client.onNotification("thread/goal/updated", (params) => handlers.onThreadGoalUpdated(params as ThreadGoalUpdatedNotification)),
@@ -130,10 +157,10 @@ export function subscribeToSessionEvents(client: AppServerClient, handlers: Hand
     client.onNotification("model/safetyBuffering/updated", (params) => handlers.onModelSafetyBuffering(params as ModelSafetyBufferingUpdatedNotification)),
     client.onNotification("mcpServer/oauthLogin/completed", (params) => handlers.onMcpOauthLoginCompleted(params as McpServerOauthLoginCompletedNotification)),
     client.onNotification("mcpServer/startupStatus/updated", (params) => handlers.onMcpServerStatusUpdated(params as McpServerStatusUpdatedNotification)),
-    client.onNotification("thread/tokenUsage/updated", (params) => onActive<ThreadTokenUsageUpdatedNotification>(params, (notification) => handlers.dispatch({ type: "tokenUsageUpdated", notification }))),
-    client.onNotification("item/autoApprovalReview/started", (params) => onActive<ItemGuardianApprovalReviewStartedNotification>(params, (notification) => handlers.dispatch({ type: "autoApprovalReviewStarted", notification }))),
-    client.onNotification("item/autoApprovalReview/completed", (params) => onActive<ItemGuardianApprovalReviewCompletedNotification>(params, (notification) => handlers.dispatch({ type: "autoApprovalReviewCompleted", notification }))),
-    client.onNotification("item/commandExecution/terminalInteraction", (params) => onActive<TerminalInteractionNotification>(params, (notification) => handlers.dispatch({ type: "terminalInteraction", notification }))),
+    client.onNotification("thread/tokenUsage/updated", (params) => dispatchActive<ThreadTokenUsageUpdatedNotification>(params, (notification) => ({ type: "tokenUsageUpdated", notification }))),
+    client.onNotification("item/autoApprovalReview/started", (params) => dispatchActive<ItemGuardianApprovalReviewStartedNotification>(params, (notification) => ({ type: "autoApprovalReviewStarted", notification }))),
+    client.onNotification("item/autoApprovalReview/completed", (params) => dispatchActive<ItemGuardianApprovalReviewCompletedNotification>(params, (notification) => ({ type: "autoApprovalReviewCompleted", notification }))),
+    client.onNotification("item/commandExecution/terminalInteraction", (params) => dispatchActive<TerminalInteractionNotification>(params, (notification) => ({ type: "terminalInteraction", notification }))),
     client.onNotification("app-server/stopped", handlers.onStopped),
     client.onLog(handlers.onRuntimeLog),
     client.onProtocolError(handlers.onProtocolError),

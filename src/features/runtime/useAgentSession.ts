@@ -17,6 +17,7 @@ import { useAgentCommands } from "./useAgentCommands";
 import { canSteerRunningTurn, runningTurnLabel, useRunningTurns } from "./useRunningTurns";
 import { useThreadController } from "./useThreadController";
 import { useWorkspaceFiles } from "./useWorkspaceFiles";
+import { useSideChat } from "./useSideChat";
 
 export type { FileMention, ImageAttachment, SkillMention } from "./sessionInput";
 
@@ -128,6 +129,18 @@ export function useAgentSession(
     getRunningTurn,
     isThreadRunning,
   });
+  const sideChat = useSideChat({
+    clientRef,
+    ensureConnected,
+    mainThread: sessionState.thread,
+    mainTurns: sessionState.turns,
+    settings,
+    personalization,
+    markThreadRunning,
+    markThreadStopped,
+  });
+  const sideChatSubscriptionHandlers = sideChat.subscriptionHandlers;
+  const resetSideChat = sideChat.reset;
   const {
     currentThreadId,
     ensureActiveThread,
@@ -149,6 +162,7 @@ export function useAgentSession(
     if (!client) return;
     return subscribeToSessionEvents(client, {
       currentThreadId,
+      sideChat: sideChatSubscriptionHandlers,
       dispatch,
       onTurnStarted,
       onTurnCompleted: (notification) => {
@@ -263,6 +277,7 @@ export function useAgentSession(
         clearRunningTurns();
         interactionStore.clear();
         resetThreads();
+        resetSideChat();
       },
       onRuntimeLog: runtimeLogStore.enqueue,
       onProtocolError: (protocolError) => setError(protocolError.message),
@@ -284,6 +299,8 @@ export function useAgentSession(
     resetThreads,
     runtimeLogStore,
     runtimeNoticeStore,
+    resetSideChat,
+    sideChatSubscriptionHandlers,
   ]);
 
   useEffect(() => () => {
@@ -414,6 +431,7 @@ export function useAgentSession(
     setThreadGoal,
     clearThreadGoal,
     restart,
+    sideChat,
   };
 }
 

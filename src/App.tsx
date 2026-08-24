@@ -6,6 +6,7 @@ import {
   ChevronRight,
   FolderOpen,
   MessageSquarePlus,
+  MessageCircle,
   Puzzle,
   Settings,
   Sparkles,
@@ -13,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
+import { useEffect, useState } from "react";
 import "./App.css";
 import { PermissionModeSelector } from "./features/approvals/PermissionModeSelector";
 import { AttachmentGallery } from "./features/attachments/AttachmentGallery";
@@ -37,6 +39,7 @@ import { ThreadHistoryList } from "./features/threads/ThreadHistoryList";
 import { threadTitle } from "./features/threads/threadPresentation";
 import { FileMentionMenu } from "./features/workspaces/FileMentionMenu";
 import { WorkspaceExplorer } from "./features/workspaces/WorkspaceExplorer";
+import { SideChatPanel } from "./features/runtime/SideChatPanel";
 import { WorkspaceSelector } from "./features/workspaces/WorkspaceSelector";
 import { WindowTitleBar } from "./features/window/WindowTitleBar";
 import { ProductMark } from "./shared/ProductMark";
@@ -45,6 +48,8 @@ import "./styles/tokens.css";
 import { isPathWithinRoot, resolveLinkedProjectPath } from "./features/workspaces/workspaceState";
 
 function App() {
+  const [inspectorView, setInspectorView] = useState<"files" | "chat">("files");
+  const [sideChatMaximized, setSideChatMaximized] = useState(false);
   const {
     workspaceGridRef,
     workspaceGridStyle,
@@ -119,6 +124,19 @@ function App() {
     toggleSkill,
     clearActiveGoal,
   } = useAppController();
+  const openSideChat = session.sideChat.openChat;
+
+  useEffect(() => {
+    const handleShortcut = (event: globalThis.KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || !event.altKey || event.key.toLowerCase() !== "s") return;
+      event.preventDefault();
+      setInspectorView("chat");
+      setInspectorOpen(true);
+      void openSideChat();
+    };
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
+  }, [openSideChat, setInspectorOpen]);
 
   async function openConversationPath(path: string) {
     const resolvedPath = currentProjectPath
@@ -137,8 +155,10 @@ function App() {
       <WindowTitleBar />
       <section
         ref={workspaceGridRef}
-        className={`workspace-grid ${sidebarOpen ? "" : "sidebar-hidden"} ${inspectorOpen ? "" : "inspector-hidden"} ${resizingPanel ? "resizing" : ""}`}
-        style={workspaceGridStyle}
+        className={`workspace-grid ${sidebarOpen ? "" : "sidebar-hidden"} ${inspectorOpen ? "" : "inspector-hidden"} ${resizingPanel ? "resizing" : ""} ${sideChatMaximized && inspectorView === "chat" ? "inspector-maximized" : ""}`}
+        style={sideChatMaximized && inspectorView === "chat"
+          ? { ...workspaceGridStyle, "--inspector-width": "min(760px, 70vw)" }
+          : workspaceGridStyle}
       >
         <aside className="sidebar panel">
           <nav className="sidebar-actions" aria-label="主要操作">
@@ -334,20 +354,35 @@ function App() {
         </div>
 
         <aside className="inspector panel">
-          <div className="inspector-heading"><strong>项目文件</strong></div>
-          {(pendingProjectPath || session.thread?.cwd) && currentProjectPath ? (
-            <button
-              type="button"
-              className="inspector-project-button"
-              onClick={() => openWorkspaceExplorer()}
-              aria-label={`打开项目文件：${currentProjectPath}`}
-              title={`${currentProjectPath}（打开项目文件）`}
-            >
-              <FolderOpen aria-hidden="true" />
-              <span>打开项目文件</span>
-            </button>
+          <div className="inspector-heading inspector-tabs">
+            <div className="inspector-tab-list" role="tablist" aria-label="右侧面板">
+              <button type="button" role="tab" aria-selected={inspectorView === "files"} className={`inspector-tab ${inspectorView === "files" ? "active" : ""}`} onClick={() => setInspectorView("files")}><FolderOpen aria-hidden="true" />项目文件</button>
+              <button type="button" role="tab" aria-selected={inspectorView === "chat"} className={`inspector-tab ${inspectorView === "chat" ? "active" : ""}`} onClick={() => { setInspectorView("chat"); void session.sideChat.openChat(); }}><MessageCircle aria-hidden="true" />侧边聊天</button>
+            </div>
+          </div>
+          {inspectorView === "chat" ? (
+            <SideChatPanel chat={session.sideChat} maximized={sideChatMaximized} onToggleMaximize={() => setSideChatMaximized((value) => !value)} onClose={() => { setSideChatMaximized(false); void session.sideChat.close(); setInspectorView("files"); }} />
           ) : (
-            <div className="inspector-project-empty">选择项目后可以在这里浏览项目结构。</div>
+            <>
+              {(pendingProjectPath || session.thread?.cwd) && currentProjectPath ? (
+                <button
+                  type="button"
+                  className="inspector-project-button"
+                  onClick={() => openWorkspaceExplorer()}
+                  aria-label={`打开项目文件：${currentProjectPath}`}
+                  title={`${currentProjectPath}（打开项目文件）`}
+                >
+                  <FolderOpen aria-hidden="true" />
+                  <span>打开项目文件</span>
+                </button>
+              ) : (
+                <div className="inspector-project-empty">选择项目后可以在这里浏览项目结构。</div>
+              )}
+              <button type="button" className="inspector-project-button side-chat-launch" onClick={() => { setInspectorView("chat"); void session.sideChat.openChat(); }} disabled={session.sideChat.submitting}>
+                <MessageCircle aria-hidden="true" />
+                <span>打开侧边聊天</span>
+              </button>
+            </>
           )}
         </aside>
       </section>
