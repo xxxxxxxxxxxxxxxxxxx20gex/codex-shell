@@ -7,4 +7,5 @@
 - 已知问题：安装包尚未代码签名；MSI 未纳入默认发布目标；仍缺 CI、干净机器 UAC/sidecar 验证，以及 Runtime 版本不匹配、超长单条活动输出和三栏拖拽的自动化覆盖。
 - 下一步：配置不含密钥的 CI 基线，签名 NSIS 安装包，并在干净 Windows 环境验证安装后的动态 sidecar 路径。
 - 验证证据：2026-08-21 完整前端回归为 56 个 Vitest 文件/247 项测试，TypeScript、ESLint、Vite production build 通过；Rust check 与 14 项 Rust 单元测试通过。`pnpm desktop:package` 成功生成 `src-tauri/target/release/bundle/nsis/codex-shell_0.1.0_x64-setup.exe`（约 85.6 MB）；静默安装检查主程序、4 个 Runtime/companion 文件和 3 个许可证资源存在，随后静默卸载成功。Knip 在 Oxc parser 分配 ArrayBuffer 时因当前 Windows/Node 内存分配失败（`RangeError: Array buffer allocation failed`），未产生无效代码报告。当前前端 bundle 约 555.91 kB，仍有 Vite bundle size warning。
+- 2026-08-24 review：分支治理和 Wiki 式文档改动未引入源码变化；静态检查未发现密钥、开发机绝对路径、明显调试输出或未清理类型逃逸。TypeScript、ESLint、56 个 Vitest 文件/247 项测试、Vite production build、Rust check 与 14 项 Rust 测试再次通过。Knip 的 Windows/Node 内存分配失败仍是质量门禁的已知限制；安装包未签名、Runtime 获取不可复现和干净机器验收仍待后续处理。
 - 最后更新：2026-08-21
