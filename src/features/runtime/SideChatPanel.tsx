@@ -1,4 +1,4 @@
-import { Maximize2, Minimize2, Send, Square, X } from "lucide-react";
+import { ChevronLeft, Maximize2, Minimize2, Send, Square, X } from "lucide-react";
 import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { ConversationTimeline } from "../threads/ConversationTimeline";
 import type { SideChat } from "./useSideChat";
@@ -9,9 +9,10 @@ interface Props {
   maximized: boolean;
   onToggleMaximize: () => void;
   onClose: () => void;
+  onBack?: () => void;
 }
 
-export function SideChatPanel({ chat, maximized, onToggleMaximize, onClose }: Props) {
+export function SideChatPanel({ chat, maximized, onToggleMaximize, onClose, onBack }: Props) {
   const [draft, setDraft] = useState("");
 
   async function submit(event?: FormEvent) {
@@ -31,9 +32,12 @@ export function SideChatPanel({ chat, maximized, onToggleMaximize, onClose }: Pr
   return (
     <section className="side-chat-panel" aria-label="侧边聊天">
       <header className="side-chat-header">
-        <div>
+        <div className="side-chat-title-group">
+          {onBack && <button type="button" className="side-chat-icon side-chat-back" onClick={onBack} title="返回功能区" aria-label="返回功能区"><ChevronLeft aria-hidden="true" /></button>}
+          <div>
           <span className="eyebrow">SIDE CHAT</span>
           <strong>侧边聊天</strong>
+          </div>
         </div>
         <div className="side-chat-actions">
           <button type="button" className="side-chat-icon" onClick={onToggleMaximize} title={maximized ? "恢复侧边栏宽度" : "最大化侧边栏"} aria-label={maximized ? "恢复侧边栏宽度" : "最大化侧边栏"}>

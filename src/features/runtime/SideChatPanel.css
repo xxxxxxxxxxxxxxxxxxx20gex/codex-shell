@@ -1,14 +1,17 @@
-.side-chat-panel { display: grid; min-height: 0; height: 100%; grid-template-rows: 56px max-content minmax(0, 1fr) max-content; background: var(--surface-sidebar); }
+.side-chat-panel { display: grid; min-width: 0; min-height: 0; height: 100%; grid-template-rows: 56px max-content minmax(0, 1fr) max-content; overflow: hidden; background: var(--surface-sidebar); }
 .side-chat-header { display: flex; min-width: 0; align-items: center; justify-content: space-between; padding: 0 12px 0 16px; border-bottom: 1px solid var(--border-subtle); background: var(--surface-panel); }
 .side-chat-header > div:first-child { display: grid; min-width: 0; gap: 2px; }
+.side-chat-title-group { display: flex !important; align-items: center; gap: 4px; }
+.side-chat-title-group > div { display: grid; min-width: 0; gap: 2px; }
 .side-chat-header strong { color: var(--text-primary); font-size: var(--text-ui); font-weight: 600; }
 .side-chat-actions { display: flex; gap: 2px; }
 .side-chat-icon, .side-chat-send { display: grid; width: 28px; height: 28px; place-items: center; padding: 0; border: 0; border-radius: var(--radius-control); color: var(--text-muted); background: transparent; cursor: pointer; }
 .side-chat-icon:hover, .side-chat-send:hover { color: var(--text-primary); background: var(--surface-raised); }
 .side-chat-icon svg, .side-chat-send svg { width: 15px; height: 15px; stroke-width: 1.75; }
 .side-chat-error { margin: 8px 10px 0; padding: 8px 10px; border: 1px solid color-mix(in srgb, var(--accent-danger) 35%, var(--border-subtle)); border-radius: var(--radius-control); color: var(--accent-danger); background: color-mix(in srgb, var(--accent-danger) 8%, var(--surface-panel)); font-size: var(--text-meta); line-height: 16px; }
-.side-chat-body { min-height: 0; overflow: hidden; }
-.side-chat-body .timeline-shell { height: 100%; }
+.side-chat-body { display: flex; min-width: 0; min-height: 0; overflow: hidden; }
+.side-chat-body .timeline-shell { min-width: 0; min-height: 0; height: auto; flex: 1 1 auto; }
+.side-chat-body .timeline { min-height: 0; height: 100%; overflow-y: auto; overscroll-behavior: contain; }
 .side-chat-empty { display: grid; min-height: 100%; place-content: center; gap: 8px; padding: 24px; color: var(--text-muted); text-align: center; }
 .side-chat-empty strong { color: var(--text-secondary); font-size: var(--text-ui); }
 .side-chat-empty span { max-width: 260px; font-size: var(--text-meta); line-height: 17px; }

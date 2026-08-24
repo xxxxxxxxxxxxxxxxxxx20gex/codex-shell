@@ -48,7 +48,7 @@ import "./styles/tokens.css";
 import { isPathWithinRoot, resolveLinkedProjectPath } from "./features/workspaces/workspaceState";
 
 function App() {
-  const [inspectorView, setInspectorView] = useState<"files" | "chat">("files");
+  const [inspectorView, setInspectorView] = useState<"home" | "files" | "chat">("home");
   const [sideChatMaximized, setSideChatMaximized] = useState(false);
   const {
     workspaceGridRef,
@@ -353,37 +353,29 @@ function App() {
           </button>
         </div>
 
-        <aside className="inspector panel">
-          <div className="inspector-heading inspector-tabs">
-            <div className="inspector-tab-list" role="tablist" aria-label="右侧面板">
-              <button type="button" role="tab" aria-selected={inspectorView === "files"} className={`inspector-tab ${inspectorView === "files" ? "active" : ""}`} onClick={() => setInspectorView("files")}><FolderOpen aria-hidden="true" />项目文件</button>
-              <button type="button" role="tab" aria-selected={inspectorView === "chat"} className={`inspector-tab ${inspectorView === "chat" ? "active" : ""}`} onClick={() => { setInspectorView("chat"); void session.sideChat.openChat(); }}><MessageCircle aria-hidden="true" />侧边聊天</button>
-            </div>
-          </div>
-          {inspectorView === "chat" ? (
-            <SideChatPanel chat={session.sideChat} maximized={sideChatMaximized} onToggleMaximize={() => setSideChatMaximized((value) => !value)} onClose={() => { setSideChatMaximized(false); void session.sideChat.close(); setInspectorView("files"); }} />
-          ) : (
-            <>
-              {(pendingProjectPath || session.thread?.cwd) && currentProjectPath ? (
-                <button
-                  type="button"
-                  className="inspector-project-button"
-                  onClick={() => openWorkspaceExplorer()}
-                  aria-label={`打开项目文件：${currentProjectPath}`}
-                  title={`${currentProjectPath}（打开项目文件）`}
-                >
-                  <FolderOpen aria-hidden="true" />
-                  <span>打开项目文件</span>
-                </button>
-              ) : (
-                <div className="inspector-project-empty">选择项目后可以在这里浏览项目结构。</div>
-              )}
-              <button type="button" className="inspector-project-button side-chat-launch" onClick={() => { setInspectorView("chat"); void session.sideChat.openChat(); }} disabled={session.sideChat.submitting}>
-                <MessageCircle aria-hidden="true" />
-                <span>打开侧边聊天</span>
+        <aside className={`inspector panel ${inspectorView !== "home" ? "inspector-detail" : ""}`}>
+          {inspectorView === "home" && <>
+            <div className="inspector-heading"><div><span className="eyebrow">WORKSPACE TOOLS</span><strong>功能区</strong></div></div>
+            <div className="inspector-home" aria-label="右侧功能入口">
+              <button type="button" className="inspector-feature-entry" onClick={() => setInspectorView("files")}>
+                <span className="inspector-feature-icon"><FolderOpen aria-hidden="true" /></span>
+                <span><strong>项目文件</strong><small>浏览当前项目结构和文件内容</small></span>
+                <ChevronRight aria-hidden="true" />
               </button>
-            </>
-          )}
+              <button type="button" className="inspector-feature-entry" onClick={() => { setInspectorView("chat"); void session.sideChat.openChat(); }} disabled={session.sideChat.submitting}>
+                <span className="inspector-feature-icon"><MessageCircle aria-hidden="true" /></span>
+                <span><strong>侧边聊天</strong><small>在独立只读线程中旁聊当前对话</small></span>
+                <ChevronRight aria-hidden="true" />
+              </button>
+            </div>
+          </>}
+          {inspectorView === "files" && <>
+            <div className="inspector-heading inspector-detail-heading"><button type="button" className="inspector-back" onClick={() => setInspectorView("home")} aria-label="返回功能区"><ChevronLeft aria-hidden="true" /></button><div><span className="eyebrow">WORKSPACE</span><strong>项目文件</strong></div></div>
+            {(pendingProjectPath || session.thread?.cwd) && currentProjectPath ? (
+              <button type="button" className="inspector-project-button" onClick={() => openWorkspaceExplorer()} aria-label={`打开项目文件：${currentProjectPath}`} title={`${currentProjectPath}（打开项目文件）`}><FolderOpen aria-hidden="true" /><span>打开项目文件</span></button>
+            ) : <div className="inspector-project-empty">选择项目后可以在这里浏览项目结构。</div>}
+          </>}
+          {inspectorView === "chat" && <SideChatPanel chat={session.sideChat} maximized={sideChatMaximized} onToggleMaximize={() => setSideChatMaximized((value) => !value)} onBack={() => setInspectorView("home")} onClose={() => { setSideChatMaximized(false); void session.sideChat.close(); setInspectorView("home"); }} />}
         </aside>
       </section>
 
