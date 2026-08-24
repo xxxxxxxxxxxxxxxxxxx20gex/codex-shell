@@ -12,7 +12,7 @@
 - Composer 已统一模型、推理强度、权限、Goal、Plan、Review、Skills、MCP 和压缩入口；Thread 的模型、权限、审批者和 Goal 状态以 Core 权威通知及查询结果为准，不在 Shell 维护第二套执行状态。
 - Windows 桌面界面已收敛到 `DESIGN.md` 和语义 Token；三栏布局在窄窗口下保留功能入口，设置承载个性化、外观、运行环境和诊断，右栏专注项目文件浏览。
 - Codex Shell 的配置、凭据、Session、SQLite、Skills、日志和缓存与官方 Codex 隔离；API Key 只保存在 Windows Credential Manager。默认项目按日期创建于系统文档目录。参见 [ADR-002](../decisions/ADR-002-isolated-runtime-data.md)。
-- 选择项目后，右侧 inspector 的“项目文件”入口复用 app-server 文件读取与 watch 能力打开 WorkspaceExplorer；目录根始终来自待创建 Thread 的项目路径或当前 Thread 的服务端 `cwd`。文件变更仍在会话时间线内查看。
+- 选择项目后，右侧 inspector 的“项目文件”入口复用 app-server 文件读取与 watch 能力打开右侧 WorkspaceExplorer 抽屉；目录根始终来自待创建 Thread 的项目路径或当前 Thread 的服务端 `cwd`。文件变更仍在会话时间线内查看。
 - 前端状态、日志、通知、资源预览、过程事件和可见 Turn 均有硬上限；时间线使用单一原生滚动容器，并只保留最近 200 个 Turn 的前端视图状态。
 - 当前 Session 的 UI 错误使用可关闭、5 秒自动消失的临时提示；切换 Session 时清理旧提示。服务端 `session.error` 仍作为持久错误保留，避免关键执行失败被自动隐藏。
 
