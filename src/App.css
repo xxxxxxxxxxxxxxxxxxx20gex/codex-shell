@@ -392,15 +392,15 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .activity-command-card summary { padding-top: 6px; padding-bottom: 6px; }
 .activity-command-card summary:hover { background: var(--surface-raised); }
 .activity-command-card .activity-icon { height: 18px; color: var(--text-secondary); background: var(--surface-raised); }
-.command-drawer { margin: 5px 0; overflow: hidden; border: 1px solid var(--border-subtle); border-radius: var(--radius-panel); background: var(--surface-sidebar); }
-.command-drawer > summary { display: grid; grid-template-columns: 25px minmax(0,1fr) auto 14px; align-items: center; gap: 7px; padding: 8px 9px; color: var(--text-secondary); cursor: pointer; list-style: none; }
+.command-drawer { margin: 5px 0; overflow: hidden; border: 0; border-radius: var(--radius-sm); background: var(--surface-sidebar); }
+.command-drawer > summary { display: grid; min-height: 36px; grid-template-columns: 25px minmax(0,1fr) auto 14px; align-items: center; gap: 7px; padding: 6px 9px; color: var(--text-secondary); cursor: pointer; list-style: none; }
 .command-drawer > summary::-webkit-details-marker { display: none; }
 .command-drawer > summary:hover { background: var(--surface-raised); }
-.command-drawer > summary strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-ui); font-weight: 500; }
+.command-drawer > summary strong { overflow: hidden; color: var(--text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-ui); font-weight: 500; }
 .command-drawer > summary small { color: var(--text-muted); font-size: var(--conversation-font-size-meta); }
 .command-drawer > summary i { color: var(--text-muted); font-size: var(--conversation-font-size-meta); font-style: normal; transition: transform .15s; }
 .command-drawer[open] > summary i { transform: rotate(180deg); }
-.command-drawer-list { padding: 2px 9px 7px; border-top: 1px solid var(--border-subtle); }
+.command-drawer-list { padding: 2px 9px 7px; }
 .command-drawer-list .activity-command-card { margin: 2px 0; }
 .activity-card summary { display: grid; grid-template-columns: 25px minmax(0,1fr) auto 14px; align-items: center; gap: 7px; padding: 8px 3px; cursor: pointer; list-style: none; }.activity-card summary::-webkit-details-marker { display: none; }.activity-card summary strong { overflow: hidden; color: var(--text-secondary); font-size: 13px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }.activity-card summary small { color: var(--text-muted); font-size: var(--conversation-font-size-meta); }.activity-card summary i { color: var(--text-muted); font-size: var(--conversation-font-size-meta); font-style: normal; transition: transform .15s; }.activity-card[open] summary i { transform: rotate(180deg); }
 .activity-icon { display: grid; height: 21px; place-items: center; border-radius: var(--radius-sm); color: var(--accent-action); background: var(--surface-raised); font: var(--text-meta)/16px var(--font-mono); }
