@@ -22,7 +22,7 @@
 - Runtime 二进制尚无可复现的获取或构建流水线；安装包已可由本机固定 Runtime 生成 NSIS，但签名、CI、干净 Windows 环境的 UAC 和 sidecar 验证仍未完成。MSI 不是默认发布目标。
 - Shell Queue 只存在当前进程内，应用退出后不会恢复；MCP 配置编辑、Skills/Plugin 管理和显式连接诊断尚未完成。
 - 文件预览仍会先经 IPC 读取完整文件；超大 Diff、单个超长活动和二进制 Diff 缺少源端预算或专用视图。
-- 侧边聊天当前固定只读沙箱、`approvalPolicy: never`，不会替代主会话执行写入或审批流程；侧聊状态暂不持久化，也不会出现在历史列表。
+- 侧边聊天当前固定只读沙箱、`approvalPolicy: never`，不会替代主会话执行写入或审批流程；侧聊状态暂不持久化，也不会出现在历史列表；关闭时在连接可用的情况下先中断活动 Turn，再退订临时 Thread，Runtime 已停止时不触发重连；切换主 Session 或 Runtime 重置后返回右侧功能入口。
 
 模块局部风险不在此重复，见 [各模块状态文档](../README.md#当前状态)。
 
@@ -37,7 +37,7 @@
 
 - 2026-08-21：固定 Runtime `0.148.0-alpha.15` 的 Thread 权威 settings/Goal 同步、审查状态单调更新及原生滚动条释放与可信 scroll 兜底完成；时间线移除 react-virtuoso，改用单一原生滚动容器、程序定位隔离、用户滚动 settle 锁、运行中受控贴底和 Session 切换重置；新增 Session 临时提示关闭/自动消失。
 - 2026-08-24：将选择项目后的“项目文件”入口迁移到右侧 inspector，并移除重复的右侧 Diff 面板；随后将 WorkspaceExplorer 改为无背景模糊的可调宽右侧抽屉，增加一键扩大到最大/缩小到最小的快捷按钮；TypeScript、ESLint、56 个 Vitest 文件/248 项测试、Vite production build 和 Tauri debug build 通过。
-- 2026-08-24：右侧 inspector 新增 Codex 风格侧边聊天；通过 `thread/fork`/`thread/start` 创建 `ephemeral` 只读线程，新增主线程与侧聊事件路由隔离、关闭退订、`Ctrl/Cmd+Alt+S` 快捷打开和最大化/恢复；fork 的父级历史仅作为模型上下文，不在侧栏重复渲染；Thread 创建完成前不展示详情 Composer，避免首条消息在无 Thread ID 时被静默丢弃；加入事件路由、面板交互和未就绪发送保护测试，前端回归为 57 个 Vitest 文件/252 项测试。
+- 2026-08-24：右侧 inspector 新增 Codex 风格侧边聊天；通过 `thread/fork`/`thread/start` 创建 `ephemeral` 只读线程，新增主线程与侧聊事件路由隔离、关闭时中断活动 Turn 后退订、`Ctrl/Cmd+Alt+S` 快捷打开和最大化/恢复；fork 的父级历史仅作为模型上下文，不在侧栏重复渲染；Thread 创建完成前不展示详情 Composer，避免首条消息在无 Thread ID 时被静默丢弃；主 Session 切换或 Runtime 重置后返回功能入口；加入事件路由、面板交互、未就绪发送和关闭生命周期测试，前端回归为 58 个 Vitest 文件/255 项测试。
 - 定向滚动与临时提示测试通过；完整前端回归为 56 个文件/247 项测试，TypeScript、ESLint、Vite production build、Rust check 和 14 项 Rust 测试通过。当前构建约 555.91 kB，仍有 Vite bundle size warning。
 - Knip 因当前 Windows/Node Oxc parser 的 ArrayBuffer 分配错误短路，未产生无效代码报告；该结果不能作为无效代码检查通过的证据。
 - 2026-08-21：`pnpm desktop:package` 在低并发 release 配置下成功生成 NSIS 安装包；隔离临时目录静默安装检查主程序、4 个 Runtime/companion 文件和 LICENSE/NOTICE 资源存在，随后静默卸载成功。安装包未签名，正式公开分发前需完成签名和干净 Windows 验收。

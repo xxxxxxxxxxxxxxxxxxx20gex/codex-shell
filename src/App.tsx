@@ -127,6 +127,16 @@ function App() {
   const openSideChat = session.sideChat.openChat;
 
   useEffect(() => {
+    // Session switches and Runtime resets clear the ephemeral side thread
+    // from the session hook. Return to the feature entry instead of leaving
+    // an empty, disabled detail view mounted in the inspector.
+    if (inspectorView === "chat" && !session.sideChat.thread && !session.sideChat.submitting) {
+      setSideChatMaximized(false);
+      setInspectorView("home");
+    }
+  }, [inspectorView, session.sideChat.submitting, session.sideChat.thread]);
+
+  useEffect(() => {
     const handleShortcut = (event: globalThis.KeyboardEvent) => {
       if (!(event.ctrlKey || event.metaKey) || !event.altKey || event.key.toLowerCase() !== "s") return;
       event.preventDefault();

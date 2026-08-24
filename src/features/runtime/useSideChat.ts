@@ -56,6 +56,8 @@ export function useSideChat({
   const [running, setRunning] = useState(false);
   const [error, setError] = useState("");
   const threadIdRef = useRef<string | null>(null);
+  const turnsRef = useRef<Turn[]>([]);
+  turnsRef.current = state.turns;
   const currentThreadId = useCallback(() => threadIdRef.current, []);
   const operationRef = useRef(false);
   const previousMainThreadIdRef = useRef<string | null>(mainThread?.id ?? null);
@@ -70,6 +72,7 @@ export function useSideChat({
 
   const close = useCallback(async () => {
     const threadId = threadIdRef.current;
+    const activeTurn = [...turnsRef.current].reverse().find((turn) => turn.status === "inProgress");
     threadIdRef.current = null;
     setOpen(false);
     setSubmitting(false);
@@ -77,15 +80,32 @@ export function useSideChat({
     if (threadId) {
       markThreadStopped(threadId);
       try {
-        const client = await ensureConnected();
-        await client.unsubscribeThread({ threadId });
+        // Closing a side chat must not restart a stopped Runtime just to send
+        // cleanup requests. If the existing connection is ready, stop the
+        // active turn before releasing the ephemeral subscription.
+        const client = clientRef.current;
+        if (client?.connectionStatus === "ready") {
+          if (activeTurn) {
+            try {
+              await client.interruptTurn({ threadId, turnId: activeTurn.id });
+            } catch {
+              // Still release the subscription when an interrupt races with
+              // completion or the Runtime is shutting down.
+            }
+          }
+          try {
+            await client.unsubscribeThread({ threadId });
+          } catch {
+            // The side chat is ephemeral; cleanup failure must not surface in
+            // the main conversation.
+          }
+        }
       } catch {
-        // The side chat is ephemeral. A disconnect during close must not
-        // surface as a main conversation error.
+        // Reading the client state can race with Runtime shutdown.
       }
     }
     dispatch({ type: "clear" });
-  }, [ensureConnected, markThreadStopped]);
+  }, [clientRef, markThreadStopped]);
 
   const openChat = useCallback(async () => {
     if (operationRef.current) return false;
