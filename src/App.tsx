@@ -7,6 +7,8 @@ import {
   FolderOpen,
   MessageSquarePlus,
   MessageCircle,
+  PanelLeft,
+  PanelRight,
   Puzzle,
   Settings,
   Sparkles,
@@ -217,23 +219,18 @@ function App() {
           onPointerMove={(event) => resizePanel(event, "sidebar")}
           onPointerUp={finishPanelResize}
           onPointerCancel={finishPanelResize}
-        >
-          <button
-            type="button"
-            className="panel-toggle"
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={() => setSidebarOpen((open) => !open)}
-            aria-label={sidebarOpen ? "隐藏左侧功能区" : "显示左侧功能区"}
-            title={sidebarOpen ? "隐藏左侧功能区" : "显示左侧功能区"}
-          >
-            {sidebarOpen ? <ChevronLeft aria-hidden="true" /> : <ChevronRight aria-hidden="true" />}
-          </button>
-        </div>
+        />
 
         <section className="conversation panel">
           <header className="conversation-header" title={session.thread?.id}>
+            <button type="button" className="drawer-toggle drawer-toggle-left" onClick={() => setSidebarOpen((open) => !open)} aria-label={sidebarOpen ? "隐藏左侧会话区" : "显示左侧会话区"} title={sidebarOpen ? "隐藏左侧会话区" : "显示左侧会话区"}>
+              <PanelLeft aria-hidden="true" />
+            </button>
             <strong>{session.thread ? threadTitle(session.thread) : "新对话"}</strong>
             {session.thread && <span>{session.thread.id.slice(0, 8)}…{session.thread.id.slice(-4)}</span>}
+            <button type="button" className="drawer-toggle drawer-toggle-right" onClick={() => setInspectorOpen((open) => !open)} aria-label={inspectorOpen ? "隐藏右侧功能区" : "显示右侧功能区"} title={inspectorOpen ? "隐藏右侧功能区" : "显示右侧功能区"}>
+              <PanelRight aria-hidden="true" />
+            </button>
           </header>
           {session.turns.length > 0 ? (
             <ConversationTimeline
@@ -351,18 +348,7 @@ function App() {
           onPointerMove={(event) => resizePanel(event, "inspector")}
           onPointerUp={finishPanelResize}
           onPointerCancel={finishPanelResize}
-        >
-          <button
-            type="button"
-            className="panel-toggle"
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={() => setInspectorOpen((open) => !open)}
-            aria-label={inspectorOpen ? "隐藏右侧功能区" : "显示右侧功能区"}
-            title={inspectorOpen ? "隐藏右侧功能区" : "显示右侧功能区"}
-          >
-            {inspectorOpen ? <ChevronRight aria-hidden="true" /> : <ChevronLeft aria-hidden="true" />}
-          </button>
-        </div>
+        />
 
         <aside className={`inspector panel ${inspectorView !== "home" ? "inspector-detail" : ""} ${inspectorView === "chat" ? "inspector-chat" : ""}`}>
           {inspectorView === "home" && <>
