@@ -7,7 +7,7 @@ import type { DisposeWorkspaceWatch } from "../runtime/useWorkspaceFiles";
 import { WorkspaceExplorer } from "./WorkspaceExplorer";
 
 describe("WorkspaceExplorer", () => {
-  it("uses the shared inspector maximize and restore controls", async () => {
+  it("uses one persistent inspector maximize toggle", async () => {
     let maximized = false;
     const onToggleMaximize = vi.fn(() => { maximized = !maximized; });
     render(
@@ -40,6 +40,7 @@ describe("WorkspaceExplorer", () => {
       />,
     );
 
+    expect(screen.getByRole("button", { name: "恢复右侧功能区宽度" })).toBeTruthy();
     const closeButtons = screen.getAllByRole("button", { name: "关闭文件浏览器" });
     const closeButton = closeButtons[closeButtons.length - 1];
     expect(closeButton?.getAttribute("aria-label")).toBe("关闭文件浏览器");
