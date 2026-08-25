@@ -233,8 +233,8 @@ export function ConversationTimeline({
           >
             <ConversationTurn
               turn={turn}
-              active={running && turnIndex === turns.length - 1}
-              retryingMessage={running && turnIndex === turns.length - 1 ? retryingMessage : null}
+              active={running && turn.status === "inProgress"}
+              retryingMessage={running && turn.status === "inProgress" ? retryingMessage : null}
               canFork={Boolean(onFork && threadId && !forkDisabled && turn.status !== "inProgress" && !(running && turnIndex === turns.length - 1))}
               onFork={threadId && onFork ? () => onFork(threadId, turn.id) : undefined}
               plan={plansByTurnId[turn.id]}

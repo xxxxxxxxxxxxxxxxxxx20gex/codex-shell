@@ -7,6 +7,7 @@ import {
   threadReference,
   threadReferenceKind,
   threadTitle,
+  normalizeThreadPath,
 } from "./threadPresentation";
 
 function thread(id: string, overrides: Partial<Thread> = {}) {
@@ -26,6 +27,12 @@ describe("thread presentation", () => {
 
     expect([threadReference(withPath), threadReferenceKind(withPath)]).toEqual(["C:\\sessions\\rollout.jsonl", "路径"]);
     expect([threadReference(withoutPath), threadReferenceKind(withoutPath)]).toEqual(["thread-id", "ID"]);
+  });
+
+  it("normalizes extended Windows rollout paths before displaying or copying them", () => {
+    expect(normalizeThreadPath('"\\\\?\\C:\\sessions\\rollout.jsonl"')).toBe("C:\\sessions\\rollout.jsonl");
+    expect(threadReference(thread("extended", { path: "\\\\?\\C:\\sessions\\rollout.jsonl" }))).toBe("C:\\sessions\\rollout.jsonl");
+    expect(normalizeThreadPath("C:\\sessions\\rollout.jsonl")).toBe("C:\\sessions\\rollout.jsonl");
   });
 
   it("prefers an explicit session name and falls back to its preview", () => {

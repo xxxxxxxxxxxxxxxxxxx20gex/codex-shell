@@ -59,9 +59,24 @@ export function threadBranchDepth(thread: Thread, threads: Thread[]): number {
 }
 
 export function threadReference(thread: Thread) {
-  return thread.path?.trim() || thread.id;
+  return normalizeThreadPath(thread.path) || thread.id;
 }
 
 export function threadReferenceKind(thread: Thread) {
-  return thread.path?.trim() ? "路径" : "ID";
+  return normalizeThreadPath(thread.path) ? "路径" : "ID";
+}
+
+/** Return a user-facing Windows path instead of the Win32 extended-path form. */
+export function normalizeThreadPath(path: string | null | undefined) {
+  const trimmed = path?.trim() ?? "";
+  const unquoted = trimmed.length >= 2 && unquotedPair(trimmed)
+    ? trimmed.slice(1, -1)
+    : trimmed;
+  return unquoted.startsWith("\\\\?\\") ? unquoted.slice(4) : unquoted;
+}
+
+function unquotedPair(value: string) {
+  const first = value[0];
+  const last = value[value.length - 1];
+  return (first === '"' && last === '"') || (first === "'" && last === "'");
 }
