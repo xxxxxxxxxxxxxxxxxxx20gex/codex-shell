@@ -1,6 +1,9 @@
 .workspace-explorer-layer { position: fixed; z-index: 15; inset: 58px 0 0; pointer-events: none; }
+.workspace-explorer-layer.embedded { position: relative; z-index: 1; inset: auto; height: 100%; pointer-events: auto; }
 .workspace-explorer-scrim { position: absolute; z-index: 0; inset: 0; width: 100%; border: 0; background: rgb(0 0 0 / 54%); cursor: default; pointer-events: auto; }
 .workspace-explorer-drawer { position: relative; z-index: 1; display: grid; width: min(var(--explorer-width), calc(100vw - 30px)); height: 100%; margin-left: auto; grid-template-rows: 70px minmax(0,1fr); border-left: 1px solid var(--border-default); background: var(--surface-sidebar); box-shadow: var(--shadow-popover); pointer-events: auto; animation: explorer-slide-in .18s ease-out; }
+.workspace-explorer-layer.embedded .workspace-explorer-drawer { width: 100%; margin-left: 0; border-left: 0; box-shadow: none; animation: none; }
+.workspace-explorer-layer.embedded .explorer-resizer { display: none; }
 @keyframes explorer-slide-in { from { transform: translateX(28px); opacity: .45; } to { transform: translateX(0); opacity: 1; } }
 .explorer-resizer { position: absolute; z-index: 2; top: 0; bottom: 0; left: -5px; width: 10px; touch-action: none; cursor: col-resize; }
 .explorer-resizer::after { position: absolute; top: 0; bottom: 0; left: 4px; width: 1px; background: transparent; content: ""; transition: background-color var(--motion-fast), box-shadow var(--motion-fast); }
@@ -12,10 +15,10 @@
 .explorer-header strong { overflow: hidden; font-size: var(--text-ui); text-overflow: ellipsis; white-space: nowrap; }
 .explorer-header small { overflow: hidden; color: var(--text-muted); font: var(--text-meta)/16px var(--font-mono); text-overflow: ellipsis; white-space: nowrap; }
 .explorer-actions { display: flex; flex: none; align-items: center; gap: 4px; }
-.explorer-close, .explorer-size-button { display: grid; width: 32px; height: 32px; flex: none; place-items: center; border: 1px solid var(--border-default); border-radius: var(--radius-control); color: var(--text-muted); background: var(--surface-raised); cursor: pointer; }
-.explorer-size-button { width: 28px; height: 28px; border-color: transparent; background: transparent; }
+.explorer-close, .explorer-size-button { display: grid; width: 28px; height: 28px; flex: none; place-items: center; padding: 0; border: 0; border-radius: var(--radius-control); color: var(--text-muted); background: transparent; cursor: pointer; transition: color var(--motion-fast), background-color var(--motion-fast); }
+.explorer-size-button { width: 28px; height: 28px; }
 .explorer-close svg, .explorer-size-button svg, .explorer-filter > svg, .explorer-root svg, .explorer-tree-row svg, .explorer-empty svg { width: 16px; height: 16px; stroke-width: 1.75; }
-.explorer-close:hover, .explorer-size-button:hover { color: var(--text-primary); background: var(--surface-selected); }
+.explorer-close:hover, .explorer-size-button:hover { color: var(--text-primary); background: var(--surface-raised); }
 .explorer-close:focus-visible, .explorer-size-button:focus-visible, .explorer-resizer:focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; }
 .explorer-size-button:disabled { color: var(--text-disabled); background: transparent; cursor: default; opacity: .55; }
 .explorer-body { display: grid; min-height: 0; grid-template-columns: 285px minmax(0,1fr); }

@@ -157,6 +157,8 @@ function App() {
       : null;
     if (!resolvedPath) throw new Error("相对文件路径需要先选择项目");
     if (currentProjectPath && isPathWithinRoot(currentProjectPath, resolvedPath)) {
+      setInspectorOpen(true);
+      setInspectorView("files");
       openWorkspaceExplorer(resolvedPath);
       return;
     }
@@ -168,8 +170,8 @@ function App() {
       <WindowTitleBar />
       <section
         ref={workspaceGridRef}
-        className={`workspace-grid ${sidebarOpen ? "" : "sidebar-hidden"} ${inspectorOpen ? "" : "inspector-hidden"} ${resizingPanel ? "resizing" : ""} ${sideChatMaximized && inspectorView === "chat" ? "inspector-maximized" : ""}`}
-        style={sideChatMaximized && inspectorView === "chat"
+        className={`workspace-grid ${sidebarOpen ? "" : "sidebar-hidden"} ${inspectorOpen ? "" : "inspector-hidden"} ${resizingPanel ? "resizing" : ""} ${sideChatMaximized && (inspectorView === "chat" || inspectorView === "files") ? "inspector-maximized" : ""}`}
+        style={sideChatMaximized && (inspectorView === "chat" || inspectorView === "files")
           ? { ...workspaceGridStyle, "--inspector-width": "min(760px, 70vw)" }
           : workspaceGridStyle}
       >
@@ -356,6 +358,8 @@ function App() {
             <div className="inspector-home" aria-label="右侧功能入口">
               <button type="button" className="inspector-feature-entry" onClick={() => {
                 if (currentProjectPath) {
+                  setInspectorOpen(true);
+                  setInspectorView("files");
                   openWorkspaceExplorer();
                 } else {
                   setInspectorView("files");
@@ -372,7 +376,9 @@ function App() {
               </button>
             </div>
           </>}
-          {inspectorView === "files" && <>
+          {inspectorView === "files" && currentProjectPath && workspaceExplorerOpen ? (
+            <WorkspaceExplorer rootPath={currentProjectPath} initialFilePath={workspaceExplorerInitialPath} embedded maximized={sideChatMaximized} onToggleMaximize={() => setSideChatMaximized((value) => !value)} onClose={() => { setSideChatMaximized(false); setWorkspaceExplorerOpen(false); setInspectorView("home"); }} readDirectory={session.readWorkspaceDirectory} readFile={session.readWorkspaceFile} watchPath={session.watchWorkspacePath} />
+          ) : inspectorView === "files" && <>
             <div className="inspector-heading inspector-detail-heading"><button type="button" className="inspector-back" onClick={() => setInspectorView("home")} aria-label="返回功能区"><ChevronLeft aria-hidden="true" /></button><div><span className="eyebrow">WORKSPACE</span><strong>项目文件</strong></div></div>
             <div className="inspector-project-empty">项目路径尚未准备好。选择项目或等待默认工作区加载后，再从功能区打开项目文件。</div>
           </>}
@@ -395,7 +401,6 @@ function App() {
         onSave={async (next) => { await savePersonalization(next); setPreferencesOpen(false); }}
       />}
       <ServerInteractionDialog store={session.interactionStore} />
-      {workspaceExplorerOpen && currentProjectPath && <WorkspaceExplorer rootPath={currentProjectPath} initialFilePath={workspaceExplorerInitialPath} onClose={() => setWorkspaceExplorerOpen(false)} readDirectory={session.readWorkspaceDirectory} readFile={session.readWorkspaceFile} watchPath={session.watchWorkspacePath} />}
     </main>
   );
 }

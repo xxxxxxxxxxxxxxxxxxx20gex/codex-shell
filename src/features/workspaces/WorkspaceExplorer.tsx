@@ -29,6 +29,9 @@ interface Props {
   readDirectory: (path: string) => Promise<FsReadDirectoryEntry[]>;
   readFile: (path: string) => Promise<string>;
   watchPath: WatchWorkspacePath;
+  embedded?: boolean;
+  maximized?: boolean;
+  onToggleMaximize?: () => void;
 }
 
 interface DirectoryState {
@@ -65,7 +68,7 @@ function clampExplorerWidth(width: number) {
   return Math.max(EXPLORER_MIN_WIDTH, Math.min(maxExplorerWidth(), width));
 }
 
-export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, readDirectory, readFile, watchPath }: Props) {
+export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, readDirectory, readFile, watchPath, embedded = false, maximized = false, onToggleMaximize }: Props) {
   const loadingDirectoriesRef = useRef(new Set<string>());
   const previewRequestRef = useRef(0);
   const selectedPathRef = useRef<string | null>(null);
@@ -257,8 +260,8 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
   const previewLines = preview?.kind === "text" ? preview.content.split("\n") : [];
 
   return (
-    <div className="workspace-explorer-layer" role="dialog" aria-modal="true" aria-label="项目文件浏览器">
-      <button className="workspace-explorer-scrim" onClick={onClose} aria-label="关闭项目文件浏览器" />
+    <div className={embedded ? "workspace-explorer-layer embedded" : "workspace-explorer-layer"} role="dialog" aria-modal="true" aria-label="项目文件浏览器">
+      {!embedded && <button className="workspace-explorer-scrim" onClick={onClose} aria-label="关闭项目文件浏览器" />}
       <section
         className={`workspace-explorer-drawer ${resizing ? "resizing" : ""}`}
         style={{ "--explorer-width": `${drawerWidth}px` } as CSSProperties}
@@ -276,8 +279,8 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
         <header className="explorer-header">
           <div><span className="eyebrow">Project Explorer</span><strong>{projectName(rootPath)}</strong><small>{rootPath}</small>{watchError && <i className="explorer-watch-warning" title={watchError}>自动刷新不可用</i>}</div>
           <div className="explorer-actions">
-            <button className="explorer-size-button" onClick={() => setDrawerWidth(maxExplorerWidth())} disabled={drawerWidth >= maxExplorerWidth()} aria-label="扩大到最大宽度" title="扩大到最大宽度"><ChevronsLeft aria-hidden="true" /></button>
-            <button className="explorer-size-button" onClick={() => setDrawerWidth(EXPLORER_MIN_WIDTH)} disabled={drawerWidth <= EXPLORER_MIN_WIDTH} aria-label="缩小到最小宽度" title="缩小到最小宽度"><ChevronsRight aria-hidden="true" /></button>
+            <button className="explorer-size-button" onClick={() => embedded && onToggleMaximize ? (!maximized && onToggleMaximize()) : setDrawerWidth(maxExplorerWidth())} disabled={embedded ? maximized : drawerWidth >= maxExplorerWidth()} aria-label={embedded ? "扩大右侧功能区" : "扩大到最大宽度"} title={embedded ? "扩大右侧功能区" : "扩大到最大宽度"}><ChevronsLeft aria-hidden="true" /></button>
+            <button className="explorer-size-button" onClick={() => embedded && onToggleMaximize ? (maximized && onToggleMaximize()) : setDrawerWidth(EXPLORER_MIN_WIDTH)} disabled={embedded ? !maximized : drawerWidth <= EXPLORER_MIN_WIDTH} aria-label={embedded ? "恢复右侧功能区宽度" : "缩小到最小宽度"} title={embedded ? "恢复右侧功能区宽度" : "缩小到最小宽度"}><ChevronsRight aria-hidden="true" /></button>
             <button className="explorer-close" onClick={onClose} aria-label="关闭文件浏览器" title="关闭"><X aria-hidden="true" /></button>
           </div>
         </header>
