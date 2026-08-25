@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type UIEvent } from "react";
+import { ArrowDown, ArrowDownToLine, ArrowUp } from "lucide-react";
 import type { McpToolCallProgressNotification } from "../../generated/app-server/v2/McpToolCallProgressNotification";
 import type { Turn } from "../../generated/app-server/v2/Turn";
 import type { TurnPlanUpdatedNotification } from "../../generated/app-server/v2/TurnPlanUpdatedNotification";
@@ -167,6 +168,11 @@ export function ConversationTimeline({
     return activeIndex;
   }, [atBottom, links, visibleStartIndex]);
 
+  const scrollToRelativeUserTurn = useCallback((offset: -1 | 1) => {
+    const nextLink = links[activeLinkIndex + offset];
+    if (nextLink) scrollToTurn(nextLink.index);
+  }, [activeLinkIndex, links, scrollToTurn]);
+
   useEffect(() => {
     const previous = previousActivityRef.current;
     previousActivityRef.current = { running, turns, processEventsByTurnId };
@@ -257,9 +263,31 @@ export function ConversationTimeline({
         </nav>
       )}
       {!atBottom && (
-        <button className="timeline-latest-button" type="button" onClick={scrollToLatest}>
-          {hasNewActivity ? "有新内容 · 返回最新" : "返回最新"}
-        </button>
+        <nav className="timeline-scroll-controls" aria-label="消息滚动控制">
+          <button
+            className="timeline-scroll-button"
+            type="button"
+            onClick={() => scrollToRelativeUserTurn(-1)}
+            disabled={links.length === 0 || activeLinkIndex <= 0}
+            aria-label="跳转到上一个用户消息"
+            title="上一个用户消息"
+          ><ArrowUp aria-hidden="true" /></button>
+          <button
+            className="timeline-scroll-button"
+            type="button"
+            onClick={() => scrollToRelativeUserTurn(1)}
+            disabled={links.length === 0 || activeLinkIndex >= links.length - 1}
+            aria-label="跳转到下一个用户消息"
+            title="下一个用户消息"
+          ><ArrowDown aria-hidden="true" /></button>
+          <button
+            className="timeline-scroll-button timeline-latest-button"
+            type="button"
+            onClick={scrollToLatest}
+            aria-label="返回最新"
+            title={hasNewActivity ? "有新内容 · 返回最新" : "返回最新"}
+          ><ArrowDownToLine aria-hidden="true" /></button>
+        </nav>
       )}
     </div>
   );

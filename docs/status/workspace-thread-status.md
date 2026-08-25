@@ -3,7 +3,7 @@
 - 模块职责：管理项目目录（Thread `cwd`）、线程列表、创建、恢复与切换。
 - 当前状态：新 Thread 使用发送首条消息前选择的自定义项目，未选择时使用 `Documents/Codex-Shell/YYYY-MM-DD` 默认项目目录；自定义选择不跨新对话持久化。已有 Thread 始终使用服务端返回的不可变 `cwd`，文件浏览、文件附件和相对路径解析均以该目录为根。每个非运行中的历史 Turn 都可通过原生 `thread/fork(lastTurnId)` 从该轮末尾创建分支；右侧侧边聊天从当前已完成 Turn fork 一个 `ephemeral`、只读沙箱 Thread，不进入历史列表，主会话切换或关闭侧聊时退订并清理。
 - 最近变更：会话置顶对齐新版 app-server 的内置 Pinned Thread Section，通过 `thread/section/move` 写入并由 `Thread.section` 判断；不再依赖已删除的 `isPinned` 元数据。分支顺序和置顶优先展示保持现有行为。右侧 inspector 先展示功能入口，再从“项目文件”进入以内嵌方式挂载的 WorkspaceExplorer；文件浏览器与侧边聊天共享右侧栏生命周期，标题栏使用固定在右上角的单一最大化/恢复切换按钮和关闭按钮，长路径不会挤出操作区，关闭后返回功能入口；目录浏览、文件预览和 watch 复用原有能力。新增侧边聊天通过 `thread/fork`/`thread/start` 的 `ephemeral: true` 创建旁聊线程，复用同一个 app-server 连接但用独立 reducer 和事件路由；fork 的父级历史只保留在服务端上下文，不重复显示在侧栏；Thread 创建完成前不展示详情 Composer，避免无 Thread ID 时静默丢弃首条消息；关闭侧聊时先中断活动 Turn（连接可用时）再退订，切换主 Session 后自动清理并返回功能入口；仍以当前 Thread `cwd` 或待创建 Thread 的项目路径为根。
-- 当前接口：Rust `get_default_project_directory`，以及 `WorkspaceSelector`、`WorkspaceExplorer`、`ThreadHistoryList`、`useWorkspaceFiles`、`useThreadController` 和 `useThreadActions`。
+- 当前接口：Rust `get_default_project_directory`，以及 `WorkspaceSelector`、`WorkspaceExplorer`、`ThreadHistoryList`、`ConversationTimeline`、`useWorkspaceFiles`、`useThreadController` 和 `useThreadActions`。时间线滚动控制以当前可见用户消息为锚点，在上一条、下一条和最新位置之间跳转。
 - 交互校正：右侧功能区中的“项目文件”入口在存在项目路径时直接打开 `WorkspaceExplorer`；无路径时仅显示准备提示，避免重复的二级打开按钮。
 - 已知问题：尚未提供显式的最近项目列表；文件预览会在前端截断前先跨 IPC 读取完整文件；侧边聊天暂不支持审批、队列或写入操作；`useThreadController` 已降到约 405 行，继续扩展 Thread 通知路由前仍应优先按生命周期职责拆分。
 - 下一步：增加断线后的 Session 恢复、最近项目列表和 Git 摘要。

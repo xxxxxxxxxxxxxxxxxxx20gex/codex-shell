@@ -13,8 +13,13 @@
 .user-message-navigation button.active span { width: 13px; background: var(--accent-action); }
 .user-message-navigation button:hover span, .user-message-navigation button:focus-visible span { width: 11px; background: var(--text-secondary); outline: none; }
 .user-message-navigation button:focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; }
-.timeline-latest-button { position: absolute; z-index: 3; right: 22px; bottom: 16px; padding: 7px 11px; border: 1px solid var(--border-default); border-radius: 999px; color: var(--text-primary); background: var(--surface-raised); box-shadow: var(--shadow-popover); font-size: 11px; cursor: pointer; }
-.timeline-latest-button:hover { border-color: var(--border-strong); background: var(--surface-raised); }
+.timeline-scroll-controls { position: absolute; z-index: 3; right: 22px; bottom: 16px; display: flex; align-items: center; gap: 4px; }
+.timeline-scroll-button { display: grid; width: 30px; height: 30px; place-items: center; padding: 0; border: 1px solid var(--border-default); border-radius: 50%; color: var(--text-secondary); background: var(--surface-raised); box-shadow: var(--shadow-popover); cursor: pointer; transition: color var(--motion-fast), border-color var(--motion-fast), background-color var(--motion-fast); }
+.timeline-scroll-button:hover:not(:disabled) { border-color: var(--border-strong); color: var(--text-primary); background: var(--surface-selected); }
+.timeline-scroll-button:disabled { color: var(--text-disabled); background: var(--surface-panel); cursor: default; opacity: .55; }
+.timeline-scroll-button:focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; }
+.timeline-scroll-button svg { width: 16px; height: 16px; stroke-width: 1.8; }
+.timeline-latest-button svg { width: 17px; height: 17px; }
 
 @media (max-width: 720px) {
   .conversation-turn-frame { padding-right: 18px; padding-left: 18px; }

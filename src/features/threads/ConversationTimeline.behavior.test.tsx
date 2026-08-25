@@ -73,6 +73,27 @@ describe("ConversationTimeline native scroll controller", () => {
     expect(screen.queryByRole("button", { name: "返回最新" })).toBeNull();
   });
 
+  it("navigates to the previous and next user messages with boundary-disabled controls", () => {
+    render(<ConversationTimeline turns={[turn("1", "第一问"), turn("2", "第二问"), turn("3", "第三问")]} running={false} />);
+    const scroller = sizeScroller();
+    const first = scroller.querySelector<HTMLElement>('[data-turn-index="0"]');
+    const second = scroller.querySelector<HTMLElement>('[data-turn-index="1"]');
+    const third = scroller.querySelector<HTMLElement>('[data-turn-index="2"]');
+    Object.defineProperty(first, "offsetTop", { configurable: true, value: 0 });
+    Object.defineProperty(second, "offsetTop", { configurable: true, value: 500 });
+    Object.defineProperty(third, "offsetTop", { configurable: true, value: 1000 });
+    scroller.scrollTop = 240;
+    fireEvent.scroll(scroller);
+
+    const previous = screen.getByRole<HTMLButtonElement>("button", { name: "跳转到上一个用户消息" });
+    const next = screen.getByRole<HTMLButtonElement>("button", { name: "跳转到下一个用户消息" });
+    expect(previous.disabled).toBe(true);
+    expect(next.disabled).toBe(false);
+
+    fireEvent.click(next);
+    expect(scroller.scrollTop).toBe(500);
+  });
+
   it("does not reassert the bottom position for completed history", () => {
     const view = render(<ConversationTimeline turns={[turn("1", "第一问", true)]} running={false} />);
     const scroller = sizeScroller();
@@ -131,7 +152,7 @@ describe("ConversationTimeline native scroll controller", () => {
 
     view.rerender(<ConversationTimeline turns={[...initialTurns, turn("3", "第三问")]} running />);
 
-    expect(screen.getByRole("button", { name: "有新内容 · 返回最新" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "返回最新" }).getAttribute("title")).toBe("有新内容 · 返回最新");
     expect(scroller.scrollTop).toBe(200);
   });
 
