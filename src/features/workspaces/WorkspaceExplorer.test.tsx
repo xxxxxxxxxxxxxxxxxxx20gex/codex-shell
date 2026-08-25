@@ -26,6 +26,27 @@ describe("WorkspaceExplorer", () => {
     expect(onToggleMaximize).toHaveBeenCalledTimes(1);
   });
 
+  it("keeps the close action available after the inspector is maximized", () => {
+    const onClose = vi.fn();
+    render(
+      <WorkspaceExplorer
+        rootPath="C:\\work"
+        maximized
+        onToggleMaximize={() => undefined}
+        onClose={onClose}
+        readDirectory={vi.fn(async () => [])}
+        readFile={vi.fn(async () => "")}
+        watchPath={vi.fn(async () => vi.fn())}
+      />,
+    );
+
+    const closeButtons = screen.getAllByRole("button", { name: "关闭文件浏览器" });
+    const closeButton = closeButtons[closeButtons.length - 1];
+    expect(closeButton?.getAttribute("aria-label")).toBe("关闭文件浏览器");
+    if (closeButton) fireEvent.click(closeButton);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it("watches expanded folders, refreshes changed files, and releases watches", async () => {
     const rootPath = "C:\\work";
     const srcPath = "C:\\work\\src";
