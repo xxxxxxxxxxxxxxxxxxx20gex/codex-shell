@@ -261,7 +261,7 @@ function App() {
             />
             {session.error && <div className="composer-error" role="alert">{session.error}</div>}
             <TransientNotice key={session.thread?.id ?? "new"} message={uiError} onDismiss={() => setUiError("")} />
-            {commandNotice && <div className="composer-notice">{commandNotice}</div>}
+            <TransientNotice message={commandNotice} onDismiss={() => setCommandNotice("")} tone="success" />
             {!session.thread && <WorkspaceSelector
               path={pendingProjectPath}
               disabled={session.submitting || session.openingThreadId !== null}

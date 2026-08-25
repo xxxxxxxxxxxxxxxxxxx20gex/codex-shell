@@ -100,12 +100,12 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .composer-error, .composer-notice, .transient-notice { display: flex; min-width: 0; min-height: 38px; box-sizing: border-box; align-items: center; margin-bottom: 8px; padding: 8px 10px; border-radius: var(--radius-panel); font-size: var(--text-meta); line-height: 16px; }
 .composer-error { border: 1px solid color-mix(in srgb, var(--accent-danger) 32%, transparent); color: var(--accent-danger); background: color-mix(in srgb, var(--accent-danger) 10%, var(--surface-panel)); }
 .transient-notice { gap: 8px; padding-right: 6px; border: 1px solid color-mix(in srgb, var(--accent-danger) 32%, transparent); color: var(--accent-danger); background: color-mix(in srgb, var(--accent-danger) 10%, var(--surface-panel)); }
+.transient-notice-success { border-color: color-mix(in srgb, var(--accent-success) 28%, transparent); color: var(--text-secondary); background: color-mix(in srgb, var(--accent-success) 8%, var(--surface-panel)); }
 .transient-notice > span { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .transient-notice > button { display: grid; width: 24px; height: 24px; flex: none; place-items: center; padding: 0; border: 0; border-radius: var(--radius-sm); color: currentColor; background: transparent; cursor: pointer; }
 .transient-notice > button:hover { background: color-mix(in srgb, var(--accent-danger) 12%, transparent); }
 .transient-notice > button:focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; }
 .transient-notice > button svg { width: 15px; height: 15px; stroke-width: 1.75; }
-.composer-notice { border: 1px solid color-mix(in srgb, var(--accent-success) 28%, transparent); color: var(--text-secondary); background: color-mix(in srgb, var(--accent-success) 8%, var(--surface-panel)); }
 .composer { position: relative; padding: 8px 9px 6px; border: 1px solid var(--border-default); border-radius: var(--radius-panel); background: var(--surface-panel); box-shadow: var(--ui-shadow-panel); }
 .composer:focus-within { border-color: var(--border-strong); }
 .composer.has-context-heatbar { padding-left: 27px; }
