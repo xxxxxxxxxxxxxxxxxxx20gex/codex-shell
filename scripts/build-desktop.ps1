@@ -31,6 +31,24 @@ $env:Path = "$(Split-Path -Parent $cargo);$env:Path"
 $projectRoot = Split-Path -Parent $PSScriptRoot
 Push-Location $projectRoot
 try {
+    # A running debug build keeps the staged app-server executable in
+    # src-tauri\target\debug open on Windows. Stop only processes launched
+    # from this project's target directory; never touch an installed Codex.
+    $targetRoot = [IO.Path]::GetFullPath((Join-Path $projectRoot "src-tauri\target")).TrimEnd('\')
+    $targetPrefix = "$targetRoot\"
+    $runningProjectProcesses = Get-CimInstance Win32_Process | Where-Object {
+        $_.ExecutablePath -and (
+            $_.ExecutablePath.Replace('\\?\', '') -eq $targetRoot -or
+            $_.ExecutablePath.Replace('\\?\', '').StartsWith($targetPrefix, [StringComparison]::OrdinalIgnoreCase)
+        )
+    }
+    foreach ($processInfo in $runningProjectProcesses) {
+        if ($processInfo.ProcessId -eq $PID) { continue }
+        Stop-Process -Id $processInfo.ProcessId -Force -ErrorAction SilentlyContinue
+    }
+    if ($runningProjectProcesses) {
+        Start-Sleep -Milliseconds 250
+    }
     pnpm tauri build --debug --no-bundle
     if ($LASTEXITCODE -ne 0) {
         throw "Tauri 桌面构建失败，退出码：$LASTEXITCODE"
