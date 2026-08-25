@@ -3,7 +3,7 @@
 - 当前阶段：Milestone 2 - P0 桌面编程工作台
 - 总体状态：核心对话、Session、工具活动、审批、文件、Diff 和模型配置可用；已具备可复验的 NSIS Windows 安装包发布链路，签名、CI 与 Runtime 恢复能力尚未完成。
 - 文档边界：本文件只记录跨模块当前快照、项目级风险、下一里程碑和完整验证基线。模块行为和定向证据以 [模块状态索引](../README.md#当前状态) 为准，历史由 Git 保留。
-- 最后更新：2026-08-24
+- 最后更新：2026-08-25
 
 ## 跨模块当前快照
 
@@ -36,7 +36,7 @@
 ## 完整验证基线
 
 - 2026-08-21：固定 Runtime `0.148.0-alpha.15` 的 Thread 权威 settings/Goal 同步、审查状态单调更新及原生滚动条释放与可信 scroll 兜底完成；时间线移除 react-virtuoso，改用单一原生滚动容器、程序定位隔离、用户滚动 settle 锁、运行中受控贴底和 Session 切换重置；新增 Session 临时提示关闭/自动消失。
-- 2026-08-24：将选择项目后的“项目文件”入口迁移到右侧 inspector，并移除重复的右侧 Diff 面板；随后将 WorkspaceExplorer 改为无背景模糊的可调宽右侧抽屉，增加一键扩大到最大/缩小到最小的快捷按钮；TypeScript、ESLint、56 个 Vitest 文件/248 项测试、Vite production build 和 Tauri debug build 通过。
+- 2026-08-25：项目文件浏览器改为以内嵌方式挂载到右侧 inspector，与侧边聊天共享面板生命周期；标题栏操作统一为无边框图标按钮，最大化/恢复直接控制右侧栏宽度；清理未再被 App 引用的旧 DiffInspector 组件、样式和测试。TypeScript、ESLint、57 个 Vitest 文件/254 项测试、Vite production build、Rust check、14 项 Rust 单测、Clippy 和 Tauri debug build 通过；Knip 仍受 Windows/Node Oxc parser 内存分配失败影响。
 - 2026-08-24：右侧 inspector 新增 Codex 风格侧边聊天；通过 `thread/fork`/`thread/start` 创建 `ephemeral` 只读线程，新增主线程与侧聊事件路由隔离、关闭时中断活动 Turn 后退订、`Ctrl/Cmd+Alt+S` 快捷打开和最大化/恢复；fork 的父级历史仅作为模型上下文，不在侧栏重复渲染；Thread 创建完成前不展示详情 Composer，避免首条消息在无 Thread ID 时被静默丢弃；主 Session 切换或 Runtime 重置后返回功能入口；加入事件路由、面板交互、未就绪发送和关闭生命周期测试，前端回归为 58 个 Vitest 文件/255 项测试。
 - 定向滚动与临时提示测试通过；完整前端回归为 56 个文件/247 项测试，TypeScript、ESLint、Vite production build、Rust check 和 14 项 Rust 测试通过。当前构建约 555.91 kB，仍有 Vite bundle size warning。
 - Knip 因当前 Windows/Node Oxc parser 的 ArrayBuffer 分配错误短路，未产生无效代码报告；该结果不能作为无效代码检查通过的证据。

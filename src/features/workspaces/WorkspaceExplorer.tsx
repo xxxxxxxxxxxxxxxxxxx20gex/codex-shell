@@ -1,7 +1,5 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import {
-  ChevronsLeft,
-  ChevronsRight,
   ChevronDown,
   ChevronRight,
   File,
@@ -11,6 +9,8 @@ import {
   FolderOpen,
   FolderRoot,
   LoaderCircle,
+  Maximize2,
+  Minimize2,
   Search,
   X,
 } from "lucide-react";
@@ -29,9 +29,8 @@ interface Props {
   readDirectory: (path: string) => Promise<FsReadDirectoryEntry[]>;
   readFile: (path: string) => Promise<string>;
   watchPath: WatchWorkspacePath;
-  embedded?: boolean;
-  maximized?: boolean;
-  onToggleMaximize?: () => void;
+  maximized: boolean;
+  onToggleMaximize: () => void;
 }
 
 interface DirectoryState {
@@ -56,19 +55,7 @@ function pathsAffectFile(changedPaths: string[], filePath: string) {
   });
 }
 
-const DEFAULT_EXPLORER_WIDTH = 900;
-const EXPLORER_MIN_WIDTH = 420;
-const EXPLORER_MAX_WIDTH = 1200;
-
-function maxExplorerWidth() {
-  return Math.max(EXPLORER_MIN_WIDTH, Math.min(EXPLORER_MAX_WIDTH, window.innerWidth - 320));
-}
-
-function clampExplorerWidth(width: number) {
-  return Math.max(EXPLORER_MIN_WIDTH, Math.min(maxExplorerWidth(), width));
-}
-
-export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, readDirectory, readFile, watchPath, embedded = false, maximized = false, onToggleMaximize }: Props) {
+export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, readDirectory, readFile, watchPath, maximized, onToggleMaximize }: Props) {
   const loadingDirectoriesRef = useRef(new Set<string>());
   const previewRequestRef = useRef(0);
   const selectedPathRef = useRef<string | null>(null);
@@ -80,10 +67,6 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState("");
   const [watchError, setWatchError] = useState("");
-  const [drawerWidth, setDrawerWidth] = useState(() => clampExplorerWidth(DEFAULT_EXPLORER_WIDTH));
-  const [resizing, setResizing] = useState(false);
-  const resizingRef = useRef(false);
-  const bodyStyleRef = useRef({ cursor: "", userSelect: "" });
 
   const loadDirectory = useCallback(async (path: string) => {
     if (loadingDirectoriesRef.current.has(path)) return;
@@ -159,42 +142,6 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [onClose]);
 
-  const resizeFromPointer = useCallback((clientX: number) => {
-    setDrawerWidth(clampExplorerWidth(window.innerWidth - clientX));
-  }, []);
-
-  useEffect(() => {
-    function handlePointerMove(event: globalThis.PointerEvent) {
-      if (resizingRef.current) resizeFromPointer(event.clientX);
-    }
-    function finishResize() {
-      if (!resizingRef.current) return;
-      resizingRef.current = false;
-      setResizing(false);
-      document.body.style.cursor = bodyStyleRef.current.cursor;
-      document.body.style.userSelect = bodyStyleRef.current.userSelect;
-    }
-    window.addEventListener("pointermove", handlePointerMove);
-    window.addEventListener("pointerup", finishResize);
-    window.addEventListener("pointercancel", finishResize);
-    return () => {
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", finishResize);
-      window.removeEventListener("pointercancel", finishResize);
-      if (resizingRef.current) finishResize();
-    };
-  }, [resizeFromPointer]);
-
-  function beginResize(event: PointerEvent<HTMLDivElement>) {
-    event.preventDefault();
-    resizingRef.current = true;
-    setResizing(true);
-    bodyStyleRef.current = { cursor: document.body.style.cursor, userSelect: document.body.style.userSelect };
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
-    event.currentTarget.setPointerCapture?.(event.pointerId);
-  }
-
   function toggleDirectory(path: string) {
     const isExpanded = expanded.has(path);
     setExpanded((current) => {
@@ -260,27 +207,13 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
   const previewLines = preview?.kind === "text" ? preview.content.split("\n") : [];
 
   return (
-    <div className={embedded ? "workspace-explorer-layer embedded" : "workspace-explorer-layer"} role="dialog" aria-modal="true" aria-label="项目文件浏览器">
-      {!embedded && <button className="workspace-explorer-scrim" onClick={onClose} aria-label="关闭项目文件浏览器" />}
-      <section
-        className={`workspace-explorer-drawer ${resizing ? "resizing" : ""}`}
-        style={{ "--explorer-width": `${drawerWidth}px` } as CSSProperties}
-      >
-        <div
-          className="explorer-resizer"
-          role="separator"
-          aria-label="调整项目文件窗口宽度"
-          aria-orientation="vertical"
-          aria-valuemin={EXPLORER_MIN_WIDTH}
-          aria-valuemax={maxExplorerWidth()}
-          aria-valuenow={drawerWidth}
-          onPointerDown={beginResize}
-        />
+    <div className="workspace-explorer-layer" role="dialog" aria-modal="true" aria-label="项目文件浏览器">
+      <section className="workspace-explorer-drawer">
         <header className="explorer-header">
           <div><span className="eyebrow">Project Explorer</span><strong>{projectName(rootPath)}</strong><small>{rootPath}</small>{watchError && <i className="explorer-watch-warning" title={watchError}>自动刷新不可用</i>}</div>
           <div className="explorer-actions">
-            <button className="explorer-size-button" onClick={() => embedded && onToggleMaximize ? (!maximized && onToggleMaximize()) : setDrawerWidth(maxExplorerWidth())} disabled={embedded ? maximized : drawerWidth >= maxExplorerWidth()} aria-label={embedded ? "扩大右侧功能区" : "扩大到最大宽度"} title={embedded ? "扩大右侧功能区" : "扩大到最大宽度"}><ChevronsLeft aria-hidden="true" /></button>
-            <button className="explorer-size-button" onClick={() => embedded && onToggleMaximize ? (maximized && onToggleMaximize()) : setDrawerWidth(EXPLORER_MIN_WIDTH)} disabled={embedded ? !maximized : drawerWidth <= EXPLORER_MIN_WIDTH} aria-label={embedded ? "恢复右侧功能区宽度" : "缩小到最小宽度"} title={embedded ? "恢复右侧功能区宽度" : "缩小到最小宽度"}><ChevronsRight aria-hidden="true" /></button>
+            <button className="explorer-size-button" onClick={() => !maximized && onToggleMaximize()} disabled={maximized} aria-label="扩大右侧功能区" title="扩大右侧功能区"><Maximize2 aria-hidden="true" /></button>
+            <button className="explorer-size-button" onClick={() => maximized && onToggleMaximize()} disabled={!maximized} aria-label="恢复右侧功能区宽度" title="恢复右侧功能区宽度"><Minimize2 aria-hidden="true" /></button>
             <button className="explorer-close" onClick={onClose} aria-label="关闭文件浏览器" title="关闭"><X aria-hidden="true" /></button>
           </div>
         </header>

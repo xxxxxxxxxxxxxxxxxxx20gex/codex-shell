@@ -1,5 +1,7 @@
 # Restore semantic colors in light and system themes
 
+> Historical implementation plan. `DiffInspector.css` was removed after the right-side duplicate Diff surface was retired; current Diff presentation is owned by the conversation timeline.
+
 Written against: b4040d48acd76302938c55cbf93e5f26def5b281
 
 ## Evidence chain

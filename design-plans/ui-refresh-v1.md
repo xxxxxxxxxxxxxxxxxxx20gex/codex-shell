@@ -1,5 +1,7 @@
 # Quiet Graphite Workbench UI Reconciliation
 
+> Historical implementation plan. The former `DiffInspector` surface referenced below was retired after implementation; current Diff presentation is owned by the conversation timeline and `diff-status.md`.
+
 Written against: the current production worktree on 2026-08-17
 
 ## Implementation status

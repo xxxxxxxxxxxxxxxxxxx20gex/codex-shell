@@ -8,4 +8,4 @@
 - 已知问题：无边框自绘最大化按钮通常不会触发 Windows 11 原生 Snap Layout 悬停菜单；文件搜索和会话操作尚未完成全键盘导航；拖拽分隔线尚未支持键盘调宽；Shell Queue、侧边聊天输入、Tauri IPC 错误与运行状态仍缺完整无障碍播报。侧边聊天当前固定为只读沙箱且不支持审批交互，适合旁聊和分析，不承担主会话的写入任务。Headless 浏览器不具备 Tauri transport，因此窗口动作以单元测试、capability 校验和桌面构建为准。
 - 下一步：补齐分隔线键盘宽度调节、文件/会话键盘导航和运行状态无障碍播报；随后逐步把仍位于 `App.css` 的 Composer/时间线样式继续迁回 feature owner，但不再以末尾覆盖方式迁移。
 - 验证证据：设置组件测试覆盖四个分类、elevated Sandbox 配置、诊断内容和指定分页直达；主题迁移后的完整质量门禁通过。浏览器 computed style 确认浅色 `--surface-selected=#dce4d8`、`--text-primary=#1c211d`、`--border-subtle=#d7ddd7`、`--accent-action=#628b19`，深色 Token 保持原值；1440×900、1280×780、1024×720 和 900×700 均无页面级横向溢出。
-- 最后更新：2026-08-24
+- 最后更新：2026-08-25

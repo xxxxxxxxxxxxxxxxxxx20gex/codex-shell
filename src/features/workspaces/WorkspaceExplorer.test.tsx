@@ -7,10 +7,14 @@ import type { DisposeWorkspaceWatch } from "../runtime/useWorkspaceFiles";
 import { WorkspaceExplorer } from "./WorkspaceExplorer";
 
 describe("WorkspaceExplorer", () => {
-  it("supports resizing the right drawer with explicit size controls", async () => {
-    const view = render(
+  it("uses the shared inspector maximize and restore controls", async () => {
+    let maximized = false;
+    const onToggleMaximize = vi.fn(() => { maximized = !maximized; });
+    render(
       <WorkspaceExplorer
         rootPath="C:\\work"
+        maximized={maximized}
+        onToggleMaximize={onToggleMaximize}
         onClose={() => undefined}
         readDirectory={vi.fn(async () => [])}
         readFile={vi.fn(async () => "")}
@@ -18,13 +22,8 @@ describe("WorkspaceExplorer", () => {
       />,
     );
 
-    const drawer = view.container.querySelector<HTMLElement>(".workspace-explorer-drawer");
-    const initialWidth = Math.max(420, Math.min(1200, window.innerWidth - 320));
-    expect(drawer?.style.getPropertyValue("--explorer-width")).toBe(`${initialWidth}px`);
-    fireEvent.click(screen.getByRole("button", { name: "缩小到最小宽度" }));
-    expect(drawer?.style.getPropertyValue("--explorer-width")).toBe("420px");
-    fireEvent.click(screen.getByRole("button", { name: "扩大到最大宽度" }));
-    expect(drawer?.style.getPropertyValue("--explorer-width")).toBe(`${initialWidth}px`);
+    fireEvent.click(screen.getByRole("button", { name: "扩大右侧功能区" }));
+    expect(onToggleMaximize).toHaveBeenCalledTimes(1);
   });
 
   it("watches expanded folders, refreshes changed files, and releases watches", async () => {
@@ -48,6 +47,8 @@ describe("WorkspaceExplorer", () => {
     const view = render(
       <WorkspaceExplorer
         rootPath={rootPath}
+        maximized={false}
+        onToggleMaximize={() => undefined}
         onClose={() => undefined}
         readDirectory={readDirectory}
         readFile={readFile}
