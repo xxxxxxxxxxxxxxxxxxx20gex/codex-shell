@@ -336,9 +336,10 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .thread-row:hover .thread-main, .thread-row:focus-within .thread-main { color: var(--text-primary); }
 .thread-pin-indicator { width: 13px; height: 13px; flex: 0 0 13px; margin-right: 5px; color: var(--accent-action); stroke-width: 1.75; }
 .thread-actions { position: relative; z-index: 4; display: flex; min-width: 0; align-items: center; justify-content: flex-end; gap: 2px; padding: 0 4px 0 8px; background: transparent; opacity: 0; visibility: hidden; transition: opacity var(--motion-fast), visibility 0s linear .12s; }
-.thread-actions::before { position: absolute; z-index: -1; top: 9px; bottom: 9px; left: 0; width: 12px; pointer-events: none; background: linear-gradient(90deg, transparent, var(--surface-raised)); content: ""; }
+.thread-actions::before { position: absolute; z-index: 0; top: 9px; bottom: 9px; left: 0; width: 12px; pointer-events: none; background: linear-gradient(90deg, transparent, var(--surface-raised)); content: ""; opacity: 0; transition: opacity var(--motion-fast); }
 .thread-row.active .thread-actions::before { background: linear-gradient(90deg, transparent, var(--surface-selected)); }
 .thread-row:hover .thread-actions, .thread-row:focus-within .thread-actions, .thread-actions.menu-open { opacity: 1; visibility: visible; transition-delay: 0s; }
+.thread-row:hover .thread-actions::before, .thread-row:focus-within .thread-actions::before, .thread-actions.menu-open::before { opacity: 1; }
 .thread-list .thread-actions button { position: relative; display: flex; width: 24px; height: 24px; flex: none; align-items: center; justify-content: center; padding: 0; border-radius: 4px; color: var(--text-muted); background: var(--surface-raised); line-height: 0; }
 .thread-row.active .thread-actions button { background: var(--surface-selected); }
 .thread-list .thread-actions button:hover { color: var(--accent-action); background: var(--surface-selected); }
