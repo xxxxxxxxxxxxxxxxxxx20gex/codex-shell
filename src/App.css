@@ -329,7 +329,7 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .thread-row.active:hover, .thread-row.active:focus-within { background: var(--surface-selected); box-shadow: inset 2px 0 0 var(--accent-action); }
 .thread-row.running .thread-main small { color: var(--accent-action); }
 .thread-row.running .thread-main small::before { display: inline-block; width: 5px; height: 5px; margin-right: 4px; border-radius: 50%; background: var(--accent-action); content: ""; }
-.thread-list .thread-main { display: flex; min-width: 0; min-height: 56px; align-items: center; justify-content: flex-start; padding: 9px 76px 9px 10px; transition: color var(--motion-fast), background-color var(--motion-fast); }
+.thread-list .thread-main { display: flex; min-width: 0; min-height: 56px; align-items: center; justify-content: flex-start; padding: 9px 10px; transition: color var(--motion-fast), background-color var(--motion-fast); }
 .thread-list .thread-copy { display: grid; min-width: 0; width: 100%; grid-template-rows: 20px 16px; gap: 2px; overflow: hidden; }
 .thread-list .thread-title { display: flex; min-width: 0; align-items: center; overflow: hidden; color: var(--text-primary); font-size: var(--text-title); font-weight: 500; line-height: 20px; text-overflow: ellipsis; white-space: nowrap; }
 .thread-list .thread-main small { display: block; min-width: 0; overflow: hidden; color: color-mix(in srgb, var(--text-muted) 80%, var(--surface-sidebar)); font: var(--text-meta)/16px var(--font-mono); text-overflow: ellipsis; white-space: nowrap; }
