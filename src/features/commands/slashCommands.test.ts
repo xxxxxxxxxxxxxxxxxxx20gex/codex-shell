@@ -3,10 +3,12 @@ import { activeSlashCommandQuery, matchingSlashCommands, parseSlashCommand } fro
 import { commandDisabled } from "./SlashCommandMenu";
 
 describe("slash command parsing", () => {
-  it("opens the menu only for a leading command token", () => {
+  it("opens the menu for an independent slash token anywhere at the end", () => {
     expect(activeSlashCommandQuery("/")).toBe("");
     expect(activeSlashCommandQuery("/ski")).toBe("ski");
-    expect(activeSlashCommandQuery("hello /ski")).toBeNull();
+    expect(activeSlashCommandQuery("hello /")).toBe("");
+    expect(activeSlashCommandQuery("hello /ski")).toBe("ski");
+    expect(activeSlashCommandQuery("https://example.com/")).toBeNull();
     expect(activeSlashCommandQuery("/goal objective")).toBeNull();
   });
 

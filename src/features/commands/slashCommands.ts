@@ -29,7 +29,7 @@ const SLASH_COMMANDS: SlashCommandDefinition[] = [
 ];
 
 export function activeSlashCommandQuery(text: string) {
-  const match = /^\/([^\s/]*)$/.exec(text);
+  const match = /(?:^|\s)\/([^\s/]*)$/.exec(text);
   return match ? match[1].toLocaleLowerCase() : null;
 }
 
