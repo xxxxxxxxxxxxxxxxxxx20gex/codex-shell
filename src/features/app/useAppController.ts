@@ -194,7 +194,12 @@ export function useAppController() {
     if (mentions.length > 0 || images.length > 0 || skills.length > 0) {
       throw new Error("目标模式目前只支持文字；请移除附件和 Skill 后再提交目标");
     }
-    await session.setThreadGoal(objective);
+    if (!session.thread) {
+      const sent = await session.send(objective, [], [], "default", [], objective);
+      if (!sent) throw new Error("目标消息未能发送，请重试");
+    } else {
+      await session.setThreadGoal(objective);
+    }
     setDraft("");
     setSkills([]);
     setMentionResults([]);

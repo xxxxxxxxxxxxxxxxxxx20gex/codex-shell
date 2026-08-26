@@ -93,6 +93,7 @@ export function useTurnExecution(props: Props) {
     skills: SkillMention[] = [],
     collaborationMode: ModeKind = "default",
     images: ImageAttachment[] = [],
+    goal: string | null = null,
   ) => {
     const message = text.trim();
     const activeThreadId = props.threadIdRef.current;
@@ -126,6 +127,18 @@ export function useTurnExecution(props: Props) {
         props.showActiveWith(optimisticThread);
       } else if (!props.subscribedThreadIdsRef.current.has(threadId)) {
         await props.ensureActiveThread();
+      }
+
+      if (goal?.trim()) {
+        const goalResponse = await client.setThreadGoal({
+          threadId,
+          objective: goal.trim(),
+          status: "active",
+        });
+        props.dispatch({
+          type: "threadGoalUpdated",
+          notification: { threadId, goal: goalResponse.goal },
+        });
       }
 
       const submittedAt = Date.now() / 1_000;
