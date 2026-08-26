@@ -14,7 +14,7 @@ try {
     & pnpm build
     if ($LASTEXITCODE -ne 0) { throw "生产构建失败，退出码：$LASTEXITCODE" }
 
-    & pnpm dlx knip
+    & pnpm quality:knip
     if ($LASTEXITCODE -ne 0) { throw "Knip 无效代码检查失败，退出码：$LASTEXITCODE" }
 
     & pnpm rust:check
