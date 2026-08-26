@@ -199,6 +199,8 @@ export function useAppController() {
       if (!sent) throw new Error("目标消息未能发送，请重试");
     } else {
       await session.setThreadGoal(objective);
+      const sent = await session.send(objective, [], [], "default");
+      if (!sent) throw new Error("目标消息未能发送，请重试");
     }
     setDraft("");
     setSkills([]);
