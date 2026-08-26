@@ -223,12 +223,16 @@
     .session-row.is-selected::before { background: var(--accent-action); }
 
     .session-copy {
+      display: grid;
       min-width: 0;
       overflow: hidden;
+      grid-template-rows: 20px 16px;
+      gap: 2px;
       white-space: nowrap;
     }
 
     .session-title {
+      display: block;
       overflow: hidden;
       font-size: 14px;
       line-height: 20px;
@@ -236,6 +240,7 @@
     }
 
     .session-meta {
+      display: block;
       overflow: hidden;
       color: var(--text-muted);
       font-size: 11px;
