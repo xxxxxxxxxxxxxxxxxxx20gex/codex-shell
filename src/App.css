@@ -328,8 +328,9 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .thread-row.active:hover, .thread-row.active:focus-within { background: var(--surface-selected); box-shadow: inset 2px 0 0 var(--accent-action); }
 .thread-row.running .thread-main small { color: var(--accent-action); }
 .thread-row.running .thread-main small::before { display: inline-block; width: 5px; height: 5px; margin-right: 4px; border-radius: 50%; background: var(--accent-action); content: ""; }
-.thread-list .thread-main { display: grid; min-height: 40px; grid-template-columns: minmax(0,1fr) auto; gap: 5px; padding: 0 4px 0 10px; transition: color var(--motion-fast), background-color var(--motion-fast); }
+.thread-list .thread-main { display: grid; min-height: 48px; grid-template-columns: minmax(0,1fr); grid-template-rows: minmax(0,1fr) auto; gap: 1px; padding: 6px 4px 6px 10px; transition: color var(--motion-fast), background-color var(--motion-fast); }
 .thread-list .thread-title { display: flex; min-width: 0; align-items: center; overflow: hidden; color: var(--text-primary); font-size: var(--text-ui); font-weight: 600; line-height: 20px; text-overflow: ellipsis; white-space: nowrap; }
+.thread-list .thread-main small { display: block; min-width: 0; overflow: hidden; line-height: 16px; text-overflow: ellipsis; white-space: nowrap; }
 .thread-list .thread-main:hover .thread-title, .thread-list .thread-main:focus-visible .thread-title { color: var(--text-primary); }
 .thread-row:hover .thread-main, .thread-row:focus-within .thread-main { color: var(--text-primary); }
 .thread-pin-indicator { width: 13px; height: 13px; flex: 0 0 13px; margin-right: 5px; color: var(--accent-action); stroke-width: 1.75; }
