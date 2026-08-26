@@ -39,7 +39,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .history-view-toggle { display: inline-flex; align-items: center; gap: 5px; }
 .history-view-toggle i { color: var(--text-muted); font-style: normal; }
 .chevron-icon { width: 12px; height: 12px; flex: 0 0 12px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.35; }
-.thread-list { display: flex; min-height: 0; flex: 1; flex-direction: column; gap: 2px; overflow-x: hidden; overflow-y: auto; padding: 0 0 12px 8px; font-family: var(--font-ui); }
+.thread-list { display: flex; min-height: 0; flex: 1; flex-direction: column; gap: 2px; overflow-x: hidden; overflow-y: auto; padding: 0 0 12px 8px; scrollbar-width: none; font-family: var(--font-ui); }
+.thread-list::-webkit-scrollbar { width: 0; height: 0; }
 .thread-list button { justify-content: space-between; min-height: 36px; padding: 9px 10px; color: var(--text-secondary); font-size: 12px; transition: color var(--ui-motion-fast), background-color var(--ui-motion-fast); }
 .thread-list button:disabled { cursor: default; }
 .thread-list button.active { color: var(--text-primary); background: var(--surface-selected); }
@@ -320,7 +321,7 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .composer-workspace-selector .clear-workspace-button:hover { color: var(--text-primary); background: var(--surface-raised); }
 .composer-workspace-selector .clear-workspace-button:disabled { cursor: default; opacity: .5; }
 .composer-workspace-selector .clear-workspace-button svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-width: 1.4; }
-.thread-row { position: relative; display: grid; width: calc(100% + 12px); grid-template-columns: minmax(0,1fr) 64px; min-height: 56px; margin-right: -12px; margin-left: calc(var(--thread-depth, 0) * 14px); border-radius: 4px; transition: background-color var(--motion-fast), box-shadow var(--motion-fast); }
+.thread-row { position: relative; display: grid; grid-template-columns: minmax(0,1fr) 64px; min-height: 56px; margin-left: calc(var(--thread-depth, 0) * 14px); border-radius: 4px; transition: background-color var(--motion-fast), box-shadow var(--motion-fast); }
 .thread-row.branched::before { position: absolute; top: 0; bottom: 0; left: -8px; width: 1px; background: var(--border-default); content: ""; }
 .thread-row.branched::after { position: absolute; top: 18px; left: -8px; width: 8px; height: 1px; background: var(--border-default); content: ""; }
 .thread-row.active { background: var(--surface-selected); box-shadow: inset 2px 0 0 var(--accent-action); }
@@ -336,10 +337,7 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .thread-row:hover .thread-main, .thread-row:focus-within .thread-main { color: var(--text-primary); }
 .thread-pin-indicator { width: 13px; height: 13px; flex: 0 0 13px; margin-right: 5px; color: var(--accent-action); stroke-width: 1.75; }
 .thread-actions { position: relative; z-index: 4; display: flex; min-width: 0; align-items: center; justify-content: flex-end; gap: 2px; padding: 0 4px 0 8px; background: transparent; opacity: 0; visibility: hidden; transition: opacity var(--motion-fast), visibility 0s linear .12s; }
-.thread-actions::before { position: absolute; z-index: 0; top: 9px; bottom: 9px; left: 0; width: 12px; pointer-events: none; background: linear-gradient(90deg, transparent, var(--surface-raised)); content: ""; opacity: 0; transition: opacity var(--motion-fast); }
-.thread-row.active .thread-actions::before { background: linear-gradient(90deg, transparent, var(--surface-selected)); }
 .thread-row:hover .thread-actions, .thread-row:focus-within .thread-actions, .thread-actions.menu-open { opacity: 1; visibility: visible; transition-delay: 0s; }
-.thread-row:hover .thread-actions::before, .thread-row:focus-within .thread-actions::before, .thread-actions.menu-open::before { opacity: 1; }
 .thread-list .thread-actions button { position: relative; display: flex; width: 24px; height: 24px; flex: none; align-items: center; justify-content: center; padding: 0; border-radius: 4px; color: var(--text-muted); background: var(--surface-raised); line-height: 0; }
 .thread-row.active .thread-actions button { background: var(--surface-selected); }
 .thread-list .thread-actions button:hover { color: var(--accent-action); background: var(--surface-selected); }

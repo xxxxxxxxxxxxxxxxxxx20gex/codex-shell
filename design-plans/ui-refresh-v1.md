@@ -31,7 +31,7 @@ The original findings below remain as the evidence and intended migration path; 
 | # | Problem | Evidence | Proposed change | Scope | Confidence |
 | --- | --- | --- | --- | --- | --- |
 | 1 | Timeline typography and semantic color only partially match the accepted design | The main answer already resolves to 15px/24px, but `TurnFileChanges` still resolves labels and paths to 11px, uses the `±` text glyph, and relies on legacy local colors; process/file separators use `#302f29` rather than `--border-subtle`. The accepted prototype specifies 13px/20px process content, 12px file rows, blue file icons, green additions, red deletions, and token-owned separators. | Keep answer text at 15px/24px, normalize process/file content to the documented roles, replace the file glyph with the existing Lucide icon language, and consume semantic tokens for separators and file states. | Conversation timeline, collapsed process group, completed file summary, message metadata | High |
-| 2 | Session history text is undersized and its state palette drifts from the workbench contract | `.thread-list .thread-main` is a 40px row, but its title inherits the broad 12px list rule and metadata is explicitly 10px; running/pin/branch styles use hardcoded lime/brown values. `DESIGN.md` requires 13px primary labels, 11px metadata, token-owned selected/hover states, and a stable 40px row. | Assign title and metadata roles explicitly, preserve fixed row geometry and action overlay, and replace local state colors with the existing semantic tokens. | Active, pinned, running, branched, long-title, and right-click Session rows | High |
+| 2 | Session history text is undersized and its state palette drifts from the workbench contract | The former 40px row and inherited list typography allowed stacked title/time content to clip; running/pin/branch styles also drifted from semantic tokens. `DESIGN.md` now requires a 56px stacked row, 14px title, 11px metadata, token-owned selected/hover states, and a stable right action slot without a decorative mask. | Assign title and metadata roles explicitly, preserve fixed row geometry and the independent action slot, hide the native scrollbar gutter, and keep row surfaces continuous while only the buttons receive local backgrounds. | Active, pinned, running, branched, long-title, and right-click Session rows | High |
 | 3 | Model advanced settings remains on a legacy modal scale and palette | `.settings-modal` uses a 16px radius and hardcoded brown surfaces/borders; field labels are 10px, help text 9px, inputs 11px, and the heading is 19px. These values contradict the 11px minimum, 12/13/14px UI roles, 8px panel radius, and graphite semantic surfaces in `DESIGN.md`. | Restyle the existing dialog with the current token scale: 14px title, 13px fields/inputs, 11px descriptions, 8px modal radius, graphite surfaces, semantic focus ring, and existing button variants. | Gateway URL, API key, custom model ID, provider capability summary, verbosity selector, error state, footer actions | High |
 
 ## Improve first
@@ -60,7 +60,7 @@ No new behavior primitive is required. Shared CSS utilities are justified only w
    - Verify: the screenshot hierarchy is reproduced without adding cards around assistant responses or changing the placement of user messages and queued Composer rows.
 
 2. `src/App.css`, `src/features/threads/ThreadHistoryList.tsx`
-   - Change: make `.thread-title` explicitly 13px/20px and row metadata 11px/16px; keep 40px rows; use token-owned selected, hover, running, pinned, and branch colors; maintain a fade/action overlay that truncates before controls.
+   - Change: make `.thread-title` explicitly 14px/20px and row metadata 11px/16px; keep 56px rows; use token-owned selected, hover, running, pinned, and branch colors; keep the right action slot independent without a fade or mask, and hide only the native scrollbar gutter.
    - Preserve: pinned-first ordering, branch depth, active/running state, archive/delete behavior, context menu, tooltips, and click target geometry.
    - Verify: long Chinese/Latin names do not overlap actions and title/metadata baselines remain stable on hover.
 
@@ -83,7 +83,7 @@ No new behavior primitive is required. Shared CSS utilities are justified only w
 ## Validation
 
 - Product: run a multi-step task that produces commentary, commands, a final answer, and file changes; pin/open a long Session; open model advanced settings with default and custom provider values.
-- Interface: compare at `1440x900`, `1280x780`, `1024x720`, and `900x700`; verify Chinese/Latin baselines, line wrapping, metadata spacing, long paths, hover action overlays, keyboard focus, and validation states.
+- Interface: compare at `1440x900`, `1280x780`, `1024x720`, and `900x700`; verify Chinese/Latin baselines, line wrapping, metadata spacing, long paths, button-only hover actions, keyboard focus, scrolling without a visible scrollbar gutter, and validation states.
 - System: confirm every new effective value resolves through `src/styles/tokens.css` and no parallel palette/type scale is introduced.
 - Repository: `pnpm test:quality` → all TypeScript, Vitest, build, Knip, Rust, Clippy, and diff checks pass; `pnpm desktop:build` → debug desktop binary builds successfully.
 
