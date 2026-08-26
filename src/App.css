@@ -39,7 +39,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .history-view-toggle { display: inline-flex; align-items: center; gap: 5px; }
 .history-view-toggle i { color: var(--text-muted); font-style: normal; }
 .chevron-icon { width: 12px; height: 12px; flex: 0 0 12px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.35; }
-.thread-list { display: flex; min-height: 0; flex: 1; flex-direction: column; gap: 2px; overflow-x: hidden; overflow-y: auto; padding: 0 8px 12px; font-family: var(--font-ui); }
+.thread-list { display: flex; min-height: 0; flex: 1; flex-direction: column; gap: 2px; overflow-x: hidden; overflow-y: auto; padding: 0 0 12px 8px; font-family: var(--font-ui); }
 .thread-list button { justify-content: space-between; min-height: 36px; padding: 9px 10px; color: var(--text-secondary); font-size: 12px; transition: color var(--ui-motion-fast), background-color var(--ui-motion-fast); }
 .thread-list button:disabled { cursor: default; }
 .thread-list button.active { color: var(--text-primary); background: var(--surface-selected); }

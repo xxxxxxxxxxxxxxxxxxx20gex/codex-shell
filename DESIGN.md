@@ -187,6 +187,7 @@ Radii:
 - Hover actions occupy the stable right action slot and never change row height, push the title, or cover its text.
 - Primary label is `--text-ui`; metadata is `--text-meta`; both align to the same 16px icon grid.
 - Long labels fade or truncate before actions. Do not place actions on a second row.
+- The history viewport does not reserve a decorative right gutter; rows extend to the scrollbar edge while the action slot keeps its own inner padding.
 - Empty lists provide one clear next action; loading uses structural placeholders without layout shifts.
 
 ### Primary sidebar actions
