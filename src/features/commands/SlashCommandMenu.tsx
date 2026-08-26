@@ -24,7 +24,7 @@ export function SlashCommandMenu({ query, selectedIndex, hasThread, running, onS
         return (
           <button key={command.id} className={index === selectedIndex ? "selected" : ""} disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => onSelect(command.id)} role="option" aria-selected={index === selectedIndex}>
             <i><Icon aria-hidden="true" /></i>
-            <span><strong>/{command.id} <em>{command.label}</em></strong><small>{command.description}</small></span>
+            <span><strong><code>/{command.id}</code><em>{command.label}</em></strong><small>{command.description}</small></span>
           </button>
         );
       })}
