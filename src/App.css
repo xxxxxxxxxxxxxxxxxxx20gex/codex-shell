@@ -320,7 +320,7 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .composer-workspace-selector .clear-workspace-button:hover { color: var(--text-primary); background: var(--surface-raised); }
 .composer-workspace-selector .clear-workspace-button:disabled { cursor: default; opacity: .5; }
 .composer-workspace-selector .clear-workspace-button svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-width: 1.4; }
-.thread-row { position: relative; display: grid; grid-template-columns: minmax(0,1fr); min-height: 40px; margin-left: calc(var(--thread-depth, 0) * 14px); border-radius: 4px; transition: background-color var(--motion-fast), box-shadow var(--motion-fast); }
+.thread-row { position: relative; display: grid; grid-template-columns: minmax(0,1fr) 64px; min-height: 72px; margin-left: calc(var(--thread-depth, 0) * 14px); border-radius: 4px; transition: background-color var(--motion-fast), box-shadow var(--motion-fast); }
 .thread-row.branched::before { position: absolute; top: 0; bottom: 0; left: -8px; width: 1px; background: var(--border-default); content: ""; }
 .thread-row.branched::after { position: absolute; top: 18px; left: -8px; width: 8px; height: 1px; background: var(--border-default); content: ""; }
 .thread-row.active { background: var(--surface-selected); box-shadow: inset 2px 0 0 var(--accent-action); }
@@ -328,23 +328,21 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .thread-row.active:hover, .thread-row.active:focus-within { background: var(--surface-selected); box-shadow: inset 2px 0 0 var(--accent-action); }
 .thread-row.running .thread-main small { color: var(--accent-action); }
 .thread-row.running .thread-main small::before { display: inline-block; width: 5px; height: 5px; margin-right: 4px; border-radius: 50%; background: var(--accent-action); content: ""; }
-.thread-list .thread-main { display: grid; min-height: 64px; align-content: center; grid-template-columns: minmax(0,1fr); grid-template-rows: 22px 16px; gap: 2px; padding: 12px 4px 12px 10px; transition: color var(--motion-fast), background-color var(--motion-fast), padding-right var(--motion-fast); }
-.thread-row:hover .thread-main, .thread-row:focus-within .thread-main { padding-right: 68px; }
+.thread-list .thread-main { display: grid; min-width: 0; min-height: 72px; align-content: center; grid-template-columns: minmax(0,1fr); grid-template-rows: 24px 18px; gap: 3px; padding: 15px 4px 15px 10px; transition: color var(--motion-fast), background-color var(--motion-fast); }
 .thread-list .thread-title { display: flex; min-width: 0; align-items: center; overflow: hidden; color: var(--text-primary); font-size: var(--text-title); font-weight: 500; line-height: 22px; text-overflow: ellipsis; white-space: nowrap; }
 .thread-list .thread-main small { display: block; min-width: 0; overflow: hidden; color: color-mix(in srgb, var(--text-muted) 80%, var(--surface-sidebar)); font: var(--text-meta)/16px var(--font-mono); text-overflow: ellipsis; white-space: nowrap; }
 .thread-list .thread-main:hover .thread-title, .thread-list .thread-main:focus-visible .thread-title { color: var(--text-primary); }
 .thread-row:hover .thread-main, .thread-row:focus-within .thread-main { color: var(--text-primary); }
 .thread-pin-indicator { width: 13px; height: 13px; flex: 0 0 13px; margin-right: 5px; color: var(--accent-action); stroke-width: 1.75; }
-.thread-actions { position: absolute; z-index: 4; top: 50%; right: 4px; display: flex; align-items: center; gap: 0; padding-left: 14px; background: transparent; opacity: 0; visibility: hidden; transform: translateY(-50%); transition: opacity var(--motion-fast), visibility 0s linear .12s; }
-.thread-actions::before { position: absolute; z-index: -1; top: 0; bottom: 0; left: 0; width: 18px; pointer-events: none; background: linear-gradient(90deg, transparent, var(--surface-raised)); content: ""; }
+.thread-actions { position: relative; z-index: 4; display: flex; min-width: 0; align-items: center; justify-content: flex-end; gap: 2px; padding: 0 4px 0 8px; background: transparent; opacity: 0; visibility: hidden; transition: opacity var(--motion-fast), visibility 0s linear .12s; }
+.thread-actions::before { position: absolute; z-index: -1; top: 15px; bottom: 15px; left: 0; width: 12px; pointer-events: none; background: linear-gradient(90deg, transparent, var(--surface-raised)); content: ""; }
 .thread-row.active .thread-actions::before { background: linear-gradient(90deg, transparent, var(--surface-selected)); }
-.thread-row:hover .thread-actions, .thread-row:focus-within .thread-actions { opacity: 1; visibility: visible; transition-delay: 0s; }
+.thread-row:hover .thread-actions, .thread-row:focus-within .thread-actions, .thread-actions.menu-open { opacity: 1; visibility: visible; transition-delay: 0s; }
 .thread-list .thread-actions button { position: relative; display: flex; width: 24px; height: 24px; flex: none; align-items: center; justify-content: center; padding: 0; border-radius: 4px; color: var(--text-muted); background: var(--surface-raised); line-height: 0; }
 .thread-row.active .thread-actions button { background: var(--surface-selected); }
 .thread-list .thread-actions button:hover { color: var(--accent-action); background: var(--surface-selected); }
 .thread-list .thread-actions button:disabled { color: var(--text-disabled); }
-.thread-actions.menu-open { opacity: 1; visibility: visible; }
-.thread-action-menu { position: absolute; top: calc(100% + 5px); right: 0; display: grid; min-width: 174px; padding: 4px; border: 1px solid var(--border-default); border-radius: var(--radius-control); background: var(--surface-raised); box-shadow: var(--shadow-popover); opacity: 0; pointer-events: none; transform: translateY(-3px); transition: opacity var(--motion-fast), transform var(--motion-fast), visibility 0s linear var(--motion-fast); visibility: hidden; }
+.thread-action-menu { position: absolute; top: calc(100% - 4px); right: 0; display: grid; min-width: 174px; padding: 4px; border: 1px solid var(--border-default); border-radius: var(--radius-control); background: var(--surface-raised); box-shadow: var(--shadow-popover); opacity: 0; pointer-events: none; transform: translateY(-3px); transition: opacity var(--motion-fast), transform var(--motion-fast), visibility 0s linear var(--motion-fast); visibility: hidden; }
 .thread-action-menu.open { opacity: 1; pointer-events: auto; transform: translateY(0); visibility: visible; transition-delay: 0s; }
 .thread-list .thread-actions .thread-action-menu .thread-action-button { display: flex !important; width: 100% !important; height: 30px; min-width: 160px; align-items: center; justify-content: flex-start !important; gap: 8px; padding: 0 8px; border: 0; color: var(--text-secondary); font-size: var(--font-size-control); text-align: left; }
 .thread-list .thread-actions .thread-action-menu .thread-action-label { display: block; min-width: 0; overflow: hidden; color: inherit; font-size: var(--font-size-control); font-weight: 500; line-height: 20px; text-overflow: ellipsis; white-space: nowrap; }
