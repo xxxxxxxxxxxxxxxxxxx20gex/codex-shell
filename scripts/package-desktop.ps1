@@ -8,7 +8,7 @@ try {
     # build. Keep the installer build usable on ordinary 16 GB developer
     # machines; this only affects the packaging process and is restored below.
     $env:CARGO_BUILD_JOBS = "2"
-    Write-Output "Staging the pinned Codex Runtime and companion binaries..."
+    Write-Output "Staging the compatible Codex Runtime and companion binaries..."
     pnpm runtime:stage
     if ($LASTEXITCODE -ne 0) {
         throw "Runtime staging failed, exit code: $LASTEXITCODE"

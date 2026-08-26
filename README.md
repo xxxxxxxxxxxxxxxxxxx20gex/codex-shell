@@ -166,17 +166,22 @@ pnpm desktop:build
 pnpm desktop:package
 ```
 
-该命令会先校验并暂存固定 Runtime，再执行正式 Tauri bundle。NSIS 安装包位于
+该命令会先发现并暂存通过协议兼容门禁的 Runtime，再执行正式 Tauri bundle。NSIS 安装包位于
 `src-tauri/target/release/bundle/nsis/`。Runtime 的
 LICENSE/NOTICE 会随安装包一同带上；正式公开发布前仍应完成代码签名、第三方依赖
 许可清单和干净 Windows 环境验收。
 
-准备固定 Runtime 和协议类型：
+准备/更新 Runtime 和协议类型：
 
 ```powershell
 pnpm runtime:stage
 pnpm protocol:generate
 ```
+
+Runtime 不要求与上一次 manifest 的完整版本号相同。暂存时会从同一来源复制主 Runtime
+和 companion binaries，记录实际版本与 SHA-256，并检查 CS 当前依赖的 app-server
+请求、通知和反向请求仍存在。协议新增能力不会自动改变 UI；如果生成类型发生变化，
+请显式运行 `pnpm protocol:generate`，审查生成差异并完成完整回归测试。
 
 独立测试脚本统一放在 [tests/scripts](tests/scripts)；源码旁的 `*.test.*` 和 Rust 测试保持就地维护，方便复用模块夹具和类型。
 
@@ -187,4 +192,4 @@ pnpm protocol:generate
 - [docs/README.md](docs/README.md)：状态文档、ADR 和文档地图；
 - [docs/status/PROJECT_STATUS.md](docs/status/PROJECT_STATUS.md)：项目当前快照、风险和验证基线。
 
-当前项目仍处于持续开发阶段。Runtime 固定获取、安装包签名、CI、断线恢复和插件内部逻辑还在后续里程碑中；如果你希望基于 Codex app-server 打造自己的桌面智能体，欢迎从 UI、模型网关、Skills/MCP 或行业工作流方向开始扩展。
+当前项目仍处于持续开发阶段。Runtime 获取、安装包签名、CI、断线恢复和插件内部逻辑还在后续里程碑中；如果你希望基于 Codex app-server 打造自己的桌面智能体，欢迎从 UI、模型网关、Skills/MCP 或行业工作流方向开始扩展。

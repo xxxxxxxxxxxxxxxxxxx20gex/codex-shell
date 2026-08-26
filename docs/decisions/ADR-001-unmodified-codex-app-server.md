@@ -1,6 +1,6 @@
 # ADR-001：使用原版 Codex app-server 作为唯一执行核心
 
-- 状态：accepted
+- 状态：superseded by [ADR-003](ADR-003-compatible-runtime-updates.md)
 - 记录日期：2026-08-21
 - 影响范围：Runtime、协议客户端、前后端职责边界
 
@@ -10,7 +10,7 @@ Codex Shell 需要在 Windows 桌面产品中提供 Codex 的 Thread、Turn、�
 
 ## 决策
 
-使用随产品固定版本发布的原版 `codex app-server` 作为唯一智能体执行核心，通过 stdio JSON-RPC 通信，不修改 Codex Core。React 负责工作台和协议展示，Tauri/Rust 负责进程生命周期、本地配置、凭据和系统能力。
+使用原版 `codex app-server` 作为唯一智能体执行核心，通过 stdio JSON-RPC 通信，不修改 Codex Core。发布包会记录实际 Runtime 版本和哈希；同源 Runtime 的更新通过兼容性门禁后可以进入开发/打包流程。React 负责工作台和协议展示，Tauri/Rust 负责进程生命周期、本地配置、凭据和系统能力。
 
 ## 选择理由与未采用方案
 
@@ -18,7 +18,7 @@ Codex Shell 需要在 Windows 桌面产品中提供 Codex 的 Thread、Turn、�
 
 ## 后果
 
-- Runtime、companion binaries 和生成协议类型必须作为同一版本基线升级。
+- Runtime 与 companion binaries 必须从同一目录成套暂存并校验哈希；更新时必须通过现有方法、通知、反向请求和协议生成检查。发现已使用类型或调用面发生不兼容变化时，必须先重新生成协议、审查差异并回归测试。
 - 新能力优先复用稳定 app-server v2 API；实验能力只能保留在最小适配层，并提供能力声明和真实 Runtime 证据。
 - UI 不直接管理子进程，也不通过自建流程替代 Core 已提供的 Thread、Goal、Plan、Review 或压缩能力。
 - 上游暂未提供稳定接口的功能，需要等待、限制范围或明确设计适配层，不能通过修改 Core 绕过边界。

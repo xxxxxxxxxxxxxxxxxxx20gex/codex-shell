@@ -28,6 +28,7 @@ function fakeThread(): Thread {
     ephemeral: true,
     section: null,
     sectionEnteredAt: null,
+    projectId: null,
     modelProvider: "openai",
     createdAt: 0,
     updatedAt: 0,

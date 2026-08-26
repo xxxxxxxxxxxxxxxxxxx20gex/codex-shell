@@ -31,6 +31,7 @@ function thread(id: string, overrides: Partial<Thread> = {}): Thread {
     ephemeral: false,
     section: null,
     sectionEnteredAt: null,
+    projectId: null,
     modelProvider: "openai",
     createdAt: 1,
     updatedAt: 1,

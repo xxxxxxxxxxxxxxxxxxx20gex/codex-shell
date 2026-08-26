@@ -7,7 +7,6 @@ $projectRoot = Split-Path -Parent $PSScriptRoot
 $binaryDirectory = Join-Path $projectRoot "src-tauri\binaries"
 $target = Join-Path $binaryDirectory "codex-x86_64-pc-windows-msvc.exe"
 $manifestPath = Join-Path $projectRoot "bundled\runtime-manifest.json"
-$sourceWasExplicit = $PSBoundParameters.ContainsKey("Source")
 $targetTriple = "x86_64-pc-windows-msvc"
 $helperDefinitions = @(
     [ordered]@{
@@ -24,12 +23,46 @@ $helperDefinitions = @(
     }
 )
 
-if (-not $Source) {
-    $command = Get-Command codex -ErrorAction Stop
-    $Source = $command.Source
+function Resolve-RuntimeCandidate([string]$Candidate) {
+    if (-not $Candidate -or -not (Test-Path -LiteralPath $Candidate)) {
+        return $null
+    }
+    $resolved = (Resolve-Path -LiteralPath $Candidate).Path
+    if ((Get-Item -LiteralPath $resolved).PSIsContainer) {
+        $resolved = Join-Path $resolved "codex.exe"
+    }
+    if (Test-Path -LiteralPath $resolved -PathType Leaf) {
+        $resolved = (Resolve-Path -LiteralPath $resolved).Path
+        try {
+            $probeVersion = (& $resolved --version 2>$null | Out-String).Trim()
+            if ($probeVersion -and $probeVersion.StartsWith("codex-cli ")) { return $resolved }
+        }
+        catch {
+            return $null
+        }
+    }
+    return $null
 }
 
-$resolvedSource = (Resolve-Path -LiteralPath $Source).Path
+if (-not $Source) {
+    $candidates = [System.Collections.Generic.List[string]]::new()
+    if ($env:CODEX_SHELL_RUNTIME) {
+        $candidates.Add($env:CODEX_SHELL_RUNTIME)
+    }
+    $userProfile = [Environment]::GetFolderPath("UserProfile")
+    if ($userProfile) {
+        $candidates.Add((Join-Path $userProfile ".codex\plugins\.plugin-appserver\codex.exe"))
+    }
+    $pathCommand = Get-Command codex -ErrorAction SilentlyContinue
+    if ($pathCommand) { $candidates.Add($pathCommand.Source) }
+    $candidates.Add($target)
+    $Source = $candidates | ForEach-Object { Resolve-RuntimeCandidate $_ } | Where-Object { $_ } | Select-Object -First 1
+}
+
+if (-not $Source) { throw "No readable Codex Runtime found. Set CODEX_SHELL_RUNTIME or add Codex to PATH." }
+
+$resolvedSource = Resolve-RuntimeCandidate $Source
+if (-not $resolvedSource) { throw "Runtime path does not exist or cannot be read: $Source" }
 $sourceDirectory = Split-Path -Parent $resolvedSource
 $stagingDirectory = Join-Path $binaryDirectory (".runtime-stage-" + [Guid]::NewGuid().ToString("N"))
 $stagedTarget = Join-Path $stagingDirectory "codex-x86_64-pc-windows-msvc.exe"
@@ -45,7 +78,7 @@ foreach ($helper in $helperDefinitions) {
         Test-Path -LiteralPath $_ -PathType Leaf
     } | Select-Object -First 1
     if (-not $helper.sourcePath) {
-        throw "The pinned Runtime is missing companion component: $($helper.sourceName)"
+        throw "Runtime is missing its same-directory companion: $($helper.sourceName)"
     }
     $helper.targetPath = Join-Path $stagingDirectory $helper.targetName
 }
@@ -58,11 +91,16 @@ try {
     }
 
     $version = (& $stagedTarget --version | Out-String).Trim()
-    if (-not $sourceWasExplicit -and (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
-        $expectedVersion = (Get-Content -Raw -LiteralPath $manifestPath | ConvertFrom-Json).version
-        if ($expectedVersion -and $version -ne $expectedVersion) {
-            throw "PATH Runtime $version does not match pinned version $expectedVersion. Pass -Source explicitly and regenerate the protocol to upgrade."
-        }
+    if (-not $version) {
+        throw "Unable to read Runtime version; refusing unknown binary."
+    }
+
+    $protocolNonce = [Guid]::NewGuid().ToString("N")
+    $protocolCheckDirectoryName = "codex-shell-protocol-check-" + $protocolNonce
+    $protocolCheckDirectory = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath $protocolCheckDirectoryName
+    & (Join-Path $projectRoot "scripts\check-runtime-compatibility.ps1") -Runtime $stagedTarget -ProtocolOutput $protocolCheckDirectory
+    if ($LASTEXITCODE -ne 0) {
+        throw "Runtime protocol compatibility check failed: exit code $LASTEXITCODE"
     }
 
     function Get-Sha256([string]$Path) {
@@ -91,6 +129,8 @@ try {
     $manifest = [ordered]@{
         schemaVersion = 1
         version = $version
+        updatePolicy = 'compatible-protocol-updates'
+        protocolCheck = 'required-surface-v1'
         target = $targetTriple
         fileName = 'codex-x86_64-pc-windows-msvc.exe'
         sha256 = $hash
@@ -103,11 +143,14 @@ try {
     }
     $manifest | ConvertTo-Json | Set-Content -LiteralPath $manifestPath -Encoding utf8
 
-    Write-Output "Staged $version"
+    Write-Output "Staged compatible Runtime $version"
     Write-Output "SHA-256 $hash"
-    Write-Output "Staged Code Mode Host and elevated Windows Sandbox helpers"
+    Write-Output "Staged same-directory Code Mode Host and elevated Windows Sandbox helpers"
 }
 finally {
+    if ($protocolCheckDirectory -and (Test-Path -LiteralPath $protocolCheckDirectory)) {
+        Remove-Item -LiteralPath $protocolCheckDirectory -Recurse -Force
+    }
     if (Test-Path -LiteralPath $stagingDirectory) {
         Remove-Item -LiteralPath $stagingDirectory -Recurse -Force
     }

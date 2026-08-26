@@ -38,6 +38,7 @@ AI 处理任务时从 `AGENTS.md` 开始，只继续读取与任务直接相关�
 
 - [ADR-001：使用原版 Codex app-server 作为唯一执行核心](decisions/ADR-001-unmodified-codex-app-server.md)
 - [ADR-002：隔离 Codex Shell 的运行数据与凭据](decisions/ADR-002-isolated-runtime-data.md)
+- [ADR-003：允许通过协议门禁的 Runtime 兼容更新](decisions/ADR-003-compatible-runtime-updates.md)
 
 ## 模块状态模板
 

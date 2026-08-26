@@ -2,7 +2,7 @@
 
 ## 项目目标
 
-Codex Shell 是面向个人开发者的 Windows 桌面智能体工作台。产品使用 Tauri 2、React、TypeScript 与 Rust 构建，以随产品固定版本发布的原版 `codex app-server` 为执行核心，通过 stdio JSON-RPC 通信，不修改 Codex Core。
+Codex Shell 是面向个人开发者的 Windows 桌面智能体工作台。产品使用 Tauri 2、React、TypeScript 与 Rust 构建，以原版 `codex app-server` 为执行核心，通过 stdio JSON-RPC 通信，不修改 Codex Core。Runtime 在发布/打包时绑定实际版本并记录哈希；开发和维护环境允许同源兼容更新，但必须通过协议兼容门禁。
 
 ## 架构边界
 
@@ -62,7 +62,7 @@ Codex Shell 是面向个人开发者的 Windows 桌面智能体工作台。产�
 ### AI 读取与冲突处理
 
 - 开始任务先读 `AGENTS.md`，再按任务范围读取唯一所有者文档：UI 工作读 `DESIGN.md`，使用或部署工作读 `README.md`，模块改动读对应状态文档，重大架构取舍读相关 ADR。只有跨模块任务才需要完整读取 `PROJECT_STATUS.md`。
-- `design-plans/` 表示目标，ADR 表示决策理由，Git 表示历史；三者都不能证明功能已经实现。当前行为以源码、固定 Runtime 和本次实际验证为准。
+- `design-plans/` 表示目标，ADR 表示决策理由，Git 表示历史；三者都不能证明功能已经实现。当前行为以源码、通过兼容门禁的 Runtime 和本次实际验证为准。
 - 文档冲突时不得按更新时间猜测。先按上表找到唯一所有者；若所有者文档与源码或验证不一致，视为文档漂移，在同一改动中修正所有者，并把其他文档中的重复细节缩成链接或短摘要。
 - ADR 不随实现变化改写历史理由。决策被替代时新增 ADR，把旧 ADR 标记为 `superseded` 并链接替代者；状态文档只描述替代后的当前事实。
 

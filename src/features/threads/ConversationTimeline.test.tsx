@@ -19,6 +19,7 @@ function completedTurn(): Turn {
     text: "回答",
     phase: null,
     memoryCitation: null,
+    delivery: null,
   };
   return {
     id: "turn-1",
@@ -109,6 +110,7 @@ describe("conversation timing", () => {
       text: "",
       phase: null,
       memoryCitation: null,
+      delivery: null,
     };
     const turn = { ...completedTurn(), items: [completedTurn().items[0], emptyAgent], status: "inProgress", completedAt: null, durationMs: null } as Turn;
     const markup = renderTurn(turn, true);
@@ -211,7 +213,7 @@ describe("conversation timing", () => {
 
   it("collapses completed intermediate activity after the final answer", () => {
     const reasoning: ThreadItem = { type: "reasoning", id: "reasoning-complete", summary: ["检查完成"], content: [] };
-    const answer: ThreadItem = { type: "agentMessage", id: "answer-complete", text: "最终回答", phase: "final_answer", memoryCitation: null };
+    const answer: ThreadItem = { type: "agentMessage", id: "answer-complete", text: "最终回答", phase: "final_answer", memoryCitation: null, delivery: null };
     const markup = renderTurn({ ...completedTurn(), items: [reasoning, answer] });
 
     expect(markup).toContain('class="turn-process-disclosure"');
@@ -235,6 +237,7 @@ describe("conversation timing", () => {
       text: "当前使用 GPT 模型。",
       phase: "final_answer",
       memoryCitation: null,
+      delivery: null,
     };
     const markup = renderTurn({ ...completedTurn(), items: [compaction, user, answer] });
 
@@ -330,9 +333,9 @@ describe("conversation timing", () => {
   });
 
   it("groups commentary and reasoning outside the final answer", () => {
-    const commentary: ThreadItem = { type: "agentMessage", id: "commentary-1", text: "我先检查项目结构。", phase: "commentary", memoryCitation: null };
+    const commentary: ThreadItem = { type: "agentMessage", id: "commentary-1", text: "我先检查项目结构。", phase: "commentary", memoryCitation: null, delivery: null };
     const reasoning: ThreadItem = { type: "reasoning", id: "reasoning-1", summary: ["定位核心模块"], content: [] };
-    const answer: ThreadItem = { type: "agentMessage", id: "answer-1", text: "检查完成。", phase: "final_answer", memoryCitation: null };
+    const answer: ThreadItem = { type: "agentMessage", id: "answer-1", text: "检查完成。", phase: "final_answer", memoryCitation: null, delivery: null };
     const markup = renderTurn({ ...completedTurn(), items: [commentary, reasoning, answer] });
 
     expect(markup).toContain("已处理 8s");
@@ -358,6 +361,7 @@ describe("conversation timing", () => {
       text: "正在核对实现。",
       phase: "commentary",
       memoryCitation: null,
+      delivery: null,
     };
     const markup = renderTurn({ ...completedTurn(), items: [emptyReasoning, commentary] });
 
@@ -410,7 +414,7 @@ describe("conversation timing", () => {
       content: [{ type: "text", text: "优先检查测试", text_elements: [] }],
     };
     const secondReasoning: ThreadItem = { type: "reasoning", id: "reasoning-after", summary: ["调整检查顺序"], content: [] };
-    const answer: ThreadItem = { type: "agentMessage", id: "answer-steered", text: "检查完成", phase: "final_answer", memoryCitation: null };
+    const answer: ThreadItem = { type: "agentMessage", id: "answer-steered", text: "检查完成", phase: "final_answer", memoryCitation: null, delivery: null };
     const markup = renderTurn({ ...completedTurn(), items: [firstUser, firstReasoning, steeredUser, secondReasoning, answer] });
 
     expect(markup.indexOf("先检查项目")).toBeLessThan(markup.indexOf("正在检查"));
@@ -428,6 +432,7 @@ describe("conversation timing", () => {
       text: "## 结果\n\n```powershell\ncodex --version\n```\n\n<script>alert(1)</script>",
       phase: "final_answer",
       memoryCitation: null,
+      delivery: null,
     };
     const markup = renderTurn({ ...completedTurn(), items: [answer] });
 
@@ -438,8 +443,8 @@ describe("conversation timing", () => {
   });
 
   it("uses a minimal assistant accent and summarizes file changes at the end", () => {
-    const firstAgent: ThreadItem = { type: "agentMessage", id: "agent-1", text: "第一段", phase: null, memoryCitation: null };
-    const secondAgent: ThreadItem = { type: "agentMessage", id: "agent-2", text: "第二段", phase: null, memoryCitation: null };
+    const firstAgent: ThreadItem = { type: "agentMessage", id: "agent-1", text: "第一段", phase: null, memoryCitation: null, delivery: null };
+    const secondAgent: ThreadItem = { type: "agentMessage", id: "agent-2", text: "第二段", phase: null, memoryCitation: null, delivery: null };
     const fileChange: ThreadItem = {
       type: "fileChange",
       id: "file-1",

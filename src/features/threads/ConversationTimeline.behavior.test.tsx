@@ -14,7 +14,7 @@ function turn(id: string, text: string, answered = false): Turn {
     content: [{ type: "text", text, text_elements: [] }],
   };
   const items: ThreadItem[] = [message];
-  if (answered) items.push({ type: "agentMessage", id: `answer-${id}`, text: `回答 ${text}`, phase: null, memoryCitation: null });
+  if (answered) items.push({ type: "agentMessage", id: `answer-${id}`, text: `回答 ${text}`, phase: null, memoryCitation: null, delivery: null });
   return { id, items, itemsView: "full", status: "completed", error: null, startedAt: null, completedAt: null, durationMs: null };
 }
 
