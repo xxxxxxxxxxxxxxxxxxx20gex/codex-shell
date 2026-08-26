@@ -69,4 +69,21 @@ describe("ThreadHistoryList behavior", () => {
     expect(onOpen).not.toHaveBeenCalled();
     expect(onUnarchive).toHaveBeenCalledWith("thread-1");
   });
+
+  it("keeps row actions separate from the title and opens the full menu from the context menu", () => {
+    render(<ThreadHistoryList {...props()} />);
+
+    const row = screen.getByRole("button", { name: /thread-1/ }).closest(".thread-row");
+    expect(row).not.toBeNull();
+    expect(row?.querySelector(".thread-copy")).toBeTruthy();
+    expect(row?.querySelector(".thread-actions")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "更多操作" })).toBeNull();
+
+    fireEvent.contextMenu(row as HTMLElement);
+
+    expect(row?.querySelector(".thread-actions")?.classList.contains("menu-open")).toBe(true);
+    expect(screen.getByRole("menu")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "复制 Session ID" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "重命名" })).toBeTruthy();
+  });
 });

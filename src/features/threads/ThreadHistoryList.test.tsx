@@ -48,6 +48,7 @@ describe("ThreadHistoryList", () => {
     expect(markup).toContain('class="thread-action-button"');
     expect(markup).toContain('class="thread-actions');
     expect(markup).toContain('class="thread-title"');
+    expect(markup).toContain('class="thread-copy"');
     expect(markup).toContain("real-thread-b");
   });
 

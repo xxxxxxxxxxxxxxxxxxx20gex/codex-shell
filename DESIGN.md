@@ -129,7 +129,7 @@ Stable dimensions:
 - icon-only button: `28px` square;
 - compact control: `28px` high;
 - regular control and list row: `32px` high;
-- history row: `40px` high;
+- history row: `56px` high when the title and timestamp are stacked;
 - composer toolbar: `32px` high;
 - icon: `16px`, stroke `1.75px`;
 - sidebar target width: `248px`, inspector target width: `288px`;
@@ -182,9 +182,9 @@ Radii:
 ## Lists And Navigation
 
 - Lists are unframed and separated by spacing or subtle dividers, not individual cards.
-- History rows use a fixed `40px` height and a stable right-side action slot.
+- History rows use a fixed `56px` height with a stable right-side action slot; the stacked title and timestamp stay readable without allowing row actions to cover text.
 - Selected rows use `--surface-selected` plus a 2px action-accent indicator on the left.
-- Hover actions overlay the right fade area and never change row height or push the title.
+- Hover actions occupy the stable right action slot and never change row height, push the title, or cover its text.
 - Primary label is `--text-ui`; metadata is `--text-meta`; both align to the same 16px icon grid.
 - Long labels fade or truncate before actions. Do not place actions on a second row.
 - Empty lists provide one clear next action; loading uses structural placeholders without layout shifts.

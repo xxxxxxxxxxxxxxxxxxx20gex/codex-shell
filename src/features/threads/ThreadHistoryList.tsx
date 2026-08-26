@@ -136,8 +136,10 @@ export function ThreadHistoryList(props: Props) {
                   ? `${threadTitle(thread)}\n恢复 Session 后可打开`
                   : `${threadTitle(thread)}\n${thread.cwd}`}
               >
-                <span className="thread-title">{isThreadPinned(thread) && <Pin className="thread-pin-indicator" aria-hidden="true" fill="currentColor" />}{threadTitle(thread)}</span>
-                <small>{running ? "运行中" : dateFormatter.format(new Date(thread.updatedAt * 1000))}</small>
+                <span className="thread-copy">
+                  <span className="thread-title">{isThreadPinned(thread) && <Pin className="thread-pin-indicator" aria-hidden="true" fill="currentColor" />}{threadTitle(thread)}</span>
+                  <small>{running ? "运行中" : dateFormatter.format(new Date(thread.updatedAt * 1000))}</small>
+                </span>
               </button>
               <div className={`thread-actions ${openActionThreadId === thread.id ? "menu-open" : ""}`} onPointerDown={(event) => event.stopPropagation()}>
                 {!props.archived && <>

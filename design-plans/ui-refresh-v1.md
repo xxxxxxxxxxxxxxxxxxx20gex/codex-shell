@@ -22,7 +22,7 @@ The original findings below remain as the evidence and intended migration path; 
 
 - Audited surface: the primary workbench conversation timeline, left Session history, and model advanced-settings dialog.
 - Design sources: accepted `DESIGN.md`, runtime `src/styles/tokens.css`, rendered reference `design-plans/ui-refresh-v1.html`, the user-provided timeline screenshot, and the current production consumers traced below.
-- Documented decisions: conversation text is 15px/24px; process content is 13px/20px; metadata is 11px/16px; Session rows are fixed 40px with 13px labels and 11px metadata; assistant output is unframed with a 2px activity line; file references use information blue and success/danger colors only for additions/deletions; meaningful text never falls below 11px.
+- Documented decisions: conversation text is 15px/24px; process content is 13px/20px; metadata is 11px/16px; Session rows use a fixed 56px stacked layout with a stable right action slot, 14px titles and 11px metadata; assistant output is unframed with a 2px activity line; file references use information blue and success/danger colors only for additions/deletions; meaningful text never falls below 11px.
 - Governing owners and consumers: `src/styles/tokens.css` owns the scale and palette; feature CSS owns explorer, command, runtime, attachment, interaction, Diff, and timeline presentation; `App.css` owns only shared workbench/layout presentation; `ConversationTurn.tsx`, `TurnActivityGroup.tsx`, `TurnFileChanges.tsx`, `ThreadHistoryList.tsx`, and `ModelSettingsPanel.tsx` own behavior and structure.
 - Explicit exceptions: code, file paths, durations, and identifiers use the mono family; conversation prose uses the UI family.
 
