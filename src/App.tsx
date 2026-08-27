@@ -118,6 +118,7 @@ function App() {
     submitWithMode,
     steerQueuedTurn,
     startNewTask,
+    startSkillTask,
     changePermissionMode,
     changeApprovalReviewer,
     changeProject,
@@ -242,7 +243,7 @@ function App() {
               <PanelRight aria-hidden="true" />
             </button>
           </header>
-          {mainView === "skills" ? <SkillManagementPage loadSkills={session.listSkills} disabledPaths={disabledSkillPaths} onToggleDisabled={toggleSkillDisabled} onClose={() => setMainView("conversation")} /> : <>
+          {mainView === "skills" ? <SkillManagementPage loadSkills={session.listSkills} disabledPaths={disabledSkillPaths} onToggleDisabled={toggleSkillDisabled} onAddSkill={() => { setMainView("conversation"); void startSkillTask(); }} onClose={() => setMainView("conversation")} /> : <>
           {session.turns.length > 0 ? (
             <ConversationTimeline
               key={session.thread?.id ?? "new"}

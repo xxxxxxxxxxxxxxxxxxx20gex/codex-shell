@@ -15,3 +15,4 @@
 
 - Skill 管理状态按全局配置持久化（本地浏览器存储），禁用后所有 Session 的可选列表立即更新；当前 Composer 中已选的该 Skill 会同步移除，历史消息和已完成请求不变。切换 Session 时清空临时 Skill 选择，避免跨 Session 串入请求。
 - Skill 管理已提升为主内容区独立页面，左侧入口切换页面并占用会话区；会话内 `/skills` 仅列出全局启用的 Skill，用于附加到下一条消息。
+- Skill 管理页按 app-server 的 `scope` 展示“个人/系统/项目”标签，并提供“添加 Skill”入口；添加入口创建新会话并通过服务端 Skill 列表附加 Installer/Creator 能力，不硬编码 Skill 路径。

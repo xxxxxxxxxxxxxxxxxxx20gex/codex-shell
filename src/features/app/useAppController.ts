@@ -352,6 +352,17 @@ export function useAppController() {
     session.startNewTask();
   }
 
+  async function startSkillTask() {
+    startNewTask();
+    try {
+      const available = await session.listSkills(true);
+      const managementSkills = available.filter((skill) => /skill[- ]?(?:installer|creator)|(?:安装|创建).*skill/i.test(`${skill.name} ${skill.description}`));
+      setSkills(managementSkills.slice(0, 2).map((skill) => ({ name: skill.name, path: skill.path })));
+    } catch (error) {
+      setUiError(errorMessage(error));
+    }
+  }
+
   function changePermissionMode(next: PermissionMode) {
     if (next === permissionMode) return;
     setPermissionMode(next);
@@ -544,6 +555,7 @@ export function useAppController() {
     submitWithMode,
     steerQueuedTurn,
     startNewTask,
+    startSkillTask,
     changePermissionMode,
     changeApprovalReviewer,
     changeProject,
