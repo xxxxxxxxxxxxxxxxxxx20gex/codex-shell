@@ -43,3 +43,12 @@
 .mcp-resource-preview { margin: 8px; padding: 8px; border: 1px solid var(--border-default); border-radius: var(--radius-control); background: var(--surface-canvas); }
 .mcp-resource-preview button { float: right; border: 0; color: var(--text-muted); background: transparent; cursor: pointer; }
 .mcp-resource-preview pre { max-height: 150px; overflow: auto; color: var(--text-secondary); font: var(--text-meta)/16px var(--font-mono); white-space: pre-wrap; }
+
+/* Skill management actions follow Codex's compact pill-button treatment. */
+.skill-management-header button { min-height: 30px; padding: 5px 12px; border: 1px solid var(--border-default); border-radius: var(--radius-control); color: var(--text-secondary); background: transparent; font-size: var(--text-label); cursor: pointer; transition: color var(--motion-fast), background-color var(--motion-fast), border-color var(--motion-fast); }
+.skill-management-header button:first-child { border-color: color-mix(in srgb, var(--accent-action) 65%, var(--border-default)); color: var(--surface-canvas); background: var(--accent-action); }
+.skill-management-header button:first-child:hover { border-color: var(--accent-action); background: color-mix(in srgb, var(--accent-action) 82%, white); }
+.skill-management-header button:last-child:hover { color: var(--text-primary); background: var(--surface-raised); }
+.skill-management-toggle { min-width: 70px; padding: 5px 9px; font-size: var(--text-label); transition: color var(--motion-fast), background-color var(--motion-fast), border-color var(--motion-fast); }
+.skill-management-toggle:hover { border-color: var(--accent-action); background: var(--surface-selected); }
+.skill-management-toggle svg { width: 14px; height: 14px; }
