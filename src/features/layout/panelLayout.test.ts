@@ -8,7 +8,7 @@ describe("resizedPanelWidth", () => {
     expect(resizedPanelWidth("sidebar", 120, bounds, 310)).toBe(200);
     expect(resizedPanelWidth("sidebar", 900, bounds, 310)).toBe(420);
     expect(resizedPanelWidth("inspector", 1_490, bounds, 244)).toBe(240);
-    expect(resizedPanelWidth("inspector", 700, bounds, 244)).toBe(520);
+    expect(resizedPanelWidth("inspector", 700, bounds, 244)).toBe(716);
   });
 
   it("reserves at least 440 pixels for the conversation", () => {

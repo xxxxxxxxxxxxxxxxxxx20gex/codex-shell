@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import {
   ChevronDown,
   ChevronRight,
@@ -67,6 +67,8 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState("");
   const [watchError, setWatchError] = useState("");
+  const [treeWidth, setTreeWidth] = useState(285);
+  const treeResizingRef = useRef(false);
 
   const loadDirectory = useCallback(async (path: string) => {
     if (loadingDirectoriesRef.current.has(path)) return;
@@ -153,6 +155,25 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
     if (!isExpanded && !directories[path]) void loadDirectory(path);
   }
 
+  function beginTreeResize(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    treeResizingRef.current = true;
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function resizeTree(event: ReactPointerEvent<HTMLDivElement>) {
+    if (!treeResizingRef.current) return;
+    const bounds = event.currentTarget.parentElement?.getBoundingClientRect();
+    if (!bounds) return;
+    setTreeWidth(Math.min(520, Math.max(210, event.clientX - bounds.left)));
+  }
+
+  function finishTreeResize(event: ReactPointerEvent<HTMLDivElement>) {
+    treeResizingRef.current = false;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+  }
+
   const handleWorkspaceChanged = useCallback((directory: string, changedPaths: string[]) => {
     void loadDirectory(directory);
     const selected = selectedPathRef.current;
@@ -218,12 +239,13 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
             <button className="explorer-close" onClick={onClose} aria-label="关闭文件浏览器" title="关闭"><X aria-hidden="true" /></button>
           </div>
         </header>
-        <div className="explorer-body">
+        <div className="explorer-body" style={{ "--explorer-tree-width": `${treeWidth}px` } as CSSProperties}>
           <aside className="explorer-tree-pane">
             <div className="explorer-filter"><Search aria-hidden="true" /><input value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="筛选已展开文件…" /></div>
             <button className="explorer-root" onClick={() => toggleDirectory(rootPath)}><i>{expanded.has(rootPath) ? <ChevronDown aria-hidden="true" /> : <ChevronRight aria-hidden="true" />}</i><span><FolderRoot aria-hidden="true" /></span><strong>{projectName(rootPath)}</strong></button>
             <div className="explorer-tree-scroll">{expanded.has(rootPath) && renderDirectory(rootPath, 0)}</div>
           </aside>
+          <div className="explorer-resizer" role="separator" aria-label="调整文件树宽度" aria-orientation="vertical" onPointerDown={beginTreeResize} onPointerMove={resizeTree} onPointerUp={finishTreeResize} onPointerCancel={finishTreeResize} />
           <main className="explorer-preview-pane">
             <div className="explorer-preview-bar">
               <span>{selectedPath ? projectRelativePath(rootPath, selectedPath) : "文件预览"}</span>

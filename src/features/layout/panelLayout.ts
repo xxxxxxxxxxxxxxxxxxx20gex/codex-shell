@@ -8,7 +8,7 @@ export const COMPACT_OVERLAY_BREAKPOINT = 900;
 const MIN_CONVERSATION_WIDTH = 440;
 const PANEL_LIMITS: Record<ResizablePanel, { minimum: number; maximum: number }> = {
   sidebar: { minimum: 200, maximum: 420 },
-  inspector: { minimum: 240, maximum: 520 },
+  inspector: { minimum: 240, maximum: 760 },
 };
 
 interface WorkspaceBounds {
