@@ -451,6 +451,12 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 
 .mention-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 7px; }.mention-chips > span { padding: 4px 5px 4px 7px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); color: var(--text-secondary); background: var(--surface-raised); font-size: var(--text-meta); }.mention-chips button { margin-left: 5px; padding: 0; border: 0; color: var(--text-muted); background: transparent; cursor: pointer; }
 .mention-chips > span.skill-chip { border-color: color-mix(in srgb, var(--accent-info) 40%, var(--border-default)); color: var(--accent-info); background: var(--surface-raised); }
+.mention-chips > span { display: inline-flex; min-height: 26px; box-sizing: border-box; align-items: center; line-height: 16px; }
+.mention-chips > span.skill-chip { gap: 5px; border-color: color-mix(in srgb, var(--accent-info) 32%, var(--border-default)); color: var(--text-secondary); background: color-mix(in srgb, var(--accent-info) 7%, var(--surface-raised)); }
+.mention-chips > span.skill-chip > svg { width: 15px; height: 15px; color: var(--accent-info); stroke-width: 1.75; }
+.mention-chips button { display: grid; width: 20px; height: 20px; margin-left: 1px; place-items: center; border-radius: var(--radius-sm); }
+.mention-chips button:hover { color: var(--text-primary); background: var(--surface-selected); }
+.mention-chips button svg { width: 14px; height: 14px; }
 .context-heatbar { position: absolute; z-index: 16; top: 10px; bottom: 10px; left: 9px; width: 8px; padding: 0; overflow: visible; border: 0; outline: 0; background: transparent; cursor: pointer; }
 .context-heatbar:disabled { cursor: default; }
 .context-heatbar-track { position: absolute; inset: 0 1px; overflow: hidden; border: 1px solid rgb(255 255 255 / 8%); border-radius: 999px; background: linear-gradient(0deg, var(--context-cool) 0%, var(--context-balanced) 42%, var(--context-warm) 72%, var(--context-hot) 100%); box-shadow: inset 0 0 5px rgb(0 0 0 / 50%); }
