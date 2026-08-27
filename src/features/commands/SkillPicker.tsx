@@ -8,13 +8,12 @@ import "./CommandPanels.css";
 interface Props {
   selected: SkillMention[];
   disabledPaths: string[];
-  onToggleDisabled: (skill: SkillMention) => void;
   loadSkills: (forceReload?: boolean) => Promise<SkillMetadata[]>;
   onToggle: (skill: SkillMention) => void;
   onClose: () => void;
 }
 
-export function SkillPicker({ selected, disabledPaths, onToggleDisabled, loadSkills, onToggle, onClose }: Props) {
+export function SkillPicker({ selected, disabledPaths, loadSkills, onToggle, onClose }: Props) {
   const [skills, setSkills] = useState<SkillMetadata[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -26,9 +25,10 @@ export function SkillPicker({ selected, disabledPaths, onToggleDisabled, loadSki
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase();
-    return normalized ? skills.filter((skill) => skill.name.toLocaleLowerCase().includes(normalized)
-      || skill.description.toLocaleLowerCase().includes(normalized)) : skills;
-  }, [query, skills]);
+    const enabled = skills.filter((skill) => !disabledPaths.includes(skill.path));
+    return normalized ? enabled.filter((skill) => skill.name.toLocaleLowerCase().includes(normalized)
+      || skill.description.toLocaleLowerCase().includes(normalized)) : enabled;
+  }, [disabledPaths, query, skills]);
 
   return <div className="agent-command-panel skill-picker">
     <header><div><strong>Skills</strong><small>选择后会附加到下一条消息</small></div><button onClick={onClose} aria-label="关闭 Skills"><X aria-hidden="true" /></button></header>
@@ -40,8 +40,7 @@ export function SkillPicker({ selected, disabledPaths, onToggleDisabled, loadSki
         const disabled = disabledPaths.includes(skill.path);
         const active = !disabled && selected.some((item) => item.path === skill.path);
         return <button key={skill.path} className={active ? "active" : ""} onClick={() => onToggle({ name: skill.name, path: skill.path })}>
-          <i><Sparkles aria-hidden="true" /></i><span><strong>{skill.interface?.displayName || skill.name}</strong><small>{skill.interface?.shortDescription || skill.shortDescription || skill.description}</small></span><em>{active ? <Check aria-label="已启用" /> : disabled ? "已禁用" : "未启用"}</em>
-          <span className="skill-disable-control" role="switch" aria-checked={!disabled} onClick={(event) => { event.stopPropagation(); onToggleDisabled({ name: skill.name, path: skill.path }); }}>{disabled ? "启用" : "禁用"}</span>
+          <i><Sparkles aria-hidden="true" /></i><span><strong>{skill.interface?.displayName || skill.name}</strong><small>{skill.interface?.shortDescription || skill.shortDescription || skill.description}</small></span><em>{active ? <Check aria-label="已选择" /> : "可用"}</em>
         </button>;
       })}
     </div>

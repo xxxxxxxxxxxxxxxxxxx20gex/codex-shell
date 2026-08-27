@@ -27,6 +27,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .sidebar-actions { display: flex; flex: 0 0 auto; flex-direction: column; gap: 2px; padding: 8px 10px 10px; }
 .sidebar-action { display: flex; width: 100%; min-height: 36px; align-items: center; gap: 12px; padding: 0 10px; border: 0; border-radius: var(--radius-control); color: var(--text-secondary); text-align: left; background: transparent; font-size: var(--text-ui); cursor: pointer; transition: color var(--motion-fast), background-color var(--motion-fast); }
 .sidebar-action:hover { color: var(--text-primary); background: var(--surface-raised); }
+.sidebar-action.active { color: var(--text-primary); background: var(--surface-selected); }
 .sidebar-action:focus-visible { background: var(--surface-raised); }
 .sidebar-action:disabled { color: var(--text-disabled); cursor: default; }
 .sidebar-action svg { width: 18px; height: 18px; flex: 0 0 18px; stroke-width: 1.75; }
