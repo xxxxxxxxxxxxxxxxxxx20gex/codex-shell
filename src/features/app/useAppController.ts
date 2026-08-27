@@ -303,12 +303,15 @@ export function useAppController() {
   async function steerCurrentTurn() {
     const message = draft.trim();
     if ((!message && mentions.length === 0 && images.length === 0) || !session.canSteer) return;
+    setCommandNotice("正在发送引导消息…");
     if (await session.steer(message, mentions, skills, images)) {
       setDraft("");
       setMentions([]);
       setSkills([]);
       setImages([]);
       setMentionResults([]);
+      setCommandNotice("引导消息已发送，正在处理…");
+    } else {
       setCommandNotice("");
     }
   }
