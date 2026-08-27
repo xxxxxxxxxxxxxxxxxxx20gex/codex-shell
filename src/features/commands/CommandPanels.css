@@ -52,3 +52,5 @@
 .skill-management-toggle { min-width: 70px; padding: 5px 9px; font-size: var(--text-label); transition: color var(--motion-fast), background-color var(--motion-fast), border-color var(--motion-fast); }
 .skill-management-toggle:hover { border-color: var(--accent-action); background: var(--surface-selected); }
 .skill-management-toggle svg { width: 14px; height: 14px; }
+.skill-management-header button:first-child { border-color: color-mix(in srgb, var(--accent-action) 45%, var(--border-default)); color: var(--text-primary); background: color-mix(in srgb, var(--accent-action) 18%, var(--surface-raised)); }
+.skill-management-header button:first-child:hover { border-color: color-mix(in srgb, var(--accent-action) 65%, var(--border-default)); background: color-mix(in srgb, var(--accent-action) 26%, var(--surface-selected)); }

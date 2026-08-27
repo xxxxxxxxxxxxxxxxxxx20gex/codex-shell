@@ -24,6 +24,7 @@ The design direction is **Quiet Graphite Workbench**:
 - Feature CSS may consume tokens but must not redefine the global type, color, spacing, radius, control-height, shadow, or motion scales.
 - A design exception must be documented here before it becomes a new reusable pattern.
 - Screenshots and mockups are evidence for a change, not a second design system.
+- Before changing a button or control, inspect the accepted design mockup and the owning tokens; preserve the shared control geometry and use explicit size/visual hierarchy (primary, secondary, ghost, danger) instead of inventing per-screen dimensions.
 
 ## Typography
 
