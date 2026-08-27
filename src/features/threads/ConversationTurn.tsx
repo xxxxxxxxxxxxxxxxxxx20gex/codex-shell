@@ -13,6 +13,7 @@ import { MarkdownContent } from "./MarkdownContent";
 import { AttachmentGallery } from "../attachments/AttachmentGallery";
 import { userMessagePresentation } from "../runtime/userMessagePresentation";
 import type { ThreadProcessEvent } from "../runtime/sessionState";
+import { TurnResourceOutputs } from "./TurnResourceOutputs";
 
 interface Props {
   turn: Turn;
@@ -240,6 +241,7 @@ export function ConversationTurn({
           )}
         </Fragment>
       ))}
+      {!active && <TurnResourceOutputs items={items} readFile={readFile} onOpenPath={onOpenPath} />}
       {active && answerItems.length === 0 && activityItems.length === 0 && (
         <TurnActivityGroup
           items={[]}

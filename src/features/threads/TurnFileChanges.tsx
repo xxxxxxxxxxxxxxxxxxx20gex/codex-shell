@@ -40,7 +40,7 @@ export function TurnFileChanges({ items }: Props) {
   const additions = files.reduce((total, file) => total + file.additions, 0);
   const deletions = files.reduce((total, file) => total + file.deletions, 0);
   return (
-    <details className="turn-file-changes" open>
+    <details className="turn-file-changes">
       <summary>
         <Files className="turn-file-changes-icon" aria-hidden="true" />
         <strong>文件变更 · {files.length}</strong>
