@@ -63,6 +63,20 @@ function ImageThumbnail({ image, readFile }: { image: ImageAttachment; readFile:
   return <span className="attachment-image-fallback" aria-hidden="true">IMG</span>;
 }
 
+export function ImageAttachmentPreview({ path, name, readFile }: { path: string; name?: string; readFile: ReadFile }) {
+  const [open, setOpen] = useState(false);
+  const image: ImageAttachment = { path, name: name ?? path.split(/[\\/]/).pop() ?? path };
+  return (
+    <>
+      <button type="button" className="attachment-image-preview session-image-preview" onClick={() => setOpen(true)} title={`预览 ${image.name}`}>
+        <ImageThumbnail image={image} readFile={readFile} />
+        <span>{image.name}</span>
+      </button>
+      {open && <AttachmentPreviewDialog target={{ kind: "image", ...image }} readFile={readFile} onClose={() => setOpen(false)} />}
+    </>
+  );
+}
+
 function AttachmentPreviewDialog({ target, readFile, onClose }: {
   target: PreviewTarget;
   readFile: ReadFile;
