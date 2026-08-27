@@ -8,8 +8,8 @@
 .explorer-header strong { overflow: hidden; font-size: var(--text-ui); text-overflow: ellipsis; white-space: nowrap; }
 .explorer-header small { overflow: hidden; color: var(--text-muted); font: var(--text-meta)/16px var(--font-mono); text-overflow: ellipsis; white-space: nowrap; }
 .explorer-actions { position: absolute; z-index: 2; top: 14px; right: 17px; display: flex; align-items: center; gap: 4px; background: var(--surface-panel); }
-.explorer-close, .explorer-size-button { display: grid; width: 28px; height: 28px; flex: none; place-items: center; padding: 0; border: 0; border-radius: var(--radius-control); color: var(--text-muted); background: transparent; cursor: pointer; transition: color var(--motion-fast), background-color var(--motion-fast); }
-.explorer-size-button { width: 28px; height: 28px; }
+.explorer-close, .explorer-size-button { display: grid; width: 32px; height: 32px; flex: none; place-items: center; padding: 0; border: 0; border-radius: var(--radius-control); color: var(--text-muted); background: transparent; cursor: pointer; transition: color var(--motion-fast), background-color var(--motion-fast); }
+.explorer-size-button { width: 36px; height: 32px; }
 .explorer-close svg, .explorer-size-button svg, .explorer-filter > svg, .explorer-root svg, .explorer-tree-row svg, .explorer-empty svg { width: 16px; height: 16px; stroke-width: 1.75; }
 .explorer-close:hover, .explorer-size-button:hover { color: var(--text-primary); background: var(--surface-raised); }
 .explorer-close:focus-visible, .explorer-size-button:focus-visible, .explorer-resizer:focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; }

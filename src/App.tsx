@@ -346,7 +346,11 @@ function App() {
           aria-label="调整右侧功能区宽度"
           aria-orientation="vertical"
           aria-valuenow={inspectorWidth}
-          onPointerDown={(event) => inspectorOpen && beginPanelResize(event, "inspector")}
+          onPointerDown={(event) => {
+            if (!inspectorOpen) return;
+            if (sideChatMaximized) setSideChatMaximized(false);
+            beginPanelResize(event, "inspector");
+          }}
           onPointerMove={(event) => resizePanel(event, "inspector")}
           onPointerUp={finishPanelResize}
           onPointerCancel={finishPanelResize}
