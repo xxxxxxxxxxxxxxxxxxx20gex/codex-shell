@@ -69,6 +69,8 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
   const [watchError, setWatchError] = useState("");
   const [treeWidth, setTreeWidth] = useState(285);
   const treeResizingRef = useRef(false);
+  const pendingTreeWidthRef = useRef<number | null>(null);
+  const treeResizeFrameRef = useRef<number | null>(null);
 
   const loadDirectory = useCallback(async (path: string) => {
     if (loadingDirectoriesRef.current.has(path)) return;
@@ -166,13 +168,33 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
     if (!treeResizingRef.current) return;
     const bounds = event.currentTarget.parentElement?.getBoundingClientRect();
     if (!bounds) return;
-    setTreeWidth(Math.min(520, Math.max(210, event.clientX - bounds.left)));
+    pendingTreeWidthRef.current = Math.min(520, Math.max(210, event.clientX - bounds.left));
+    if (treeResizeFrameRef.current === null) {
+      treeResizeFrameRef.current = window.requestAnimationFrame(() => {
+        treeResizeFrameRef.current = null;
+        const width = pendingTreeWidthRef.current;
+        pendingTreeWidthRef.current = null;
+        if (width !== null) setTreeWidth(width);
+      });
+    }
   }
 
   function finishTreeResize(event: ReactPointerEvent<HTMLDivElement>) {
+    if (treeResizeFrameRef.current !== null) {
+      window.cancelAnimationFrame(treeResizeFrameRef.current);
+      treeResizeFrameRef.current = null;
+    }
+    if (pendingTreeWidthRef.current !== null) {
+      setTreeWidth(pendingTreeWidthRef.current);
+      pendingTreeWidthRef.current = null;
+    }
     treeResizingRef.current = false;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   }
+
+  useEffect(() => () => {
+    if (treeResizeFrameRef.current !== null) window.cancelAnimationFrame(treeResizeFrameRef.current);
+  }, []);
 
   const handleWorkspaceChanged = useCallback((directory: string, changedPaths: string[]) => {
     void loadDirectory(directory);
