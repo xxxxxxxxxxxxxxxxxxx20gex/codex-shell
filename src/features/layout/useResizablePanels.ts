@@ -24,10 +24,11 @@ export function useResizablePanels() {
   const workspaceGridRef = useRef<HTMLElement>(null);
   const resizingPanelRef = useRef<ResizablePanel | null>(null);
   const pendingResizeRef = useRef<{ panel: ResizablePanel; clientX: number } | null>(null);
+  const resizeBoundsRef = useRef<DOMRect | null>(null);
   const resizeFrameRef = useRef<number | null>(null);
 
   function applyResize(panel: ResizablePanel, clientX: number) {
-    const bounds = workspaceGridRef.current?.getBoundingClientRect();
+    const bounds = resizeBoundsRef.current ?? workspaceGridRef.current?.getBoundingClientRect();
     if (!bounds) return;
     if (panel === "sidebar") {
       const oppositeWidth = inspectorOpen && bounds.width >= THREE_PANEL_BREAKPOINT ? inspectorWidth : 0;
@@ -57,6 +58,7 @@ export function useResizablePanels() {
     if (event.button !== 0) return;
     event.preventDefault();
     resizingPanelRef.current = panel;
+    resizeBoundsRef.current = workspaceGridRef.current?.getBoundingClientRect() ?? null;
     setResizingPanel(panel);
     event.currentTarget.setPointerCapture(event.pointerId);
   }
@@ -82,6 +84,7 @@ export function useResizablePanels() {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
     resizingPanelRef.current = null;
+    resizeBoundsRef.current = null;
     setResizingPanel(null);
   }
 

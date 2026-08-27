@@ -70,6 +70,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
   const [treeWidth, setTreeWidth] = useState(285);
   const treeWidthRef = useRef(285);
   const treeResizingRef = useRef(false);
+  const treeResizeBoundsRef = useRef<DOMRect | null>(null);
   const pendingTreeWidthRef = useRef<number | null>(null);
   const treeResizeFrameRef = useRef<number | null>(null);
 
@@ -162,12 +163,13 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
     if (event.button !== 0) return;
     event.preventDefault();
     treeResizingRef.current = true;
+    treeResizeBoundsRef.current = event.currentTarget.parentElement?.getBoundingClientRect() ?? null;
     event.currentTarget.setPointerCapture(event.pointerId);
   }
 
   function resizeTree(event: ReactPointerEvent<HTMLDivElement>) {
     if (!treeResizingRef.current) return;
-    const bounds = event.currentTarget.parentElement?.getBoundingClientRect();
+    const bounds = treeResizeBoundsRef.current;
     if (!bounds) return;
     pendingTreeWidthRef.current = Math.min(520, Math.max(210, event.clientX - bounds.left));
     if (treeResizeFrameRef.current === null) {
@@ -195,6 +197,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
       pendingTreeWidthRef.current = null;
     }
     treeResizingRef.current = false;
+    treeResizeBoundsRef.current = null;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   }
 
