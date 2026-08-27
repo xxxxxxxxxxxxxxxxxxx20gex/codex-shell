@@ -7,12 +7,14 @@ import "./CommandPanels.css";
 
 interface Props {
   selected: SkillMention[];
+  disabledPaths: string[];
+  onToggleDisabled: (skill: SkillMention) => void;
   loadSkills: (forceReload?: boolean) => Promise<SkillMetadata[]>;
   onToggle: (skill: SkillMention) => void;
   onClose: () => void;
 }
 
-export function SkillPicker({ selected, loadSkills, onToggle, onClose }: Props) {
+export function SkillPicker({ selected, disabledPaths, onToggleDisabled, loadSkills, onToggle, onClose }: Props) {
   const [skills, setSkills] = useState<SkillMetadata[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -35,9 +37,11 @@ export function SkillPicker({ selected, loadSkills, onToggle, onClose }: Props) 
       {loading && <p>正在读取 Skills…</p>}{error && <p className="error">{error}</p>}
       {!loading && !error && filtered.length === 0 && <p>没有可用的 Skill。</p>}
       {filtered.map((skill) => {
-        const active = selected.some((item) => item.path === skill.path);
+        const disabled = disabledPaths.includes(skill.path);
+        const active = !disabled && selected.some((item) => item.path === skill.path);
         return <button key={skill.path} className={active ? "active" : ""} onClick={() => onToggle({ name: skill.name, path: skill.path })}>
-          <i><Sparkles aria-hidden="true" /></i><span><strong>{skill.interface?.displayName || skill.name}</strong><small>{skill.interface?.shortDescription || skill.shortDescription || skill.description}</small></span><em>{active ? <Check aria-label="已选择" /> : skill.scope}</em>
+          <i><Sparkles aria-hidden="true" /></i><span><strong>{skill.interface?.displayName || skill.name}</strong><small>{skill.interface?.shortDescription || skill.shortDescription || skill.description}</small></span><em>{active ? <Check aria-label="已启用" /> : disabled ? "已禁用" : "未启用"}</em>
+          <span className="skill-disable-control" role="switch" aria-checked={!disabled} onClick={(event) => { event.stopPropagation(); onToggleDisabled({ name: skill.name, path: skill.path }); }}>{disabled ? "启用" : "禁用"}</span>
         </button>;
       })}
     </div>

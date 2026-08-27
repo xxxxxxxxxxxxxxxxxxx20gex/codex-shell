@@ -83,6 +83,9 @@ export function useAppController() {
   const [mentions, setMentions] = useState<FileMention[]>([]);
   const [images, setImages] = useState<ImageAttachment[]>([]);
   const [skills, setSkills] = useState<SkillMention[]>([]);
+  const [disabledSkillPaths, setDisabledSkillPaths] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem("codex-shell.disabled-skills") ?? "[]") as string[]; } catch { return []; }
+  });
   const [mentionResults, setMentionResults] = useState<FuzzyFileSearchResult[]>([]);
   const [mentionLoading, setMentionLoading] = useState(false);
   const [uiError, setUiError] = useState("");
@@ -140,6 +143,7 @@ export function useAppController() {
 
   useEffect(() => {
     setUiError("");
+    setSkills([]);
   }, [activeThreadId]);
 
   useEffect(() => {
@@ -467,9 +471,19 @@ export function useAppController() {
   }
 
   function toggleSkill(skill: SkillMention) {
+    if (disabledSkillPaths.includes(skill.path)) return;
     setSkills((current) => current.some((item) => item.path === skill.path)
       ? current.filter((item) => item.path !== skill.path)
       : [...current, skill]);
+  }
+
+  function toggleSkillDisabled(skill: SkillMention) {
+    setDisabledSkillPaths((current) => {
+      const next = current.includes(skill.path) ? current.filter((path) => path !== skill.path) : [...current, skill.path];
+      localStorage.setItem("codex-shell.disabled-skills", JSON.stringify(next));
+      if (next.includes(skill.path)) setSkills((selected) => selected.filter((item) => item.path !== skill.path));
+      return next;
+    });
   }
 
   function openPreferences(section: PreferencesSection = "personalization") {
@@ -508,6 +522,7 @@ export function useAppController() {
     images,
     setImages,
     skills,
+    disabledSkillPaths,
     mentionResults,
     mentionLoading,
     uiError,
@@ -538,6 +553,7 @@ export function useAppController() {
     handleComposerPaste,
     handleComposerKeyDown,
     toggleSkill,
+    toggleSkillDisabled,
     clearActiveGoal,
   };
 }
