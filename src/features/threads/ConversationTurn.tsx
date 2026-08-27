@@ -190,6 +190,7 @@ export function ConversationTurn({
                         activeItemTurnIds={activeItemTurnIds}
                         mcpProgressByItemId={mcpProgressByItemId}
                         processEvents={activityBlock === activityBlocks[0] ? processEvents : []}
+                        readFile={readFile}
                         onOpenPath={onOpenPath}
                         onOpenError={onOpenError}
                       />
@@ -209,6 +210,7 @@ export function ConversationTurn({
                 activeItemTurnIds={activeItemTurnIds}
                 mcpProgressByItemId={mcpProgressByItemId}
                 processEvents={blockIndex === firstActivityBlockIndex ? processEvents : []}
+                readFile={readFile}
                 onOpenPath={onOpenPath}
                 onOpenError={onOpenError}
               />
@@ -251,6 +253,7 @@ export function ConversationTurn({
           activeItemTurnIds={activeItemTurnIds}
           mcpProgressByItemId={mcpProgressByItemId}
           processEvents={processEvents}
+          readFile={readFile}
           onOpenPath={onOpenPath}
           onOpenError={onOpenError}
         />

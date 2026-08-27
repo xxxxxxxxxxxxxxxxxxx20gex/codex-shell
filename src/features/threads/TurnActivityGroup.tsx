@@ -20,11 +20,12 @@ interface Props {
   activeItemTurnIds: Record<string, string>;
   mcpProgressByItemId: Record<string, McpToolCallProgressNotification>;
   processEvents?: ThreadProcessEvent[];
+  readFile?: (path: string) => Promise<string>;
   onOpenPath?: (path: string) => void | Promise<void>;
   onOpenError?: (message: string) => void;
 }
 
-export function TurnActivityGroup({ items, active, turnActive, startedAt, durationMs, retryingMessage = null, showHeader, turnId, activeItemTurnIds, mcpProgressByItemId, processEvents = [], onOpenPath, onOpenError }: Props) {
+export function TurnActivityGroup({ items, active, turnActive, startedAt, durationMs, retryingMessage = null, showHeader, turnId, activeItemTurnIds, mcpProgressByItemId, processEvents = [], readFile, onOpenPath, onOpenError }: Props) {
   const [now, setNow] = useState(Date.now);
   useEffect(() => {
     if (!turnActive || startedAt === null) return;
@@ -69,7 +70,7 @@ export function TurnActivityGroup({ items, active, turnActive, startedAt, durati
         ) : item.type === "agentMessage" ? (
           <MarkdownContent className="turn-commentary" key={item.id} onOpenPath={onOpenPath} onOpenError={onOpenError}>{item.text}</MarkdownContent>
         ) : (
-          <TurnActivityItem item={item} key={item.id} />
+          <TurnActivityItem item={item} key={item.id} readFile={readFile} />
         ))}
         {activeProgress && <div className="turn-native-progress">{activeProgress}</div>}
         <TurnProcessEvents events={processEvents} />

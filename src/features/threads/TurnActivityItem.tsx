@@ -16,9 +16,11 @@ import {
 } from "lucide-react";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import { formatTurnDuration } from "./conversationTiming";
+import { ImageAttachmentPreview } from "../attachments/AttachmentGallery";
 
 interface Props {
   item: ThreadItem;
+  readFile?: (path: string) => Promise<string>;
 }
 
 function durationLabel(durationMs: number | null) {
@@ -99,7 +101,7 @@ function statusText(item: ThreadItem) {
   }
 }
 
-function ActivityBody({ item }: Props) {
+function ActivityBody({ item, readFile }: Props) {
   switch (item.type) {
     case "reasoning":
       return item.content.length > 0 ? <pre>{item.content.join("\n")}</pre> : null;
@@ -140,10 +142,14 @@ function ActivityBody({ item }: Props) {
     case "webSearch":
       return <>{item.results && <pre>{jsonPreview(item.results)}</pre>}</>;
     case "imageView":
-      return <code>{item.path}</code>;
+      return <>
+        {readFile && <ImageAttachmentPreview path={item.path} name={item.path.split(/[\\/]/).pop() || "图片"} readFile={readFile} />}
+        <code>{item.path}</code>
+      </>;
     case "imageGeneration":
       return <>
         {item.revisedPrompt && <p>{item.revisedPrompt}</p>}
+        {readFile && item.savedPath && <ImageAttachmentPreview path={item.savedPath} name={item.savedPath.split(/[\\/]/).pop() || "生成图片"} readFile={readFile} />}
         {item.savedPath && <code>{item.savedPath}</code>}
       </>;
     case "hookPrompt":
@@ -160,7 +166,7 @@ function ActivityBody({ item }: Props) {
   }
 }
 
-export function TurnActivityItem({ item }: Props) {
+export function TurnActivityItem({ item, readFile }: Props) {
   if (item.type === "userMessage" || item.type === "agentMessage") return null;
   if (item.type === "reasoning" && item.content.length === 0) {
     return <div className="activity-reasoning-note">{item.summary.join("\n")}</div>;
@@ -180,7 +186,7 @@ export function TurnActivityItem({ item }: Props) {
         {statusText(item) && <small>{statusText(item)}</small>}
         <i><ChevronDown aria-hidden="true" /></i>
       </summary>
-      <div className="activity-body"><ActivityBody item={item} /></div>
+      <div className="activity-body"><ActivityBody item={item} readFile={readFile} /></div>
     </details>
   );
 }
