@@ -19,6 +19,8 @@ export function useResizablePanels() {
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH);
   const [inspectorWidth, setInspectorWidth] = useState(DEFAULT_INSPECTOR_WIDTH);
   const [resizingPanel, setResizingPanel] = useState<ResizablePanel | null>(null);
+  const sidebarWidthRef = useRef(DEFAULT_SIDEBAR_WIDTH);
+  const inspectorWidthRef = useRef(DEFAULT_INSPECTOR_WIDTH);
   const workspaceGridRef = useRef<HTMLElement>(null);
   const resizingPanelRef = useRef<ResizablePanel | null>(null);
   const pendingResizeRef = useRef<{ panel: ResizablePanel; clientX: number } | null>(null);
@@ -29,12 +31,16 @@ export function useResizablePanels() {
     if (!bounds) return;
     if (panel === "sidebar") {
       const oppositeWidth = inspectorOpen && bounds.width >= THREE_PANEL_BREAKPOINT ? inspectorWidth : 0;
-      setSidebarWidth(resizedPanelWidth(panel, clientX, bounds, oppositeWidth));
+      const width = resizedPanelWidth(panel, clientX, bounds, oppositeWidth);
+      sidebarWidthRef.current = width;
+      workspaceGridRef.current?.style.setProperty("--sidebar-width", `${width}px`);
       return;
     }
 
     const oppositeWidth = sidebarOpen && bounds.width >= COMPACT_OVERLAY_BREAKPOINT ? sidebarWidth : 0;
-    setInspectorWidth(resizedPanelWidth(panel, clientX, bounds, oppositeWidth));
+    const width = resizedPanelWidth(panel, clientX, bounds, oppositeWidth);
+    inspectorWidthRef.current = width;
+    workspaceGridRef.current?.style.setProperty("--inspector-width", `${width}px`);
   }
 
   function flushResize() {
@@ -70,6 +76,8 @@ export function useResizablePanels() {
 
   function finishPanelResize(event: PointerEvent<HTMLDivElement>) {
     flushResize();
+    setSidebarWidth(sidebarWidthRef.current);
+    setInspectorWidth(inspectorWidthRef.current);
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
@@ -81,6 +89,9 @@ export function useResizablePanels() {
     pendingResizeRef.current = null;
     if (resizeFrameRef.current !== null) window.cancelAnimationFrame(resizeFrameRef.current);
   }, []);
+
+  useEffect(() => { sidebarWidthRef.current = sidebarWidth; }, [sidebarWidth]);
+  useEffect(() => { inspectorWidthRef.current = inspectorWidth; }, [inspectorWidth]);
 
   const workspaceGridStyle = {
     "--sidebar-width": sidebarOpen ? `${sidebarWidth}px` : "0px",

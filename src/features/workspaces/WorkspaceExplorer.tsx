@@ -68,6 +68,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
   const [previewError, setPreviewError] = useState("");
   const [watchError, setWatchError] = useState("");
   const [treeWidth, setTreeWidth] = useState(285);
+  const treeWidthRef = useRef(285);
   const treeResizingRef = useRef(false);
   const pendingTreeWidthRef = useRef<number | null>(null);
   const treeResizeFrameRef = useRef<number | null>(null);
@@ -174,7 +175,11 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
         treeResizeFrameRef.current = null;
         const width = pendingTreeWidthRef.current;
         pendingTreeWidthRef.current = null;
-        if (width !== null) setTreeWidth(width);
+        if (width !== null) {
+          treeWidthRef.current = width;
+          const body = document.querySelector<HTMLElement>(".workspace-explorer-drawer .explorer-body");
+          body?.style.setProperty("--explorer-tree-width", `${width}px`);
+        }
       });
     }
   }
@@ -185,6 +190,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
       treeResizeFrameRef.current = null;
     }
     if (pendingTreeWidthRef.current !== null) {
+      treeWidthRef.current = pendingTreeWidthRef.current;
       setTreeWidth(pendingTreeWidthRef.current);
       pendingTreeWidthRef.current = null;
     }
