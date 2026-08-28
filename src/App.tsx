@@ -177,7 +177,7 @@ function App() {
         ref={workspaceGridRef}
         className={`workspace-grid ${sidebarOpen ? "" : "sidebar-hidden"} ${inspectorOpen ? "" : "inspector-hidden"} ${resizingPanel ? "resizing" : ""} ${sideChatMaximized && (inspectorView === "chat" || inspectorView === "files") ? "inspector-maximized" : ""}`}
         style={sideChatMaximized && (inspectorView === "chat" || inspectorView === "files")
-          ? { ...workspaceGridStyle, "--inspector-width": "0px", "--inspector-max-width": "min(760px, 70vw)" } as CSSProperties
+          ? { ...workspaceGridStyle, "--inspector-width": "0px", "--inspector-max-width": "100%" } as CSSProperties
           : workspaceGridStyle}
       >
         <aside className="sidebar panel">

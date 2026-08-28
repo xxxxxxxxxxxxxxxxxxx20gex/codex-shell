@@ -241,8 +241,8 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .inspector-tab:hover { color: var(--text-primary); background: var(--surface-raised); }
 .inspector-tab.active { border-bottom-color: var(--accent-action); color: var(--text-primary); }
 .inspector-tab svg { width: 14px; height: 14px; stroke-width: 1.75; }
-.workspace-grid.inspector-maximized > .inspector { position: absolute; z-index: 19; top: 0; right: 0; bottom: 0; width: var(--inspector-max-width, min(760px, 70vw)); }
-.workspace-grid.inspector-maximized > .inspector-resizer { right: var(--inspector-max-width, min(760px, 70vw)); }
+.workspace-grid.inspector-maximized > .inspector { position: absolute; z-index: 19; top: 0; right: 0; bottom: 0; width: var(--inspector-max-width, 100%); }
+.workspace-grid.inspector-maximized > .inspector-resizer { right: var(--inspector-max-width, 100%); }
 .side-chat-launch { margin-top: 0; }
 .inspector-heading > div { display: grid; min-width: 0; gap: 2px; }
 .inspector-heading strong { font-size: var(--text-ui); font-weight: 600; }
