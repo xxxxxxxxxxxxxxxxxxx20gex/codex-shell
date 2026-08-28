@@ -88,7 +88,6 @@ function App() {
     permissionMode,
     approvalReviewer,
     pendingProjectPath,
-    workspaceExplorerOpen,
     setWorkspaceExplorerOpen,
     workspaceExplorerInitialPath,
     mentions,
@@ -403,7 +402,7 @@ function App() {
               </button>
             </div>
           </>}
-          {inspectorView === "files" && currentProjectPath && workspaceExplorerOpen ? (
+          {inspectorView === "files" && currentProjectPath ? (
             <WorkspaceExplorer rootPath={currentProjectPath} initialFilePath={workspaceExplorerInitialPath} maximized={sideChatMaximized} onToggleMaximize={() => toggleInspectorMaximized("files")} onClose={() => { setSideChatMaximized(false); setWorkspaceExplorerOpen(false); setInspectorView("home"); }} readDirectory={session.readWorkspaceDirectory} readFile={session.readWorkspaceFile} watchPath={session.watchWorkspacePath} />
           ) : inspectorView === "files" && <>
             <div className="inspector-heading inspector-detail-heading"><button type="button" className="inspector-back" onClick={() => setInspectorView("home")} aria-label="返回功能区"><ChevronLeft aria-hidden="true" /></button><div><span className="eyebrow">WORKSPACE</span><strong>项目文件</strong></div></div>
