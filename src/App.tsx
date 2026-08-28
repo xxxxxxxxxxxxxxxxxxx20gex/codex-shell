@@ -133,6 +133,18 @@ function App() {
   } = useAppController();
   const openSideChat = session.sideChat.openChat;
 
+  function toggleInspectorMaximized(view?: "chat" | "files") {
+    setInspectorOpen(true);
+    if (view === "files") {
+      // Keep the Explorer mounted when the maximize click races with a
+      // drawer close/navigation update. Maximizing is a layout operation,
+      // not a request to change the active feature.
+      setInspectorView("files");
+      setWorkspaceExplorerOpen(true);
+    }
+    setSideChatMaximized((value) => !value);
+  }
+
   useEffect(() => {
     // Session switches and Runtime resets clear the ephemeral side thread
     // from the session hook. Return to the feature entry instead of leaving
@@ -392,12 +404,12 @@ function App() {
             </div>
           </>}
           {inspectorView === "files" && currentProjectPath && workspaceExplorerOpen ? (
-            <WorkspaceExplorer rootPath={currentProjectPath} initialFilePath={workspaceExplorerInitialPath} maximized={sideChatMaximized} onToggleMaximize={() => setSideChatMaximized((value) => !value)} onClose={() => { setSideChatMaximized(false); setWorkspaceExplorerOpen(false); setInspectorView("home"); }} readDirectory={session.readWorkspaceDirectory} readFile={session.readWorkspaceFile} watchPath={session.watchWorkspacePath} />
+            <WorkspaceExplorer rootPath={currentProjectPath} initialFilePath={workspaceExplorerInitialPath} maximized={sideChatMaximized} onToggleMaximize={() => toggleInspectorMaximized("files")} onClose={() => { setSideChatMaximized(false); setWorkspaceExplorerOpen(false); setInspectorView("home"); }} readDirectory={session.readWorkspaceDirectory} readFile={session.readWorkspaceFile} watchPath={session.watchWorkspacePath} />
           ) : inspectorView === "files" && <>
             <div className="inspector-heading inspector-detail-heading"><button type="button" className="inspector-back" onClick={() => setInspectorView("home")} aria-label="返回功能区"><ChevronLeft aria-hidden="true" /></button><div><span className="eyebrow">WORKSPACE</span><strong>项目文件</strong></div></div>
             <div className="inspector-project-empty">项目路径尚未准备好。选择项目或等待默认工作区加载后，再从功能区打开项目文件。</div>
           </>}
-          {inspectorView === "chat" && <SideChatPanel chat={session.sideChat} maximized={sideChatMaximized} onToggleMaximize={() => setSideChatMaximized((value) => !value)} onBack={() => setInspectorView("home")} onClose={() => { setSideChatMaximized(false); void session.sideChat.close(); setInspectorView("home"); }} />}
+          {inspectorView === "chat" && <SideChatPanel chat={session.sideChat} maximized={sideChatMaximized} onToggleMaximize={toggleInspectorMaximized} onBack={() => setInspectorView("home")} onClose={() => { setSideChatMaximized(false); void session.sideChat.close(); setInspectorView("home"); }} />}
         </aside>
       </section>
 
