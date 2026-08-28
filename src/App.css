@@ -241,7 +241,8 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .inspector-tab:hover { color: var(--text-primary); background: var(--surface-raised); }
 .inspector-tab.active { border-bottom-color: var(--accent-action); color: var(--text-primary); }
 .inspector-tab svg { width: 14px; height: 14px; stroke-width: 1.75; }
-.workspace-grid.inspector-maximized > .inspector { position: absolute; z-index: 19; inset: 0; width: auto; min-width: 0; visibility: visible !important; transform: none !important; pointer-events: auto; }
+.workspace-grid.inspector-maximized { grid-template-columns: var(--sidebar-width) minmax(0, 1fr) 0px !important; }
+.workspace-grid.inspector-maximized > .inspector { position: relative; z-index: 19; grid-column: 2 / 4; grid-row: 1; width: auto; min-width: 0; visibility: visible !important; transform: none !important; pointer-events: auto; }
 .workspace-grid.inspector-maximized > .inspector-resizer { display: none; }
 .side-chat-launch { margin-top: 0; }
 .inspector-heading > div { display: grid; min-width: 0; gap: 2px; }
