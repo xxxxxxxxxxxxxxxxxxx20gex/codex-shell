@@ -264,7 +264,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
         <header className="explorer-header">
           <div><span className="eyebrow">Project Explorer</span><strong>{projectName(rootPath)}</strong><small>{rootPath}</small>{watchError && <i className="explorer-watch-warning" title={watchError}>自动刷新不可用</i>}</div>
           <div className="explorer-actions" aria-label="项目文件浏览器操作">
-            <button className="explorer-size-button" onClick={onToggleMaximize} aria-label={maximized ? "恢复右侧功能区宽度" : "扩大右侧功能区"} title={maximized ? "恢复右侧功能区宽度" : "扩大右侧功能区"}>
+            <button className="explorer-size-button" onClick={(event) => { event.preventDefault(); event.stopPropagation(); onToggleMaximize(); }} aria-label={maximized ? "恢复右侧功能区宽度" : "扩大右侧功能区"} title={maximized ? "恢复右侧功能区宽度" : "扩大右侧功能区"}>
               {maximized ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />}
             </button>
             <button className="explorer-close" onClick={onClose} aria-label="关闭文件浏览器" title="关闭"><X aria-hidden="true" /></button>
