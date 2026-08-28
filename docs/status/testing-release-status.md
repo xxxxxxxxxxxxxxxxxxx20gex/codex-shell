@@ -13,3 +13,5 @@
 - 2026-08-24 review：分支治理和 Wiki 式文档改动未引入源码变化；侧边聊天生命周期 review 已补充关闭中断、停止 Runtime 不重连和 Session 切换视图回收测试。TypeScript、ESLint、58 个 Vitest 文件/255 项测试、Vite production build、Rust check 与 14 项 Rust 测试再次通过。Knip 尚未固定为项目依赖；安装包未签名、Runtime 获取不可复现和干净机器验收仍待后续处理。
 - 2026-08-25 review：TypeScript、ESLint、57 个 Vitest 文件/256 项测试和 Vite production build 通过；Rust check 与 14 项 Rust 单测通过，独立临时 target 的 `cargo clippy --all-targets -- -D warnings` 通过。Knip 当前未配置为项目依赖或质量门禁，未产出无效代码报告。项目文件内嵌 inspector 与旧 DiffInspector 清理后的 Tauri debug build 已通过；本轮项目文件标题栏修复后，确认默认 target 的拒绝访问来自仍在运行的本项目 `src-tauri\target\debug\codex.exe` app-server。`scripts/build-desktop.ps1` 现在只按规范化路径停止本项目 target 下的旧进程，再执行默认构建；时间线滚动控制新增上一条、下一条和返回最新的定向交互测试；本轮未重复生成安装包。
 - 最后更新：2026-08-26
+
+- 2026-08-28 代码健康审查：移除无读取方的 `workspaceExplorerOpen` 重复状态，Explorer 挂载条件与当前项目文件视图保持一致；`pnpm typecheck`、`pnpm lint`、`pnpm test -- --run`（57 个文件/258 个测试）、`pnpm build` 和 `cargo check --manifest-path src-tauri/Cargo.toml` 通过。`pnpm quality:knip` 因 Node/OXC 解析阶段 ArrayBuffer 分配失败未完成，不能视为通过；该失败属于本机资源/工具运行问题，未产生 Knip 诊断。

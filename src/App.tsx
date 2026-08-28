@@ -88,7 +88,6 @@ function App() {
     permissionMode,
     approvalReviewer,
     pendingProjectPath,
-    setWorkspaceExplorerOpen,
     workspaceExplorerInitialPath,
     mentions,
     setMentions,
@@ -139,7 +138,6 @@ function App() {
       // drawer close/navigation update. Maximizing is a layout operation,
       // not a request to change the active feature.
       setInspectorView("files");
-      setWorkspaceExplorerOpen(true);
     }
     setSideChatMaximized((value) => !value);
   }
@@ -403,7 +401,7 @@ function App() {
             </div>
           </>}
           {inspectorView === "files" && currentProjectPath ? (
-            <WorkspaceExplorer rootPath={currentProjectPath} initialFilePath={workspaceExplorerInitialPath} maximized={sideChatMaximized} onToggleMaximize={() => toggleInspectorMaximized("files")} onClose={() => { setSideChatMaximized(false); setWorkspaceExplorerOpen(false); setInspectorView("home"); }} readDirectory={session.readWorkspaceDirectory} readFile={session.readWorkspaceFile} watchPath={session.watchWorkspacePath} />
+            <WorkspaceExplorer rootPath={currentProjectPath} initialFilePath={workspaceExplorerInitialPath} maximized={sideChatMaximized} onToggleMaximize={() => toggleInspectorMaximized("files")} onClose={() => { setSideChatMaximized(false); setInspectorView("home"); }} readDirectory={session.readWorkspaceDirectory} readFile={session.readWorkspaceFile} watchPath={session.watchWorkspacePath} />
           ) : inspectorView === "files" && <>
             <div className="inspector-heading inspector-detail-heading"><button type="button" className="inspector-back" onClick={() => setInspectorView("home")} aria-label="返回功能区"><ChevronLeft aria-hidden="true" /></button><div><span className="eyebrow">WORKSPACE</span><strong>项目文件</strong></div></div>
             <div className="inspector-project-empty">项目路径尚未准备好。选择项目或等待默认工作区加载后，再从功能区打开项目文件。</div>

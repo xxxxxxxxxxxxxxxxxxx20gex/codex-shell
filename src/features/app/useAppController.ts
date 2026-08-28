@@ -78,7 +78,6 @@ export function useAppController() {
   const [approvalReviewer, setApprovalReviewer] = useState<ApprovalReviewerMode>(DEFAULT_APPROVAL_REVIEWER);
   const [pendingProjectPath, setPendingProjectPath] = useState<string | null>(null);
   const [defaultProjectDirectory, setDefaultProjectDirectory] = useState<DefaultProjectDirectory | null>(null);
-  const [workspaceExplorerOpen, setWorkspaceExplorerOpen] = useState(false);
   const [workspaceExplorerInitialPath, setWorkspaceExplorerInitialPath] = useState<string | null>(null);
   const [mentions, setMentions] = useState<FileMention[]>([]);
   const [images, setImages] = useState<ImageAttachment[]>([]);
@@ -379,7 +378,6 @@ export function useAppController() {
 
   function changeProject(path: string | null) {
     if (session.thread) return;
-    setWorkspaceExplorerOpen(false);
     setWorkspaceExplorerInitialPath(null);
     setMentions([]);
     setMentionResults([]);
@@ -388,7 +386,6 @@ export function useAppController() {
 
   function openWorkspaceExplorer(initialFilePath: string | null = null) {
     setWorkspaceExplorerInitialPath(initialFilePath);
-    setWorkspaceExplorerOpen(true);
   }
 
   function selectMention(result: FuzzyFileSearchResult) {
@@ -525,8 +522,6 @@ export function useAppController() {
     permissionMode,
     approvalReviewer,
     pendingProjectPath,
-    workspaceExplorerOpen,
-    setWorkspaceExplorerOpen,
     workspaceExplorerInitialPath,
     mentions,
     setMentions,
