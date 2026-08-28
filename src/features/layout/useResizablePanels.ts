@@ -11,6 +11,7 @@ import {
 type WorkspaceGridStyle = CSSProperties & {
   "--sidebar-width": string;
   "--inspector-width": string;
+  "--inspector-max-width"?: string;
 };
 
 export function useResizablePanels() {

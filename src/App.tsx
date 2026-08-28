@@ -16,7 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import "./App.css";
 import { PermissionModeSelector } from "./features/approvals/PermissionModeSelector";
 import { AttachmentGallery } from "./features/attachments/AttachmentGallery";
@@ -177,7 +177,7 @@ function App() {
         ref={workspaceGridRef}
         className={`workspace-grid ${sidebarOpen ? "" : "sidebar-hidden"} ${inspectorOpen ? "" : "inspector-hidden"} ${resizingPanel ? "resizing" : ""} ${sideChatMaximized && (inspectorView === "chat" || inspectorView === "files") ? "inspector-maximized" : ""}`}
         style={sideChatMaximized && (inspectorView === "chat" || inspectorView === "files")
-          ? { ...workspaceGridStyle, "--inspector-width": "min(760px, 70vw)" }
+          ? { ...workspaceGridStyle, "--inspector-width": "0px", "--inspector-max-width": "min(760px, 70vw)" } as CSSProperties
           : workspaceGridStyle}
       >
         <aside className="sidebar panel">
