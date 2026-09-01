@@ -53,7 +53,7 @@ export function TurnResourceOutputs({ items, readFile, onOpenPath }: Props) {
     <header><strong>本轮产出</strong><small>{images.length + files.length} 个资源</small></header>
     {images.length > 0 && <div className="turn-resource-images">
       {images.map((path) => readFile
-        ? <ImageAttachmentPreview key={path} path={path} name={baseName(path)} readFile={readFile} />
+        ? <ImageAttachmentPreview key={path} path={path} name={baseName(path)} readFile={readFile} onOpenPath={onOpenPath} />
         : <span className="turn-resource-unavailable" key={path}><ImageIcon aria-hidden="true" />{baseName(path)}</span>)}
     </div>}
     {files.length > 0 && <ul className="turn-resource-files">

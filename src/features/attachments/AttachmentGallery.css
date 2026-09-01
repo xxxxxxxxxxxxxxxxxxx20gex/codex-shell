@@ -24,8 +24,10 @@
 .attachment-preview-dialog header strong, .attachment-preview-dialog header small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .attachment-preview-dialog header strong { font-size: 11px; }
 .attachment-preview-dialog header small { color: var(--text-muted); font-size: var(--text-meta); }
-.attachment-preview-dialog header > button { display: grid; width: 28px; height: 28px; flex: none; place-items: center; padding: 0; border: 0; border-radius: var(--radius-control); color: var(--text-secondary); background: transparent; font-size: 19px; cursor: pointer; }
-.attachment-preview-dialog header > button:hover { color: var(--text-primary); background: var(--surface-raised); }
+.attachment-preview-actions { display: flex; flex: none; align-items: center; gap: 4px; }
+.attachment-preview-actions button { display: grid; width: 28px; height: 28px; place-items: center; padding: 0; border: 0; border-radius: var(--radius-control); color: var(--text-secondary); background: transparent; cursor: pointer; }
+.attachment-preview-actions button:hover { color: var(--text-primary); background: var(--surface-raised); }
+.attachment-preview-actions svg { width: 16px; height: 16px; stroke-width: 1.75; }
 .attachment-preview-content { display: grid; min-width: 0; min-height: 0; place-items: center; overflow: auto; padding: 18px; }
 .attachment-preview-content > img { max-width: 100%; max-height: 100%; object-fit: contain; }
 .attachment-preview-content > pre { box-sizing: border-box; width: 100%; min-height: 100%; margin: 0; padding: 15px; overflow: auto; color: var(--text-primary); background: var(--surface-canvas); font: var(--text-meta)/16px var(--font-mono); white-space: pre-wrap; word-break: break-word; }

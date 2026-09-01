@@ -311,6 +311,7 @@ function App() {
                 files={mentions}
                 images={images}
                 readFile={session.readWorkspaceFile}
+                onOpenPath={openConversationPath}
                 onRemoveFile={(path) => setMentions((current) => current.filter((item) => item.path !== path))}
                 onRemoveImage={(index) => setImages((current) => current.filter((_, itemIndex) => itemIndex !== index))}
               />

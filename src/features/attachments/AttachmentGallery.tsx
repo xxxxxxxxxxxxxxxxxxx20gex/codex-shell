@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { File, X } from "lucide-react";
+import { File, FolderOpen, X } from "lucide-react";
 import { errorMessage } from "../../shared/errors";
 import type { FileMention, ImageAttachment } from "../runtime/sessionInput";
 import { decodeFilePreview, formatFileSize, type FilePreview } from "../workspaces/filePreview";
@@ -14,6 +14,7 @@ interface Props {
   readFile: ReadFile;
   onRemoveFile?: (path: string) => void;
   onRemoveImage?: (index: number) => void;
+  onOpenPath?: (path: string) => void | Promise<void>;
   align?: "start" | "end";
 }
 
@@ -63,7 +64,7 @@ function ImageThumbnail({ image, readFile }: { image: ImageAttachment; readFile:
   return <span className="attachment-image-fallback" aria-hidden="true">IMG</span>;
 }
 
-export function ImageAttachmentPreview({ path, name, readFile }: { path: string; name?: string; readFile: ReadFile }) {
+export function ImageAttachmentPreview({ path, name, readFile, onOpenPath }: { path: string; name?: string; readFile: ReadFile; onOpenPath?: (path: string) => void | Promise<void> }) {
   const [open, setOpen] = useState(false);
   const image: ImageAttachment = { path, name: name ?? path.split(/[\\/]/).pop() ?? path };
   return (
@@ -72,15 +73,16 @@ export function ImageAttachmentPreview({ path, name, readFile }: { path: string;
         <ImageThumbnail image={image} readFile={readFile} />
         <span>{image.name}</span>
       </button>
-      {open && <AttachmentPreviewDialog target={{ kind: "image", ...image }} readFile={readFile} onClose={() => setOpen(false)} />}
+      {open && <AttachmentPreviewDialog target={{ kind: "image", ...image }} readFile={readFile} onClose={() => setOpen(false)} onOpenPath={onOpenPath} />}
     </>
   );
 }
 
-function AttachmentPreviewDialog({ target, readFile, onClose }: {
+function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath }: {
   target: PreviewTarget;
   readFile: ReadFile;
   onClose: () => void;
+  onOpenPath?: (path: string) => void | Promise<void>;
 }) {
   const local = usePathPreview(target.path, readFile, Boolean(target.path));
   const preview = target.kind === "image" && target.url
@@ -101,7 +103,10 @@ function AttachmentPreviewDialog({ target, readFile, onClose }: {
       <section className="attachment-preview-dialog">
         <header>
           <div><strong>{target.name}</strong><small>{target.path ?? "剪贴板图片"}</small></div>
-          <button type="button" onClick={onClose} aria-label="关闭附件预览"><X aria-hidden="true" /></button>
+          <div className="attachment-preview-actions">
+            {target.path && onOpenPath && <button type="button" onClick={() => void onOpenPath(target.path!)} aria-label="在资源管理器中打开" title="在资源管理器中打开"><FolderOpen aria-hidden="true" /></button>}
+            <button type="button" onClick={onClose} aria-label="关闭附件预览"><X aria-hidden="true" /></button>
+          </div>
         </header>
         <div className="attachment-preview-content">
           {local.loading && <div className="attachment-preview-state"><span className="attachment-loading" /><strong>正在读取附件…</strong></div>}
@@ -122,6 +127,7 @@ export function AttachmentGallery({
   readFile,
   onRemoveFile,
   onRemoveImage,
+  onOpenPath,
   align = "start",
 }: Props) {
   const [previewTarget, setPreviewTarget] = useState<PreviewTarget | null>(null);
@@ -149,7 +155,7 @@ export function AttachmentGallery({
           </div>
         ))}
       </div>
-      {previewTarget && <AttachmentPreviewDialog target={previewTarget} readFile={readFile} onClose={() => setPreviewTarget(null)} />}
+      {previewTarget && <AttachmentPreviewDialog target={previewTarget} readFile={readFile} onClose={() => setPreviewTarget(null)} onOpenPath={onOpenPath} />}
     </>
   );
 }

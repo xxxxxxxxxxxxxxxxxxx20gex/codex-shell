@@ -156,7 +156,7 @@ export function ConversationTurn({
                 const message = userMessagePresentation(block.item);
                 return <>
                   {(message.files.length > 0 || message.images.length > 0) && readFile && (
-                    <AttachmentGallery files={message.files} images={message.images} readFile={readFile} align="end" />
+                    <AttachmentGallery files={message.files} images={message.images} readFile={readFile} onOpenPath={onOpenPath} align="end" />
                   )}
                   {message.text && <div className="user-message">{message.text}</div>}
                 </>;
