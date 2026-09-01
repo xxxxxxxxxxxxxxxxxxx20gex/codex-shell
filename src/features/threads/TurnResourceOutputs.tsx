@@ -13,7 +13,10 @@ function baseName(path: string) {
 }
 
 function isImagePath(path: string) {
-  return /\.(?:avif|bmp|gif|jpe?g|png|webp)$/i.test(path);
+  // SVG is a renderable image artifact too. Keep it in the visual resource
+  // gallery instead of treating a generated SVG as a generic downloadable
+  // file change.
+  return /\.(?:avif|bmp|gif|jpe?g|png|svg|webp)$/i.test(path);
 }
 
 /** Only resources that have a useful visual/document representation belong in the turn summary. */
