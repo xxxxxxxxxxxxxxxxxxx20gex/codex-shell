@@ -20,7 +20,7 @@
 .attachment-preview-scrim { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: rgba(5,5,4,.78); cursor: default; backdrop-filter: blur(5px); }
 .attachment-preview-dialog { position: relative; display: grid; width: min(920px, 92vw); height: min(720px, 88vh); grid-template-rows: auto minmax(0,1fr); overflow: hidden; border: 1px solid var(--border-default); border-radius: var(--radius-panel); background: var(--surface-panel); box-shadow: var(--shadow-popover); }
 .attachment-preview-dialog header { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 13px; border-bottom: 1px solid var(--border-subtle); }
-.attachment-preview-dialog header > div { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.attachment-preview-dialog header > div:first-child { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
 .attachment-preview-dialog header strong, .attachment-preview-dialog header small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .attachment-preview-dialog header strong { font-size: 11px; }
 .attachment-preview-dialog header small { color: var(--text-muted); font-size: var(--text-meta); }

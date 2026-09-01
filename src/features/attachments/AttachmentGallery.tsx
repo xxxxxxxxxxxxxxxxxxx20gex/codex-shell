@@ -88,6 +88,17 @@ function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath }: {
   const preview = target.kind === "image" && target.url
     ? { kind: "image" as const, dataUrl: target.url, byteSize: 0 }
     : local.preview;
+  const [openError, setOpenError] = useState("");
+
+  async function openResource() {
+    if (!target.path || !onOpenPath) return;
+    setOpenError("");
+    try {
+      await onOpenPath(target.path);
+    } catch (error) {
+      setOpenError(errorMessage(error));
+    }
+  }
 
   useEffect(() => {
     function closeOnEscape(event: KeyboardEvent) {
@@ -104,11 +115,12 @@ function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath }: {
         <header>
           <div><strong>{target.name}</strong><small>{target.path ?? "剪贴板图片"}</small></div>
           <div className="attachment-preview-actions">
-            {target.path && onOpenPath && <button type="button" onClick={() => void onOpenPath(target.path!)} aria-label="在资源管理器中打开" title="在资源管理器中打开"><FolderOpen aria-hidden="true" /></button>}
+            {target.path && onOpenPath && <button type="button" onClick={() => void openResource()} aria-label="在资源管理器中打开" title="在资源管理器中打开"><FolderOpen aria-hidden="true" /></button>}
             <button type="button" onClick={onClose} aria-label="关闭附件预览"><X aria-hidden="true" /></button>
           </div>
         </header>
         <div className="attachment-preview-content">
+          {openError && <div className="attachment-preview-state error"><strong>无法打开资源管理器</strong><p>{openError}</p></div>}
           {local.loading && <div className="attachment-preview-state"><span className="attachment-loading" /><strong>正在读取附件…</strong></div>}
           {local.error && <div className="attachment-preview-state error"><strong>无法预览附件</strong><p>{local.error}</p></div>}
           {preview?.kind === "image" && <img src={preview.dataUrl} alt={target.name} />}
