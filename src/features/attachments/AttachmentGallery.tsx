@@ -96,7 +96,8 @@ function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath, onOpen
     if (!target.path || !onOpenPath) return;
     setOpenError("");
     try {
-      await onOpenPath(target.path);
+      if (onOpenInExplorer) await onOpenInExplorer(target.path);
+      else if (onOpenPath) await onOpenPath(target.path);
     } catch (error) {
       setOpenError(errorMessage(error));
     }
@@ -117,7 +118,7 @@ function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath, onOpen
         <header>
           <div><strong>{target.name}</strong><small>{target.path ?? "剪贴板图片"}</small></div>
           <div className="attachment-preview-actions">
-            {target.path && (onOpenInExplorer || onOpenPath) && <button type="button" onClick={() => void (onOpenInExplorer ? onOpenInExplorer(target.path!) : openResource())} aria-label="在资源管理器中打开" title="在资源管理器中打开"><FolderOpen aria-hidden="true" /></button>}
+            {target.path && (onOpenInExplorer || onOpenPath) && <button type="button" onClick={() => void openResource()} aria-label="在资源管理器中打开" title="在资源管理器中打开"><FolderOpen aria-hidden="true" /></button>}
             <button type="button" onClick={onClose} aria-label="关闭附件预览"><X aria-hidden="true" /></button>
           </div>
         </header>
