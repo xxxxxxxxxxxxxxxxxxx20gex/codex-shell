@@ -21,6 +21,8 @@ import type { ModelSettings, PersonalizationSettings } from "../models/types";
 import type { AppServerClient } from "./appServerClient";
 import type { AgentSessionAction } from "./sessionState";
 import type { FileMention, ImageAttachment, SkillMention } from "./sessionInput";
+import { buildUserInput } from "./sessionInput";
+import type { ThreadQueueChangedNotification } from "../../generated/app-server/v2/ThreadQueueChangedNotification";
 import { useQueuedTurns } from "./useQueuedTurns";
 import type { RunningTurn, RunningTurnKind } from "./useRunningTurns";
 import { useThreadActions } from "./useThreadActions";
@@ -92,7 +94,47 @@ export function useThreadController(props: Props) {
     clearThread: clearQueuedThread,
     clear: clearQueued,
     get: getQueued,
+    setServerId: setQueuedServerId,
+    replaceThread: replaceQueuedThread,
   } = useQueuedTurns();
+  const nativeQueueRefreshRef = useRef(new Set<string>());
+
+  const refreshNativeQueue = useCallback(async (threadId: string) => {
+    const client = await ensureConnected();
+    if (typeof client.listQueuedSubmissions !== "function") return;
+    if (nativeQueueRefreshRef.current.has(threadId)) return;
+    nativeQueueRefreshRef.current.add(threadId);
+    try {
+      const response = await client.listQueuedSubmissions({ threadId });
+      // Keep the richer CS metadata (model, permissions, intent) by matching
+      // the server's stable clientUserMessageId. Items created elsewhere use
+      // conservative defaults and remain fully manageable in the UI.
+      const existing = getQueued(threadId);
+      const byClientId = new Map(existing.map((item) => [item.id, item]));
+      const next = response.data.map((item) => {
+        const preserved = byClientId.get(item.clientUserMessageId);
+        if (preserved) return { ...preserved, serverId: item.id };
+        return {
+        id: item.clientUserMessageId,
+        serverId: item.id,
+        text: item.input.filter((input) => input.type === "text").map((input) => input.text).join(""),
+        mentions: item.input.filter((input) => input.type === "mention").map((input) => ({ name: input.name, path: input.path })),
+        skills: item.input.filter((input) => input.type === "skill").map((input) => ({ name: input.name, path: input.path })),
+        images: item.input.filter((input) => input.type === "image" || input.type === "localImage").map((input) => ({
+          name: input.type === "image" ? input.url : input.path,
+          ...(input.type === "image" ? { url: input.url } : { path: input.path }),
+        })),
+        collaborationMode: "default" as const,
+        settings: { ...settings },
+        permissionMode,
+        approvalReviewer,
+        };
+      });
+      replaceQueuedThread(threadId, next);
+    } finally {
+      nativeQueueRefreshRef.current.delete(threadId);
+    }
+  }, [approvalReviewer, ensureConnected, getQueued, permissionMode, replaceQueuedThread, settings]);
 
   const currentThreadId = useCallback(() => threadIdRef.current, []);
   const threadHistory = useThreadHistory({
@@ -210,6 +252,7 @@ export function useThreadController(props: Props) {
     const threadId = threadIdRef.current;
     if ((!message && mentions.length === 0 && images.length === 0)
       || !threadId || (!submitting && !isThreadRunning(threadId))) return false;
+    const clientUserMessageId = `queued-turn-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const accepted = enqueueQueued(threadId, {
       text: message,
       mentions: [...mentions],
@@ -219,18 +262,37 @@ export function useThreadController(props: Props) {
       settings: { ...settings },
       permissionMode: permissionMode,
       approvalReviewer: approvalReviewer,
-    });
+    }, clientUserMessageId);
     if (!accepted) setError("当前 Session 最多排队 10 条消息");
+    else {
+      void ensureActiveThread().then(({ client }) => {
+        if (typeof client.addQueuedSubmission !== "function") return;
+        return client.addQueuedSubmission({
+          threadId,
+          input: buildUserInput(message, mentions, skills, images),
+          clientUserMessageId,
+        }).then((response) => setQueuedServerId(threadId, clientUserMessageId, response.queuedSubmission.id))
+          .catch((error) => {
+            removeQueuedInput(threadId, clientUserMessageId);
+            setError(`消息未能加入 app-server 队列：${errorMessage(error)}`);
+          });
+      }).catch((error) => {
+        removeQueuedInput(threadId, clientUserMessageId);
+        setError(`消息未能加入 app-server 队列：${errorMessage(error)}`);
+      });
+    }
     return accepted;
-  }, [approvalReviewer, isThreadRunning, permissionMode, setError, settings, submitting, enqueueQueued]);
+  }, [approvalReviewer, ensureActiveThread, enqueueQueued, isThreadRunning, permissionMode, removeQueuedInput, setError, setQueuedServerId, settings, submitting]);
 
   const sendNextQueued = useCallback(async (threadId: string) => {
     const next = shiftQueued(threadId);
     if (!next) return false;
-    const sent = await sendQueued(threadId, next);
+    const sent = next.serverId
+      ? await ensureConnected().then((client) => client.startQueuedSubmission({ threadId, queuedSubmissionId: next.serverId }).then(() => true))
+      : await sendQueued(threadId, next);
     if (!sent) restoreQueuedFront(threadId, next);
     return sent;
-  }, [restoreQueuedFront, shiftQueued, sendQueued]);
+  }, [ensureConnected, restoreQueuedFront, shiftQueued, sendQueued]);
 
   const clearActiveThread = useCallback(() => {
     const previousThreadId = threadIdRef.current;
@@ -297,6 +359,7 @@ export function useThreadController(props: Props) {
       applyThreadRuntimeState(openedThread);
       setSubmitting(false);
       dispatch({ type: "loadThread", thread: openedThread });
+      void refreshNativeQueue(openedThread.id).catch(() => undefined);
     } catch (readError) {
       setError(errorMessage(readError));
     } finally {
@@ -310,6 +373,7 @@ export function useThreadController(props: Props) {
     setError,
     setSubmitting,
     isActionInProgress,
+    refreshNativeQueue,
     unsubscribeIfIdle,
   ]);
 
@@ -355,11 +419,21 @@ export function useThreadController(props: Props) {
     } else if (notification.turn.status !== "completed" || getQueued(notification.threadId).length === 0) {
       void unsubscribeIfIdle(notification.threadId);
     }
+    // Native app-server queue advances itself after a completed turn. The
+    // previous client-side dispatch caused duplicate turns when both paths
+    // observed the same completion.
     if (notification.turn.status === "completed" && getQueued(notification.threadId).length > 0) {
-      void sendNextQueued(notification.threadId);
+      void ensureConnected().then((client) => {
+        // Compatibility fallback for runtimes predating thread/queue/*.
+        if (typeof client.addQueuedSubmission !== "function") void sendNextQueued(notification.threadId);
+      });
     }
     void refreshHistory();
-  }, [dispatch, markThreadStopped, setError, setSubmitting, getQueued, refreshHistory, sendNextQueued, unsubscribeIfIdle]);
+  }, [dispatch, ensureConnected, markThreadStopped, setError, setSubmitting, getQueued, refreshHistory, sendNextQueued, unsubscribeIfIdle]);
+
+  const onThreadQueueChanged = useCallback((notification: ThreadQueueChangedNotification) => {
+    void refreshNativeQueue(notification.threadId).catch((error) => setError(`队列状态同步失败：${errorMessage(error)}`));
+  }, [refreshNativeQueue, setError]);
 
   const onThreadName = useCallback((notification: ThreadNameUpdatedNotification) => {
     renameInHistory(notification.threadId, notification.threadName ?? null);
@@ -420,8 +494,13 @@ export function useThreadController(props: Props) {
 
   const removeQueued = useCallback((queuedTurnId: string) => {
     const threadId = threadIdRef.current;
-    if (threadId) removeQueuedInput(threadId, queuedTurnId);
-  }, [removeQueuedInput]);
+    if (!threadId) return;
+    const queued = getQueued(threadId).find((item) => item.id === queuedTurnId);
+    removeQueuedInput(threadId, queuedTurnId);
+    if (queued?.serverId) {
+      void ensureConnected().then((client) => client.deleteQueuedSubmission({ threadId, queuedSubmissionId: queued.serverId! })).catch((error) => setError(`无法取消队列消息：${errorMessage(error)}`));
+    }
+  }, [ensureConnected, getQueued, removeQueuedInput, setError]);
 
   const resumeQueued = useCallback(async () => {
     const threadId = threadIdRef.current;
@@ -467,6 +546,7 @@ export function useThreadController(props: Props) {
     removeThread,
     onThreadUnarchived,
     onThreadClosed,
+    onThreadQueueChanged,
     reset,
   };
 }

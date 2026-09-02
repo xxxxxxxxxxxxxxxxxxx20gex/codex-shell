@@ -87,6 +87,8 @@ import type { TurnSteerResponse } from "../../generated/app-server/v2/TurnSteerR
 import type { WindowsSandboxReadinessResponse } from "../../generated/app-server/v2/WindowsSandboxReadinessResponse";
 import type { WindowsSandboxSetupStartParams } from "../../generated/app-server/v2/WindowsSandboxSetupStartParams";
 import type { WindowsSandboxSetupStartResponse } from "../../generated/app-server/v2/WindowsSandboxSetupStartResponse";
+import type { ConfigReadParams } from "../../generated/app-server/v2/ConfigReadParams";
+import type { ConfigReadResponse } from "../../generated/app-server/v2/ConfigReadResponse";
 import { asError, errorMessage } from "../../shared/errors";
 import {
   TauriAppServerTransport,
@@ -378,6 +380,10 @@ export class AppServerClient {
 
   listModels(params: ModelListParams = {}) {
     return this.request<ModelListResponse>("model/list", params);
+  }
+
+  readConfig(params: ConfigReadParams = {}) {
+    return this.request<ConfigReadResponse>("config/read", params);
   }
 
   readModelProviderCapabilities() {

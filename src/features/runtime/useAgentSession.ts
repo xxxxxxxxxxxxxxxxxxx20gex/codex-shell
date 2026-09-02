@@ -64,6 +64,10 @@ export function useAgentSession(
   clientRef.current ??= new AppServerClient();
   const [sessionState, dispatch] = useReducer(agentSessionReducer, initialAgentSessionState);
   const [codexHome, setCodexHome] = useState("");
+  // Plan mode is a protocol-level collaboration mode. The optional
+  // tools.update_plan flag controls the checklist tool only, so do not use it
+  // to hide Plan mode. Keep this state for runtime capability diagnostics.
+  const [updatePlanEnabled, setUpdatePlanEnabled] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [retryingError, dispatchRetryingError] = useReducer(updateRetryingError, null);
@@ -72,6 +76,7 @@ export function useAgentSession(
   const runtimeNoticeStore = useStableStore(() => new RuntimeNoticeStore());
   const interactionStore: ServerInteractionStore = useStableStore(() => new InteractionStore());
   const sandboxReadinessCheckedRef = useRef(false);
+  const runtimeConfigReadRef = useRef(false);
   const {
     runningTurns,
     markThreadRunning,
@@ -107,9 +112,27 @@ export function useAgentSession(
     if (!client) throw new Error("app-server 客户端尚未初始化");
     if (client.connectionStatus !== "ready") await client.start();
     setCodexHome(client.serverInfo?.codexHome ?? "");
+    if (!runtimeConfigReadRef.current && typeof client.readConfig === "function") {
+      runtimeConfigReadRef.current = true;
+      void client.readConfig({ cwd: projectCwd }).then(({ config }) => {
+        // Older generated schemas do not expose every nested tool flag. Read it
+        // defensively when a runtime provides it; absence means the server's
+        // default. This flag does not gate Plan collaboration mode.
+        const tools = config.tools as unknown as Record<string, unknown> | null;
+        const updatePlan = tools?.update_plan;
+        if (updatePlan && typeof updatePlan === "object" && "enabled" in updatePlan && typeof updatePlan.enabled === "boolean") {
+          setUpdatePlanEnabled(updatePlan.enabled);
+        } else {
+          setUpdatePlanEnabled(true);
+        }
+      }).catch(() => {
+        runtimeConfigReadRef.current = false;
+        setUpdatePlanEnabled(true);
+      });
+    }
     void readSandboxReadiness(client);
     return client;
-  }, [readSandboxReadiness]);
+  }, [projectCwd, readSandboxReadiness]);
 
   const threads = useThreadController({
     clientRef,
@@ -152,6 +175,7 @@ export function useAgentSession(
     removeThread,
     onThreadUnarchived,
     onThreadClosed,
+    onThreadQueueChanged,
     openThread,
     reset: resetThreads,
     refreshHistory,
@@ -197,6 +221,7 @@ export function useAgentSession(
       onThreadDeleted: (notification) => removeThread(notification.threadId),
       onThreadUnarchived: (notification) => onThreadUnarchived(notification.threadId),
       onThreadClosed: (notification) => onThreadClosed(notification.threadId),
+      onThreadQueueChanged,
       onServerRequestResolved: (notification) => interactionStore.dismiss(notification.requestId),
       onWarning: (notification) => runtimeNoticeStore.push({
         kind: "warning",
@@ -274,6 +299,7 @@ export function useAgentSession(
         setCodexHome("");
         setWindowsSandboxReadiness(null);
         sandboxReadinessCheckedRef.current = false;
+        runtimeConfigReadRef.current = false;
         clearRunningTurns();
         interactionStore.clear();
         resetThreads();
@@ -289,6 +315,7 @@ export function useAgentSession(
     interactionStore,
     markThreadStopped,
     onThreadClosed,
+    onThreadQueueChanged,
     onThreadName,
     onThreadStarted,
     onThreadStatus,
@@ -374,6 +401,7 @@ export function useAgentSession(
     clearRunningTurns();
     interactionStore.clear();
     sandboxReadinessCheckedRef.current = false;
+    runtimeConfigReadRef.current = false;
     setWindowsSandboxReadiness(null);
     try {
       await clientRef.current?.stop();
@@ -397,6 +425,7 @@ export function useAgentSession(
 
   return {
     codexHome,
+    updatePlanEnabled,
     running,
     canSteer,
     canInterrupt,

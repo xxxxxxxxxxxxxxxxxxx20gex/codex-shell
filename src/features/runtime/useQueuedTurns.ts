@@ -8,6 +8,8 @@ export const MAX_QUEUED_TURNS_PER_THREAD = 10;
 
 export interface QueuedTurnInput {
   id: string;
+  /** app-server queue id; absent when running against an older runtime. */
+  serverId?: string;
   text: string;
   mentions: FileMention[];
   skills: SkillMention[];
@@ -39,13 +41,29 @@ export function useQueuedTurns() {
   const enqueue = useCallback((
     threadId: string,
     input: Omit<QueuedTurnInput, "id">,
+    id = queuedTurnId(),
   ) => {
     const current = queuedTurnsRef.current.get(threadId) ?? [];
     if (current.length >= MAX_QUEUED_TURNS_PER_THREAD) return false;
     const next = new Map(queuedTurnsRef.current);
-    next.set(threadId, [...current, { ...input, id: queuedTurnId() }]);
+    next.set(threadId, [...current, { ...input, id }]);
     replace(next);
     return true;
+  }, [replace]);
+
+  const setServerId = useCallback((threadId: string, id: string, serverId: string) => {
+    const current = queuedTurnsRef.current.get(threadId);
+    if (!current) return;
+    const next = new Map(queuedTurnsRef.current);
+    next.set(threadId, current.map((item) => item.id === id ? { ...item, serverId } : item));
+    replace(next);
+  }, [replace]);
+
+  const replaceThread = useCallback((threadId: string, inputs: QueuedTurnInput[]) => {
+    const next = new Map(queuedTurnsRef.current);
+    if (inputs.length) next.set(threadId, inputs);
+    else next.delete(threadId);
+    replace(next);
   }, [replace]);
 
   const shift = useCallback((threadId: string) => {
@@ -92,5 +110,5 @@ export function useQueuedTurns() {
     [],
   );
 
-  return { queuedTurns, enqueue, shift, restoreFront, remove, clearThread, clear, get };
+  return { queuedTurns, enqueue, setServerId, replaceThread, shift, restoreFront, remove, clearThread, clear, get };
 }

@@ -72,6 +72,7 @@ export function ConversationTimeline({
   const programmaticScrollRef = useRef(false);
   const manualScrollLockRef = useRef(false);
   const manualScrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const anchorRef = useRef<{ index: number; offset: number } | null>(null);
   const previousThreadIdRef = useRef(threadId);
   const [atBottom, setAtBottom] = useState(true);
   const [hasNewActivity, setHasNewActivity] = useState(false);
@@ -99,6 +100,11 @@ export function ConversationTimeline({
       if (child.offsetTop <= threshold) nextIndex = Number(child.dataset.turnIndex ?? nextIndex);
     });
     setVisibleStartIndex(nextIndex);
+    const anchor = children.find((child) => child.offsetTop + child.offsetHeight > scroller.scrollTop + 1);
+    if (anchor) anchorRef.current = {
+      index: Number(anchor.dataset.turnIndex ?? 0),
+      offset: anchor.getBoundingClientRect().top - scroller.getBoundingClientRect().top,
+    };
   }, []);
 
   const updateBottomState = useCallback((nextAtBottom: boolean) => {
@@ -187,6 +193,34 @@ export function ConversationTimeline({
 
   useEffect(() => () => {
     if (manualScrollTimerRef.current !== null) clearTimeout(manualScrollTimerRef.current);
+  }, []);
+
+  // Content is streamed into existing turns and can change height many times.
+  // Preserve the user's visual anchor while they browse history; only the
+  // follow-latest path is allowed to move the viewport.
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      const anchor = anchorRef.current;
+      if (!anchor || followLatestRef.current || atBottomRef.current) return;
+      const target = scroller.querySelector<HTMLElement>(`[data-turn-index="${anchor.index}"]`);
+      if (!target) return;
+      const nextOffset = target.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+      const delta = nextOffset - anchor.offset;
+      if (Math.abs(delta) > 0.5) {
+        programmaticScrollRef.current = true;
+        scroller.scrollTop += delta;
+        requestAnimationFrame(() => { programmaticScrollRef.current = false; });
+        anchor.offset = nextOffset - delta;
+      }
+    });
+    const observeTurns = () => scroller.querySelectorAll<HTMLElement>("[data-turn-index]").forEach((turn) => observer.observe(turn));
+    observer.observe(scroller);
+    observeTurns();
+    const mutations = typeof MutationObserver === "undefined" ? null : new MutationObserver(observeTurns);
+    mutations?.observe(scroller, { childList: true, subtree: true });
+    return () => { mutations?.disconnect(); observer.disconnect(); };
   }, []);
 
   useLayoutEffect(() => {
