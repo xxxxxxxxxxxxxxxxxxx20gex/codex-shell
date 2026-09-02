@@ -184,9 +184,11 @@ export function useThreadController(props: Props) {
     if (!threadId) throw new Error("请先发送一条消息创建 Session");
     const client = await ensureConnected();
     if (!subscribedThreadIdsRef.current.has(threadId)) {
-      const response = await client.resumeThread({ threadId });
+      const response = await client.resumeThread({ threadId, excludeTurns: true });
       subscribedThreadIdsRef.current.add(threadId);
-      dispatch({ type: "loadThread", thread: response.thread });
+      // History is already paged into the reducer. A metadata-only resume must
+      // not clear it by dispatching loadThread with an empty turns array.
+      dispatch({ type: "updateThread", thread: response.thread });
       applyThreadRuntimeState(response.thread);
     }
     return { client, threadId };
@@ -351,7 +353,7 @@ export function useThreadController(props: Props) {
           openedThread = (await client.readThread({ threadId, includeTurns: true })).thread;
         } catch (readError) {
           if (!canResumeAfterReadError(readError)) throw historyError;
-          openedThread = (await client.resumeThread({ threadId })).thread;
+          openedThread = (await client.resumeThread({ threadId, excludeTurns: true })).thread;
           subscribedThreadIdsRef.current.add(threadId);
         }
       }

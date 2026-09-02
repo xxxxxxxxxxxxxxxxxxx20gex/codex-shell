@@ -65,6 +65,7 @@ describe("AppServerClient", () => {
     await client.start();
     const historyPromise = client.readThreadWithHistory("thread-1", 2);
     const metadataRequest = transport.sent[transport.sent.length - 1];
+    expect(metadataRequest?.params).toEqual({ threadId: "thread-1", includeTurns: false });
     transport.emit({ id: metadataRequest?.id, result: { thread: { id: "thread-1", turns: [], preview: "", ephemeral: false } } });
     await Promise.resolve();
     const turnsRequest = transport.sent[transport.sent.length - 1];

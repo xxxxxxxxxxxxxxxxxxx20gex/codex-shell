@@ -142,7 +142,7 @@ function setup() {
 
 describe("useThreadController", () => {
   it("reads a Session without subscribing and resumes only when sending", async () => {
-    const { client, props } = setup();
+    const { client, props, dispatch } = setup();
     const { result } = renderHook(() => useThreadController(props));
     await waitFor(() => expect(client.listThreads).toHaveBeenCalled());
 
@@ -155,7 +155,11 @@ describe("useThreadController", () => {
     await act(async () => {
       expect(await result.current.send("continue")).toBe(true);
     });
-    expect(client.resumeThread).toHaveBeenCalledWith({ threadId: "thread-a" });
+    expect(client.resumeThread).toHaveBeenCalledWith({ threadId: "thread-a", excludeTurns: true });
+    expect(dispatch).toHaveBeenCalledWith(expect.objectContaining({
+      type: "updateThread",
+      thread: expect.objectContaining({ id: "thread-a" }),
+    }));
     expect(client.startTurn).toHaveBeenCalledWith(expect.objectContaining({
       threadId: "thread-a",
       summary: "auto",
@@ -533,7 +537,7 @@ describe("useThreadController", () => {
       await result.current.openThread("thread-a");
     });
 
-    expect(client.resumeThread).toHaveBeenCalledWith({ threadId: "thread-a" });
+    expect(client.resumeThread).toHaveBeenCalledWith({ threadId: "thread-a", excludeTurns: true });
     expect(dispatch).toHaveBeenCalledWith(expect.objectContaining({ type: "loadThread" }));
   });
 

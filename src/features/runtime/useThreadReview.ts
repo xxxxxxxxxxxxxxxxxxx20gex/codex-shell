@@ -51,10 +51,11 @@ export function useThreadReview({
       } else {
         await unsubscribeIfIdle(threadId);
         subscribedThreadIdsRef.current.add(response.reviewThreadId);
-        const review = await client.readThread({
-          threadId: response.reviewThreadId,
-          includeTurns: true,
-        });
+        const review = typeof client.readThreadWithHistory === "function"
+          ? await client.readThreadWithHistory(response.reviewThreadId)
+          // Test doubles and pre-pagination runtimes may not expose the
+          // helper; retain the legacy path only for those clients.
+          : await client.readThread({ threadId: response.reviewThreadId, includeTurns: true });
         threadIdRef.current = response.reviewThreadId;
         dispatch({ type: "loadThread", thread: review.thread });
         upsertHistory(review.thread);

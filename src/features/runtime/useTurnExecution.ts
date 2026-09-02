@@ -201,7 +201,7 @@ export function useTurnExecution(props: Props) {
     try {
       const client = await props.ensureConnected();
       if (!props.subscribedThreadIdsRef.current.has(threadId)) {
-        await client.resumeThread({ threadId });
+        await client.resumeThread({ threadId, excludeTurns: true });
         props.subscribedThreadIdsRef.current.add(threadId);
       }
       const input = validatedUserInput(
