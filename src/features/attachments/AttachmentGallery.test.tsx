@@ -60,4 +60,20 @@ describe("AttachmentGallery", () => {
     fireEvent.click(screen.getByTitle("预览 screen.png"));
     await waitFor(() => expect(screen.getAllByAltText("screen.png")).toHaveLength(2));
   });
+
+  it("opens a local resource from the preview header", async () => {
+    const onOpenPath = vi.fn().mockResolvedValue(undefined);
+    render(
+      <AttachmentGallery
+        files={[]}
+        images={[{ name: "translated.svg", path: "C:\\work\\translated.svg" }]}
+        readFile={vi.fn().mockResolvedValue("PHN2Zy8+")}
+        onOpenPath={onOpenPath}
+      />,
+    );
+
+    fireEvent.click(screen.getByTitle("预览 translated.svg"));
+    fireEvent.click(screen.getByLabelText("在资源管理器中打开"));
+    await waitFor(() => expect(onOpenPath).toHaveBeenCalledWith("C:\\work\\translated.svg"));
+  });
 });
