@@ -44,7 +44,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .chevron-icon { width: 12px; height: 12px; flex: 0 0 12px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.35; }
 .thread-list { display: flex; min-height: 0; flex: 1; flex-direction: column; gap: 2px; overflow-x: hidden; overflow-y: auto; padding: 0 0 12px 8px; scrollbar-width: none; font-family: var(--font-ui); }
 .thread-list::-webkit-scrollbar { width: 0; height: 0; }
-.thread-list button { justify-content: space-between; min-height: 36px; padding: 9px 10px; color: var(--text-secondary); font-size: 12px; transition: color var(--ui-motion-fast), background-color var(--ui-motion-fast); }
+.thread-list button { justify-content: space-between; min-height: 36px; padding: 9px 10px; color: var(--text-secondary); font-size: 11px; transition: color var(--ui-motion-fast), background-color var(--ui-motion-fast); }
 .thread-list button:disabled { cursor: default; }
 .thread-list button.active { color: var(--text-primary); background: var(--surface-selected); }
 .thread-list button > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

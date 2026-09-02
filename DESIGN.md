@@ -47,7 +47,7 @@ On Windows WebView2, text rasterization follows the platform default (ClearType/
 | `--text-label` | `12px / 16px` | compact labels, menu descriptions, toolbar text |
 | `--text-ui` | `13px / 20px` | buttons, lists, form controls, panels |
 | `--text-title` | `14px / 20px` | panel titles, current session title, emphasized list title |
-| `--text-conversation` | `15px / 24px` | user and assistant messages |
+| `--text-conversation` | `14px / 24px` | user and assistant messages |
 | `--text-conversation-small` | `13px / 20px` | command output, reasoning summaries, file changes |
 
 Rules:
