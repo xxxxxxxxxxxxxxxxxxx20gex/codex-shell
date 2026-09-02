@@ -20,6 +20,7 @@ interface Props {
   processEventsByTurnId?: Record<string, ThreadProcessEvent[]>;
   readFile?: (path: string) => Promise<string>;
   onOpenPath?: (path: string) => void | Promise<void>;
+  onOpenInExplorer?: (path: string) => void | Promise<void>;
   onOpenError?: (message: string) => void;
 }
 
@@ -61,6 +62,7 @@ export function ConversationTimeline({
   processEventsByTurnId = EMPTY_PROCESS_EVENTS,
   readFile,
   onOpenPath,
+  onOpenInExplorer,
   onOpenError,
 }: Props) {
   const scrollerRef = useRef<HTMLDivElement | null>(null);
@@ -243,6 +245,7 @@ export function ConversationTimeline({
               processEvents={processEventsByTurnId[turn.id] ?? []}
               readFile={readFile}
               onOpenPath={onOpenPath}
+              onOpenInExplorer={onOpenInExplorer}
               onOpenError={onOpenError}
             />
           </div>

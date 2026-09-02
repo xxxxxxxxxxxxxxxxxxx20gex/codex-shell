@@ -24,6 +24,7 @@ pub fn run() {
             config::save_personalization_settings,
             credentials::save_api_key,
             workspace::get_default_project_directory,
+            workspace::reveal_path_in_explorer,
         ])
         .run(tauri::generate_context!())
         .expect("failed to run Codex Shell");

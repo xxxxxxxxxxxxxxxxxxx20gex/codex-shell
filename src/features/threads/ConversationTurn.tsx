@@ -27,6 +27,7 @@ interface Props {
   processEvents?: ThreadProcessEvent[];
   readFile?: (path: string) => Promise<string>;
   onOpenPath?: (path: string) => void | Promise<void>;
+  onOpenInExplorer?: (path: string) => void | Promise<void>;
   onOpenError?: (message: string) => void;
 }
 
@@ -102,6 +103,7 @@ export function ConversationTurn({
   processEvents = [],
   readFile,
   onOpenPath,
+  onOpenInExplorer,
   onOpenError,
 }: Props) {
   const items = turn.items;
@@ -241,7 +243,7 @@ export function ConversationTurn({
           )}
         </Fragment>
       ))}
-      {!active && <TurnResourceOutputs items={items} readFile={readFile} onOpenPath={onOpenPath} />}
+      {!active && <TurnResourceOutputs items={items} readFile={readFile} onOpenPath={onOpenPath} onOpenInExplorer={onOpenInExplorer} />}
       {active && answerItems.length === 0 && activityItems.length === 0 && (
         <TurnActivityGroup
           items={[]}

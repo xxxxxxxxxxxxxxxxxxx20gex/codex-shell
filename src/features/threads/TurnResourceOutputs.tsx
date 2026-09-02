@@ -6,6 +6,7 @@ interface Props {
   items: ThreadItem[];
   readFile?: (path: string) => Promise<string>;
   onOpenPath?: (path: string) => void | Promise<void>;
+  onOpenInExplorer?: (path: string) => void | Promise<void>;
 }
 
 function baseName(path: string) {
@@ -27,7 +28,7 @@ function resourceKind(path: string): "image" | "pdf" | "spreadsheet" | null {
   return null;
 }
 
-export function TurnResourceOutputs({ items, readFile, onOpenPath }: Props) {
+export function TurnResourceOutputs({ items, readFile, onOpenPath, onOpenInExplorer }: Props) {
   const paths = new Set<string>();
   const images: string[] = [];
   const files: string[] = [];
@@ -53,7 +54,7 @@ export function TurnResourceOutputs({ items, readFile, onOpenPath }: Props) {
     <header><strong>本轮产出</strong><small>{images.length + files.length} 个资源</small></header>
     {images.length > 0 && <div className="turn-resource-images">
       {images.map((path) => readFile
-        ? <ImageAttachmentPreview key={path} path={path} name={baseName(path)} readFile={readFile} onOpenPath={onOpenPath} />
+        ? <ImageAttachmentPreview key={path} path={path} name={baseName(path)} readFile={readFile} onOpenPath={onOpenPath} onOpenInExplorer={onOpenInExplorer} />
         : <span className="turn-resource-unavailable" key={path}><ImageIcon aria-hidden="true" />{baseName(path)}</span>)}
     </div>}
     {files.length > 0 && <ul className="turn-resource-files">

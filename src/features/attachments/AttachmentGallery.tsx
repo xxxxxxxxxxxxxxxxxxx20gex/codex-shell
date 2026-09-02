@@ -15,6 +15,7 @@ interface Props {
   onRemoveFile?: (path: string) => void;
   onRemoveImage?: (index: number) => void;
   onOpenPath?: (path: string) => void | Promise<void>;
+  onOpenInExplorer?: (path: string) => void | Promise<void>;
   align?: "start" | "end";
 }
 
@@ -64,7 +65,7 @@ function ImageThumbnail({ image, readFile }: { image: ImageAttachment; readFile:
   return <span className="attachment-image-fallback" aria-hidden="true">IMG</span>;
 }
 
-export function ImageAttachmentPreview({ path, name, readFile, onOpenPath }: { path: string; name?: string; readFile: ReadFile; onOpenPath?: (path: string) => void | Promise<void> }) {
+export function ImageAttachmentPreview({ path, name, readFile, onOpenPath, onOpenInExplorer }: { path: string; name?: string; readFile: ReadFile; onOpenPath?: (path: string) => void | Promise<void>; onOpenInExplorer?: (path: string) => void | Promise<void> }) {
   const [open, setOpen] = useState(false);
   const image: ImageAttachment = { path, name: name ?? path.split(/[\\/]/).pop() ?? path };
   return (
@@ -73,16 +74,17 @@ export function ImageAttachmentPreview({ path, name, readFile, onOpenPath }: { p
         <ImageThumbnail image={image} readFile={readFile} />
         <span>{image.name}</span>
       </button>
-      {open && <AttachmentPreviewDialog target={{ kind: "image", ...image }} readFile={readFile} onClose={() => setOpen(false)} onOpenPath={onOpenPath} />}
+      {open && <AttachmentPreviewDialog target={{ kind: "image", ...image }} readFile={readFile} onClose={() => setOpen(false)} onOpenPath={onOpenPath} onOpenInExplorer={onOpenInExplorer} />}
     </>
   );
 }
 
-function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath }: {
+function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath, onOpenInExplorer }: {
   target: PreviewTarget;
   readFile: ReadFile;
   onClose: () => void;
   onOpenPath?: (path: string) => void | Promise<void>;
+  onOpenInExplorer?: (path: string) => void | Promise<void>;
 }) {
   const local = usePathPreview(target.path, readFile, Boolean(target.path));
   const preview = target.kind === "image" && target.url
@@ -115,7 +117,7 @@ function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath }: {
         <header>
           <div><strong>{target.name}</strong><small>{target.path ?? "剪贴板图片"}</small></div>
           <div className="attachment-preview-actions">
-            {target.path && onOpenPath && <button type="button" onClick={() => void openResource()} aria-label="在资源管理器中打开" title="在资源管理器中打开"><FolderOpen aria-hidden="true" /></button>}
+            {target.path && (onOpenInExplorer || onOpenPath) && <button type="button" onClick={() => void (onOpenInExplorer ? onOpenInExplorer(target.path!) : openResource())} aria-label="在资源管理器中打开" title="在资源管理器中打开"><FolderOpen aria-hidden="true" /></button>}
             <button type="button" onClick={onClose} aria-label="关闭附件预览"><X aria-hidden="true" /></button>
           </div>
         </header>
@@ -140,6 +142,7 @@ export function AttachmentGallery({
   onRemoveFile,
   onRemoveImage,
   onOpenPath,
+  onOpenInExplorer,
   align = "start",
 }: Props) {
   const [previewTarget, setPreviewTarget] = useState<PreviewTarget | null>(null);
@@ -167,7 +170,7 @@ export function AttachmentGallery({
           </div>
         ))}
       </div>
-      {previewTarget && <AttachmentPreviewDialog target={previewTarget} readFile={readFile} onClose={() => setPreviewTarget(null)} onOpenPath={onOpenPath} />}
+      {previewTarget && <AttachmentPreviewDialog target={previewTarget} readFile={readFile} onClose={() => setPreviewTarget(null)} onOpenPath={onOpenPath} onOpenInExplorer={onOpenInExplorer} />}
     </>
   );
 }

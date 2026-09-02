@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
+import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState, type CSSProperties } from "react";
 import "./App.css";
 import { PermissionModeSelector } from "./features/approvals/PermissionModeSelector";
@@ -179,6 +180,10 @@ function App() {
     await revealItemInDir(resolvedPath);
   }
 
+  async function openResourceInExplorer(path: string) {
+    await invoke("reveal_path_in_explorer", { path });
+  }
+
   return (
     <main className="app-shell" data-theme={personalization.theme}>
       <WindowTitleBar />
@@ -268,6 +273,7 @@ function App() {
               processEventsByTurnId={session.processEventsByTurnId}
               readFile={session.readWorkspaceFile}
               onOpenPath={openConversationPath}
+              onOpenInExplorer={openResourceInExplorer}
               onOpenError={setUiError}
             />
           ) : (
