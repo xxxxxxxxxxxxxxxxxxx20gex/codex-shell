@@ -35,7 +35,7 @@ describe("sendOrQueue", () => {
 
     await expect(sendOrQueue({ running: true, send, queue }, "next task", [], [], "default"))
       .resolves.toBe(true);
-    expect(queue).toHaveBeenCalledWith("next task", [], [], "default");
+    expect(queue).toHaveBeenCalledWith("next task", [], [], "default", []);
     expect(send).not.toHaveBeenCalled();
   });
 
@@ -45,7 +45,7 @@ describe("sendOrQueue", () => {
 
     await expect(sendOrQueue({ running: false, send, queue }, "new task", [], [], "plan"))
       .resolves.toBe(true);
-    expect(send).toHaveBeenCalledWith("new task", [], [], "plan");
+    expect(send).toHaveBeenCalledWith("new task", [], [], "plan", []);
     expect(queue).not.toHaveBeenCalled();
   });
 });

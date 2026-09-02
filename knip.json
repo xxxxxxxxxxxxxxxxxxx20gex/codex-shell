@@ -1,4 +1,18 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "ignore": ["src/generated/**"]
+  "entry": [
+    "src/main.tsx",
+    "vite.config.ts",
+    "eslint.config.js",
+    "tests/**/*.test.{ts,tsx}"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "!src/generated/**",
+    "tests/**/*.{ts,tsx}",
+    "tests/scripts/**/*.{js,mjs}",
+    "vite.config.ts",
+    "eslint.config.js"
+  ],
+  "ignore": ["src/generated/**", "src-tauri/**", "dist/**", "bundled/**"]
 }

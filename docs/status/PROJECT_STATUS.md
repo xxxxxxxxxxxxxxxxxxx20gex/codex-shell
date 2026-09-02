@@ -3,11 +3,11 @@
 - 当前阶段：Milestone 2 - P0 桌面编程工作台
 - 总体状态：核心对话、Session、工具活动、审批、文件、Diff 和模型配置可用；已具备可复验的 NSIS Windows 安装包发布链路，签名、CI 与 Runtime 恢复能力尚未完成。
 - 文档边界：本文件只记录跨模块当前快照、项目级风险、下一里程碑和完整验证基线。模块行为和定向证据以 [模块状态索引](../README.md#当前状态) 为准，历史由 Git 保留。
-- 最后更新：2026-08-26
+- 最后更新：2026-09-02
 
 ## 跨模块当前快照
 
-- 产品使用 Tauri 2、React、TypeScript 与 Rust 构建，以原版 `codex app-server` 为唯一执行核心，通过 stdio JSON-RPC 通信；Runtime 更新通过兼容门禁，发布 manifest 记录实际版本、哈希和 companion binaries。参见 [ADR-001](../decisions/ADR-001-unmodified-codex-app-server.md) 与 [ADR-003](../decisions/ADR-003-compatible-runtime-updates.md)。
+- 产品使用 Tauri 2、React、TypeScript 与 Rust 构建，以原版 `codex app-server` 为唯一执行核心，通过 stdio JSON-RPC 通信；当前暂存 Runtime 为 `codex-cli 0.152.1`，更新通过兼容门禁，发布 manifest 记录实际版本、哈希和 companion binaries。参见 [ADR-001](../decisions/ADR-001-unmodified-codex-app-server.md) 与 [ADR-003](../decisions/ADR-003-compatible-runtime-updates.md)。
 - 核心工作流已形成闭环：用户可以选择项目、创建和恢复多个 Session、发送文本/文件/图片、查看结构化执行时间线、处理审批、审查实时与历史 Diff，并按完成 Turn 分叉会话。
 - Composer 已统一模型、推理强度、权限、Goal、Plan、Review、Skills、MCP 和压缩入口；Thread 的模型、权限、审批者和 Goal 状态以 Core 权威通知及查询结果为准，不在 Shell 维护第二套执行状态。
 - Windows 桌面界面已收敛到 `DESIGN.md` 和语义 Token；三栏布局在窄窗口下保留功能入口，设置承载个性化、外观、运行环境和诊断，右栏提供项目文件浏览和独立只读侧边聊天。
@@ -34,6 +34,8 @@
 4. 在 Runtime 或读取协议层增加大文件、Diff 和活动输出预算，避免只依赖前端截断。
 
 ## 完整验证基线
+
+- 2026-09-02：代码健康审查移除未被消费的 `tools.update_plan.enabled` 诊断读取、`config/read` 客户端包装和 `sendOrQueue` 的重复图片分支；保留生成协议类型及历史/旧 Runtime 兼容逻辑。`pnpm lint`、`pnpm typecheck`、57 个 Vitest 文件/261 个测试、Vite production build、Rust check、14 个 Rust 单测和 Clippy 通过。Knip 在 OXC 解析阶段因本机 ArrayBuffer 分配失败退出，未产生诊断；该结果不作为无效代码通过证据。
 
 - 2026-08-21：固定 Runtime `0.148.0-alpha.15` 的 Thread 权威 settings/Goal 同步、审查状态单调更新及原生滚动条释放与可信 scroll 兜底完成；时间线移除 react-virtuoso，改用单一原生滚动容器、程序定位隔离、用户滚动 settle 锁、运行中受控贴底和 Session 切换重置；新增 Session 临时提示关闭/自动消失。
 - 2026-08-25：项目文件浏览器改为以内嵌方式挂载到右侧 inspector，与侧边聊天共享面板生命周期；标题栏操作统一为无边框图标按钮，最大化/恢复直接控制右侧栏宽度，长项目路径不会再挤出关闭操作区；时间线离开底部后使用三个图标按钮跳转上一条用户消息、下一条用户消息和最新位置；清理未再被 App 引用的旧 DiffInspector 组件、样式和测试。TypeScript、ESLint、57 个 Vitest 文件/256 项测试、Vite production build、Rust check、14 项 Rust 单测、Clippy 和 Tauri debug build 通过；确认默认 target 的拒绝访问来自仍在运行的本项目 app-server，构建脚本现会按路径只回收该项目 target 下的旧进程后再构建；Knip 仍受 Windows/Node Oxc parser 内存分配失败影响。
