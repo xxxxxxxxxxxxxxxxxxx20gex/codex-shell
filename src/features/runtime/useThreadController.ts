@@ -13,6 +13,8 @@ import type { ThreadStartedNotification } from "../../generated/app-server/v2/Th
 import type { ThreadStatusChangedNotification } from "../../generated/app-server/v2/ThreadStatusChangedNotification";
 import type { TurnCompletedNotification } from "../../generated/app-server/v2/TurnCompletedNotification";
 import type { TurnStartedNotification } from "../../generated/app-server/v2/TurnStartedNotification";
+import type { ThreadSettingsUpdateParams } from "../../generated/app-server/v2/ThreadSettingsUpdateParams";
+import type { TurnSettingsUpdateParams } from "../../generated/app-server/v2/TurnSettingsUpdateParams";
 import { errorMessage } from "../../shared/errors";
 import type { ApprovalReviewerMode, PermissionMode } from "../approvals/permissionModes";
 import type { ModelSettings, PersonalizationSettings } from "../models/types";
@@ -171,6 +173,32 @@ export function useThreadController(props: Props) {
     showActiveWith,
   });
 
+  /**
+   * Apply settings through app-server without recreating the thread. The
+   * server remains authoritative and emits thread/settings/updated, which is
+   * consumed by the session reducer. When a live turn supports publication,
+   * also publish the same model controls to that turn.
+   */
+  const updateThreadSettings = useCallback(async (params: Omit<ThreadSettingsUpdateParams, "threadId">) => {
+    const threadId = threadIdRef.current;
+    if (!threadId) return false;
+    const { client } = await ensureActiveThread();
+    await client.updateThreadSettings({ threadId, ...params });
+    const runningTurn = getRunningTurn(threadId);
+    if (runningTurn?.turnId && (params.model !== undefined || params.effort !== undefined || params.summary !== undefined || params.serviceTier !== undefined)) {
+      const turnParams: TurnSettingsUpdateParams = {
+        threadId,
+        turnId: runningTurn.turnId,
+        model: params.model,
+        effort: params.effort,
+        summary: params.summary,
+        serviceTier: params.serviceTier,
+      };
+      await client.updateTurnSettings(turnParams);
+    }
+    return true;
+  }, [ensureActiveThread, getRunningTurn]);
+
   const queue = useCallback((
     text: string,
     mentions: FileMention[] = [],
@@ -253,11 +281,17 @@ export function useThreadController(props: Props) {
       const client = await ensureConnected();
       let openedThread: Thread;
       try {
-        openedThread = (await client.readThread({ threadId, includeTurns: true })).thread;
-      } catch (readError) {
-        if (!canResumeAfterReadError(readError)) throw readError;
-        openedThread = (await client.resumeThread({ threadId })).thread;
-        subscribedThreadIdsRef.current.add(threadId);
+        // Prefer the paginated history contract so opening a large session
+        // does not block the renderer with one unbounded payload.
+        openedThread = (await client.readThreadWithHistory(threadId)).thread;
+      } catch (historyError) {
+        try {
+          openedThread = (await client.readThread({ threadId, includeTurns: true })).thread;
+        } catch (readError) {
+          if (!canResumeAfterReadError(readError)) throw historyError;
+          openedThread = (await client.resumeThread({ threadId })).thread;
+          subscribedThreadIdsRef.current.add(threadId);
+        }
       }
       threadIdRef.current = openedThread.id;
       applyThreadRuntimeState(openedThread);
@@ -415,6 +449,7 @@ export function useThreadController(props: Props) {
     resumeQueued,
     steer,
     interrupt,
+    updateThreadSettings,
     openThread,
     startNewTask,
     renameThread,

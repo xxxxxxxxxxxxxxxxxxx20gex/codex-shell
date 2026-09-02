@@ -4,6 +4,9 @@ import type { FuzzyFileSearchResult } from "../../generated/app-server/FuzzyFile
 import {
   DEFAULT_APPROVAL_REVIEWER,
   DEFAULT_PERMISSION_MODE,
+  getApprovalsReviewer,
+  getPermissionMode,
+  getTurnSandboxPolicy,
   type ApprovalReviewerMode,
   type PermissionMode,
 } from "../approvals/permissionModes";
@@ -113,6 +116,14 @@ export function useAppController() {
     setSettings(next);
     if ("__TAURI_INTERNALS__" in window) {
       void invoke("save_model_settings", { settings: next }).catch((error) => setUiError(errorMessage(error)));
+    }
+    if (session.thread) {
+      void session.updateThreadSettings({
+        model: next.modelId,
+        effort: next.reasoningEffort,
+        summary: next.reasoningSummary,
+        serviceTier: next.serviceTier === "default" ? null : next.serviceTier,
+      }).catch((error) => setUiError(`Session 设置未能同步到 app-server：${errorMessage(error)}`));
     }
   }
 
@@ -366,6 +377,14 @@ export function useAppController() {
     if (next === permissionMode) return;
     setPermissionMode(next);
     setCommandNotice("权限设置将在当前 Session 的下一条消息生效。");
+    if (session.thread) {
+      const mode = getPermissionMode(next);
+      void session.updateThreadSettings({
+        approvalPolicy: mode.approvalPolicy,
+        approvalsReviewer: getApprovalsReviewer(next, approvalReviewer),
+        sandboxPolicy: getTurnSandboxPolicy(next),
+      }).catch((error) => setUiError(`权限设置未能同步到 app-server：${errorMessage(error)}`));
+    }
   }
 
   function changeApprovalReviewer(next: ApprovalReviewerMode) {
@@ -374,6 +393,10 @@ export function useAppController() {
     setCommandNotice(next === "auto_review"
       ? "自动风险审查将在下一条消息生效。"
       : "受保护操作将在下一条消息起由你审批。");
+    if (session.thread) {
+      void session.updateThreadSettings({ approvalsReviewer: getApprovalsReviewer(permissionMode, next) })
+        .catch((error) => setUiError(`审批策略未能同步到 app-server：${errorMessage(error)}`));
+    }
   }
 
   function changeProject(path: string | null) {

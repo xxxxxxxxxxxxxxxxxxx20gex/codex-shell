@@ -17,9 +17,10 @@ describe("McpStatusPanel", () => {
       text: "x".repeat(120_000),
     }]);
     render(
-      <McpStatusPanel
+        <McpStatusPanel
         loadServers={vi.fn(async () => [{
           name: "docs",
+          runtimeStatus: null,
           pluginId: null,
           serverInfo: null,
           tools: {},
@@ -47,6 +48,7 @@ describe("McpStatusPanel", () => {
       <McpStatusPanel
         loadServers={vi.fn(async () => [{
           name: "unsafe",
+          runtimeStatus: null,
           pluginId: null,
           serverInfo: null,
           tools: {},
@@ -70,6 +72,7 @@ describe("McpStatusPanel", () => {
       <McpStatusPanel
         loadServers={vi.fn(async () => [{
           name: "safe",
+          runtimeStatus: null,
           pluginId: null,
           serverInfo: null,
           tools: {},

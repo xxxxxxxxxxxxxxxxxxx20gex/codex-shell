@@ -29,6 +29,7 @@ function thread(turns: Turn[] = []): Thread {
     section: null,
     sectionEnteredAt: null,
     projectId: null,
+    historyMode: "legacy",
     modelProvider: "openai",
     createdAt: 1,
     updatedAt: 2,

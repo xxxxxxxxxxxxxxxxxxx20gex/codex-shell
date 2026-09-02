@@ -40,6 +40,28 @@ import type { ThreadGoalSetParams } from "../../generated/app-server/v2/ThreadGo
 import type { ThreadGoalSetResponse } from "../../generated/app-server/v2/ThreadGoalSetResponse";
 import type { ThreadListParams } from "../../generated/app-server/v2/ThreadListParams";
 import type { ThreadListResponse } from "../../generated/app-server/v2/ThreadListResponse";
+import type { ThreadTurnsListParams } from "../../generated/app-server/v2/ThreadTurnsListParams";
+import type { ThreadTurnsListResponse } from "../../generated/app-server/v2/ThreadTurnsListResponse";
+import type { ThreadItemsListParams } from "../../generated/app-server/v2/ThreadItemsListParams";
+import type { ThreadItemsListResponse } from "../../generated/app-server/v2/ThreadItemsListResponse";
+import type { ThreadTimelineListParams } from "../../generated/app-server/v2/ThreadTimelineListParams";
+import type { ThreadTimelineListResponse } from "../../generated/app-server/v2/ThreadTimelineListResponse";
+import type { ThreadSettingsUpdateParams } from "../../generated/app-server/v2/ThreadSettingsUpdateParams";
+import type { ThreadSettingsUpdateResponse } from "../../generated/app-server/v2/ThreadSettingsUpdateResponse";
+import type { TurnSettingsUpdateParams } from "../../generated/app-server/v2/TurnSettingsUpdateParams";
+import type { TurnSettingsUpdateResponse } from "../../generated/app-server/v2/TurnSettingsUpdateResponse";
+import type { ThreadQueueAddParams } from "../../generated/app-server/v2/ThreadQueueAddParams";
+import type { ThreadQueueAddResponse } from "../../generated/app-server/v2/ThreadQueueAddResponse";
+import type { ThreadQueueListParams } from "../../generated/app-server/v2/ThreadQueueListParams";
+import type { ThreadQueueListResponse } from "../../generated/app-server/v2/ThreadQueueListResponse";
+import type { ThreadQueueUpdateParams } from "../../generated/app-server/v2/ThreadQueueUpdateParams";
+import type { ThreadQueueUpdateResponse } from "../../generated/app-server/v2/ThreadQueueUpdateResponse";
+import type { ThreadQueueDeleteParams } from "../../generated/app-server/v2/ThreadQueueDeleteParams";
+import type { ThreadQueueDeleteResponse } from "../../generated/app-server/v2/ThreadQueueDeleteResponse";
+import type { ThreadQueueReorderParams } from "../../generated/app-server/v2/ThreadQueueReorderParams";
+import type { ThreadQueueReorderResponse } from "../../generated/app-server/v2/ThreadQueueReorderResponse";
+import type { ThreadQueueStartParams } from "../../generated/app-server/v2/ThreadQueueStartParams";
+import type { ThreadQueueStartResponse } from "../../generated/app-server/v2/ThreadQueueStartResponse";
 import type { ThreadMetadataUpdateParams } from "../../generated/app-server/v2/ThreadMetadataUpdateParams";
 import type { ThreadMetadataUpdateResponse } from "../../generated/app-server/v2/ThreadMetadataUpdateResponse";
 import type { ThreadReadParams } from "../../generated/app-server/v2/ThreadReadParams";
@@ -213,6 +235,73 @@ export class AppServerClient {
 
   readThread(params: ThreadReadParams) {
     return this.request<ThreadReadResponse>("thread/read", params);
+  }
+
+  /**
+   * Hydrate a thread using the paginated history API introduced by newer
+   * runtimes. Older runtimes may reject the endpoint, so callers can safely
+   * fall back to the legacy includeTurns read without changing semantics.
+   */
+  async readThreadWithHistory(threadId: string, limit = 200) {
+    const metadata = await this.readThread({ threadId, includeTurns: false });
+    let cursor: string | null = null;
+    const turns: ThreadTurnsListResponse["data"] = [];
+    do {
+      const page = await this.listThreadTurns({
+        threadId,
+        cursor,
+        limit: Math.max(1, Math.min(limit - turns.length, 200)),
+        sortDirection: "asc",
+        itemsView: "full",
+      });
+      turns.push(...page.data);
+      cursor = page.nextCursor;
+    } while (cursor !== null && turns.length < limit);
+    return { thread: { ...metadata.thread, turns: turns.slice(-limit) } };
+  }
+
+  listThreadTurns(params: ThreadTurnsListParams) {
+    return this.request<ThreadTurnsListResponse>("thread/turns/list", params);
+  }
+
+  listThreadItems(params: ThreadItemsListParams) {
+    return this.request<ThreadItemsListResponse>("thread/items/list", params);
+  }
+
+  listThreadTimeline(params: ThreadTimelineListParams) {
+    return this.request<ThreadTimelineListResponse>("thread/timeline/list", params);
+  }
+
+  updateThreadSettings(params: ThreadSettingsUpdateParams) {
+    return this.request<ThreadSettingsUpdateResponse>("thread/settings/update", params);
+  }
+
+  updateTurnSettings(params: TurnSettingsUpdateParams) {
+    return this.request<TurnSettingsUpdateResponse>("turn/settings/update", params);
+  }
+
+  addQueuedSubmission(params: ThreadQueueAddParams) {
+    return this.request<ThreadQueueAddResponse>("thread/queue/add", params);
+  }
+
+  listQueuedSubmissions(params: ThreadQueueListParams) {
+    return this.request<ThreadQueueListResponse>("thread/queue/list", params);
+  }
+
+  updateQueuedSubmission(params: ThreadQueueUpdateParams) {
+    return this.request<ThreadQueueUpdateResponse>("thread/queue/update", params);
+  }
+
+  deleteQueuedSubmission(params: ThreadQueueDeleteParams) {
+    return this.request<ThreadQueueDeleteResponse>("thread/queue/delete", params);
+  }
+
+  reorderQueuedSubmissions(params: ThreadQueueReorderParams) {
+    return this.request<ThreadQueueReorderResponse>("thread/queue/reorder", params);
+  }
+
+  startQueuedSubmission(params: ThreadQueueStartParams) {
+    return this.request<ThreadQueueStartResponse>("thread/queue/start", params);
   }
 
   forkThread(params: ThreadForkParams) {

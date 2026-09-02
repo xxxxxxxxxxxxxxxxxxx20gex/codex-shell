@@ -59,6 +59,37 @@ describe("AppServerClient", () => {
     await expect(responsePromise).resolves.toEqual({ ok: true });
   });
 
+  it("hydrates paginated history and preserves server order", async () => {
+    const transport = new FakeTransport();
+    const client = new AppServerClient(transport);
+    await client.start();
+    const historyPromise = client.readThreadWithHistory("thread-1", 2);
+    const metadataRequest = transport.sent[transport.sent.length - 1];
+    transport.emit({ id: metadataRequest?.id, result: { thread: { id: "thread-1", turns: [], preview: "", ephemeral: false } } });
+    await Promise.resolve();
+    const turnsRequest = transport.sent[transport.sent.length - 1];
+    expect(turnsRequest?.method).toBe("thread/turns/list");
+    expect(turnsRequest?.params).toEqual(expect.objectContaining({ threadId: "thread-1", sortDirection: "asc", itemsView: "full", limit: 2 }));
+    transport.emit({ id: turnsRequest?.id, result: { data: [{ id: "turn-1" }, { id: "turn-2" }], nextCursor: null, backwardsCursor: null } });
+    await expect(historyPromise).resolves.toMatchObject({ thread: { id: "thread-1", turns: [{ id: "turn-1" }, { id: "turn-2" }] } });
+  });
+
+  it("exposes native live settings and queue requests without creating a thread", async () => {
+    const transport = new FakeTransport();
+    const client = new AppServerClient(transport);
+    await client.start();
+    const settingsPromise = client.updateThreadSettings({ threadId: "thread-1", model: "gpt-5.6-sol", effort: "high" });
+    const settingsRequest = transport.sent[transport.sent.length - 1];
+    expect(settingsRequest?.method).toBe("thread/settings/update");
+    transport.emit({ id: settingsRequest?.id, result: {} });
+    await settingsPromise;
+    const queuePromise = client.addQueuedSubmission({ threadId: "thread-1", clientUserMessageId: "client-1", input: [{ type: "text", text: "queued", text_elements: [] }] });
+    const queueRequest = transport.sent[transport.sent.length - 1];
+    expect(queueRequest?.method).toBe("thread/queue/add");
+    transport.emit({ id: queueRequest?.id, result: { queuedSubmission: { id: "queued-1", clientUserMessageId: "client-1", input: [] } } });
+    await expect(queuePromise).resolves.toMatchObject({ queuedSubmission: { id: "queued-1" } });
+  });
+
   it("subscribes to app-server stderr logs and disposes the transport listener", async () => {
     const transport = new FakeTransport();
     const client = new AppServerClient(transport);

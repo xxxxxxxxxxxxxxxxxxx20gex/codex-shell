@@ -7,6 +7,7 @@ describe("ServerInteractionStore", () => {
     return {
       kind: "commandApproval" as const,
       params: {
+        kind: "command" as const,
         threadId: "thread-1",
         turnId: "turn-1",
         itemId,
@@ -29,6 +30,7 @@ describe("ServerInteractionStore", () => {
     const result = store.request(1, {
       kind: "commandApproval",
       params: {
+        kind: "command" as const,
         threadId: "thread-1",
         turnId: "turn-1",
         itemId: "item-1",
