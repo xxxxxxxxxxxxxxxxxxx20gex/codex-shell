@@ -37,6 +37,8 @@ The design direction is **Quiet Graphite Workbench**:
 
 Use weights `400`, `500`, and `600` only. Letter spacing is always `0`.
 
+On Windows WebView2, text rasterization follows the platform default (ClearType/subpixel where available); the application must not force a thinner `antialiased` mode.
+
 ### Scale
 
 | Token | Size / line height | Use |

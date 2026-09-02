@@ -3,8 +3,10 @@
   color: var(--text-primary);
   background: var(--surface-canvas);
   font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
+  /* Let Windows WebView2 use its native ClearType/subpixel text rasterizer.
+   * Forcing `antialiased` makes small Chinese glyphs look thin and jagged. */
+  text-rendering: auto;
+  -webkit-font-smoothing: auto;
 }
 
 * { box-sizing: border-box; }

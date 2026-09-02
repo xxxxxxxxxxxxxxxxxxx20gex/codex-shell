@@ -35,3 +35,4 @@
 - 附件顶部的资源管理器操作改为调用 CS 自有 `reveal_path_in_explorer` Tauri 命令，Windows 端使用 `explorer.exe /select,<path>` 定位文件，避免 opener 插件对本地路径无响应；项目内预览跳转逻辑保持不变。
 - 预览按钮统一通过同一错误处理入口调用资源打开回调，避免 Tauri 打开失败时静默无反馈。
 - 用户消息新增与回答一致的复制操作，仅复制消息正文，不包含附件、Skill 或内部元数据。
+- 全局文字渲染改回 Windows WebView2 默认抗锯齿，移除强制 `antialiased` 与 `optimizeLegibility`，改善中文小字号边缘偏硬、偏细的问题。
