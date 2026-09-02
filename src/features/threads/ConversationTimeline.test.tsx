@@ -100,6 +100,7 @@ describe("conversation timing", () => {
     );
 
     expect(markup).toContain('aria-label="复制回答"');
+    expect(markup).toContain('aria-label="复制消息"');
     expect(markup).toContain('aria-label="分叉 Session"');
   });
 
