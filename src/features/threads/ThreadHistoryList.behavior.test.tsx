@@ -81,6 +81,7 @@ describe("ThreadHistoryList behavior", () => {
 
     fireEvent.contextMenu(row as HTMLElement);
 
+    expect(row?.classList.contains("action-open")).toBe(true);
     expect(row?.querySelector(".thread-actions")?.classList.contains("menu-open")).toBe(true);
     expect(screen.getByRole("menu")).toBeTruthy();
     expect(screen.getByRole("button", { name: "复制 Session ID" })).toBeTruthy();

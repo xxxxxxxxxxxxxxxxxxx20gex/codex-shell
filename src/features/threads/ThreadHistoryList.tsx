@@ -127,7 +127,7 @@ export function ThreadHistoryList(props: Props) {
             ? copyFeedback.label
             : `复制 Session ${referenceKind}`;
           return (
-            <div className={`thread-row ${thread.id === props.activeThreadId ? "active" : ""} ${running ? "running" : ""} ${thread.forkedFromId ? "branched" : ""}`} style={{ "--thread-depth": threadBranchDepth(thread, props.threads) } as CSSProperties} key={thread.id} onContextMenu={(event) => { event.preventDefault(); setOpenActionThreadId(thread.id); }}>
+            <div className={`thread-row ${thread.id === props.activeThreadId ? "active" : ""} ${running ? "running" : ""} ${thread.forkedFromId ? "branched" : ""} ${openActionThreadId === thread.id ? "action-open" : ""}`} style={{ "--thread-depth": threadBranchDepth(thread, props.threads) } as CSSProperties} key={thread.id} onContextMenu={(event) => { event.preventDefault(); setOpenActionThreadId(thread.id); }}>
               <button
                 className="thread-main"
                 disabled={busy || props.archived}
