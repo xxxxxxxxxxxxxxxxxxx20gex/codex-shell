@@ -92,9 +92,11 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .agent-response th { background: var(--surface-raised); }
 .agent-response hr { margin: 18px 0; border: 0; border-top: 1px solid var(--border-subtle); }
 .message-timing { color: var(--text-muted); font: var(--text-meta)/16px var(--font-mono); font-variant-numeric: tabular-nums; }
-.user-message-timing { margin: 8px 3px 0; text-align: right; }
+.user-message-meta { display: flex; min-height: 28px; align-items: center; justify-content: flex-end; gap: 6px; margin-top: 4px; }
+.user-message-timing { margin: 0 3px 0 0; text-align: right; }
 .agent-message-timing { margin-top: 8px; }
 .message-actions { display: flex; gap: 4px; margin-top: 7px; }
+.user-message-actions { margin-top: 0; }
 .message-actions button { display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center; padding: 0; border: 1px solid transparent; border-radius: var(--radius-control); color: var(--text-muted); background: transparent; cursor: pointer; }
 .message-actions button:hover, .message-actions button:focus-visible { border-color: var(--border-default); color: var(--accent-action); background: var(--surface-raised); }
 .message-actions svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.75; }

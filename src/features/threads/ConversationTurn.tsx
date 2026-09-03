@@ -177,12 +177,22 @@ export function ConversationTurn({
                     <AttachmentGallery files={message.files} images={message.images} readFile={readFile} onOpenPath={onOpenPath} align="end" />
                   )}
                   {message.text && <div className="user-message">{message.text}</div>}
-                  {message.text && <div className="message-actions user-message-actions"><button type="button" onClick={() => void copyUserMessage(block.item.id, message.text)} aria-label={userCopyFeedbackId === block.item.id ? "已复制消息" : "复制消息"} title={userCopyFeedbackId === block.item.id ? "已复制消息" : "复制消息"}><svg aria-hidden="true" viewBox="0 0 16 16"><rect x="5.5" y="5.5" width="7" height="7" rx="1" /><path d="M10.5 5.5V4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v5.5a1 1 0 0 0 1 1h1.5" /></svg></button></div>}
+                  {(message.text || (block.item.id === firstUserMessageId && sentTiming)) && (
+                    <div className="user-message-meta">
+                      {block.item.id === firstUserMessageId && sentTiming && (
+                        <div className="message-timing user-message-timing">{sentTiming}</div>
+                      )}
+                      {message.text && (
+                        <div className="message-actions user-message-actions">
+                          <button type="button" onClick={() => void copyUserMessage(block.item.id, message.text)} aria-label={userCopyFeedbackId === block.item.id ? "已复制消息" : "复制消息"} title={userCopyFeedbackId === block.item.id ? "已复制消息" : "复制消息"}>
+                            <svg aria-hidden="true" viewBox="0 0 16 16"><rect x="5.5" y="5.5" width="7" height="7" rx="1" /><path d="M10.5 5.5V4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v5.5a1 1 0 0 0 1 1h1.5" /></svg>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </>;
               })()}
-              {block.item.id === firstUserMessageId && sentTiming && (
-                <div className="message-timing user-message-timing">{sentTiming}</div>
-              )}
             </div>
           )}
           {plan && blockIndex === firstUserBlockIndex && <TurnPlanView plan={plan} />}
