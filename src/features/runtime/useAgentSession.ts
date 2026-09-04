@@ -59,6 +59,7 @@ export function useAgentSession(
   approvalReviewer: ApprovalReviewerMode,
   projectCwd: string | null,
   personalization: PersonalizationSettings = { customInstructions: "", theme: "dark" },
+  settingsReady = true,
 ) {
   const clientRef = useRef<AppServerClient | null>(null);
   clientRef.current ??= new AppServerClient();
@@ -119,6 +120,7 @@ export function useAgentSession(
     permissionMode,
     approvalReviewer,
     projectCwd,
+    settingsReady,
     dispatch,
     submitting,
     setSubmitting,

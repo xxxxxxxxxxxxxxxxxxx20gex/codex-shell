@@ -6,5 +6,5 @@
 - 当前接口：`pnpm typecheck`、`pnpm lint`、`pnpm test`、`pnpm quality:knip`、`pnpm test:quality`、`pnpm build`、`pnpm rust:check`、`pnpm runtime:stage`、`pnpm protocol:generate`、`pnpm runtime:probe-goal`、`pnpm runtime:probe-model-parameters`、`pnpm runtime:probe-local-tool`、`pnpm desktop:build`、`pnpm desktop:package`。
 - 已知问题：安装包尚未代码签名，仍缺 CI、干净机器 UAC/sidecar 验证，以及超长活动输出和三栏拖拽的自动化覆盖。Vite 仍报告主 chunk 超过 500 kB。
 - 下一步：配置不含密钥的 CI 基线、签名 NSIS 安装包，并在干净 Windows 环境验证安装后的动态 sidecar 路径。
-- 验证证据：2026-09-04；发布前按 `v0.1.1` 版本执行 `pnpm typecheck`、`pnpm lint`、`pnpm test -- --run --maxWorkers=1 --no-file-parallelism`（57 个文件/261 个测试）、`pnpm build`、`pnpm quality:knip`、`pnpm rust:check`（cargo check、14 个 Rust 单测及 Clippy）和 `pnpm desktop:package`，均通过。安装包绑定通过协议兼容门禁的 `codex-cli 0.153.0-alpha.5`；Vite 仍报告主 JS chunk 约 581.19 kB，安装包尚未代码签名。
+- 验证证据：2026-09-04；发布前按 `v0.1.1` 版本执行 `pnpm typecheck`、`pnpm lint`、`pnpm test -- --run --maxWorkers=1 --no-file-parallelism`（57 个文件/261 个测试）、`pnpm build`、`pnpm quality:knip`、`pnpm rust:check`（cargo check、14 个 Rust 单测及 Clippy）和 `pnpm desktop:package`，均通过。发布后配置就绪闸门修复又执行同一前端门禁（57 个文件/262 个测试）、`pnpm build` 和 `pnpm rust:check`，均通过。安装包绑定通过协议兼容门禁的 `codex-cli 0.153.0-alpha.5`；Vite 仍报告主 JS chunk 约 581.61 kB，安装包尚未代码签名。
 - 最后更新：2026-09-04

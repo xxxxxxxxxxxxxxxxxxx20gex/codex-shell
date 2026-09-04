@@ -78,7 +78,7 @@ function App() {
     modelPickerOpen,
     setModelPickerOpen,
     settings,
-    setSettings,
+    saveModelSettings,
     personalization,
     savePersonalization,
     modelDisplayName,
@@ -417,7 +417,7 @@ function App() {
         </aside>
       </section>
 
-      {settingsOpen && <ModelSettingsPanel settings={settings} loadModels={session.listModels} loadProviderCapabilities={session.readModelProviderCapabilities} onClose={() => setSettingsOpen(false)} onSave={(next, requiresRestart = false) => { setSettings(next); setModelDisplayName(null); setSettingsOpen(false); if (requiresRestart) void session.restart(); }} />}
+      {settingsOpen && <ModelSettingsPanel settings={settings} loadModels={session.listModels} loadProviderCapabilities={session.readModelProviderCapabilities} onClose={() => setSettingsOpen(false)} onSave={(next, requiresRestart = false) => { saveModelSettings(next, requiresRestart); setSettingsOpen(false); }} />}
       {preferencesOpen && <PreferencesPanel
         settings={personalization}
         initialSection={preferencesSection}

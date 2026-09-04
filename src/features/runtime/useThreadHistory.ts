@@ -9,6 +9,7 @@ interface Props {
   ensureConnected: () => Promise<AppServerClient>;
   dispatch: Dispatch<AgentSessionAction>;
   currentThreadId: () => string | null;
+  enabled?: boolean;
 }
 
 function mergeThread(threads: Thread[], thread: Thread) {
@@ -32,7 +33,7 @@ function retainBranchAncestors(listedThreads: Thread[], currentThreads: Thread[]
   return [...retained.values()];
 }
 
-export function useThreadHistory({ ensureConnected, dispatch, currentThreadId }: Props) {
+export function useThreadHistory({ ensureConnected, dispatch, currentThreadId, enabled = true }: Props) {
   const initialLoadStartedRef = useRef(false);
   const requestSequenceRef = useRef(0);
   const nextCursorRef = useRef<string | null>(null);
@@ -89,10 +90,11 @@ export function useThreadHistory({ ensureConnected, dispatch, currentThreadId }:
   const loadMore = useCallback(() => refresh(true), [refresh]);
 
   useEffect(() => {
+    if (!enabled) return;
     if (initialLoadStartedRef.current) return;
     initialLoadStartedRef.current = true;
     void refresh();
-  }, [refresh]);
+  }, [enabled, refresh]);
 
   const showArchived = useCallback((nextArchived: boolean) => {
     if (nextArchived === archivedRef.current) return;

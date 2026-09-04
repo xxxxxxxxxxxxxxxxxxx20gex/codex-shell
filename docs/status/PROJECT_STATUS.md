@@ -37,6 +37,8 @@
 
 - 2026-09-02：代码健康审查移除未被消费的 `tools.update_plan.enabled` 诊断读取、`config/read` 客户端包装和 `sendOrQueue` 的重复图片分支；保留生成协议类型及历史/旧 Runtime 兼容逻辑。`pnpm lint`、`pnpm typecheck`、57 个 Vitest 文件/261 个测试、Vite production build、Rust check、14 个 Rust 单测和 Clippy 通过。Knip 在 OXC 解析阶段因本机 ArrayBuffer 分配失败退出，未产生诊断；该结果不作为无效代码通过证据。
 
+- 2026-09-04：修复首次启动在持久化网关配置读取完成前提前启动 app-server，以及保存网关配置时用旧 React 状态重启的问题；历史加载受配置就绪闸门控制，设置重启在新状态提交后执行。新增回归测试；前端完整回归为 57 个文件/262 个测试，TypeScript、ESLint、Vite production build、Rust check、14 个 Rust 单测和 Clippy 通过。
+
 - 2026-08-21：固定 Runtime `0.148.0-alpha.15` 的 Thread 权威 settings/Goal 同步、审查状态单调更新及原生滚动条释放与可信 scroll 兜底完成；时间线移除 react-virtuoso，改用单一原生滚动容器、程序定位隔离、用户滚动 settle 锁、运行中受控贴底和 Session 切换重置；新增 Session 临时提示关闭/自动消失。
 - 2026-08-25：项目文件浏览器改为以内嵌方式挂载到右侧 inspector，与侧边聊天共享面板生命周期；标题栏操作统一为无边框图标按钮，最大化/恢复直接控制右侧栏宽度，长项目路径不会再挤出关闭操作区；时间线离开底部后使用三个图标按钮跳转上一条用户消息、下一条用户消息和最新位置；清理未再被 App 引用的旧 DiffInspector 组件、样式和测试。TypeScript、ESLint、57 个 Vitest 文件/256 项测试、Vite production build、Rust check、14 项 Rust 单测、Clippy 和 Tauri debug build 通过；确认默认 target 的拒绝访问来自仍在运行的本项目 app-server，构建脚本现会按路径只回收该项目 target 下的旧进程后再构建；Knip 仍受 Windows/Node Oxc parser 内存分配失败影响。
 - 2026-08-26：Runtime staging 改为兼容更新通道，使用本机 `codex-cli 0.149.0-alpha.4.1` 与同目录 companion binaries 重新生成协议；新增协议兼容门禁，确认 CS 现有生成文件、RPC、通知和反向请求未被删除或修改。补齐生成类型变化后的 `projectId`、agent message `delivery` 测试夹具。TypeScript、ESLint、57 个 Vitest 文件/258 项测试、Vite production build、Rust check、14 项 Rust 单测、Clippy 和 Tauri debug build 通过；debug NSIS 安装包重新生成。

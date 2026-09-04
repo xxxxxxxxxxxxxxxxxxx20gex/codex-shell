@@ -40,6 +40,7 @@ interface Props {
   permissionMode: PermissionMode;
   approvalReviewer: ApprovalReviewerMode;
   projectCwd: string | null;
+  settingsReady?: boolean;
   dispatch: Dispatch<AgentSessionAction>;
   submitting: boolean;
   setSubmitting: Dispatch<SetStateAction<boolean>>;
@@ -75,6 +76,7 @@ export function useThreadController(props: Props) {
     markThreadStopped,
     permissionMode,
     projectCwd,
+    settingsReady = true,
     setError,
     setSubmitting,
     settings,
@@ -141,6 +143,7 @@ export function useThreadController(props: Props) {
     ensureConnected: ensureConnected,
     dispatch: dispatch,
     currentThreadId,
+    enabled: settingsReady,
   });
   const {
     archived: historyArchived,

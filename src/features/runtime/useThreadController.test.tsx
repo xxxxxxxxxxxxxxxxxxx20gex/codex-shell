@@ -141,6 +141,19 @@ function setup() {
 }
 
 describe("useThreadController", () => {
+  it("waits for persisted settings before loading Session history", async () => {
+    const { client, props } = setup();
+    const { rerender } = renderHook(({ settingsReady }) => useThreadController({ ...props, settingsReady }), {
+      initialProps: { settingsReady: false },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(client.listThreads).not.toHaveBeenCalled();
+
+    rerender({ settingsReady: true });
+    await waitFor(() => expect(client.listThreads).toHaveBeenCalled());
+  });
+
   it("reads a Session without subscribing and resumes only when sending", async () => {
     const { client, props, dispatch } = setup();
     const { result } = renderHook(() => useThreadController(props));

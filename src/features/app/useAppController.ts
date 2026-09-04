@@ -74,6 +74,7 @@ export function useAppController() {
   const [preferencesSection, setPreferencesSection] = useState<PreferencesSection>("personalization");
   const [modelPickerOpen, setModelPickerOpen] = useState(false);
   const [settings, setSettings] = useState(initialSettings);
+  const [settingsReady, setSettingsReady] = useState(false);
   const [personalization, setPersonalization] = useState(initialPersonalization);
   const [modelDisplayName, setModelDisplayName] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
@@ -97,10 +98,12 @@ export function useAppController() {
   const [slashMenuDismissed, setSlashMenuDismissed] = useState(false);
   const [slashSelectedIndex, setSlashSelectedIndex] = useState(0);
   const mentionRequestRef = useRef(0);
+  const pendingModelRestartRef = useRef(false);
   const composerRef = useRef<HTMLDivElement>(null);
   const panels = useResizablePanels();
   const newThreadCwd = pendingProjectPath ?? defaultProjectDirectory?.path ?? null;
-  const session = useAgentSession(settings, permissionMode, approvalReviewer, newThreadCwd, personalization);
+  const session = useAgentSession(settings, permissionMode, approvalReviewer, newThreadCwd, personalization, settingsReady);
+  const restartSession = session.restart;
   const searchFiles = session.searchFiles;
   const currentProjectPath = session.thread?.cwd ? String(session.thread.cwd) : newThreadCwd;
   const mentionQuery = activeFileMentionQuery(draft);
@@ -127,6 +130,12 @@ export function useAppController() {
     }
   }
 
+  function saveModelSettings(next: ModelSettings, requiresRestart = false) {
+    setSettings(next);
+    setModelDisplayName(null);
+    if (requiresRestart) pendingModelRestartRef.current = true;
+  }
+
   async function savePersonalization(next: PersonalizationSettings) {
     if ("__TAURI_INTERNALS__" in window) {
       await invoke("save_personalization_settings", { settings: next });
@@ -135,13 +144,30 @@ export function useAppController() {
   }
 
   useEffect(() => {
-    if (!("__TAURI_INTERNALS__" in window)) return;
-    void invoke<ModelSettings>("load_model_settings").then(setSettings).catch(() => undefined);
-    void invoke<PersonalizationSettings>("load_personalization_settings").then(setPersonalization).catch(() => undefined);
-    void invoke<DefaultProjectDirectory>("get_default_project_directory")
-      .then(setDefaultProjectDirectory)
-      .catch((error) => setUiError(errorMessage(error)));
+    if (!("__TAURI_INTERNALS__" in window)) {
+      setSettingsReady(true);
+      return;
+    }
+    let active = true;
+    const loadSettings = invoke<ModelSettings>("load_model_settings")
+      .then((loaded) => { if (active) setSettings(loaded); })
+      .catch(() => undefined);
+    const loadPersonalization = invoke<PersonalizationSettings>("load_personalization_settings")
+      .then((loaded) => { if (active) setPersonalization(loaded); })
+      .catch(() => undefined);
+    const loadProjectDirectory = invoke<DefaultProjectDirectory>("get_default_project_directory")
+      .then((directory) => { if (active) setDefaultProjectDirectory(directory); })
+      .catch((error) => { if (active) setUiError(errorMessage(error)); });
+    void Promise.allSettled([loadSettings, loadPersonalization, loadProjectDirectory])
+      .then(() => { if (active) setSettingsReady(true); });
+    return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    if (!settingsReady || !pendingModelRestartRef.current) return;
+    pendingModelRestartRef.current = false;
+    void restartSession();
+  }, [restartSession, settings, settingsReady]);
 
   useEffect(() => {
     if (!authoritativeThreadSettings) return;
@@ -535,6 +561,7 @@ export function useAppController() {
     setModelPickerOpen,
     settings,
     setSettings,
+    saveModelSettings,
     personalization,
     savePersonalization,
     modelDisplayName,
