@@ -1,4 +1,7 @@
-import { ShieldCheck } from "lucide-react";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { ExternalLink, ShieldCheck } from "lucide-react";
+import { useState } from "react";
+import { APP_VERSION, RELEASES_LATEST_URL } from "../../appVersion";
 import type { WindowsSandboxReadiness } from "../../generated/app-server/v2/WindowsSandboxReadiness";
 import type { WindowsSandboxSetupMode } from "../../generated/app-server/v2/WindowsSandboxSetupMode";
 import { CodexHomeCard } from "../runtime/CodexHomeCard";
@@ -24,6 +27,17 @@ export function RuntimePreferences({
   onSetupWindowsSandbox,
   onRestart,
 }: Props) {
+  const [updateError, setUpdateError] = useState("");
+
+  async function openLatestRelease() {
+    setUpdateError("");
+    try {
+      await openUrl(RELEASES_LATEST_URL);
+    } catch (error) {
+      setUpdateError(error instanceof Error ? error.message : "无法打开更新页面");
+    }
+  }
+
   return (
     <div className="preferences-section">
       <h3>运行环境</h3>
@@ -39,6 +53,17 @@ export function RuntimePreferences({
         {windowsSandboxReadiness && windowsSandboxReadiness !== "ready" && (
           <button className="secondary-button" onClick={() => void onSetupWindowsSandbox("elevated")}>使用管理员权限配置</button>
         )}
+      </section>
+      <section className="preferences-runtime-card update-preferences-card">
+        <header>
+          <span><ExternalLink aria-hidden="true" />Codex Shell 更新</span>
+          <i>v{APP_VERSION}</i>
+        </header>
+        <p>打开官方 GitHub Release 页面，获取最新的 Windows 安装包。</p>
+        <button className="secondary-button" type="button" onClick={() => void openLatestRelease()}>
+          检查更新
+        </button>
+        {updateError && <small className="update-preferences-error" role="alert">{updateError}</small>}
       </section>
       <CodexHomeCard path={codexHome} disabled={codexHomeDisabled} onRestart={onRestart} />
     </div>

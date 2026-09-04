@@ -1,3 +1,4 @@
+import { APP_VERSION } from "../../appVersion";
 import type { InitializeResponse } from "../../generated/app-server/InitializeResponse";
 import type { CollaborationMode } from "../../generated/app-server/CollaborationMode";
 import type { FuzzyFileSearchParams } from "../../generated/app-server/FuzzyFileSearchParams";
@@ -437,7 +438,7 @@ export class AppServerClient {
       await this.attachTransportListeners();
       this.activeProcess = await this.transport.start();
       this.initializeResponse = await this.requestRaw<InitializeResponse>("initialize", {
-        clientInfo: { name: "codex-shell", title: "Codex Shell", version: "0.1.2" },
+        clientInfo: { name: "codex-shell", title: "Codex Shell", version: APP_VERSION },
         capabilities: {
           experimentalApi: true,
           requestAttestation: false,

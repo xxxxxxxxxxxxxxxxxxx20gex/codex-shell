@@ -2,9 +2,12 @@
 
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { RuntimeLogStore } from "../runtime/runtimeLogStore";
 import { RuntimeNoticeStore } from "../runtime/runtimeNoticeStore";
 import { PreferencesPanel } from "./PreferencesPanel";
+
+vi.mock("@tauri-apps/plugin-opener", () => ({ openUrl: vi.fn(async () => undefined) }));
 
 afterEach(cleanup);
 
@@ -64,6 +67,17 @@ describe("PreferencesPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "诊断" }));
     expect(screen.getByText("运行提示")).toBeTruthy();
     expect(screen.getByRole("region", { name: "app-server 实时日志" })).toBeTruthy();
+  });
+
+  it("opens the latest release page from runtime settings", async () => {
+    render(<PreferencesPanel {...panelProps()} onSave={async () => undefined} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "运行环境" }));
+    fireEvent.click(screen.getByRole("button", { name: "检查更新" }));
+
+    await waitFor(() => expect(openUrl).toHaveBeenCalledWith(
+      "https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/releases/latest",
+    ));
   });
 
   it("opens directly on the requested section", () => {
