@@ -23,11 +23,12 @@ try {
     }
     if (-not $Repository) { $Repository = $env:GITHUB_REPOSITORY }
     if (-not $Repository) { throw "Pass -Repository OWNER/REPOSITORY." }
-    if (-not $Tag) {
-        $config = Get-Content -Raw (Join-Path $projectRoot "src-tauri\tauri.conf.json") | ConvertFrom-Json
-        $Tag = "v$($config.version)"
-    }
+    $config = Get-Content -Raw (Join-Path $projectRoot "src-tauri\tauri.conf.json") | ConvertFrom-Json
+    if (-not $Tag) { $Tag = "v$($config.version)" }
     if (-not $Tag.StartsWith("v")) { $Tag = "v$Tag" }
+    if ($Tag.Substring(1) -ne [string]$config.version) {
+        throw "Release tag $Tag does not match tauri.conf.json version $($config.version). Update the version before packaging."
+    }
     if (-not $OutputDirectory) { $OutputDirectory = Join-Path $projectRoot "release-artifacts\$Tag" }
     $outputPath = [IO.Path]::GetFullPath($OutputDirectory)
 
