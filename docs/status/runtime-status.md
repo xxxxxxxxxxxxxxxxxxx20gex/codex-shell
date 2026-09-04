@@ -1,7 +1,7 @@
 # Codex Runtime 状态
 
 - 模块职责：动态发现、兼容性验证、启动、停止并最终打包 `codex.exe` 及其同源 companion binaries。
-- 当前状态：公开 `v0.1.1` 安装包已暂存并验证 `codex-cli 0.153.0-alpha.5` Runtime、Code Mode Host 及 elevated Windows Sandbox 的同目录 helper；manifest 记录实际版本和哈希，进程、认证和数据目录隔离已完成，NSIS 安装包可生成。该 Runtime 通过现有协议兼容门禁，但上游版本仍带有 alpha 标识。
+- 当前状态：公开 `v0.1.2` 安装包已暂存并验证 `codex-cli 0.153.0-alpha.5` Runtime、Code Mode Host 及 elevated Windows Sandbox 的同目录 helper；manifest 记录实际版本和哈希，进程、认证和数据目录隔离已完成，NSIS 安装包可生成。该 Runtime 通过现有协议兼容门禁，但上游版本仍带有 alpha 标识。
 - 最近变更：Runtime staging 不再要求与历史 manifest 完全匹配，改为运行 app-server 协议兼容门禁，允许新增协议并阻止当前调用面被删除；主 Runtime 与三个 helper 必须来自同一目录并分别校验 SHA-256。生成协议同步升级仍由 `pnpm protocol:generate` 显式触发。首条消息进入目标模式时，前端先创建普通 Session，再通过原生 `thread/goal/set` 写入目标，随后启动同一条 Turn，不再要求用户先发送无关消息。独立 `/` 仍直接唤出 Skills、MCP、计划和目标等命令菜单。每次 app-server 启动仍以进程代际隔离旧 reader 线程事件。首次启动会等待持久化模型网关、个性化和默认目录配置读取完成后再加载历史，避免 app-server 以默认网关抢先启动；高级网关设置保存后的重启也在新状态提交后执行。
 - 当前接口：`resolve_codex_executable`、`resolve_codex_home`、`set_codex_home`、`resolve_default_project_directory`、返回进程身份的 `app_server_start`、`app_server_stop`。
 - 路径边界：应用配置仍由 Tauri `app_config_dir` 计算；CODEX_HOME 默认由用户目录动态拼接为 `.codex-shell`；默认项目目录由系统文档已知目录动态拼接为 `Codex-Shell/YYYY-MM-DD`；Thread 的执行目录仍由 `thread/start.cwd` 决定，源码不包含开发机仓库绝对路径。

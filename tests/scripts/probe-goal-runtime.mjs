@@ -72,7 +72,7 @@ function request(method, params) {
 
 try {
   await request("initialize", {
-    clientInfo: { name: "codex-shell-goal-probe", title: "Goal Probe", version: "0.1.1" },
+    clientInfo: { name: "codex-shell-goal-probe", title: "Goal Probe", version: "0.1.2" },
     capabilities: { experimentalApi: true, requestAttestation: false },
   });
   child.stdin.write(`${JSON.stringify({ method: "initialized" })}\n`);

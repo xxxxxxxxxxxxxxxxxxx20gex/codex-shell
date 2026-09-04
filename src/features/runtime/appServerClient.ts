@@ -437,7 +437,7 @@ export class AppServerClient {
       await this.attachTransportListeners();
       this.activeProcess = await this.transport.start();
       this.initializeResponse = await this.requestRaw<InitializeResponse>("initialize", {
-        clientInfo: { name: "codex-shell", title: "Codex Shell", version: "0.1.1" },
+        clientInfo: { name: "codex-shell", title: "Codex Shell", version: "0.1.2" },
         capabilities: {
           experimentalApi: true,
           requestAttestation: false,
