@@ -1,6 +1,6 @@
 # 项目总状态
 
-- 当前阶段：Milestone 2 - P0 桌面编程工作台；公开稳定版本 `v0.1.3`，updater 集成待下一版本发布
+- 当前阶段：Milestone 2 - P0 桌面编程工作台；公开稳定版本 `v0.1.3`，updater 集成已进入下一版本发布链路
 - 总体状态：核心对话、Session、工具活动、审批、文件、Diff 和模型配置可用；已具备可复验的 NSIS Windows 安装包发布链路，签名、CI 与 Runtime 恢复能力尚未完成。
 - 文档边界：本文件只记录跨模块当前快照、项目级风险、下一里程碑和完整验证基线。模块行为和定向证据以 [模块状态索引](../README.md#当前状态) 为准，历史由 Git 保留。
 - 最后更新：2026-09-04
@@ -19,7 +19,7 @@
 ## 项目级风险
 
 - app-server 自动断线恢复尚未完成；代际隔离可以阻止旧进程事件污染新连接，但不会主动重启崩溃进程或恢复进行中的 Turn。
-- Runtime 二进制尚无可复现的获取或构建流水线；安装包已可由本机通过兼容门禁的 Runtime 生成 NSIS，但签名、CI、干净 Windows 环境的 UAC 和 sidecar 验证仍未完成。MSI 不是默认发布目标。
+- Runtime 二进制不进入 Git；发布流水线现通过固定 HTTPS ZIP 与 SHA-256 获取并校验同源 Runtime 及 companion binaries，再执行兼容门禁。仍需配置经过授权的 Runtime 来源，并完成签名、CI、干净 Windows 环境的 UAC 和 sidecar 验证。MSI 不是默认发布目标。
 - Shell Queue 只存在当前进程内，应用退出后不会恢复；MCP 配置编辑、Skills/Plugin 管理和显式连接诊断尚未完成。
 - 文件预览仍会先经 IPC 读取完整文件；超大 Diff、单个超长活动和二进制 Diff 缺少源端预算或专用视图。
 - 侧边聊天当前固定只读沙箱、`approvalPolicy: never`，不会替代主会话执行写入或审批流程；侧聊状态暂不持久化，也不会出现在历史列表；关闭时在连接可用的情况下先中断活动 Turn，再退订临时 Thread，Runtime 已停止时不触发重连；切换主 Session 或 Runtime 重置后返回右侧功能入口。

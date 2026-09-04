@@ -41,11 +41,11 @@ CS 不修改 Codex Core，也不在前端复制一套 Agent 执行循环。所�
 ### 下载 Windows 安装包
 
 当前公开稳定版仍为 [Codex Shell v0.1.3](https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/releases/tag/v0.1.3)：下载
-`codex-shell_0.1.3_x64-setup.exe` 后按向导安装。下一版将加入 Tauri Updater，当前公开 Release 未进行 Windows Authenticode 代码签名，
+`codex-shell_0.1.3_x64-setup.exe` 后按向导安装。下一版将启用 Tauri Updater，当前公开 Release 未进行 Windows Authenticode 代码签名，
 Windows SmartScreen 可能在首次运行时显示提示；这是个人二开项目，不代表 OpenAI
 官方产品或背书。
 
-安装后也可以打开“设置 → 运行环境 → 检查并更新”。CS 会检查官方 Release 的签名更新，
+安装后也可以打开“设置 → 运行环境 → 检查并更新”。CS 会检查正式 Release 的签名更新，
 发现新版本后下载并启动安装器，安装完成后自动重启应用。更新过程不会把 API Key 或会话内容
 发送给 CS 自己的服务器；更新包来自项目配置的 GitHub Release 端点。
 
@@ -224,6 +224,26 @@ Runtime 不要求与上一次 manifest 的完整版本号相同。暂存时会�
 和 companion binaries，记录实际版本与 SHA-256，并检查 CS 当前依赖的 app-server
 请求、通知和反向请求仍存在。协议新增能力不会自动改变 UI；如果生成类型发生变化，
 请显式运行 `pnpm protocol:generate`，审查生成差异并完成完整回归测试。
+
+为发布工作流准备可复现的 Runtime 压缩包：
+
+```powershell
+pnpm runtime:archive -- -Source "D:\path\to\codex.exe" -OutputDirectory "D:\path\to\runtime-release"
+```
+
+压缩包必须包含来自同一 Runtime 目录的四个文件：`codex.exe`、
+`codex-code-mode-host.exe`、`codex-windows-sandbox-setup.exe` 和
+`codex-command-runner.exe`。脚本会生成 ZIP 和同名 `.sha256` 文件。将 ZIP 放到有权限的
+HTTPS 发布位置后，在 GitHub 仓库的 **Settings → Secrets and variables → Actions → Variables**
+中配置：
+
+- `CODEX_SHELL_RUNTIME_URL`：Runtime ZIP 的固定 HTTPS 地址；
+- `CODEX_SHELL_RUNTIME_SHA256`：对应 `.sha256` 文件中的 64 位 SHA-256。
+
+发布工作流会先下载 ZIP、校验 SHA-256、检查四个 companion binaries 和 `codex-cli` 版本，
+再运行协议兼容门禁和 Tauri 签名打包。Runtime 不应放入 GitHub Secret 或仓库；公开分发前还
+必须确认其许可证和再分发授权。签名私钥仍只保存在 `TAURI_SIGNING_PRIVATE_KEY` 与
+`TAURI_SIGNING_PRIVATE_KEY_PASSWORD` 两个 GitHub Secret 中。
 
 独立测试脚本统一放在 [tests/scripts](tests/scripts)；源码旁的 `*.test.*` 和 Rust 测试保持就地维护，方便复用模块夹具和类型。
 
