@@ -19,7 +19,7 @@
 ## 项目级风险
 
 - app-server 自动断线恢复尚未完成；代际隔离可以阻止旧进程事件污染新连接，但不会主动重启崩溃进程或恢复进行中的 Turn。
-- Runtime 二进制不进入 Git；发布流水线现通过固定 HTTPS ZIP 与 SHA-256 获取并校验同源 Runtime 及 companion binaries，再执行兼容门禁。仍需配置经过授权的 Runtime 来源，并完成签名、CI、干净 Windows 环境的 UAC 和 sidecar 验证。MSI 不是默认发布目标。
+- Runtime 二进制不进入 Git；个人发布通过本机脚本暂存同源 Runtime、运行兼容门禁并生成签名安装器和 updater manifest，再手动上传 Release。仍需完成签名发布、干净 Windows 环境的 UAC 和 sidecar 验证。MSI 不是默认发布目标。
 - Shell Queue 只存在当前进程内，应用退出后不会恢复；MCP 配置编辑、Skills/Plugin 管理和显式连接诊断尚未完成。
 - 文件预览仍会先经 IPC 读取完整文件；超大 Diff、单个超长活动和二进制 Diff 缺少源端预算或专用视图。
 - 侧边聊天当前固定只读沙箱、`approvalPolicy: never`，不会替代主会话执行写入或审批流程；侧聊状态暂不持久化，也不会出现在历史列表；关闭时在连接可用的情况下先中断活动 Turn，再退订临时 Thread，Runtime 已停止时不触发重连；切换主 Session 或 Runtime 重置后返回右侧功能入口。

@@ -91,7 +91,7 @@ CS 不会将与功能无关的遥测数据上传到外部服务。
 下一版 Windows 安装包将使用 Tauri Updater 的 minisign 更新签名校验。当前 `v0.1.3` 安装包
 尚未包含 updater 能力；安装包本身也可能因未配置 Windows Authenticode 代码签名而触发
 SmartScreen 提示。Tauri 更新签名与 Windows 代码签名是两套独立机制。签名私钥只保存在
-GitHub Actions Secret 中，不提交到仓库。
+本机安全目录或其他受控密钥存储中，不提交到仓库。
 
 ### 创建第一条对话
 
@@ -225,7 +225,26 @@ Runtime 不要求与上一次 manifest 的完整版本号相同。暂存时会�
 请求、通知和反向请求仍存在。协议新增能力不会自动改变 UI；如果生成类型发生变化，
 请显式运行 `pnpm protocol:generate`，审查生成差异并完成完整回归测试。
 
-为发布工作流准备可复现的 Runtime 压缩包：
+个人开发者推荐使用本机打包并手动上传 Release。先确保当前进程有签名密码（不要把密码写入仓库）：
+
+```powershell
+$env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = "<你的私钥密码>"
+pnpm release:package -- -Repository "OWNER/REPOSITORY" -Tag "v0.1.4"
+```
+
+如果私钥位于默认路径 `%USERPROFILE%\\.tauri\\codex-shell.key`，无需额外参数；也可以显式指定：
+
+```powershell
+pnpm release:package -- -SigningKeyPath "C:\\secure\\codex-shell.key" -Repository "OWNER/REPOSITORY" -Tag "v0.1.4"
+```
+
+命令会暂存本机 Runtime、运行协议兼容门禁、构建签名 NSIS 安装包，并在
+`release-artifacts/v0.1.4/` 生成三个必须上传到同一个 GitHub Release 的文件：安装器、`.sig` 和
+`latest.json`。在 GitHub 创建同名 Tag/Release（例如 `v0.1.4`）并上传这三个文件后，已安装的旧版本
+即可通过“检查并更新”自动发现、验签和安装新版本。换电脑时只需准备同版本 Runtime、签名私钥/密码、
+Rust/Node 构建环境并重新执行该命令；用户端不需要任何额外配置。
+
+为需要跨机器缓存时准备可复现的 Runtime 压缩包：
 
 ```powershell
 pnpm runtime:archive -- -Source "D:\path\to\codex.exe" -OutputDirectory "D:\path\to\runtime-release"
@@ -233,17 +252,9 @@ pnpm runtime:archive -- -Source "D:\path\to\codex.exe" -OutputDirectory "D:\path
 
 压缩包必须包含来自同一 Runtime 目录的四个文件：`codex.exe`、
 `codex-code-mode-host.exe`、`codex-windows-sandbox-setup.exe` 和
-`codex-command-runner.exe`。脚本会生成 ZIP 和同名 `.sha256` 文件。将 ZIP 放到有权限的
-HTTPS 发布位置后，在 GitHub 仓库的 **Settings → Secrets and variables → Actions → Variables**
-中配置：
-
-- `CODEX_SHELL_RUNTIME_URL`：Runtime ZIP 的固定 HTTPS 地址；
-- `CODEX_SHELL_RUNTIME_SHA256`：对应 `.sha256` 文件中的 64 位 SHA-256。
-
-发布工作流会先下载 ZIP、校验 SHA-256、检查四个 companion binaries 和 `codex-cli` 版本，
-再运行协议兼容门禁和 Tauri 签名打包。Runtime 不应放入 GitHub Secret 或仓库；公开分发前还
-必须确认其许可证和再分发授权。签名私钥仍只保存在 `TAURI_SIGNING_PRIVATE_KEY` 与
-`TAURI_SIGNING_PRIVATE_KEY_PASSWORD` 两个 GitHub Secret 中。
+`codex-command-runner.exe`。脚本会生成 ZIP 和同名 `.sha256` 文件，供跨机器传输时校验。
+脚本会校验四个 companion binaries 和 `codex-cli` 版本。Runtime 不应放入 GitHub Secret 或仓库；公开
+分发前还必须确认其许可证和再分发授权。签名私钥不提交 Git，换电脑时通过安全方式复制到新机器。
 
 独立测试脚本统一放在 [tests/scripts](tests/scripts)；源码旁的 `*.test.*` 和 Rust 测试保持就地维护，方便复用模块夹具和类型。
 
@@ -254,4 +265,4 @@ HTTPS 发布位置后，在 GitHub 仓库的 **Settings → Secrets and variable
 - [docs/README.md](docs/README.md)：状态文档、ADR 和文档地图；
 - [docs/status/PROJECT_STATUS.md](docs/status/PROJECT_STATUS.md)：项目当前快照、风险和验证基线。
 
-当前项目仍处于持续开发阶段。Runtime 获取、安装包签名、CI、断线恢复和插件内部逻辑还在后续里程碑中；如果你希望基于 Codex app-server 打造自己的桌面智能体，欢迎从 UI、模型网关、Skills/MCP 或行业工作流方向开始扩展。
+当前项目仍处于持续开发阶段。断线恢复和插件内部逻辑还在后续里程碑中；如果你希望基于 Codex app-server 打造自己的桌面智能体，欢迎从 UI、模型网关、Skills/MCP 或行业工作流方向开始扩展。
