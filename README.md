@@ -40,8 +40,8 @@ CS 不修改 Codex Core，也不在前端复制一套 Agent 执行循环。所�
 
 ### 下载 Windows 安装包
 
-稳定版安装器发布在 [GitHub Releases](https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/releases/tag/v0.1.0)：下载
-`codex-shell_0.1.0_x64-setup.exe` 后按向导安装。当前 Release 未进行代码签名，
+当前公开稳定版为 [Codex Shell v0.1.1](https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/releases/tag/v0.1.1)：下载
+`codex-shell_0.1.1_x64-setup.exe` 后按向导安装。当前 Release 未进行代码签名，
 Windows SmartScreen 可能在首次运行时显示提示；这是个人二开项目，不代表 OpenAI
 官方产品或背书。
 
@@ -137,7 +137,7 @@ CS 采用“代码实现 + 仓库文档 Wiki”协同的开发方式。文档不
 ### 分支与版本
 
 - `main`：个人项目的日常开发与稳定主线；
-- `release/vX.Y.Z`：对应已发布版本的冻结维护分支，并与同名 Git tag 对齐。
+- `release/vX.Y.Z`：对应已发布版本的冻结维护分支，并与同名 Git tag 对齐；当前公开版本为 `release/v0.1.1`。
 
 日常改动直接提交到 `main`，通过质量门禁后正式发布。发布时从 `main` 创建版本分支
 和 tag，安装包与该 tag 保持一致。
