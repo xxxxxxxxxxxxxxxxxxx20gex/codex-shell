@@ -12,7 +12,6 @@
     "test": "vitest run",
     "quality:knip": "knip --files --exports --dependencies --reporter compact",
     "runtime:stage": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stage-runtime.ps1",
-    "runtime:archive": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package-runtime.ps1",
     "release:package": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package-release.ps1",
     "runtime:probe-goal": "node tests/scripts/probe-goal-runtime.mjs",
     "runtime:probe-model-parameters": "node tests/scripts/probe-model-parameters.mjs",

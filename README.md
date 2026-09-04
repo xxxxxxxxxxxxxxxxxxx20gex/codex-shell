@@ -243,17 +243,8 @@ pnpm release:package -- -SigningKeyPath "C:\\secure\\codex-shell.key" -Repositor
 即可通过“检查并更新”自动发现、验签和安装新版本。换电脑时只需准备同版本 Runtime 和签名私钥、
 Rust/Node 构建环境并重新执行该命令；用户端不需要任何额外配置。
 
-为需要跨机器缓存时准备可复现的 Runtime 压缩包：
-
-```powershell
-pnpm runtime:archive -- -Source "D:\path\to\codex.exe" -OutputDirectory "D:\path\to\runtime-release"
-```
-
-压缩包必须包含来自同一 Runtime 目录的四个文件：`codex.exe`、
-`codex-code-mode-host.exe`、`codex-windows-sandbox-setup.exe` 和
-`codex-command-runner.exe`。脚本会生成 ZIP 和同名 `.sha256` 文件，供跨机器传输时校验。
-脚本会校验四个 companion binaries 和 `codex-cli` 版本。Runtime 不应放入 GitHub Secret 或仓库；公开
-分发前还必须确认其许可证和再分发授权。签名私钥不提交 Git，换电脑时通过安全方式复制到新机器。
+脚本会校验四个 companion binaries 和 `codex-cli` 版本。Runtime 不应放入仓库；公开分发前还必须
+确认其许可证和再分发授权。签名私钥不提交 Git，换电脑时通过安全方式复制到新机器。
 
 独立测试脚本统一放在 [tests/scripts](tests/scripts)；源码旁的 `*.test.*` 和 Rust 测试保持就地维护，方便复用模块夹具和类型。
 
