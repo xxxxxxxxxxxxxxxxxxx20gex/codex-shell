@@ -1,6 +1,6 @@
 [package]
 name = "codex-shell"
-version = "0.1.2"
+version = "0.1.3"
 description = "A personal desktop shell for Codex app-server"
 authors = ["Codex Shell Contributors"]
 edition = "2024"

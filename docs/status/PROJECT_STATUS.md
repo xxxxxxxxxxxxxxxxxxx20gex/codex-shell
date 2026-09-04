@@ -1,13 +1,13 @@
 # 项目总状态
 
-- 当前阶段：Milestone 2 - P0 桌面编程工作台；公开稳定版本 `v0.1.2`
+- 当前阶段：Milestone 2 - P0 桌面编程工作台；公开稳定版本 `v0.1.3`
 - 总体状态：核心对话、Session、工具活动、审批、文件、Diff 和模型配置可用；已具备可复验的 NSIS Windows 安装包发布链路，签名、CI 与 Runtime 恢复能力尚未完成。
 - 文档边界：本文件只记录跨模块当前快照、项目级风险、下一里程碑和完整验证基线。模块行为和定向证据以 [模块状态索引](../README.md#当前状态) 为准，历史由 Git 保留。
 - 最后更新：2026-09-04
 
 ## 跨模块当前快照
 
-- 产品使用 Tauri 2、React、TypeScript 与 Rust 构建，以原版 `codex app-server` 为唯一执行核心，通过 stdio JSON-RPC 通信；`v0.1.2` 发布包暂存的是通过兼容门禁的 `codex-cli 0.153.0-alpha.5`，发布 manifest 记录实际版本、哈希和 companion binaries。生成协议类型仍以 `0.152.1` 为基线。参见 [ADR-001](../decisions/ADR-001-unmodified-codex-app-server.md) 与 [ADR-003](../decisions/ADR-003-compatible-runtime-updates.md)。
+- 产品使用 Tauri 2、React、TypeScript 与 Rust 构建，以原版 `codex app-server` 为唯一执行核心，通过 stdio JSON-RPC 通信；`v0.1.3` 发布包暂存的是通过兼容门禁的 `codex-cli 0.153.0-alpha.5`，发布 manifest 记录实际版本、哈希和 companion binaries。生成协议类型仍以 `0.152.1` 为基线。参见 [ADR-001](../decisions/ADR-001-unmodified-codex-app-server.md) 与 [ADR-003](../decisions/ADR-003-compatible-runtime-updates.md)。
 - 核心工作流已形成闭环：用户可以选择项目、创建和恢复多个 Session、发送文本/文件/图片、查看结构化执行时间线、处理审批、审查实时与历史 Diff，并按完成 Turn 分叉会话。
 - Composer 已统一模型、推理强度、权限、Goal、Plan、Review、Skills、MCP 和压缩入口；Thread 的模型、权限、审批者和 Goal 状态以 Core 权威通知及查询结果为准，不在 Shell 维护第二套执行状态。
 - Windows 桌面界面已收敛到 `DESIGN.md` 和语义 Token；三栏布局在窄窗口下保留功能入口，设置承载个性化、外观、运行环境和诊断，右栏提供项目文件浏览和独立只读侧边聊天。
