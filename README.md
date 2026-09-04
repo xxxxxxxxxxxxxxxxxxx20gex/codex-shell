@@ -225,14 +225,13 @@ Runtime 不要求与上一次 manifest 的完整版本号相同。暂存时会�
 请求、通知和反向请求仍存在。协议新增能力不会自动改变 UI；如果生成类型发生变化，
 请显式运行 `pnpm protocol:generate`，审查生成差异并完成完整回归测试。
 
-个人开发者推荐使用本机打包并手动上传 Release。先确保当前进程有签名密码（不要把密码写入仓库）：
+个人开发者推荐使用本机打包并手动上传 Release。当前项目使用无密码的 Tauri signing key，发布时只需保管私钥文件；私钥本身仍不能提交仓库：
 
 ```powershell
-$env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = "<你的私钥密码>"
 pnpm release:package -- -Repository "OWNER/REPOSITORY" -Tag "v0.1.4"
 ```
 
-如果私钥位于默认路径 `%USERPROFILE%\\.tauri\\codex-shell.key`，无需额外参数；也可以显式指定：
+私钥位于默认路径 `%USERPROFILE%\\.tauri\\codex-shell.key` 时无需额外参数；也可以显式指定：
 
 ```powershell
 pnpm release:package -- -SigningKeyPath "C:\\secure\\codex-shell.key" -Repository "OWNER/REPOSITORY" -Tag "v0.1.4"
@@ -241,7 +240,7 @@ pnpm release:package -- -SigningKeyPath "C:\\secure\\codex-shell.key" -Repositor
 命令会暂存本机 Runtime、运行协议兼容门禁、构建签名 NSIS 安装包，并在
 `release-artifacts/v0.1.4/` 生成三个必须上传到同一个 GitHub Release 的文件：安装器、`.sig` 和
 `latest.json`。在 GitHub 创建同名 Tag/Release（例如 `v0.1.4`）并上传这三个文件后，已安装的旧版本
-即可通过“检查并更新”自动发现、验签和安装新版本。换电脑时只需准备同版本 Runtime、签名私钥/密码、
+即可通过“检查并更新”自动发现、验签和安装新版本。换电脑时只需准备同版本 Runtime 和签名私钥、
 Rust/Node 构建环境并重新执行该命令；用户端不需要任何额外配置。
 
 为需要跨机器缓存时准备可复现的 Runtime 压缩包：

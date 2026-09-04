@@ -9,6 +9,8 @@ $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent $PSScriptRoot
 Push-Location $projectRoot
 $previousCargoBuildJobs = $env:CARGO_BUILD_JOBS
+$previousSigningKeyPath = $env:TAURI_SIGNING_PRIVATE_KEY_PATH
+$previousSigningPassword = $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD
 try {
     if (-not $SigningKeyPath) { $SigningKeyPath = $env:TAURI_SIGNING_PRIVATE_KEY_PATH }
     if (-not $SigningKeyPath) {
@@ -17,9 +19,6 @@ try {
     }
     if (-not $SigningKeyPath -or -not (Test-Path -LiteralPath $SigningKeyPath -PathType Leaf)) {
         throw "Signing key not found. Pass -SigningKeyPath or set TAURI_SIGNING_PRIVATE_KEY_PATH."
-    }
-    if ([string]::IsNullOrWhiteSpace($env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD)) {
-        throw "TAURI_SIGNING_PRIVATE_KEY_PASSWORD is not set. Set it only in the current process or user environment; never commit it."
     }
     if (-not $Repository) { $Repository = $env:GITHUB_REPOSITORY }
     if (-not $Repository) { throw "Pass -Repository OWNER/REPOSITORY." }
@@ -32,7 +31,11 @@ try {
     if (-not $OutputDirectory) { $OutputDirectory = Join-Path $projectRoot "release-artifacts\$Tag" }
     $outputPath = [IO.Path]::GetFullPath($OutputDirectory)
 
-    $env:TAURI_SIGNING_PRIVATE_KEY = [IO.File]::ReadAllText((Resolve-Path -LiteralPath $SigningKeyPath).Path)
+    $env:TAURI_SIGNING_PRIVATE_KEY_PATH = (Resolve-Path -LiteralPath $SigningKeyPath).Path
+    # The project key is intentionally generated without a password. Explicitly
+    # clear an inherited value so another developer-machine environment cannot
+    # make this build fail or sign with an unexpected key password.
+    $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = ""
     $env:CARGO_BUILD_JOBS = "2"
     Write-Output "Staging the compatible Codex Runtime..."
     pnpm runtime:stage
@@ -61,7 +64,10 @@ try {
     Get-ChildItem -LiteralPath $outputPath -File | Select-Object Name, Length
 }
 finally {
-    Remove-Item Env:TAURI_SIGNING_PRIVATE_KEY -ErrorAction SilentlyContinue
+    if ($null -eq $previousSigningKeyPath) { Remove-Item Env:TAURI_SIGNING_PRIVATE_KEY_PATH -ErrorAction SilentlyContinue }
+    else { $env:TAURI_SIGNING_PRIVATE_KEY_PATH = $previousSigningKeyPath }
+    if ($null -eq $previousSigningPassword) { Remove-Item Env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD -ErrorAction SilentlyContinue }
+    else { $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = $previousSigningPassword }
     if ($null -eq $previousCargoBuildJobs) { Remove-Item Env:CARGO_BUILD_JOBS -ErrorAction SilentlyContinue }
     else { $env:CARGO_BUILD_JOBS = $previousCargoBuildJobs }
     Pop-Location

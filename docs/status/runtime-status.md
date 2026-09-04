@@ -6,7 +6,7 @@
 - 当前接口：`resolve_codex_executable`、`resolve_codex_home`、`set_codex_home`、`resolve_default_project_directory`、返回进程身份的 `app_server_start`、`app_server_stop`。
 - 路径边界：应用配置仍由 Tauri `app_config_dir` 计算；CODEX_HOME 默认由用户目录动态拼接为 `.codex-shell`；默认项目目录由系统文档已知目录动态拼接为 `Codex-Shell/YYYY-MM-DD`；Thread 的执行目录仍由 `thread/start.cwd` 决定，源码不包含开发机仓库绝对路径。
 - 认证边界：app-server 使用独立 `codex_shell_gateway` provider，`env_key=OPENAI_API_KEY` 且 `requires_openai_auth=false`，只从当前进程注入的用户凭据读取，不继承宿主 Codex 登录状态。
-- 已知问题：Runtime 二进制被 Git 忽略，跨机器发布需要安全复制同版本 Runtime 与签名私钥；兼容门禁覆盖现有生成文件、方法、通知和反向请求保留，但不替代真实 smoke；旧 CODEX_HOME 迁移仍依赖同卷 `rename`，跨卷用户目录需要单独的可恢复复制方案；安装包中的 elevated UAC 实际设置流程、进程崩溃后的自动恢复尚未验证。实时 stderr 仅保存在当前窗口的有界内存中，应用退出后仍以 Core 的 SQLite 日志为长期诊断来源。
+- 已知问题：Runtime 二进制被 Git 忽略，跨机器发布需要安全复制同版本 Runtime 与无密码 signing key；兼容门禁覆盖现有生成文件、方法、通知和反向请求保留，但不替代真实 smoke；旧 CODEX_HOME 迁移仍依赖同卷 `rename`，跨卷用户目录需要单独的可恢复复制方案；安装包中的 elevated UAC 实际设置流程、进程崩溃后的自动恢复尚未验证。实时 stderr 仅保存在当前窗口的有界内存中，应用退出后仍以 Core 的 SQLite 日志为长期诊断来源。
 - 下一步：用本机发布脚本生成 `v0.1.4` 正式 Release，在干净 Windows 用户环境验证更新后的 UAC、sandbox readiness 和 elevated 命令执行闭环。
 - 验证证据：2026-09-04，`codex-cli 0.153.0-alpha.5` 与同目录 helper 通过协议兼容门禁并写入 manifest；真实第三方网关探针在低推理模式下产生两次 `commandExecution` 并完成 Turn。独立 Cargo target 中 `cargo check`、14 项 Rust 单元测试和严格 Clippy 均通过；配置就绪闸门与延迟重启由前端回归测试覆盖。
 - 相关决策：[ADR-001：使用原版 Codex app-server](../decisions/ADR-001-unmodified-codex-app-server.md)、[ADR-002：隔离运行数据与凭据](../decisions/ADR-002-isolated-runtime-data.md)。

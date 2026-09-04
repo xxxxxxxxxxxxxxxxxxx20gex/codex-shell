@@ -27,7 +27,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEE0RkM4QUU4Njk4MTQ5MDAKUldRQVNZRnA2SXI4cEN6M3YwZDRQZjRHbVRSV3Y0N3ZQTko3b04rZVNlQXdoeDVKcHhPQk1sZloK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDMyQjcxMTgwNTI2RDdEQgpSV1RiMXlZRkdIRXJBeWlnSkRzeno0TlNFSEtwZWZBUmU1c1d3WGhkN0dJSmdoTDhqenR1MkRPYgo=",
       "endpoints": [
         "https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/releases/latest/download/latest.json"
       ]
