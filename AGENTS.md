@@ -95,6 +95,7 @@ Codex Shell 是面向个人开发者的 Windows 桌面智能体工作台。产�
 - 分支职责固定为：`main` 是个人项目的唯一开发与稳定主线；每个公开版本建立对应的 `release/vX.Y.Z` 分支，并与同名 tag 指向同一个发布提交。发布分支创建后只接受该版本的必要修复，不把未验证的开发改动直接推入。
 - 日常改动直接在 `main` 完成并通过质量门禁；发布时从 `main` 创建 `release/vX.Y.Z`，打同名 tag 并上传 Release。发布后的修复应回合并 `main`，避免稳定线和发布维护线信息漂移。
 - 个人生产发布默认使用本机 `pnpm release:package`：暂存并校验同源 Runtime，生成签名 NSIS 安装器、`.sig` 和 `latest.json`，再将三项作为同一版本的正式 GitHub Release 资产手动上传；不依赖 CI Runner，也不得把 Runtime 或私钥提交到仓库。详细命令以 `README.md` 为准。
+- 日常开发、调试和回归默认只运行本地 Debug 构建（如 `pnpm desktop:build` 或 `pnpm tauri dev`），不签名、不生成生产 Release 资产、不操作版本 tag；只有用户明确要求“发布”时，才执行生产打包、Updater 签名和 Release 上传准备流程。
 - Tauri Updater 私钥是发布根凭证，必须保存在受控的本机安全位置并单独备份；签名密码可选，但无密码 key 时文件本身即最高敏感级别凭证。更换公钥前必须设计过渡版本，否则已安装版本会拒绝后续更新。
 - GitHub HTTPS 认证使用 GitHub CLI 的非交互凭据助手，不触发 Git Credential Manager 图形窗口；凭据只保存在用户级安全存储中，不得写入仓库、脚本、文档、提交信息或远端 URL。
 - 本机网络访问 GitHub 时使用 `http://127.0.0.1:7897` 代理；只把代理作为本仓库 Git 配置，不将代理环境注入应用运行时。
