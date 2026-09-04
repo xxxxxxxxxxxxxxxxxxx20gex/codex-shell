@@ -40,14 +40,14 @@ CS 不修改 Codex Core，也不在前端复制一套 Agent 执行循环。所�
 
 ### 下载 Windows 安装包
 
-当前公开稳定版为 [Codex Shell v0.1.3](https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/releases/tag/v0.1.3)：下载
-`codex-shell_0.1.3_x64-setup.exe` 后按向导安装。当前 Release 未进行代码签名，
+当前公开稳定版仍为 [Codex Shell v0.1.3](https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/releases/tag/v0.1.3)：下载
+`codex-shell_0.1.3_x64-setup.exe` 后按向导安装。下一版将加入 Tauri Updater，当前公开 Release 未进行 Windows Authenticode 代码签名，
 Windows SmartScreen 可能在首次运行时显示提示；这是个人二开项目，不代表 OpenAI
 官方产品或背书。
 
-安装后也可以打开“设置 → 运行环境 → 检查更新”，进入官方 GitHub 最新 Release 页面。
-当前更新入口是用户确认后的手动下载安装：安装包尚未配置 Tauri updater 的签名密钥和更新端点，
-因此不会在后台静默下载或替换程序。下载新的 NSIS 安装包并按向导安装即可保留用户数据。
+安装后也可以打开“设置 → 运行环境 → 检查并更新”。CS 会检查官方 Release 的签名更新，
+发现新版本后下载并启动安装器，安装完成后自动重启应用。更新过程不会把 API Key 或会话内容
+发送给 CS 自己的服务器；更新包来自项目配置的 GitHub Release 端点。
 
 ### 运行已构建的桌面端
 
@@ -88,9 +88,10 @@ CS 不会将与功能无关的遥测数据上传到外部服务。
 
 ### 代码签名
 
-当前 Windows 安装包尚未进行代码签名，首次运行时 Windows SmartScreen 可能显示安全提示。
-项目目前也未启用 SignPath 或其他第三方签名服务；待建立可审计的签名证书、审批者和发布流程后，
-再在此处公布真实的签名策略和维护者信息。
+下一版 Windows 安装包将使用 Tauri Updater 的 minisign 更新签名校验。当前 `v0.1.3` 安装包
+尚未包含 updater 能力；安装包本身也可能因未配置 Windows Authenticode 代码签名而触发
+SmartScreen 提示。Tauri 更新签名与 Windows 代码签名是两套独立机制。签名私钥只保存在
+GitHub Actions Secret 中，不提交到仓库。
 
 ### 创建第一条对话
 
@@ -170,7 +171,7 @@ CS 采用“代码实现 + 仓库文档 Wiki”协同的开发方式。文档不
 ### 分支与版本
 
 - `main`：个人项目的日常开发与稳定主线；
-- `release/vX.Y.Z`：对应已发布版本的冻结维护分支，并与同名 Git tag 对齐；当前公开版本为 `release/v0.1.3`。
+- `release/vX.Y.Z`：对应已发布版本的冻结维护分支，并与同名 Git tag 对齐；当前公开版本为 `release/v0.1.3`。Updater 集成将在下一版本发布分支中生效。
 
 日常改动直接提交到 `main`，通过质量门禁后正式发布。发布时从 `main` 创建版本分支
 和 tag，安装包与该 tag 保持一致。

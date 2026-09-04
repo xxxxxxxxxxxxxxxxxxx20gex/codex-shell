@@ -1,7 +1,7 @@
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { check } from "@tauri-apps/plugin-updater";
 import { ExternalLink, ShieldCheck } from "lucide-react";
 import { useState } from "react";
-import { APP_VERSION, RELEASES_LATEST_URL } from "../../appVersion";
+import { APP_VERSION } from "../../appVersion";
 import type { WindowsSandboxReadiness } from "../../generated/app-server/v2/WindowsSandboxReadiness";
 import type { WindowsSandboxSetupMode } from "../../generated/app-server/v2/WindowsSandboxSetupMode";
 import { CodexHomeCard } from "../runtime/CodexHomeCard";
@@ -28,13 +28,22 @@ export function RuntimePreferences({
   onRestart,
 }: Props) {
   const [updateError, setUpdateError] = useState("");
+  const [updateState, setUpdateState] = useState<"idle" | "checking" | "installing" | "current">("idle");
 
-  async function openLatestRelease() {
+  async function installLatestUpdate() {
     setUpdateError("");
+    setUpdateState("checking");
     try {
-      await openUrl(RELEASES_LATEST_URL);
+      const update = await check();
+      if (!update) {
+        setUpdateState("current");
+        return;
+      }
+      setUpdateState("installing");
+      await update.downloadAndInstall();
     } catch (error) {
-      setUpdateError(error instanceof Error ? error.message : "无法打开更新页面");
+      setUpdateError(error instanceof Error ? error.message : "更新检查或安装失败");
+      setUpdateState("idle");
     }
   }
 
@@ -59,10 +68,11 @@ export function RuntimePreferences({
           <span><ExternalLink aria-hidden="true" />Codex Shell 更新</span>
           <i>v{APP_VERSION}</i>
         </header>
-        <p>打开官方 GitHub Release 页面，获取最新的 Windows 安装包。</p>
-        <button className="secondary-button" type="button" onClick={() => void openLatestRelease()}>
-          检查更新
+        <p>安全检查官方签名更新并安装最新版本。更新时应用会自动重启。</p>
+        <button className="secondary-button" type="button" disabled={updateState === "checking" || updateState === "installing"} onClick={() => void installLatestUpdate()}>
+          {updateState === "checking" ? "检查中…" : updateState === "installing" ? "下载并安装中…" : updateState === "current" ? "已是最新版本" : "检查并更新"}
         </button>
+        {updateState === "current" && <small className="update-preferences-note">当前已是最新版本</small>}
         {updateError && <small className="update-preferences-error" role="alert">{updateError}</small>}
       </section>
       <CodexHomeCard path={codexHome} disabled={codexHomeDisabled} onRestart={onRestart} />

@@ -23,6 +23,7 @@
 .sandbox-preferences-card > button { margin-top: 12px; min-height: var(--control-height-compact); padding: 0 9px; font-size: var(--text-label); }
 .update-preferences-card > button { display: inline-flex; min-height: var(--control-height-compact); align-items: center; margin-top: 12px; padding: 0 11px; font-size: var(--text-label); }
 .update-preferences-error { display: block; margin-top: 8px; color: var(--accent-danger); font-size: var(--text-meta); line-height: 16px; }
+.update-preferences-note { display: block; margin-top: 8px; color: var(--text-muted); font-size: var(--text-meta); line-height: 16px; }
 .codex-home-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .codex-home-actions button { min-height: var(--control-height-compact); padding: 0 9px; font-size: var(--text-label); }
 .codex-home-error, .codex-home-note { display: block; margin-top: 8px; font-size: var(--text-meta); line-height: 16px; }
