@@ -47,8 +47,8 @@ try {
 
     $bundleDirectory = Join-Path $projectRoot "src-tauri\target\release\bundle"
     $nsisDirectory = Join-Path $bundleDirectory "nsis"
-    $installer = @(Get-ChildItem -LiteralPath $nsisDirectory -Filter "*-setup.exe" -File)
-    if ($installer.Count -ne 1) { throw "Expected exactly one NSIS installer; found $($installer.Count)." }
+    $installer = @(Get-ChildItem -LiteralPath $nsisDirectory -Filter "*$($config.version)*-setup.exe" -File)
+    if ($installer.Count -ne 1) { throw "Expected exactly one NSIS installer for version $($config.version); found $($installer.Count)." }
     $signature = "$($installer[0].FullName).sig"
     if (-not (Test-Path -LiteralPath $signature -PathType Leaf)) { throw "Tauri did not create the updater signature: $signature" }
 
