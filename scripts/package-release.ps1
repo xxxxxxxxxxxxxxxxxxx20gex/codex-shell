@@ -9,6 +9,7 @@ $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent $PSScriptRoot
 Push-Location $projectRoot
 $previousCargoBuildJobs = $env:CARGO_BUILD_JOBS
+$previousSigningKey = $env:TAURI_SIGNING_PRIVATE_KEY
 $previousSigningKeyPath = $env:TAURI_SIGNING_PRIVATE_KEY_PATH
 $previousSigningPassword = $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD
 try {
@@ -31,7 +32,9 @@ try {
     if (-not $OutputDirectory) { $OutputDirectory = Join-Path $projectRoot "release-artifacts\$Tag" }
     $outputPath = [IO.Path]::GetFullPath($OutputDirectory)
 
-    $env:TAURI_SIGNING_PRIVATE_KEY_PATH = (Resolve-Path -LiteralPath $SigningKeyPath).Path
+    $resolvedSigningKeyPath = (Resolve-Path -LiteralPath $SigningKeyPath).Path
+    $env:TAURI_SIGNING_PRIVATE_KEY = [IO.File]::ReadAllText($resolvedSigningKeyPath)
+    $env:TAURI_SIGNING_PRIVATE_KEY_PATH = $resolvedSigningKeyPath
     # The project key is intentionally generated without a password. Explicitly
     # clear an inherited value so another developer-machine environment cannot
     # make this build fail or sign with an unexpected key password.
@@ -64,6 +67,8 @@ try {
     Get-ChildItem -LiteralPath $outputPath -File | Select-Object Name, Length
 }
 finally {
+    if ($null -eq $previousSigningKey) { Remove-Item Env:TAURI_SIGNING_PRIVATE_KEY -ErrorAction SilentlyContinue }
+    else { $env:TAURI_SIGNING_PRIVATE_KEY = $previousSigningKey }
     if ($null -eq $previousSigningKeyPath) { Remove-Item Env:TAURI_SIGNING_PRIVATE_KEY_PATH -ErrorAction SilentlyContinue }
     else { $env:TAURI_SIGNING_PRIVATE_KEY_PATH = $previousSigningKeyPath }
     if ($null -eq $previousSigningPassword) { Remove-Item Env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD -ErrorAction SilentlyContinue }
