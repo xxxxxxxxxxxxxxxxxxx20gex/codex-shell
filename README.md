@@ -40,7 +40,7 @@ CS 不修改 Codex Core，也不在前端复制一套 Agent 执行循环。所�
 
 ### 下载 Windows 安装包
 
-当前公开稳定版仍为 [Codex Shell v0.1.3](https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/releases/tag/v0.1.3)：下载
+当前公开稳定版仍为 [Codex Shell v0.1.4](https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/releases/tag/v0.1.4)：下载
 `codex-shell_0.1.3_x64-setup.exe` 后按向导安装。下一版将启用 Tauri Updater，当前公开 Release 未进行 Windows Authenticode 代码签名，
 Windows SmartScreen 可能在首次运行时显示提示；这是个人二开项目，不代表 OpenAI
 官方产品或背书。
@@ -88,7 +88,7 @@ CS 不会将与功能无关的遥测数据上传到外部服务。
 
 ### 代码签名
 
-下一版 Windows 安装包将使用 Tauri Updater 的 minisign 更新签名校验。当前 `v0.1.3` 安装包
+下一版 Windows 安装包将使用 Tauri Updater 的 minisign 更新签名校验。当前 `v0.1.4` 安装包
 尚未包含 updater 能力；安装包本身也可能因未配置 Windows Authenticode 代码签名而触发
 SmartScreen 提示。Tauri 更新签名与 Windows 代码签名是两套独立机制。签名私钥只保存在
 本机安全目录或其他受控密钥存储中，不提交到仓库。
@@ -171,7 +171,7 @@ CS 采用“代码实现 + 仓库文档 Wiki”协同的开发方式。文档不
 ### 分支与版本
 
 - `main`：个人项目的日常开发与稳定主线；
-- `release/vX.Y.Z`：对应已发布版本的冻结维护分支，并与同名 Git tag 对齐；当前公开版本为 `release/v0.1.3`。Updater 集成将在下一版本发布分支中生效。
+- `release/vX.Y.Z`：对应已发布版本的冻结维护分支，并与同名 Git tag 对齐；当前公开版本为 `release/v0.1.4`。Updater 已在当前发布分支中生效。
 
 日常改动直接提交到 `main`，通过质量门禁后正式发布。发布时从 `main` 创建版本分支
 和 tag，安装包与该 tag 保持一致。

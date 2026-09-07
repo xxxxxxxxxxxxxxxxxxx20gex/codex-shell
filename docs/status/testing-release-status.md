@@ -1,7 +1,7 @@
 # 测试与发布状态
 
 - 模块职责：维护类型检查、前端单元测试、Rust 校验、Windows 构建与发行物验证。
-- 当前状态：公开稳定版本仍为 `v0.1.3`；下一版本已接入 Tauri Updater，设置中的“检查并更新”会校验正式 GitHub Release 签名后下载并在 Windows 上自动重启安装。个人发布通过 `pnpm release:package` 在本机暂存经过批准的 Runtime、生成签名 NSIS 安装包和 `latest.json`，再手动上传到同名 Release。
+- 当前状态：公开稳定版本仍为 `v0.1.4`；当前版本已接入 Tauri Updater，设置中的“检查并更新”会校验正式 GitHub Release 签名后下载并在 Windows 上自动重启安装。个人发布通过 `pnpm release:package` 在本机暂存经过批准的 Runtime、生成签名 NSIS 安装包和 `latest.json`，再手动上传到同名 Release。
 - 最近变更：代码健康审查移除了不再被消费的 `tools.update_plan.enabled` 诊断读取和 `config/read` 客户端包装；`sendOrQueue` 的发送/排队路径统一复用同一调用形态，避免图片分支与普通消息分叉。README 已补充模型网关数据传输范围、用户主动操作的后续请求和当前未签名状态说明。生成协议类型、历史兼容回退和仍被 app-server 使用的接口保留。
 - 当前接口：`pnpm typecheck`、`pnpm lint`、`pnpm test`、`pnpm quality:knip`、`pnpm test:quality`、`pnpm build`、`pnpm rust:check`、`pnpm runtime:stage`、`pnpm protocol:generate`、`pnpm runtime:probe-goal`、`pnpm runtime:probe-model-parameters`、`pnpm runtime:probe-local-tool`、`pnpm desktop:build`、`pnpm desktop:package`。
 - 已知问题：安装包尚未代码签名，仍缺 CI、干净机器 UAC/sidecar 验证，以及超长活动输出和三栏拖拽的自动化覆盖。Vite 仍报告主 chunk 超过 500 kB。

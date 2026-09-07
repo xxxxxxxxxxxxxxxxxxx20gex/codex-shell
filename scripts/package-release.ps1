@@ -33,19 +33,20 @@ try {
     $outputPath = [IO.Path]::GetFullPath($OutputDirectory)
 
     $resolvedSigningKeyPath = (Resolve-Path -LiteralPath $SigningKeyPath).Path
-    $env:TAURI_SIGNING_PRIVATE_KEY = [IO.File]::ReadAllText($resolvedSigningKeyPath)
-    $env:TAURI_SIGNING_PRIVATE_KEY_PATH = $resolvedSigningKeyPath
-    # The project key is intentionally generated without a password. Explicitly
-    # clear an inherited value so another developer-machine environment cannot
-    # make this build fail or sign with an unexpected key password.
-    $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = ""
+    # Build the installer without updater artifact generation. Tauri's bundler
+    # treats an empty password as missing and otherwise prompts interactively,
+    # which cannot work in a reproducible release script. The updater signature
+    # is generated explicitly below with `tauri signer sign --password ""`.
+    Remove-Item Env:TAURI_SIGNING_PRIVATE_KEY -ErrorAction SilentlyContinue
+    Remove-Item Env:TAURI_SIGNING_PRIVATE_KEY_PATH -ErrorAction SilentlyContinue
+    Remove-Item Env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD -ErrorAction SilentlyContinue
     $env:CARGO_BUILD_JOBS = "2"
     Write-Output "Staging the compatible Codex Runtime..."
     pnpm runtime:stage
     if ($LASTEXITCODE -ne 0) { throw "Runtime staging failed, exit code: $LASTEXITCODE" }
 
     Write-Output "Building the signed Windows installer..."
-    pnpm tauri build
+    pnpm tauri build --ci --config src-tauri/tauri.release.conf.json
     if ($LASTEXITCODE -ne 0) { throw "Tauri release packaging failed, exit code: $LASTEXITCODE" }
 
     $bundleDirectory = Join-Path $projectRoot "src-tauri\target\release\bundle"
@@ -53,6 +54,9 @@ try {
     $installer = @(Get-ChildItem -LiteralPath $nsisDirectory -Filter "*$($config.version)*-setup.exe" -File)
     if ($installer.Count -ne 1) { throw "Expected exactly one NSIS installer for version $($config.version); found $($installer.Count)." }
     $signature = "$($installer[0].FullName).sig"
+    Write-Output "Signing the installer with the passwordless updater key..."
+    pnpm tauri signer sign --private-key-path $resolvedSigningKeyPath --password "" $installer[0].FullName
+    if ($LASTEXITCODE -ne 0) { throw "Updater signing failed, exit code: $LASTEXITCODE" }
     if (-not (Test-Path -LiteralPath $signature -PathType Leaf)) { throw "Tauri did not create the updater signature: $signature" }
 
     if (Test-Path -LiteralPath $outputPath) { Remove-Item -LiteralPath $outputPath -Recurse -Force }
