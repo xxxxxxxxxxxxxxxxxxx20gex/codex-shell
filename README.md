@@ -178,6 +178,38 @@ CS 采用“代码实现 + 仓库文档 Wiki”协同的开发方式。文档不
 
 环境要求：Windows、Node.js、pnpm、Rust、Visual Studio C++ Build Tools，以及可用的 `codex.exe` Runtime。
 
+### 换电脑继续开发
+
+源码、脚本、协议类型和 UI 资源都在 Git 仓库中，换机时先克隆 `main`，再安装同样的
+Node.js、pnpm、Rust、Visual Studio C++ Build Tools 和 WebView2 运行环境：
+
+```powershell
+git clone https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell.git
+cd codex-shell
+pnpm install
+pnpm desktop:build
+```
+
+日常 Debug 开发不需要 signing key，也不需要 GitHub PAT。`pnpm runtime:stage` 会从
+当前机器安装的 Codex 桌面端同目录或 PATH 查找 Runtime；如果 Runtime 在其他位置，先
+设置 `CODEX_SHELL_RUNTIME` 指向 `codex.exe` 或其目录。Runtime 和 companion binaries
+被 Git 忽略，不要从旧电脑直接提交到仓库。
+
+只有在新电脑需要正式发布时，才通过安全介质复制无密码私钥到
+`%USERPROFILE%\\.tauri\\codex-shell.key`（或使用 `-SigningKeyPath` 指定路径）。私钥是
+Updater 的发布根凭证，不能上传到 GitHub、聊天记录或网盘公开链接；公钥已经写入
+`src-tauri/tauri.conf.json`，不需要重新生成。发布权限使用 GitHub CLI 单独登录或配置
+受控凭证，不要把 PAT 写进 remote URL、脚本或提交记录：
+
+```powershell
+gh auth login
+pnpm release:package -- -Repository "xxxxxxxxxxxxxxxxxxx20gex/codex-shell" -Tag "vX.Y.Z"
+```
+
+如果还要保留本机的历史会话和设置，可另外备份 `%USERPROFILE%\\.codex-shell`；这属于
+运行数据，不是构建依赖，也不应作为项目源码提交。新机首次开发只需重新安装依赖、准备
+可用 Runtime 并运行 Debug 构建即可。
+
 ```powershell
 pnpm install
 
