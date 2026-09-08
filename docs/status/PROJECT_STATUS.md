@@ -1,13 +1,13 @@
 # 项目总状态
 
-- 当前阶段：Milestone 2 - P0 桌面编程工作台；公开稳定版本 `v0.1.4`，updater 集成已进入下一版本发布链路
-- 总体状态：核心对话、Session、工具活动、审批、文件、Diff 和模型配置可用；已具备可复验的 NSIS Windows 安装包发布链路，签名、CI 与 Runtime 恢复能力尚未完成。
+- 当前阶段：Milestone 2 - P0 桌面编程工作台；公开稳定版本 `v0.1.4` 已启用 Tauri Updater
+- 总体状态：核心对话、Session、工具活动、审批、文件、Diff 和模型配置可用；已发布带 minisign 更新签名的 NSIS Windows 安装包，Windows Authenticode 代码签名、CI 与 Runtime 恢复能力尚未完成。
 - 文档边界：本文件只记录跨模块当前快照、项目级风险、下一里程碑和完整验证基线。模块行为和定向证据以 [模块状态索引](../README.md#当前状态) 为准，历史由 Git 保留。
-- 最后更新：2026-09-04
+- 最后更新：2026-09-08
 
 ## 跨模块当前快照
 
-- 产品使用 Tauri 2、React、TypeScript 与 Rust 构建，以原版 `codex app-server` 为唯一执行核心，通过 stdio JSON-RPC 通信；下一开发版本接入 Tauri Updater，正式发布仍需生成签名 updater 产物。当前 Runtime 为通过兼容门禁的 `codex-cli 0.153.0-alpha.5`，生成协议类型仍以 `0.152.1` 为基线。参见 [ADR-001](../decisions/ADR-001-unmodified-codex-app-server.md) 与 [ADR-003](../decisions/ADR-003-compatible-runtime-updates.md)。
+- 产品使用 Tauri 2、React、TypeScript 与 Rust 构建，以原版 `codex app-server` 为唯一执行核心，通过 stdio JSON-RPC 通信；公开 `v0.1.4` 已发布安装器、minisign 签名和 updater manifest。当前 Runtime 为通过兼容门禁的 `codex-cli 0.153.4`，生成协议类型仍以 `0.152.1` 为基线。参见 [ADR-001](../decisions/ADR-001-unmodified-codex-app-server.md) 与 [ADR-003](../decisions/ADR-003-compatible-runtime-updates.md)。
 - 核心工作流已形成闭环：用户可以选择项目、创建和恢复多个 Session、发送文本/文件/图片、查看结构化执行时间线、处理审批、审查实时与历史 Diff，并按完成 Turn 分叉会话。
 - Composer 已统一模型、推理强度、权限、Goal、Plan、Review、Skills、MCP 和压缩入口；Thread 的模型、权限、审批者和 Goal 状态以 Core 权威通知及查询结果为准，不在 Shell 维护第二套执行状态。
 - Windows 桌面界面已收敛到 `DESIGN.md` 和语义 Token；三栏布局在窄窗口下保留功能入口，设置承载个性化、外观、运行环境和诊断，右栏提供项目文件浏览和独立只读侧边聊天。
@@ -19,7 +19,7 @@
 ## 项目级风险
 
 - app-server 自动断线恢复尚未完成；代际隔离可以阻止旧进程事件污染新连接，但不会主动重启崩溃进程或恢复进行中的 Turn。
-- Runtime 二进制不进入 Git；个人发布通过本机脚本暂存同源 Runtime、运行兼容门禁并生成签名安装器和 updater manifest，再手动上传 Release。仍需完成签名发布、干净 Windows 环境的 UAC 和 sidecar 验证。MSI 不是默认发布目标。
+- Runtime 二进制不进入 Git；个人发布通过本机脚本暂存同源 Runtime、运行兼容门禁并生成安装器、minisign 签名和 updater manifest，再手动上传 Release。`v0.1.4` 已完成该发布流程及干净 Windows 环境的 UAC、sandbox readiness 和 elevated 命令验证；Windows Authenticode 代码签名仍未完成。MSI 不是默认发布目标。
 - Shell Queue 只存在当前进程内，应用退出后不会恢复；MCP 配置编辑、Skills/Plugin 管理和显式连接诊断尚未完成。
 - 文件预览仍会先经 IPC 读取完整文件；超大 Diff、单个超长活动和二进制 Diff 缺少源端预算或专用视图。
 - 侧边聊天当前固定只读沙箱、`approvalPolicy: never`，不会替代主会话执行写入或审批流程；侧聊状态暂不持久化，也不会出现在历史列表；关闭时在连接可用的情况下先中断活动 Turn，再退订临时 Thread，Runtime 已停止时不触发重连；切换主 Session 或 Runtime 重置后返回右侧功能入口。
@@ -30,10 +30,12 @@
 
 1. 实现 app-server 断线后当前 Session 的可控恢复，并明确进行中 Turn 的失败、重试和状态回收边界。
 2. 继续拆分高频 Composer 与 Session 编排入口，保持行为和测试基线不变。
-3. 建立 CI、Runtime 获取与兼容校验、安装包签名基线，并在干净 Windows 用户环境验证 elevated Sandbox 与 sidecar。
+3. 建立 CI 与 Windows Authenticode 代码签名基线，并持续在干净 Windows 用户环境回归 elevated Sandbox 与 sidecar。
 4. 在 Runtime 或读取协议层增加大文件、Diff 和活动输出预算，避免只依赖前端截断。
 
 ## 完整验证基线
+
+- 2026-09-07：公开 `v0.1.4` Release 已上传 `codex-shell_0.1.4_x64-setup.exe`、对应 minisign `.sig` 和 `latest.json`；发布 tag 记录兼容门禁 Runtime `codex-cli 0.153.4`，并完成干净 Windows 用户环境的 UAC、sandbox readiness 和 elevated 命令验证。
 
 - 2026-09-02：代码健康审查移除未被消费的 `tools.update_plan.enabled` 诊断读取、`config/read` 客户端包装和 `sendOrQueue` 的重复图片分支；保留生成协议类型及历史/旧 Runtime 兼容逻辑。`pnpm lint`、`pnpm typecheck`、57 个 Vitest 文件/261 个测试、Vite production build、Rust check、14 个 Rust 单测和 Clippy 通过。Knip 在 OXC 解析阶段因本机 ArrayBuffer 分配失败退出，未产生诊断；该结果不作为无效代码通过证据。
 

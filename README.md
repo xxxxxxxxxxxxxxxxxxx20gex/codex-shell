@@ -41,7 +41,7 @@ CS 不修改 Codex Core，也不在前端复制一套 Agent 执行循环。所�
 ### 下载 Windows 安装包
 
 当前公开稳定版仍为 [Codex Shell v0.1.4](https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/releases/tag/v0.1.4)：下载
-`codex-shell_0.1.3_x64-setup.exe` 后按向导安装。下一版将启用 Tauri Updater，当前公开 Release 未进行 Windows Authenticode 代码签名，
+`codex-shell_0.1.4_x64-setup.exe` 后按向导安装。`v0.1.4` 已启用 Tauri Updater，但当前公开 Release 未进行 Windows Authenticode 代码签名，
 Windows SmartScreen 可能在首次运行时显示提示；这是个人二开项目，不代表 OpenAI
 官方产品或背书。
 
@@ -88,8 +88,8 @@ CS 不会将与功能无关的遥测数据上传到外部服务。
 
 ### 代码签名
 
-下一版 Windows 安装包将使用 Tauri Updater 的 minisign 更新签名校验。当前 `v0.1.4` 安装包
-尚未包含 updater 能力；安装包本身也可能因未配置 Windows Authenticode 代码签名而触发
+当前 `v0.1.4` Windows 安装包使用 Tauri Updater 的 minisign 更新签名校验；安装包本身
+仍可能因未配置 Windows Authenticode 代码签名而触发
 SmartScreen 提示。Tauri 更新签名与 Windows 代码签名是两套独立机制。签名私钥只保存在
 本机安全目录或其他受控密钥存储中，不提交到仓库。
 
