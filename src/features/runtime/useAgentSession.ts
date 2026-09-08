@@ -47,6 +47,14 @@ export function visibleRetryingMessage(
   return retryingError?.threadId === activeThreadId ? retryingError.message : "";
 }
 
+export function windowsSandboxSetupMessage(
+  status: Exclude<WindowsSandboxReadiness, "ready">,
+) {
+  return status === "notConfigured"
+    ? "请前往“设置 → 运行环境”，点击“使用管理员权限配置”。"
+    : "Windows Sandbox 需要更新。请前往“设置 → 运行环境”，点击“使用管理员权限配置”。";
+}
+
 function useStableStore<T>(create: () => T) {
   const storeRef = useRef<T | null>(null);
   storeRef.current ??= create();
@@ -93,9 +101,7 @@ export function useAgentSession(
         runtimeNoticeStore.push({
           kind: "security",
           title: "Windows Sandbox 尚未就绪",
-          message: response.status === "notConfigured"
-            ? "app-server 检测到沙箱尚未配置，可在右侧状态页启动原生设置。"
-            : "app-server 检测到沙箱需要更新，可在右侧状态页重新设置。",
+          message: windowsSandboxSetupMessage(response.status),
         });
       }
     } catch {

@@ -8,6 +8,8 @@
 - 认证边界：app-server 使用独立 `codex_shell_gateway` provider，`env_key=OPENAI_API_KEY` 且 `requires_openai_auth=false`，只从当前进程注入的用户凭据读取，不继承宿主 Codex 登录状态。
 - 已知问题：Runtime 二进制被 Git 忽略，跨机器发布需要安全复制同版本 Runtime 与无密码 signing key；兼容门禁覆盖现有生成文件、方法、通知和反向请求保留，但不替代真实 smoke；旧 CODEX_HOME 迁移仍依赖同卷 `rename`，跨卷用户目录需要单独的可恢复复制方案；进程崩溃后的自动恢复尚未实现。实时 stderr 仅保存在当前窗口的有界内存中，应用退出后仍以 Core 的 SQLite 日志为长期诊断来源。
 - 发布状态：已用本机发布脚本生成 `v0.1.4` 正式 Release，并在干净 Windows 用户环境验证 UAC、sandbox readiness 和 elevated 命令执行闭环。
+- 交互校正：Windows Sandbox 未配置或需要更新时，运行时提示会明确引导到“设置 → 运行环境 → 使用管理员权限配置”，不再指向不存在的右侧状态页。
+- 验证证据（2026-09-08）：Sandbox 提示文案定向 Vitest、TypeScript、ESLint、production build 和 `cargo check --manifest-path src-tauri/Cargo.toml` 均通过。
 - 验证证据：2026-09-04，`codex-cli 0.153.0-alpha.5` 与同目录 helper 通过协议兼容门禁；真实第三方网关探针在低推理模式下产生两次 `commandExecution` 并完成 Turn，独立 Cargo target 中 `cargo check`、14 项 Rust 单元测试和严格 Clippy 均通过。2026-09-07，`v0.1.4` manifest 更新为 `codex-cli 0.153.4` 并记录主 Runtime 与三个同源 helper 的 SHA-256，正式 Release 上传安装器、`.sig` 和 `latest.json`。
 - 相关决策：[ADR-001：使用原版 Codex app-server](../decisions/ADR-001-unmodified-codex-app-server.md)、[ADR-002：隔离运行数据与凭据](../decisions/ADR-002-isolated-runtime-data.md)。
 - 最后更新：2026-09-08

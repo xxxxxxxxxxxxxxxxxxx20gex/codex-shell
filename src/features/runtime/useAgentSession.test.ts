@@ -3,7 +3,22 @@ import {
   sendOrQueue,
   updateRetryingError,
   visibleRetryingMessage,
+  windowsSandboxSetupMessage,
 } from "./useAgentSession";
+
+describe("Windows Sandbox setup notice", () => {
+  it("points an unconfigured sandbox to the administrator setup action", () => {
+    expect(windowsSandboxSetupMessage("notConfigured")).toBe(
+      "请前往“设置 → 运行环境”，点击“使用管理员权限配置”。",
+    );
+  });
+
+  it("points a sandbox update to the same administrator setup action", () => {
+    expect(windowsSandboxSetupMessage("updateRequired")).toBe(
+      "Windows Sandbox 需要更新。请前往“设置 → 运行环境”，点击“使用管理员权限配置”。",
+    );
+  });
+});
 
 describe("retrying error lifecycle", () => {
   it("clears a retry banner when the matching Turn settles", () => {

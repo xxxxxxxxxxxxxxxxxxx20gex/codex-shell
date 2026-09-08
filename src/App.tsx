@@ -282,7 +282,7 @@ function App() {
           <div className="composer-wrap">
             <RuntimeNoticeBanner
               store={session.runtimeNoticeStore}
-              onShowStatus={() => openPreferences("diagnostics")}
+              onShowStatus={() => openPreferences("runtime")}
             />
             {session.error && <div className="composer-error" role="alert">{session.error}</div>}
             <TransientNotice key={session.thread?.id ?? "new"} message={uiError} onDismiss={() => setUiError("")} />
