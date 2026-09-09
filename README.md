@@ -24,6 +24,16 @@ CS 将模型回答、执行过程、文件变更和本轮产出整合到同一�
 
 ## 核心工作方式
 
+### 管理扩展（当前开发版）
+
+- 左侧 **Skills** 可从包含 `SKILL.md` 的目录安装独立技能，或启动 Installer 会话。启停由 Core 持久化；卸载仅用于 CS 用户目录中的独立技能，内容移到当前 CODEX_HOME 的 `uninstalled-skills`，可手动恢复。项目、系统、管理员和 Plugin 技能不提供此卸载入口。
+- 在 Composer 的 **MCP** 面板添加、编辑、启停或删除用户级服务器，支持 stdio 命令、JSON 参数数组、环境变量引用及 HTTP。原配置中未编辑的工具策略等字段会保留；项目和 Plugin 配置不会被此表单删除。
+- HTTP Bearer Token 输入后保存到 Windows Credential Manager，普通配置只写环境变量名。新增或更换 Token 后，等待任务结束，在“设置 → 运行环境”重启使其生效；不会自动中断当前任务。stdio 服务的密钥可通过系统环境变量引用。
+- 左侧 **插件** 支持添加本地目录或 Git Marketplace、更新来源、查看详情、安装与卸载 Plugin。仅支持本地 Marketplace 管理，不提供 OpenAI 账户、官方远程目录或 ChatGPT Connector 登录；MCP 自身 OAuth 仍可使用。
+- 扩展变更后列表重新读取。已安装并不等于已认证；插件如返回待认证 Connector，会明确提示。新 Skill/Plugin 建议在新会话使用。安装可信来源的插件会允许其 MCP/Hooks 执行本地代码。
+
+MCP 的 reload、OAuth 和插件下载可能主动连接各自服务；这些通信独立于模型请求。
+
 ```text
 CS 桌面壳（Tauri + React）
         │  stdio JSON-RPC

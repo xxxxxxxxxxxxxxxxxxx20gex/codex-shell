@@ -1,0 +1,37 @@
+.extension-page, .skill-management-page { box-sizing: border-box; width: 100%; padding: var(--space-6); gap: var(--space-4); }
+.skill-management-header { flex-wrap: wrap; gap: var(--space-3); }
+.skill-management-header h1 { font-size: var(--text-title); }
+.skill-management-header > div:last-child, .extension-actions, .skill-management-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.extension-page button, .skill-management-remove, .mcp-config-panel button { min-height: var(--control-height-compact); padding: var(--space-1) var(--space-2); border: 1px solid var(--border-default); border-radius: var(--radius-control); color: var(--text-secondary); background: var(--surface-panel); font-size: var(--text-label); cursor: pointer; }
+.extension-page button:disabled, .mcp-config-panel button:disabled { color: var(--text-disabled); cursor: default; }
+.extension-page button:hover:enabled, .mcp-config-panel button:hover:enabled { background: var(--surface-raised); }
+.extension-page input, .mcp-config-form input, .mcp-config-form select { box-sizing: border-box; width: 100%; min-width: 0; min-height: var(--control-height); padding: var(--space-1) var(--space-2); border: 1px solid var(--border-default); border-radius: var(--radius-control); color: var(--text-primary); background: var(--surface-canvas); font: inherit; }
+.extension-source, .extension-source label, .mcp-config-form label { display: grid; gap: var(--space-2); font-size: var(--text-ui); }
+.extension-marketplace > header, .extension-detail > header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-2); }
+.extension-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--border-subtle); }
+.extension-row > div:first-child { flex: 1; min-width: 0; }
+.extension-row strong, .extension-row p, .extension-row small, .extension-page [role], .skill-management-section [role] { overflow-wrap: anywhere; }
+.extension-row p { color: var(--text-secondary); font-size: var(--text-ui); }
+.extension-row small { color: var(--text-muted); font-size: var(--text-meta); }
+.extension-detail { padding: var(--space-3) 0; border-top: 1px solid var(--border-subtle); font-size: var(--text-ui); }
+.extension-page .error, .mcp-config-panel .error, .skill-management-page .error { color: var(--accent-danger); }
+.mcp-config-form fieldset { display: grid; min-width: 0; border: 0; padding: 0; gap: var(--space-2); }
+.mcp-config-panel { padding: var(--space-3); font-size: var(--text-ui); }
+.mcp-config-panel > header { display: grid; gap: var(--space-1); }
+.mcp-config-panel > header small { color: var(--text-muted); font-size: var(--text-meta); }
+.mcp-config-form { margin: var(--space-2) 0; }
+.mcp-config-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-2) 0; border-top: 1px solid var(--border-subtle); }
+.mcp-config-row > span { display: grid; min-width: 0; }
+.mcp-config-row small { color: var(--text-muted); font-size: var(--text-meta); }
+.mcp-config-panel p { overflow-wrap: anywhere; font-size: var(--text-label); }
+.mcp-panel { max-height: min(680px, 75vh); }
+.skill-management-search { border-radius: var(--radius-control); }
+.skill-management-search input { min-width: 0; }
+.skill-management-card { grid-template-columns: var(--control-height) minmax(0, 1fr) auto; }
+.skill-management-card strong { flex-wrap: wrap; overflow-wrap: anywhere; }
+.skill-management-icon, .skill-management-toggle svg, .skill-management-search svg { width: 16px; height: 16px; stroke-width: 1.75; }
+.skill-management-card .skill-management-icon { width: var(--control-height); height: var(--control-height); border-radius: var(--radius-control); }
+.skill-management-icon svg { width: 16px; height: 16px; stroke-width: 1.75; }
+.extension-page :focus-visible, .mcp-config-panel :focus-visible, .skill-management-page :focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; }
+@media (max-width: 1024px) { .skill-management-page { padding: var(--space-3); } .skill-management-actions { flex-direction: column; } }
+@media (prefers-reduced-motion: reduce) { .skill-management-page button { transition: none; } }

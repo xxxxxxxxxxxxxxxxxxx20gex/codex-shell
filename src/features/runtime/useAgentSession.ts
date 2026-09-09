@@ -75,6 +75,7 @@ export function useAgentSession(
   const [sessionState, dispatch] = useReducer(agentSessionReducer, initialAgentSessionState);
   const [codexHome, setCodexHome] = useState("");
   const [skillsRevision, setSkillsRevision] = useState(0);
+  const extensionsChanged = useCallback(() => setSkillsRevision((value) => value + 1), []);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [retryingError, dispatchRetryingError] = useReducer(updateRetryingError, null);
@@ -272,16 +273,16 @@ export function useAgentSession(
             : "app-server 正在等待安全检查完成。",
         });
       },
-      onMcpOauthLoginCompleted: (notification) => runtimeNoticeStore.push({
+      onMcpOauthLoginCompleted: (notification) => { setSkillsRevision((value) => value + 1); runtimeNoticeStore.push({
         kind: notification.success ? "info" : "warning",
         title: notification.success ? `MCP ${notification.name} 登录成功` : `MCP ${notification.name} 登录失败`,
         message: notification.error ?? (notification.success ? "app-server 已完成 OAuth 登录。" : "请重新发起 OAuth 登录。"),
-      }),
-      onMcpServerStatusUpdated: (notification) => runtimeNoticeStore.push({
+      }); },
+      onMcpServerStatusUpdated: (notification) => { setSkillsRevision((value) => value + 1); runtimeNoticeStore.push({
         kind: notification.status === "failed" ? "warning" : "info",
         title: `MCP ${notification.name} · ${notification.status}`,
         message: notification.error ?? (notification.status === "ready" ? "服务器已就绪。" : "服务器启动状态已更新。"),
-      }),
+      }); },
       onStopped: () => {
         dispatchRetryingError({ type: "clear" });
         setCodexHome("");
@@ -413,6 +414,7 @@ export function useAgentSession(
   return {
     codexHome,
     skillsRevision,
+    extensionsChanged,
     running,
     canSteer,
     canInterrupt,

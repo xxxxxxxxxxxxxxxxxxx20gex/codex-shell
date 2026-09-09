@@ -100,6 +100,15 @@ export function useAppController() {
   const panels = useResizablePanels();
   const newThreadCwd = pendingProjectPath ?? defaultProjectDirectory?.path ?? null;
   const session = useAgentSession(settings, permissionMode, approvalReviewer, newThreadCwd, personalization, settingsReady);
+  const listAvailableSkills = session.listSkills;
+  useEffect(() => {
+    if (!session.skillsRevision) return;
+    let active = true;
+    void listAvailableSkills(true).then((items) => {
+      if (active) setSkills((selected) => selected.filter((skill) => items.some((item) => item.path === skill.path && item.enabled)));
+    }).catch((error) => { if (active) setUiError(errorMessage(error)); });
+    return () => { active = false; };
+  }, [session.skillsRevision, listAvailableSkills]);
   const restartSession = session.restart;
   const searchFiles = session.searchFiles;
   const currentProjectPath = session.thread?.cwd ? String(session.thread.cwd) : newThreadCwd;

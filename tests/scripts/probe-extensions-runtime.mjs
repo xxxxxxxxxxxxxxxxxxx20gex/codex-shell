@@ -73,8 +73,6 @@ try {
   await request("plugin/uninstall", { pluginId: plugin.id });
   await request("marketplace/remove", { marketplaceName: added.marketplaceName });
   console.log("PASS Plugins: local marketplace add/list/read/install/uninstall/remove");
-  const catalog = await request("plugin/list", {});
-  console.log(JSON.stringify({ remoteCatalogsWithoutAccount: catalog.marketplaces.filter((item) => !item.path).map((item) => item.name), catalogErrors: catalog.marketplaceLoadErrors.length }));
 } finally {
   for (const waiter of pending.values()) clearTimeout(waiter.timeout);
   if (child.exitCode === null) { child.kill(); await once(child, "exit"); }

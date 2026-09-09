@@ -38,12 +38,15 @@ export function useAgentCommands(
 
   const listMcpServers = useCallback(async (): Promise<McpServerStatus[]> => {
     const client = await ensureConnected();
-    const response = await client.listMcpServers({
-      threadId: currentThreadId(),
-      detail: "full",
-      limit: 100,
-    });
-    return response.data;
+    const servers: McpServerStatus[] = [];
+    let cursor: string | null = null;
+    do {
+      const response = await client.listMcpServers({ threadId: currentThreadId(), detail: "full", limit: 100, cursor });
+      servers.push(...response.data);
+      cursor = response.nextCursor;
+      if (servers.length >= 1000 && cursor) throw new Error("MCP 状态超过 1000 项，请减少配置后重试。");
+    } while (cursor);
+    return servers;
   }, [currentThreadId, ensureConnected]);
 
   const loginMcpServer = useCallback(async (name: string) => {

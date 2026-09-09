@@ -25,6 +25,7 @@ import { McpStatusPanel } from "./features/commands/McpStatusPanel";
 import { ReviewPanel } from "./features/commands/ReviewPanel";
 import { SkillPicker } from "./features/commands/SkillPicker";
 import { SkillManagementPage } from "./features/commands/SkillManagementPage";
+import { PluginManagementPage } from "./features/commands/PluginManagementPage";
 import { SendModeControl } from "./features/composer/SendModeControl";
 import { ComposerAddMenu } from "./features/composer/ComposerAddMenu";
 import { ComposerIntentControl } from "./features/composer/ComposerIntentControl";
@@ -53,7 +54,7 @@ import { isPathWithinRoot, resolveLinkedProjectPath } from "./features/workspace
 
 function App() {
   const [inspectorView, setInspectorView] = useState<"home" | "files" | "chat">("home");
-  const [mainView, setMainView] = useState<"conversation" | "skills">("conversation");
+  const [mainView, setMainView] = useState<"conversation" | "skills" | "plugins">("conversation");
   const [sideChatMaximized, setSideChatMaximized] = useState(false);
   const {
     workspaceGridRef,
@@ -199,7 +200,7 @@ function App() {
               <MessageSquarePlus aria-hidden="true" />
               <span>新建对话</span>
             </button>
-            <button className="sidebar-action" type="button" disabled title="插件功能预留">
+            <button className={`sidebar-action ${mainView === "plugins" ? "active" : ""}`} type="button" onClick={() => { setMainView("plugins"); setCommandPanel(null); }} title="管理 Plugins">
               <Puzzle aria-hidden="true" />
               <span>插件</span>
             </button>
@@ -256,7 +257,7 @@ function App() {
               <PanelRight aria-hidden="true" />
             </button>
           </header>
-          {mainView === "skills" ? <SkillManagementPage loadSkills={session.listSkills} revision={session.skillsRevision} setEnabled={setSkillEnabled} onAddSkill={() => { setMainView("conversation"); void startSkillTask(); }} onClose={() => setMainView("conversation")} /> : <>
+          {mainView === "skills" ? <SkillManagementPage loadSkills={session.listSkills} revision={session.skillsRevision} codexHome={session.codexHome} setEnabled={setSkillEnabled} onAddSkill={() => { setMainView("conversation"); void startSkillTask(); }} onChanged={session.extensionsChanged} onClose={() => setMainView("conversation")} /> : mainView === "plugins" ? <PluginManagementPage extensions={session.extensions} revision={session.skillsRevision} onChanged={session.extensionsChanged} onClose={() => setMainView("conversation")} /> : <>
           {session.turns.length > 0 ? (
             <ConversationTimeline
               key={session.thread?.id ?? "new"}
@@ -324,7 +325,7 @@ function App() {
               {currentProjectPath && mentionQuery !== null && <FileMentionMenu query={mentionQuery} results={mentionResults} loading={mentionLoading} onSelect={selectMention} />}
               {slashMenuVisible && <SlashCommandMenu query={slashQuery ?? ""} selectedIndex={slashSelectedIndex} hasThread={Boolean(session.thread)} running={session.running} onSelect={(id) => void runSlashCommand(id)} />}
               {commandPanel === "skills" && <SkillPicker selected={skills} revision={session.skillsRevision} loadSkills={session.listSkills} onToggle={toggleSkill} onClose={() => setCommandPanel(null)} />}
-              {commandPanel === "mcp" && <McpStatusPanel loadServers={session.listMcpServers} loginServer={session.loginMcpServer} reloadServers={session.reloadMcpServers} readResource={session.readMcpResource} onClose={() => setCommandPanel(null)} />}
+              {commandPanel === "mcp" && <McpStatusPanel loadServers={session.listMcpServers} loginServer={session.loginMcpServer} reloadServers={session.reloadMcpServers} readResource={session.readMcpResource} readConfig={session.extensions.readMcpConfig} writeConfig={session.extensions.writeMcpConfig} revision={session.skillsRevision} onChanged={session.extensionsChanged} onClose={() => setCommandPanel(null)} />}
               {commandPanel === "review" && <ReviewPanel startReview={session.startReview} onStarted={(delivery) => { setCommandPanel(null); setCommandNotice(delivery === "detached" ? "已打开独立 Review Session。" : "原生代码审查已在当前 Session 启动。"); }} onClose={() => setCommandPanel(null)} />}
               <div className="composer-toolbar">
                 <div className="composer-tools">

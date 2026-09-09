@@ -1,10 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { RefreshCw, Server, X } from "lucide-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import type { McpServerStatus } from "../../generated/app-server/v2/McpServerStatus";
 import type { ResourceContent } from "../../generated/app-server/ResourceContent";
 import { errorMessage } from "../../shared/errors";
 import { safeHttpUrl } from "../../shared/externalUrl";
+import { McpConfigPanel } from "./McpConfigPanel";
+import "./ExtensionManagement.css";
+import type { UserMcpConfig, McpConfig } from "../extensions/mcpConfig";
 
 interface Props {
   loadServers: () => Promise<McpServerStatus[]>;
@@ -12,6 +15,10 @@ interface Props {
   reloadServers: () => Promise<void>;
   readResource: (server: string, uri: string) => Promise<ResourceContent[]>;
   onClose: () => void;
+  readConfig?: () => Promise<UserMcpConfig>;
+  writeConfig?: (name: string, value: McpConfig | null, version: string) => Promise<void>;
+  onChanged?: () => void;
+  revision?: number;
 }
 
 const AUTH_LABELS: Record<McpServerStatus["authStatus"], string> = {
@@ -33,7 +40,15 @@ function buildResourcePreview(contents: ResourceContent[]) {
     : `${text.slice(0, MAX_RESOURCE_PREVIEW_CHARS)}\n\n[预览已截断]`;
 }
 
-export function McpStatusPanel({ loadServers, loginServer, reloadServers, readResource, onClose }: Props) {
+export function McpStatusPanel({ loadServers, loginServer, reloadServers, readResource, onClose, readConfig, writeConfig, onChanged, revision }: Props) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function outside(event: PointerEvent) { if (!panelRef.current?.contains(event.target as Node)) onClose(); }
+    function escape(event: KeyboardEvent) { if (event.key === "Escape") onClose(); }
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("keydown", escape);
+    return () => { document.removeEventListener("pointerdown", outside); document.removeEventListener("keydown", escape); };
+  }, [onClose]);
   const [servers, setServers] = useState<McpServerStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -55,7 +70,7 @@ export function McpStatusPanel({ loadServers, loginServer, reloadServers, readRe
 
   useEffect(() => {
     void refresh();
-  }, [refresh]);
+  }, [refresh, revision]);
 
   async function login(name: string) {
     setActionServer(name);
@@ -97,9 +112,9 @@ export function McpStatusPanel({ loadServers, loginServer, reloadServers, readRe
     }
   }
 
-  return <div className="agent-command-panel mcp-panel">
+  return <div ref={panelRef} className="agent-command-panel mcp-panel">
     <header><div><strong>MCP</strong><small>服务器、OAuth、工具与资源</small></div><span><button className="mcp-refresh" disabled={actionServer !== null} onClick={() => void reload()}><RefreshCw aria-hidden="true" />刷新配置</button><button onClick={onClose} aria-label="关闭 MCP"><X aria-hidden="true" /></button></span></header>
-    <div className="command-panel-list">
+    <div className="command-panel-list">{readConfig && writeConfig && <McpConfigPanel read={readConfig} write={writeConfig} onChanged={onChanged} />}
       {loading && <p>正在读取 MCP 状态…</p>}{error && <p className="error">{error}</p>}
       {!loading && !error && servers.length === 0 && <p>当前没有配置 MCP 服务器。</p>}
       {authorizationUrl && <p className="mcp-auth-link">浏览器未打开？<a href={authorizationUrl} target="_blank" rel="noreferrer" onClick={(event) => { event.preventDefault(); void openUrl(authorizationUrl).catch((value) => setError(errorMessage(value))); }}>继续 OAuth 登录</a></p>}
@@ -107,7 +122,7 @@ export function McpStatusPanel({ loadServers, loginServer, reloadServers, readRe
       {servers.map((server) => {
         const tools = Object.keys(server.tools);
         return <details className="mcp-server" key={server.name}>
-          <summary><i><Server aria-hidden="true" /></i><span><strong>{server.name}</strong><small>{tools.length} 个工具 · {AUTH_LABELS[server.authStatus]}</small></span><em>{server.serverInfo ? "已连接" : "未启动"}</em></summary>
+          <summary><i><Server aria-hidden="true" /></i><span><strong>{server.name}</strong><small>{tools.length} 个工具 · {AUTH_LABELS[server.authStatus]}{server.pluginId ? " · 来自插件" : ""}</small></span><em>{server.runtimeStatus ? ({ notStarted: "未启动", starting: "启动中", connected: "已连接", authenticationRequired: "需要认证", failed: "启动失败", cancelled: "已取消", disabled: "已禁用" })[server.runtimeStatus] : server.serverInfo ? "已连接" : "等待状态"}</em></summary>
           <div className="mcp-server-actions">
             {server.authStatus === "notLoggedIn" && <button className="secondary-button" disabled={actionServer !== null} onClick={() => void login(server.name)}>{actionServer === server.name ? "正在登录…" : "OAuth 登录"}</button>}
           </div>
