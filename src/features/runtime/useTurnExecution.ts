@@ -2,6 +2,7 @@ import { useCallback, useRef, type Dispatch, type MutableRefObject, type SetStat
 import type { ModeKind } from "../../generated/app-server/ModeKind";
 import type { Thread } from "../../generated/app-server/v2/Thread";
 import type { UserInput } from "../../generated/app-server/v2/UserInput";
+import type { Turn } from "../../generated/app-server/v2/Turn";
 import { errorMessage } from "../../shared/errors";
 import { assertModelVisibleInput } from "../../shared/modelVisibleInput";
 import {
@@ -142,6 +143,8 @@ export function useTurnExecution(props: Props) {
       }
 
       const submittedAt = Date.now() / 1_000;
+      const optimisticTurn: Turn = { id: `local-turn:${submittedAt}`, items: [], itemsView: "full", status: "inProgress", error: null, startedAt: submittedAt, completedAt: null, durationMs: null };
+      props.dispatch({ type: "optimisticTurnSubmitted", turn: optimisticTurn, userInput: input, submittedAt });
       const response = await startTurn(
         client,
         threadId,
