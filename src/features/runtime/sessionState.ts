@@ -69,6 +69,7 @@ export type AgentSessionAction =
   | { type: "threadStatusChanged"; threadId: string; status: ThreadStatus }
   | { type: "turnSubmitted"; turn: Turn; userInput: UserInput[]; submittedAt: number }
   | { type: "optimisticTurnSubmitted"; turn: Turn; userInput: UserInput[]; submittedAt: number }
+  | { type: "optimisticSteer"; threadId: string; userInput: UserInput[] }
   | { type: "turnStarted"; turn: Turn; startedAt: number }
   | { type: "itemStarted"; notification: ItemStartedNotification }
   | { type: "itemCompleted"; notification: ItemCompletedNotification }
@@ -445,6 +446,10 @@ export function agentSessionReducer(
       );
     case "optimisticTurnSubmitted":
       return withTurns(state, [...state.turns, withFallbackStartedAt(withOptimisticUser(action.turn, action.userInput), action.submittedAt)]);
+    case "optimisticSteer": {
+      const turn = state.turns.find((item) => item.id === (state.turns.at(-1)?.id) && item.status === "inProgress");
+      return turn ? withTurns(state, state.turns.map((item) => item.id === turn.id ? withOptimisticUser(item, action.userInput) : item)) : state;
+    }
     case "turnStarted":
       return withTurns(
         state,

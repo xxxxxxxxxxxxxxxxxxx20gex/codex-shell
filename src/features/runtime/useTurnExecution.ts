@@ -182,6 +182,7 @@ export function useTurnExecution(props: Props) {
     try {
       const input = validatedUserInput(message, mentions, skills, images, "补充指令和附件路径");
       const { client } = await props.ensureActiveThread();
+      props.dispatch({ type: "optimisticSteer", threadId, userInput: input });
       await client.steerTurn({
         threadId,
         expectedTurnId: runningTurn.turnId,
