@@ -80,6 +80,7 @@ interface Handlers {
   onMcpOauthLoginCompleted: (notification: McpServerOauthLoginCompletedNotification) => void;
   onMcpServerStatusUpdated: (notification: McpServerStatusUpdatedNotification) => void;
   onStopped: () => void;
+  onSkillsChanged?: () => void;
   onRuntimeLog: (line: string) => void;
   onProtocolError: (error: Error) => void;
   requestInteraction: (
@@ -110,6 +111,7 @@ export function subscribeToSessionEvents(client: AppServerClient, handlers: Hand
   }
 
   const disposers = [
+    client.onNotification("skills/changed", () => handlers.onSkillsChanged?.()),
     client.onNotification("item/agentMessage/delta", (params) => dispatchActive<AgentMessageDeltaNotification>(params, (notification) => ({ type: "agentDelta", notification }))),
     client.onNotification("item/plan/delta", (params) => dispatchActive<PlanDeltaNotification>(params, (notification) => ({ type: "planDelta", notification }))),
     client.onNotification("item/commandExecution/outputDelta", (params) => dispatchActive<CommandExecutionOutputDeltaNotification>(params, (notification) => ({ type: "commandDelta", notification }))),

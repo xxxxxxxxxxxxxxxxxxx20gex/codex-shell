@@ -86,9 +86,6 @@ export function useAppController() {
   const [mentions, setMentions] = useState<FileMention[]>([]);
   const [images, setImages] = useState<ImageAttachment[]>([]);
   const [skills, setSkills] = useState<SkillMention[]>([]);
-  const [disabledSkillPaths, setDisabledSkillPaths] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem("codex-shell.disabled-skills") ?? "[]") as string[]; } catch { return []; }
-  });
   const [mentionResults, setMentionResults] = useState<FuzzyFileSearchResult[]>([]);
   const [mentionLoading, setMentionLoading] = useState(false);
   const [uiError, setUiError] = useState("");
@@ -392,7 +389,7 @@ export function useAppController() {
     startNewTask();
     try {
       const available = await session.listSkills(true);
-      const managementSkills = available.filter((skill) => /skill[- ]?(?:installer|creator)|(?:安装|创建).*skill/i.test(`${skill.name} ${skill.description}`));
+      const managementSkills = available.filter((skill) => skill.enabled && /skill[- ]?(?:installer|creator)|(?:安装|创建).*skill/i.test(`${skill.name} ${skill.description}`));
       setSkills(managementSkills.slice(0, 2).map((skill) => ({ name: skill.name, path: skill.path })));
     } catch (error) {
       setUiError(errorMessage(error));
@@ -528,19 +525,15 @@ export function useAppController() {
   }
 
   function toggleSkill(skill: SkillMention) {
-    if (disabledSkillPaths.includes(skill.path)) return;
     setSkills((current) => current.some((item) => item.path === skill.path)
       ? current.filter((item) => item.path !== skill.path)
       : [...current, skill]);
   }
 
-  function toggleSkillDisabled(skill: SkillMention) {
-    setDisabledSkillPaths((current) => {
-      const next = current.includes(skill.path) ? current.filter((path) => path !== skill.path) : [...current, skill.path];
-      localStorage.setItem("codex-shell.disabled-skills", JSON.stringify(next));
-      if (next.includes(skill.path)) setSkills((selected) => selected.filter((item) => item.path !== skill.path));
-      return next;
-    });
+  async function setSkillEnabled(path: string, enabled: boolean) {
+    const effectiveEnabled = await session.setSkillEnabled(path, enabled);
+    if (!effectiveEnabled) setSkills((selected) => selected.filter((item) => item.path !== path));
+    return effectiveEnabled;
   }
 
   function openPreferences(section: PreferencesSection = "personalization") {
@@ -578,7 +571,6 @@ export function useAppController() {
     images,
     setImages,
     skills,
-    disabledSkillPaths,
     mentionResults,
     mentionLoading,
     uiError,
@@ -610,7 +602,7 @@ export function useAppController() {
     handleComposerPaste,
     handleComposerKeyDown,
     toggleSkill,
-    toggleSkillDisabled,
+    setSkillEnabled,
     clearActiveGoal,
   };
 }

@@ -14,6 +14,7 @@ import { agentSessionReducer, initialAgentSessionState } from "./sessionState";
 import type { FileMention, ImageAttachment, SkillMention } from "./sessionInput";
 import { subscribeToSessionEvents } from "./sessionSubscriptions";
 import { useAgentCommands } from "./useAgentCommands";
+import { useExtensions } from "../extensions/useExtensions";
 import { canSteerRunningTurn, runningTurnLabel, useRunningTurns } from "./useRunningTurns";
 import { useThreadController } from "./useThreadController";
 import { useWorkspaceFiles } from "./useWorkspaceFiles";
@@ -73,6 +74,7 @@ export function useAgentSession(
   clientRef.current ??= new AppServerClient();
   const [sessionState, dispatch] = useReducer(agentSessionReducer, initialAgentSessionState);
   const [codexHome, setCodexHome] = useState("");
+  const [skillsRevision, setSkillsRevision] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [retryingError, dispatchRetryingError] = useReducer(updateRetryingError, null);
@@ -171,6 +173,7 @@ export function useAgentSession(
     if (!client) return;
     return subscribeToSessionEvents(client, {
       currentThreadId,
+      onSkillsChanged: () => setSkillsRevision((value) => value + 1),
       sideChat: sideChatSubscriptionHandlers,
       dispatch,
       onTurnStarted,
@@ -335,6 +338,7 @@ export function useAgentSession(
     markThreadRunning,
     markThreadStopped,
   );
+  const extensions = useExtensions(ensureConnected);
   const {
     getThreadGoal: readThreadGoal,
     setThreadGoal: writeThreadGoal,
@@ -408,6 +412,7 @@ export function useAgentSession(
 
   return {
     codexHome,
+    skillsRevision,
     running,
     canSteer,
     canInterrupt,
@@ -438,6 +443,7 @@ export function useAgentSession(
     watchWorkspacePath,
     ...threads,
     ...agentCommands,
+    extensions,
     getThreadGoal,
     setThreadGoal,
     clearThreadGoal,

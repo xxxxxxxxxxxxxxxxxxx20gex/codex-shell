@@ -2,6 +2,8 @@ mod app_server;
 mod codex_home;
 mod config;
 mod credentials;
+mod mcp_credentials;
+mod skill_files;
 mod runtime;
 mod workspace;
 
@@ -24,6 +26,9 @@ pub fn run() {
             config::load_personalization_settings,
             config::save_personalization_settings,
             credentials::save_api_key,
+            mcp_credentials::save_mcp_secret,
+            skill_files::install_local_skill,
+            skill_files::uninstall_local_skill,
             workspace::get_default_project_directory,
             workspace::reveal_path_in_explorer,
         ])

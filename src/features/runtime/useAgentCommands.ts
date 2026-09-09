@@ -26,8 +26,15 @@ export function useAgentCommands(
       cwds: projectCwd ? [projectCwd] : [],
       forceReload,
     });
-    return response.data.flatMap((entry) => entry.skills).filter((skill) => skill.enabled);
+    const errors = response.data.flatMap((entry) => entry.errors);
+    if (errors.length) throw new Error(errors.map((error) => `${error.path}: ${error.message}`).join("\n"));
+    return response.data.flatMap((entry) => entry.skills);
   }, [ensureConnected, projectCwd]);
+
+  const setSkillEnabled = useCallback(async (path: string, enabled: boolean) => {
+    const client = await ensureConnected();
+    return (await client.writeSkillConfig({ path, enabled })).effectiveEnabled;
+  }, [ensureConnected]);
 
   const listMcpServers = useCallback(async (): Promise<McpServerStatus[]> => {
     const client = await ensureConnected();
@@ -101,6 +108,7 @@ export function useAgentCommands(
 
   return {
     listSkills,
+    setSkillEnabled,
     listMcpServers,
     loginMcpServer,
     reloadMcpServers,

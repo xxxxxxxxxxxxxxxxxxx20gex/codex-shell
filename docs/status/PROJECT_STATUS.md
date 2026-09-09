@@ -20,7 +20,7 @@
 
 - app-server 自动断线恢复尚未完成；代际隔离可以阻止旧进程事件污染新连接，但不会主动重启崩溃进程或恢复进行中的 Turn。
 - Runtime 二进制不进入 Git；个人发布通过本机脚本暂存同源 Runtime、运行兼容门禁并生成安装器、minisign 签名和 updater manifest，再手动上传 Release。`v0.1.4` 已完成该发布流程及干净 Windows 环境的 UAC、sandbox readiness 和 elevated 命令验证；Windows Authenticode 代码签名仍未完成。MSI 不是默认发布目标。
-- Shell Queue 只存在当前进程内，应用退出后不会恢复；MCP 配置编辑、Skills/Plugin 管理和显式连接诊断尚未完成。
+- Shell Queue 只存在当前进程内，应用退出后不会恢复；Skills Core 启停、版本化 MCP 配置和本地 Plugin RPC 适配已完成，但 Skill 文件安装/卸载及三者管理页面仍在后续里程碑。
 - 文件预览仍会先经 IPC 读取完整文件；超大 Diff、单个超长活动和二进制 Diff 缺少源端预算或专用视图。
 - 侧边聊天当前固定只读沙箱、`approvalPolicy: never`，不会替代主会话执行写入或审批流程；侧聊状态暂不持久化，也不会出现在历史列表；关闭时在连接可用的情况下先中断活动 Turn，再退订临时 Thread，Runtime 已停止时不触发重连；切换主 Session 或 Runtime 重置后返回右侧功能入口。
 
@@ -28,10 +28,10 @@
 
 ## 下一里程碑
 
-1. 实现 app-server 断线后当前 Session 的可控恢复，并明确进行中 Turn 的失败、重试和状态回收边界。
-2. 继续拆分高频 Composer 与 Session 编排入口，保持行为和测试基线不变。
-3. 建立 CI 与 Windows Authenticode 代码签名基线，并持续在干净 Windows 用户环境回归 elevated Sandbox 与 sidecar。
-4. 在 Runtime 或读取协议层增加大文件、Diff 和活动输出预算，避免只依赖前端截断。
+1. 接入独立 Skill 文件的受限安装/卸载，并增加 MCP user-scope 管理表单。
+2. 增加 Local Marketplace/Plugin 管理页面；远程目录开始前先完成账户与 Connector 能力探针。
+3. 实现 app-server 断线后当前 Session 的可控恢复，并明确进行中 Turn 的失败、重试和状态回收边界。
+4. 建立 CI 与 Windows Authenticode 代码签名基线，并持续在干净 Windows 用户环境回归 elevated Sandbox 与 sidecar。
 
 ## 完整验证基线
 

@@ -1,4 +1,7 @@
 import { APP_VERSION } from "../../appVersion";
+import { ExtensionClient } from "./extensionClient";
+import type { SkillsConfigWriteParams } from "../../generated/app-server/v2/SkillsConfigWriteParams";
+import type { SkillsConfigWriteResponse } from "../../generated/app-server/v2/SkillsConfigWriteResponse";
 import type { InitializeResponse } from "../../generated/app-server/InitializeResponse";
 import type { CollaborationMode } from "../../generated/app-server/CollaborationMode";
 import type { FuzzyFileSearchParams } from "../../generated/app-server/FuzzyFileSearchParams";
@@ -142,6 +145,7 @@ function parseMessage(raw: string): JsonRpcMessage {
 
 export class AppServerClient {
   private nextId = 1;
+  readonly extensions = new ExtensionClient(this.request.bind(this));
   private pending = new Map<JsonRpcId, PendingRequest>();
   private notificationHandlers = new Map<string, Set<NotificationHandler>>();
   private logHandlers = new Set<LogHandler>();
@@ -359,6 +363,10 @@ export class AppServerClient {
 
   listSkills(params: SkillsListParams = {}) {
     return this.request<SkillsListResponse>("skills/list", params);
+  }
+
+  writeSkillConfig(params: SkillsConfigWriteParams) {
+    return this.request<SkillsConfigWriteResponse>("skills/config/write", params);
   }
 
   listMcpServers(params: ListMcpServerStatusParams = {}) {

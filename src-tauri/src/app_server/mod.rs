@@ -96,6 +96,7 @@ pub fn app_server_start(
         .current_dir(&default_project_directory)
         .env("CODEX_HOME", &codex_home)
         .env("OPENAI_API_KEY", api_key)
+        .envs(crate::mcp_credentials::read_environment(&codex_home)?)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());

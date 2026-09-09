@@ -7,28 +7,30 @@ import "./CommandPanels.css";
 
 interface Props {
   selected: SkillMention[];
-  disabledPaths: string[];
+  revision: number;
   loadSkills: (forceReload?: boolean) => Promise<SkillMetadata[]>;
   onToggle: (skill: SkillMention) => void;
   onClose: () => void;
 }
 
-export function SkillPicker({ selected, disabledPaths, loadSkills, onToggle, onClose }: Props) {
+export function SkillPicker({ selected, revision, loadSkills, onToggle, onClose }: Props) {
   const [skills, setSkills] = useState<SkillMetadata[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    void loadSkills().then(setSkills).catch((value) => setError(errorMessage(value))).finally(() => setLoading(false));
-  }, [loadSkills]);
+    let active = true;
+    void loadSkills(true).then((items) => { if (active) { setSkills(items); setError(""); } }).catch((value) => { if (active) setError(errorMessage(value)); }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [loadSkills, revision]);
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase();
-    const enabled = skills.filter((skill) => !disabledPaths.includes(skill.path));
+    const enabled = skills.filter((skill) => skill.enabled);
     return normalized ? enabled.filter((skill) => skill.name.toLocaleLowerCase().includes(normalized)
       || skill.description.toLocaleLowerCase().includes(normalized)) : enabled;
-  }, [disabledPaths, query, skills]);
+  }, [query, skills]);
 
   return <div className="agent-command-panel skill-picker">
     <header><div><strong>Skills</strong><small>选择后会附加到下一条消息</small></div><button onClick={onClose} aria-label="关闭 Skills"><X aria-hidden="true" /></button></header>
@@ -37,8 +39,7 @@ export function SkillPicker({ selected, disabledPaths, loadSkills, onToggle, onC
       {loading && <p>正在读取 Skills…</p>}{error && <p className="error">{error}</p>}
       {!loading && !error && filtered.length === 0 && <p>没有可用的 Skill。</p>}
       {filtered.map((skill) => {
-        const disabled = disabledPaths.includes(skill.path);
-        const active = !disabled && selected.some((item) => item.path === skill.path);
+        const active = selected.some((item) => item.path === skill.path);
         return <button key={skill.path} className={active ? "active" : ""} onClick={() => onToggle({ name: skill.name, path: skill.path })}>
           <i><Sparkles aria-hidden="true" /></i><span><strong>{skill.interface?.displayName || skill.name}</strong><small>{skill.interface?.shortDescription || skill.shortDescription || skill.description}</small></span><em>{active ? <Check aria-label="已选择" /> : "可用"}</em>
         </button>;
