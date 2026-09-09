@@ -117,6 +117,7 @@ function App() {
     runSlashCommand,
     submitWithMode,
     steerQueuedTurn,
+    editQueuedTurn,
     startNewTask,
     startSkillTask,
     changePermissionMode,
@@ -304,7 +305,7 @@ function App() {
                   <Clock3 className="queued-turn-icon" aria-hidden="true" />
                   <span>{label}</span>
                   <small className="queued-turn-status">等待中</small>
-                  <button type="button" onClick={() => { setDraft(queued.text); session.removeQueued(queued.id); }} aria-label={`编辑待发送消息：${label}`} title="编辑"><FilePenLine aria-hidden="true" /></button>
+                  <button type="button" onClick={() => editQueuedTurn(queued)} aria-label={`编辑待发送消息：${label}`} title="编辑"><FilePenLine aria-hidden="true" /></button>
                   {session.canSteer && <button type="button" onClick={() => void steerQueuedTurn(queued)} aria-label={`引导发送待发送消息：${label}`} title="引导发送"><ArrowUpRight aria-hidden="true" /></button>}
                   <button type="button" onClick={() => session.removeQueued(queued.id)} aria-label={`取消待发送消息：${label}`} title="取消待发送"><X aria-hidden="true" /></button>
                 </div>;

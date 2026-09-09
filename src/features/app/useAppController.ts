@@ -550,6 +550,12 @@ export function useAppController() {
     setPreferencesOpen(true);
   }
 
+  function editQueuedTurn(turn: (typeof session.queuedTurns)[number]) {
+    setDraft(turn.text); setMentions(turn.mentions); setImages(turn.images ?? []); setSkills(turn.skills);
+    setSettings(turn.settings); setPermissionMode(turn.permissionMode); setApprovalReviewer(turn.approvalReviewer);
+    setComposerIntent(turn.collaborationMode === "plan" ? "plan" : "default"); session.removeQueued(turn.id);
+  }
+
   return {
     ...panels,
     session,
@@ -600,6 +606,7 @@ export function useAppController() {
     runSlashCommand,
     submitWithMode,
     steerQueuedTurn,
+    editQueuedTurn,
     startNewTask,
     startSkillTask,
     changePermissionMode,
