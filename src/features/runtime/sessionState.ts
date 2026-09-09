@@ -447,7 +447,8 @@ export function agentSessionReducer(
     case "optimisticTurnSubmitted":
       return withTurns(state, [...state.turns, withFallbackStartedAt(withOptimisticUser(action.turn, action.userInput), action.submittedAt)]);
     case "optimisticSteer": {
-      const turn = state.turns.find((item) => item.id === (state.turns.at(-1)?.id) && item.status === "inProgress");
+      const lastTurn = state.turns[state.turns.length - 1];
+      const turn = state.turns.find((item) => item.id === lastTurn?.id && item.status === "inProgress");
       return turn ? withTurns(state, state.turns.map((item) => item.id === turn.id ? withOptimisticUser(item, action.userInput) : item)) : state;
     }
     case "turnStarted":
