@@ -24,7 +24,11 @@
 .mcp-config-row > span { display: grid; min-width: 0; }
 .mcp-config-row small { color: var(--text-muted); font-size: var(--text-meta); }
 .mcp-config-panel p { overflow-wrap: anywhere; font-size: var(--text-label); }
-.mcp-panel { max-height: min(680px, 75vh); }
+.mcp-panel { width: min(680px, calc(100vw - 48px)); max-height: min(760px, 82vh); }
+.mcp-panel .command-panel-list { min-height: 0; }
+.mcp-config-form fieldset { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.mcp-config-form fieldset label:nth-child(3), .mcp-config-form fieldset label:nth-child(4), .mcp-config-form fieldset label:nth-child(5), .mcp-config-form fieldset .extension-actions { grid-column: 1 / -1; }
+@media (max-width: 640px) { .mcp-panel { width: calc(100vw - 24px); } .mcp-config-form fieldset { grid-template-columns: 1fr; } .mcp-config-form fieldset label, .mcp-config-form fieldset .extension-actions { grid-column: 1; } }
 .skill-management-search { border-radius: var(--radius-control); }
 .skill-management-search input { min-width: 0; }
 .skill-management-card { grid-template-columns: var(--control-height) minmax(0, 1fr) auto; }
