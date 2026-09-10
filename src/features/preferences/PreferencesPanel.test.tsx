@@ -1,7 +1,6 @@
 // @vitest-environment happy-dom
 
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { check } from "@tauri-apps/plugin-updater";
 import type { ProviderSettings } from "../models/types";
@@ -28,8 +27,6 @@ const providerSettings: ProviderSettings = {
 
 function panelProps() {
   return {
-    minimized: false,
-    onMinimizedChange: vi.fn(),
     settings: { customInstructions: "", theme: "dark" as const },
     providerSettings,
     onSaveProviderSettings: vi.fn(async () => undefined),
@@ -45,35 +42,21 @@ function panelProps() {
 }
 
 describe("PreferencesPanel", () => {
-  it("preserves channel drafts across maximize and minimize without closing", () => {
+  it("keeps the default dialog with only a close control and supports channel editing", () => {
     const props = panelProps();
-    function SettingsHost() {
-      const [minimized, setMinimized] = useState(false);
-      return <>
-        <button onClick={() => setMinimized(false)}>打开设置</button>
-        <PreferencesPanel {...props} minimized={minimized} onMinimizedChange={setMinimized} initialSection="providers" onSave={async () => undefined} />
-      </>;
-    }
-    render(<SettingsHost />);
+    render(<PreferencesPanel {...props} initialSection="providers" onSave={async () => undefined} />);
+    expect(screen.getByRole("dialog").className).toBe("preferences-modal");
+    expect(screen.queryByRole("button", { name: /最大化设置|最小化设置|还原设置窗口|恢复设置/ })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "编辑 OpenAI 官方" }));
     fireEvent.change(screen.getByLabelText("名称"), { target: { value: "未保存渠道" } });
-    fireEvent.click(screen.getByRole("button", { name: "最大化设置" }));
-    expect(screen.getByRole("dialog").classList.contains("maximized")).toBe(true);
-    fireEvent.click(screen.getByRole("button", { name: "最小化设置" }));
-    expect(screen.queryByRole("dialog")).toBeNull();
-    fireEvent.keyDown(window, { key: "Escape" });
-    expect(props.onClose).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "恢复设置" }));
     expect((screen.getByLabelText("名称") as HTMLInputElement).value).toBe("未保存渠道");
-    expect(screen.getByRole("dialog").classList.contains("maximized")).toBe(true);
-    fireEvent.click(screen.getByRole("button", { name: "最小化设置" }));
-    fireEvent.click(screen.getByRole("button", { name: "打开设置" }));
-    expect((screen.getByLabelText("名称") as HTMLInputElement).value).toBe("未保存渠道");
-    expect(screen.getByRole("dialog").classList.contains("maximized")).toBe(true);
-    fireEvent.click(screen.getByRole("button", { name: "还原设置窗口" }));
-    expect(screen.getByRole("dialog").classList.contains("maximized")).toBe(false);
     fireEvent.click(screen.getByRole("button", { name: "取消" }));
     expect(screen.getByRole("button", { name: "编辑 OpenAI 官方" })).toBeTruthy();
+    expect(props.onClose).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "关闭设置" }));
+    expect(props.onClose).toHaveBeenCalledTimes(1);
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(props.onClose).toHaveBeenCalledTimes(2);
   });
 
   it("keeps general settings limited to personalization and appearance", async () => {

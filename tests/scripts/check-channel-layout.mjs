@@ -26,10 +26,7 @@ const providerSettings = {schemaVersion:2,activeChannelId:"openai-1",channels:[
 ]};
 const models = [{id:"deepseek-flash",model:"deepseek-flash",upgrade:null,upgradeInfo:null,availabilityNux:null,displayName:"DeepSeek Flash",description:"",modelSpecialty:null,hidden:false,supportedReasoningEfforts:[{reasoningEffort:"low",description:""}],defaultReasoningEffort:"low",inputModalities:["text"],supportsPersonality:false,multiAgentVersion:null,additionalSpeedTiers:[],serviceTiers:[],defaultServiceTier:null,isDefault:true}];
 function SettingsHost() {
-  const [minimized, setMinimized] = React.useState(false);
-  return React.createElement(React.Fragment,null,
-    React.createElement("button",{onClick:()=>setMinimized(false)},"打开设置"),
-    React.createElement(PreferencesPanel,{minimized,onMinimizedChange:setMinimized,settings:{customInstructions:"",theme:"dark"},providerSettings,onSaveProviderSettings:async()=>{},initialSection:"providers",codexHome:"C:/cs",codexHomeDisabled:false,windowsSandboxReadiness:"notConfigured",noticeStore:new RuntimeNoticeStore(),logStore:new RuntimeLogStore(),onSetupWindowsSandbox:async()=>true,onRestart:async()=>{},onClose:()=>{window.__closed=(window.__closed||0)+1;},onSave:async()=>{}}));
+  return React.createElement(PreferencesPanel,{settings:{customInstructions:"",theme:"dark"},providerSettings,onSaveProviderSettings:async()=>{},initialSection:"providers",codexHome:"C:/cs",codexHomeDisabled:false,windowsSandboxReadiness:"notConfigured",noticeStore:new RuntimeNoticeStore(),logStore:new RuntimeLogStore(),onSetupWindowsSandbox:async()=>true,onRestart:async()=>{},onClose:()=>{window.__closed=(window.__closed||0)+1;},onSave:async()=>{}});
 }
 window.show = (kind) => {
   const content = kind === "providers"
@@ -98,28 +95,19 @@ try {
         await page.getByLabel("名称", { exact: true }).fill("未保存的渠道名称");
         await assertSurface(kind, viewport);
         await page.screenshot({ path: join(output, `editor-${width}.png`) });
-        await page.getByRole("button", { name: "最大化设置", exact: true }).click();
-        await assertSurface(kind, viewport);
-        await page.screenshot({ path: join(output, `maximized-${width}.png`) });
-        await page.getByRole("button", { name: "最小化设置", exact: true }).click();
-        assert.equal(await page.getByRole("dialog").count(), 0);
+        assert.equal(await page.getByRole("button", { name: /最大化设置|最小化设置|恢复设置|还原设置窗口/ }).count(), 0);
+        const bounds = await page.getByRole("dialog").boundingBox();
+        assert.equal(bounds.width, Math.min(1040, width - 32));
+        assert.equal(bounds.height, Math.min(760, height - 32));
         const before = await page.evaluate(() => window.__closed ?? 0);
-        await page.keyboard.press("Escape");
-        assert.equal(await page.evaluate(() => window.__closed ?? 0), before);
-        await page.getByRole("button", { name: "恢复设置" }).click();
         assert.equal(await page.getByLabel("名称", { exact: true }).inputValue(), "未保存的渠道名称");
-        await page.getByRole("button", { name: "最小化设置", exact: true }).click();
-        await page.getByRole("button", { name: "打开设置", exact: true }).click();
-        assert.equal(await page.getByLabel("名称", { exact: true }).inputValue(), "未保存的渠道名称");
-        assert.equal(await page.getByRole("dialog").evaluate(el => el.classList.contains("maximized")), true);
-        await page.getByRole("button", { name: "还原设置窗口" }).click();
         await page.getByRole("button", { name: "取消", exact: true }).click();
         await page.getByRole("button", { name: "关闭设置", exact: true }).focus();
         await page.keyboard.press("Tab");
         assert.equal(await page.getByRole("button", { name: "个性化提示词" }).evaluate(el => el === document.activeElement), true);
         await page.getByRole("button", { name: "关闭", exact: true }).focus();
         await page.keyboard.press("Tab");
-        assert.equal(await page.getByRole("button", { name: "最小化设置", exact: true }).evaluate(el => el === document.activeElement), true);
+        assert.equal(await page.getByRole("button", { name: "关闭设置", exact: true }).evaluate(el => el === document.activeElement), true);
         await page.mouse.click(2, 2);
         assert.equal(await page.evaluate(() => window.__closed ?? 0), before + 1);
       }

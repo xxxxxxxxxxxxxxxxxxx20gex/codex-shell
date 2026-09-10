@@ -45,19 +45,18 @@ it("activates the advanced editor's chosen channel and only closes after restart
   expect(session.restart).toHaveBeenCalledTimes(2);
 });
 
-it("restores minimized settings from the settings entry and after closing", () => {
+it("opens settings on the requested section and reopens after closing", () => {
   const { result } = renderHook(useAppController);
   act(() => result.current.openPreferences("providers"));
-  act(() => result.current.setPreferencesMinimized(true));
   expect(result.current.preferencesOpen).toBe(true);
-  expect(result.current.preferencesMinimized).toBe(true);
+  expect(result.current.preferencesSection).toBe("providers");
   act(() => result.current.openPreferences());
   expect(result.current.preferencesOpen).toBe(true);
-  expect(result.current.preferencesMinimized).toBe(false);
-  act(() => { result.current.setPreferencesMinimized(true); result.current.setPreferencesOpen(false); });
+  expect(result.current.preferencesSection).toBe("personalization");
+  act(() => result.current.setPreferencesOpen(false));
+  expect(result.current.preferencesOpen).toBe(false);
   act(() => result.current.openPreferences("runtime"));
   expect(result.current.preferencesOpen).toBe(true);
-  expect(result.current.preferencesMinimized).toBe(false);
   expect(result.current.preferencesSection).toBe("runtime");
 });
 

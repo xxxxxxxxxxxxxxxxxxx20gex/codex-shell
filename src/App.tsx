@@ -76,8 +76,6 @@ function App() {
     setSettingsOpen,
     preferencesOpen,
     setPreferencesOpen,
-    preferencesMinimized,
-    setPreferencesMinimized,
     preferencesSection,
     openPreferences,
     modelPickerOpen,
@@ -432,8 +430,6 @@ function App() {
 
       {settingsOpen && <ModelSettingsPanel settings={conversation} providerSettings={settings} loadModels={session.listModels} loadProviderCapabilities={session.readModelProviderCapabilities} onManageChannels={() => { setSettingsOpen(false); openPreferences("providers"); }} switchDisabled={session.running || session.runningThreadCount > 0 || session.sideChat.submitting} onClose={() => setSettingsOpen(false)} onSave={saveAdvancedModelSettings} />}
       {preferencesOpen && <PreferencesPanel
-        minimized={preferencesMinimized}
-        onMinimizedChange={setPreferencesMinimized}
         settings={personalization}
         providerSettings={settings}
         onSaveProviderSettings={saveProviderSettings}
