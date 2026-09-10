@@ -359,6 +359,7 @@ function applyAgentDelta(turns: Turn[], notification: AgentMessageDeltaNotificat
           text: notification.delta,
           phase: null,
           memoryCitation: null,
+          questions: null,
           delivery: null,
         };
     return upsertItem(turn, item);

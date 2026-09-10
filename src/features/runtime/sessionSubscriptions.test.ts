@@ -31,7 +31,6 @@ function handlers(overrides: Partial<Handlers> = {}): Handlers {
     onDeprecation: () => undefined,
     onWorldWritableWarning: () => undefined,
     onSandboxSetupCompleted: () => undefined,
-    onContextCompacted: () => undefined,
     onModelRerouted: () => undefined,
     onModelVerification: () => undefined,
     onModelSafetyBuffering: () => undefined,
@@ -46,6 +45,24 @@ function handlers(overrides: Partial<Handlers> = {}): Handlers {
 }
 
 describe("session subscriptions", () => {
+  it("consumes canonical compaction items without the deprecated notification", async () => {
+    const transport = new FakeTransport();
+    const client = new AppServerClient(transport);
+    await client.start();
+    const subscribe = vi.spyOn(client, "onNotification");
+    const dispatch = vi.fn();
+    const dispose = subscribeToSessionEvents(client, handlers({ dispatch }));
+    expect(subscribe.mock.calls.some(([method]) => method === "thread/compacted")).toBe(false);
+    const notification = { threadId: "thread-active", turnId: "turn-1", item: { type: "contextCompaction", id: "compact-1" } };
+    transport.emit({ method: "item/started", params: notification });
+    transport.emit({ method: "item/completed", params: notification });
+    expect(dispatch).toHaveBeenCalledTimes(2);
+    expect(dispatch).toHaveBeenLastCalledWith({ type: "itemCompleted", notification });
+    dispose();
+    transport.emit({ method: "item/completed", params: notification });
+    expect(dispatch).toHaveBeenCalledTimes(2);
+  });
+
   it("routes activity notifications only to the active thread", async () => {
     const transport = new FakeTransport();
     const client = new AppServerClient(transport);

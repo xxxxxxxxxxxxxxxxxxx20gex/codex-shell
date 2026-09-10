@@ -3,11 +3,11 @@
 - 当前阶段：Milestone 2 - P0 桌面编程工作台；公开稳定版本 `v0.1.4` 已启用 Tauri Updater
 - 总体状态：核心对话、Session、工具活动、审批、文件、Diff 和模型配置可用；已发布带 minisign 更新签名的 NSIS Windows 安装包，Windows Authenticode 代码签名、CI 与 Runtime 恢复能力尚未完成。
 - 文档边界：本文件只记录跨模块当前快照、项目级风险、下一里程碑和完整验证基线。模块行为和定向证据以 [模块状态索引](../README.md#当前状态) 为准，历史由 Git 保留。
-- 最后更新：2026-09-10
+- 最后更新：2026-09-11
 
 ## 跨模块当前快照
 
-- 产品使用 Tauri 2、React、TypeScript 与 Rust 构建，以原版 `codex app-server` 为唯一执行核心，通过 stdio JSON-RPC 通信；公开 `v0.1.4` 已发布安装器、minisign 签名和 updater manifest。当前 Runtime 为通过兼容门禁的 `codex-cli 0.153.4`，生成协议类型仍以 `0.152.1` 为基线。参见 [ADR-001](../decisions/ADR-001-unmodified-codex-app-server.md) 与 [ADR-003](../decisions/ADR-003-compatible-runtime-updates.md)。
+- 产品使用 Tauri 2、React、TypeScript 与 Rust 构建，以原版 `codex app-server` 为唯一执行核心，通过 stdio JSON-RPC 通信；公开 `v0.1.4` 已发布安装器、minisign 签名和 updater manifest。当前 Runtime 为通过兼容门禁的 `codex-cli 0.153.4`，生成协议类型已与 `0.153.4` 的实验导出对齐；静态门禁不代表所有运行时功能可用，见 [协议状态](protocol-status.md)。参见 [ADR-001](../decisions/ADR-001-unmodified-codex-app-server.md) 与 [ADR-003](../decisions/ADR-003-compatible-runtime-updates.md)。
 - 核心工作流已形成闭环：用户可以选择项目、创建和恢复多个 Session、发送文本/文件/图片、查看结构化执行时间线、处理审批、审查实时与历史 Diff，并按完成 Turn 分叉会话。
 - Composer 已统一模型、推理强度、权限、Goal、Plan、Review、Skills、MCP 和压缩入口；Thread 的模型、权限、审批者和 Goal 状态以 Core 权威通知及查询结果为准，不在 Shell 维护第二套执行状态。
 - 模型配置已改为「厂商分组 + 渠道列表」（[ADR-004](../decisions/ADR-004-model-provider-channels.md)）：设置中维护 OpenAI / DeepSeek 渠道的 Base URL、密钥、模型目录和该渠道自己的对话参数，对话高级设置只选择渠道；同一时刻只有一个激活渠道，切换渠道会重启 app-server，全部运行 Thread、主会话和侧聊提交期间禁止切换。DeepSeek 渠道注入随应用编译的官方模型目录，连接测试只验证路由、密钥与目录。
@@ -40,7 +40,7 @@
 
 ## 完整验证基线
 
-- 2026-09-10 渠道修复及设置窗口控制简化：TypeScript、ESLint、Knip、Vitest（63 个文件 / 313 项）、production build、Cargo check、36 项 Rust 单测、严格 Clippy、Debug 构建与四视口渠道布局检查通过；本次未使用真实 API Key 或真实系统凭据做端到端切换。覆盖范围和限制见 [测试与发布](testing-release-status.md)。下条 Runtime 探针是既有证据，本次未重跑。
+- 2026-09-11 协议审查修复：TypeScript、ESLint、Knip、Vitest（63 个文件 / 317 项）、production build、Cargo check、36 项 Rust 单测、严格 Clippy、Debug 构建与当前 Runtime 兼容门禁通过。隔离本机协议探针验证设置、队列与元数据，并确认分页和运行中设置的 Runtime 限制；未重跑远端 API 或四视口布局。详见 [测试与发布](testing-release-status.md)。
 
 - 2026-09-10：模型配置改为厂商分组 + 渠道列表，并把对话参数按渠道归属；DeepSeek 渠道接入内置官方模型目录。`pnpm typecheck`、`pnpm lint`、`pnpm test`（62 个文件 / 301 项）、`pnpm quality:knip`、`pnpm build` 和 `pnpm rust:check`（Cargo check、31 项 Rust 单测、严格 Clippy）全部通过；真实 app-server 探针确认按渠道注入 `model_catalog_json` 后 `model/list` 返回对应目录，同路由不注入则返回内置 GPT 目录；端点探针确认 `https://api.deepseek.com/models` 在无效 Key 下返回 401。未使用真实 DeepSeek 密钥完成对话，模型中转渠道设置与对话高级设置已通过 `pnpm test:channel-layout`（Playwright + 本机 Chrome，模拟回调）：1440×900、1280×780、1024×720、900×700 四档均无页面级横向溢出，模态框不越界，可见文字不小于 11px，键盘焦点可进入面板，删除二次确认、Escape 关闭和 reduced-motion 均生效；该脚本挂载真实组件但使用模拟回调，不是真实 Tauri 端到端。
 - 2026-09-07：公开 `v0.1.4` Release 已上传 `codex-shell_0.1.4_x64-setup.exe`、对应 minisign `.sig` 和 `latest.json`；发布 tag 记录兼容门禁 Runtime `codex-cli 0.153.4`，并完成干净 Windows 用户环境的 UAC、sandbox readiness 和 elevated 命令验证。

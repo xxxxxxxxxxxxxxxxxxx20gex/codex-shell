@@ -61,7 +61,7 @@ function threadSettings(overrides: Partial<ThreadSettings> = {}): ThreadSettings
       mode: "default",
       settings: { model: "authoritative-model", reasoning_effort: "high", developer_instructions: null },
     },
-    personality: null,
+    multiAgentMode: "explicitRequestOnly", personality: null,
     ...overrides,
   };
 }

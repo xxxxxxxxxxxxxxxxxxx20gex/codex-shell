@@ -267,13 +267,13 @@ export class AppServerClient {
         threadId,
         cursor,
         limit: Math.max(1, Math.min(limit - turns.length, 200)),
-        sortDirection: "asc",
+        sortDirection: "desc",
         itemsView: "full",
       });
       turns.push(...page.data);
       cursor = page.nextCursor;
     } while (cursor !== null && turns.length < limit);
-    return { thread: { ...metadata.thread, turns: turns.slice(-limit) } };
+    return { thread: { ...metadata.thread, turns: turns.slice(0, limit).reverse() } };
   }
 
   listThreadTurns(params: ThreadTurnsListParams) {

@@ -8,7 +8,7 @@ if (-not (Test-Path -LiteralPath $runtime -PathType Leaf)) {
 }
 
 New-Item -ItemType Directory -Force -Path $output | Out-Null
-& $runtime app-server generate-ts --out $output
+& $runtime app-server generate-ts --experimental --out $output
 if ($LASTEXITCODE -ne 0) {
     throw "app-server TypeScript 协议生成失败，退出码：$LASTEXITCODE"
 }

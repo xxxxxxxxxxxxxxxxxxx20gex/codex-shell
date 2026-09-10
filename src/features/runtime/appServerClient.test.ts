@@ -73,7 +73,7 @@ describe("AppServerClient", () => {
     await expect(responsePromise).resolves.toEqual({ ok: true });
   });
 
-  it("hydrates paginated history and preserves server order", async () => {
+  it("hydrates the newest history and restores chronological order", async () => {
     const transport = new FakeTransport();
     const client = new AppServerClient(transport);
     await client.start();
@@ -84,9 +84,30 @@ describe("AppServerClient", () => {
     await Promise.resolve();
     const turnsRequest = transport.sent[transport.sent.length - 1];
     expect(turnsRequest?.method).toBe("thread/turns/list");
-    expect(turnsRequest?.params).toEqual(expect.objectContaining({ threadId: "thread-1", sortDirection: "asc", itemsView: "full", limit: 2 }));
-    transport.emit({ id: turnsRequest?.id, result: { data: [{ id: "turn-1" }, { id: "turn-2" }], nextCursor: null, backwardsCursor: null } });
+    expect(turnsRequest?.params).toEqual(expect.objectContaining({ threadId: "thread-1", sortDirection: "desc", itemsView: "full", limit: 2 }));
+    transport.emit({ id: turnsRequest?.id, result: { data: [{ id: "turn-2" }, { id: "turn-1" }], nextCursor: "older", backwardsCursor: null } });
     await expect(historyPromise).resolves.toMatchObject({ thread: { id: "thread-1", turns: [{ id: "turn-1" }, { id: "turn-2" }] } });
+    expect(transport.sent.filter((message) => message.method === "thread/turns/list")).toHaveLength(1);
+  });
+
+  it("loads only the latest 200 turns across descending pages", async () => {
+    const transport = new FakeTransport();
+    const client = new AppServerClient(transport);
+    await client.start();
+    const pending = client.readThreadWithHistory("thread-1");
+    transport.emit({ id: transport.sent[transport.sent.length - 1]?.id, result: { thread: { id: "thread-1", turns: [] } } });
+    await Promise.resolve();
+    transport.emit({ id: transport.sent[transport.sent.length - 1]?.id, result: {
+      data: Array.from({ length: 100 }, (_, index) => ({ id: `turn-${300 - index}` })), nextCursor: "page-2",
+    } });
+    await Promise.resolve();
+    expect(transport.sent[transport.sent.length - 1]?.params).toMatchObject({ cursor: "page-2", limit: 100, sortDirection: "desc" });
+    transport.emit({ id: transport.sent[transport.sent.length - 1]?.id, result: {
+      data: Array.from({ length: 100 }, (_, index) => ({ id: `turn-${200 - index}` })), nextCursor: "page-3",
+    } });
+    const response = await pending;
+    expect(response.thread.turns.map((turn) => turn.id)).toEqual(Array.from({ length: 200 }, (_, index) => `turn-${101 + index}`));
+    expect(transport.sent.filter((message) => message.method === "thread/turns/list")).toHaveLength(2);
   });
 
   it("exposes native live settings and queue requests without creating a thread", async () => {

@@ -2,7 +2,6 @@ import type { AgentMessageDeltaNotification } from "../../generated/app-server/v
 import type { CommandExecutionOutputDeltaNotification } from "../../generated/app-server/v2/CommandExecutionOutputDeltaNotification";
 import type { CommandExecutionRequestApprovalParams } from "../../generated/app-server/v2/CommandExecutionRequestApprovalParams";
 import type { ConfigWarningNotification } from "../../generated/app-server/v2/ConfigWarningNotification";
-import type { ContextCompactedNotification } from "../../generated/app-server/v2/ContextCompactedNotification";
 import type { DeprecationNoticeNotification } from "../../generated/app-server/v2/DeprecationNoticeNotification";
 import type { ErrorNotification } from "../../generated/app-server/v2/ErrorNotification";
 import type { FileChangePatchUpdatedNotification } from "../../generated/app-server/v2/FileChangePatchUpdatedNotification";
@@ -73,7 +72,6 @@ interface Handlers {
   onDeprecation: (notification: DeprecationNoticeNotification) => void;
   onWorldWritableWarning: (notification: WindowsWorldWritableWarningNotification) => void;
   onSandboxSetupCompleted: (notification: WindowsSandboxSetupCompletedNotification) => void;
-  onContextCompacted: (notification: ContextCompactedNotification) => void;
   onModelRerouted: (notification: ModelReroutedNotification) => void;
   onModelVerification: (notification: ModelVerificationNotification) => void;
   onModelSafetyBuffering: (notification: ModelSafetyBufferingUpdatedNotification) => void;
@@ -156,7 +154,6 @@ export function subscribeToSessionEvents(client: AppServerClient, handlers: Hand
     client.onNotification("deprecationNotice", (params) => handlers.onDeprecation(params as DeprecationNoticeNotification)),
     client.onNotification("windows/worldWritableWarning", (params) => handlers.onWorldWritableWarning(params as WindowsWorldWritableWarningNotification)),
     client.onNotification("windowsSandbox/setupCompleted", (params) => handlers.onSandboxSetupCompleted(params as WindowsSandboxSetupCompletedNotification)),
-    client.onNotification("thread/compacted", (params) => handlers.onContextCompacted(params as ContextCompactedNotification)),
     client.onNotification("model/rerouted", (params) => handlers.onModelRerouted(params as ModelReroutedNotification)),
     client.onNotification("model/verification", (params) => handlers.onModelVerification(params as ModelVerificationNotification)),
     client.onNotification("model/safetyBuffering/updated", (params) => handlers.onModelSafetyBuffering(params as ModelSafetyBufferingUpdatedNotification)),

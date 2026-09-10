@@ -4,6 +4,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Thread } from "../../generated/app-server/v2/Thread";
 import type { Turn } from "../../generated/app-server/v2/Turn";
+import type { ThreadQueueListResponse } from "../../generated/app-server/v2/ThreadQueueListResponse";
 import type { ApprovalReviewerMode, PermissionMode } from "../approvals/permissionModes";
 import type { AppServerClient } from "./appServerClient";
 import { useThreadController } from "./useThreadController";
@@ -33,6 +34,10 @@ function thread(id: string, overrides: Partial<Thread> = {}): Thread {
     sectionEnteredAt: null,
     projectId: null,
     historyMode: "legacy",
+    extra: null,
+    model: null,
+    reasoningEffort: null,
+    canAcceptDirectInput: null,
     modelProvider: "openai",
     createdAt: 1,
     updatedAt: 1,
@@ -61,6 +66,7 @@ function setup() {
   ]);
   const running = new Set<string>();
   const client = {
+    listQueuedSubmissions: vi.fn(async (): Promise<ThreadQueueListResponse> => ({ data: [], nextCursor: null })),
     listThreads: vi.fn(async () => ({ data: [...threads.values()], nextCursor: null })),
     readThread: vi.fn(async ({ threadId }: { threadId: string }) => ({ thread: threads.get(threadId)! })),
     resumeThread: vi.fn(async ({ threadId }: { threadId: string }) => ({ thread: threads.get(threadId)! })),
@@ -141,6 +147,44 @@ function setup() {
 }
 
 describe("useThreadController", () => {
+  it("coalesces notifications during a queue refresh and discards its stale result", async () => {
+    const { client, props } = setup();
+    const { result } = renderHook(() => useThreadController(props));
+    await act(async () => { await result.current.openThread("thread-a"); });
+    client.listQueuedSubmissions.mockClear();
+    let resolveFirst!: (response: ThreadQueueListResponse) => void;
+    client.listQueuedSubmissions.mockImplementationOnce(() => new Promise((resolve) => { resolveFirst = resolve; }));
+    client.listQueuedSubmissions.mockResolvedValueOnce({ data: [{ id: "server-new", clientUserMessageId: "client-new", input: [{ type: "text", text: "latest", text_elements: [] }] }], nextCursor: null });
+    act(() => result.current.onThreadQueueChanged({ threadId: "thread-a" }));
+    await waitFor(() => expect(client.listQueuedSubmissions).toHaveBeenCalledTimes(1));
+    act(() => {
+      result.current.onThreadQueueChanged({ threadId: "thread-a" });
+      result.current.onThreadQueueChanged({ threadId: "thread-a" });
+    });
+    await act(async () => { resolveFirst({ data: [], nextCursor: null }); });
+    expect(client.listQueuedSubmissions).toHaveBeenCalledTimes(2);
+    expect(result.current.queuedTurns).toEqual([expect.objectContaining({ id: "client-new", text: "latest" })]);
+  });
+
+  it("releases queue refresh state after errors and ignores responses after reset", async () => {
+    const { client, props } = setup();
+    const { result } = renderHook(() => useThreadController(props));
+    await act(async () => { await result.current.openThread("thread-a"); });
+    client.listQueuedSubmissions.mockRejectedValueOnce(new Error("queue unavailable"));
+    act(() => result.current.onThreadQueueChanged({ threadId: "thread-a" }));
+    await waitFor(() => expect(props.setError).toHaveBeenCalledWith(expect.stringContaining("queue unavailable")));
+    let resolvePending!: (response: ThreadQueueListResponse) => void;
+    client.listQueuedSubmissions.mockImplementationOnce(() => new Promise((resolve) => { resolvePending = resolve; }));
+    act(() => result.current.onThreadQueueChanged({ threadId: "thread-a" }));
+    await waitFor(() => expect(resolvePending).toBeDefined());
+    act(() => result.current.reset());
+    await act(async () => {
+      await result.current.openThread("thread-a");
+      resolvePending({ data: [{ id: "stale", clientUserMessageId: "stale", input: [] }], nextCursor: null });
+    });
+    expect(result.current.queuedTurns).toEqual([]);
+  });
+
   it("waits for persisted settings before loading Session history", async () => {
     const { client, props } = setup();
     const { rerender } = renderHook(({ settingsReady }) => useThreadController({ ...props, settingsReady }), {

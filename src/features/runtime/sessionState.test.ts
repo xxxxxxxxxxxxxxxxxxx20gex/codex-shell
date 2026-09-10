@@ -30,6 +30,10 @@ function thread(turns: Turn[] = []): Thread {
     sectionEnteredAt: null,
     projectId: null,
     historyMode: "legacy",
+    extra: null,
+    model: null,
+    reasoningEffort: null,
+    canAcceptDirectInput: null,
     modelProvider: "openai",
     createdAt: 1,
     updatedAt: 2,
@@ -195,7 +199,7 @@ describe("agentSessionReducer", () => {
     const completed = {
       ...turn("turn-1", [
         userMessage("user-1", "问题"),
-        { type: "agentMessage", id: "agent-1", text: "答案", phase: null, memoryCitation: null, delivery: null },
+        { type: "agentMessage", id: "agent-1", text: "答案", phase: null, memoryCitation: null, questions: null, delivery: null },
       ]),
       status: "completed",
       startedAt: 1,
@@ -220,7 +224,7 @@ describe("agentSessionReducer", () => {
     });
     const completed = {
       ...turn("turn-1", [
-        { type: "agentMessage", id: "agent-1", text: "答案", phase: null, memoryCitation: null, delivery: null },
+        { type: "agentMessage", id: "agent-1", text: "答案", phase: null, memoryCitation: null, questions: null, delivery: null },
       ]),
       status: "completed",
       completedAt: 2,
@@ -257,7 +261,7 @@ describe("agentSessionReducer", () => {
     });
     const completed = {
       ...turn("turn-1", [
-        { type: "agentMessage", id: "agent-1", text: "答案", phase: "final_answer", memoryCitation: null, delivery: null },
+        { type: "agentMessage", id: "agent-1", text: "答案", phase: "final_answer", memoryCitation: null, questions: null, delivery: null },
       ]),
       status: "completed",
       completedAt: 2,
@@ -432,7 +436,7 @@ describe("agentSessionReducer", () => {
       text: "新回复",
       phase: null,
       memoryCitation: null,
-      delivery: null,
+      questions: null, delivery: null,
     }]);
   });
 
@@ -577,7 +581,7 @@ describe("agentSessionReducer", () => {
         mode: "default",
         settings: { model: "gpt-test", reasoning_effort: null, developer_instructions: null },
       },
-      personality: null,
+      multiAgentMode: "explicitRequestOnly", personality: null,
     } as const;
     const unchanged = agentSessionReducer(loaded, {
       type: "threadSettingsUpdated",

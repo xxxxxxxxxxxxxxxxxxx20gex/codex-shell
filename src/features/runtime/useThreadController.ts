@@ -99,42 +99,55 @@ export function useThreadController(props: Props) {
     setServerId: setQueuedServerId,
     replaceThread: replaceQueuedThread,
   } = useQueuedTurns();
-  const nativeQueueRefreshRef = useRef(new Set<string>());
+  const nativeQueueRefreshRef = useRef(new Map<string, { dirty: boolean }>());
 
   const refreshNativeQueue = useCallback(async (threadId: string) => {
-    const client = await ensureConnected();
-    if (typeof client.listQueuedSubmissions !== "function") return;
-    if (nativeQueueRefreshRef.current.has(threadId)) return;
-    nativeQueueRefreshRef.current.add(threadId);
+    const pending = nativeQueueRefreshRef.current.get(threadId);
+    if (pending) {
+      pending.dirty = true;
+      return;
+    }
+    const refresh = { dirty: false };
+    nativeQueueRefreshRef.current.set(threadId, refresh);
     try {
-      const response = await client.listQueuedSubmissions({ threadId });
-      // Keep the richer CS metadata (model, permissions, intent) by matching
-      // the server's stable clientUserMessageId. Items created elsewhere use
-      // conservative defaults and remain fully manageable in the UI.
-      const existing = getQueued(threadId);
-      const byClientId = new Map(existing.map((item) => [item.id, item]));
-      const next = response.data.map((item) => {
-        const preserved = byClientId.get(item.clientUserMessageId);
-        if (preserved) return { ...preserved, serverId: item.id };
-        return {
-        id: item.clientUserMessageId,
-        serverId: item.id,
-        text: item.input.filter((input) => input.type === "text").map((input) => input.text).join(""),
-        mentions: item.input.filter((input) => input.type === "mention").map((input) => ({ name: input.name, path: input.path })),
-        skills: item.input.filter((input) => input.type === "skill").map((input) => ({ name: input.name, path: input.path })),
-        images: item.input.filter((input) => input.type === "image" || input.type === "localImage").map((input) => ({
-          name: input.type === "image" ? input.url : input.path,
-          ...(input.type === "image" ? { url: input.url } : { path: input.path }),
-        })),
-        collaborationMode: "default" as const,
-        settings: { ...settings },
-        permissionMode,
-        approvalReviewer,
-        };
-      });
-      replaceQueuedThread(threadId, next);
+      const client = await ensureConnected();
+      if (typeof client.listQueuedSubmissions !== "function") return;
+      do {
+        if (nativeQueueRefreshRef.current.get(threadId) !== refresh) return;
+        refresh.dirty = false;
+        const response = await client.listQueuedSubmissions({ threadId });
+        if (nativeQueueRefreshRef.current.get(threadId) !== refresh) return;
+        if (refresh.dirty) continue;
+        // Keep the richer CS metadata (model, permissions, intent) by matching
+        // the server's stable clientUserMessageId. Items created elsewhere use
+        // conservative defaults and remain fully manageable in the UI.
+        const existing = getQueued(threadId);
+        const byClientId = new Map(existing.map((item) => [item.id, item]));
+        const next = response.data.map((item) => {
+          const preserved = byClientId.get(item.clientUserMessageId);
+          if (preserved) return { ...preserved, serverId: item.id };
+          return {
+          id: item.clientUserMessageId,
+          serverId: item.id,
+          text: item.input.filter((input) => input.type === "text").map((input) => input.text).join(""),
+          mentions: item.input.filter((input) => input.type === "mention").map((input) => ({ name: input.name, path: input.path })),
+          skills: item.input.filter((input) => input.type === "skill").map((input) => ({ name: input.name, path: input.path })),
+          images: item.input.filter((input) => input.type === "image" || input.type === "localImage").map((input) => ({
+            name: input.type === "image" ? input.url : input.path,
+            ...(input.type === "image" ? { url: input.url } : { path: input.path }),
+          })),
+          collaborationMode: "default" as const,
+          settings: { ...settings },
+          permissionMode,
+          approvalReviewer,
+          };
+        });
+        replaceQueuedThread(threadId, next);
+      } while (refresh.dirty);
     } finally {
-      nativeQueueRefreshRef.current.delete(threadId);
+      if (nativeQueueRefreshRef.current.get(threadId) === refresh) {
+        nativeQueueRefreshRef.current.delete(threadId);
+      }
     }
   }, [approvalReviewer, ensureConnected, getQueued, permissionMode, replaceQueuedThread, settings]);
 
@@ -495,6 +508,7 @@ export function useThreadController(props: Props) {
     invalidateActions();
     threadIdRef.current = null;
     subscribedThreadIdsRef.current.clear();
+    nativeQueueRefreshRef.current.clear();
     clearQueued();
     setSubmitting(false);
     dispatch({ type: "clear" });

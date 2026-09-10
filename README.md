@@ -261,12 +261,16 @@ LICENSE/NOTICE 会随安装包一同带上；正式公开发布前仍应完成�
 ```powershell
 pnpm runtime:stage
 pnpm protocol:generate
+pnpm runtime:probe-protocol
 ```
 
 Runtime 不要求与上一次 manifest 的完整版本号相同。暂存时会从同一来源复制主 Runtime
 和 companion binaries，记录实际版本与 SHA-256，并检查 CS 当前依赖的 app-server
 请求、通知和反向请求仍存在。协议新增能力不会自动改变 UI；如果生成类型发生变化，
 请显式运行 `pnpm protocol:generate`，审查生成差异并完成完整回归测试。
+生成和门禁均包含 CS 已使用的实验协议；这不代表 Runtime 的全部实验功能可用。
+`runtime:probe-protocol` 使用隔离临时目录和本机模拟网关检查设置与队列，不使用真实密钥；
+当前功能边界见 [协议状态](docs/status/protocol-status.md)。
 
 个人开发者推荐使用本机打包并手动上传 Release。当前项目使用无密码的 Tauri signing key，发布时只需保管私钥文件；私钥本身仍不能提交仓库：
 

@@ -250,11 +250,6 @@ export function useAgentSession(
           message: notification.error ?? `已完成 ${notification.mode} 模式设置。`,
         });
       },
-      onContextCompacted: (notification) => runtimeNoticeStore.push({
-        kind: "info",
-        title: "Session 上下文已压缩",
-        message: `Thread ${notification.threadId} 已由 app-server 完成上下文压缩。`,
-      }),
       onModelRerouted: (notification) => runtimeNoticeStore.push({
         kind: "warning",
         title: "模型已被重新路由",
