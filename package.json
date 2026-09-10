@@ -16,6 +16,7 @@
     "runtime:probe-goal": "node tests/scripts/probe-goal-runtime.mjs",
     "runtime:probe-extensions": "node tests/scripts/probe-extensions-runtime.mjs",
     "test:extension-layout": "node tests/scripts/check-extension-layout.mjs",
+    "test:channel-layout": "node tests/scripts/check-channel-layout.mjs",
     "runtime:probe-model-parameters": "node tests/scripts/probe-model-parameters.mjs",
     "runtime:probe-local-tool": "node tests/scripts/probe-local-tool-runtime.mjs",
     "protocol:generate": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/generate-protocol.ps1",

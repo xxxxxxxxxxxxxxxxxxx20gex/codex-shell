@@ -10,7 +10,6 @@ import type { TurnStartedNotification } from "../../generated/app-server/v2/Turn
 import { useSideChat } from "./useSideChat";
 
 const settings: ModelSettings = {
-  baseUrl: "https://example.test/v1",
   modelId: "gpt-test",
   reasoningEffort: "medium",
   reasoningSummary: "auto",

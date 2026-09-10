@@ -482,6 +482,8 @@ version = "0.1.4"
 dependencies = [
  "chrono",
  "keyring",
+ "reqwest",
+ "rustls",
  "serde",
  "serde_json",
  "tauri",

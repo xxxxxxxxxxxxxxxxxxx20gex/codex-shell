@@ -28,3 +28,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tests/scripts/run-quality-ga
 
 - `pnpm runtime:probe-extensions`：使用临时 CODEX_HOME 验证 Skills、MCP 配置和本地 Plugin 安装/卸载，不读取个人凭据或官方目录。
 - `pnpm test:extension-layout <playwright/index.mjs绝对路径> <浏览器可执行文件绝对路径>`：先启动 `pnpm dev --host 127.0.0.1 --port 1435`；脚本在浏览器中挂载真实组件及模拟回调，检查四尺寸布局、字号、焦点和 reduced-motion，截图保存到系统临时目录。
+
+## 模型渠道检查
+
+- `pnpm test:channel-layout <playwright/index.mjs绝对路径> <浏览器可执行文件绝对路径> [端口]`：先启动 `pnpm dev --host 127.0.0.1 --port 1435`；脚本挂载真实的 `PreferencesPanel`（模型渠道分区）与 `ModelSettingsPanel`，检查四尺寸布局、模态框边界、字号下限、键盘焦点、删除二次确认、Escape 关闭和 reduced-motion，截图保存到系统临时目录。

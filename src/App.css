@@ -520,3 +520,13 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   .turn-activity-indicator.active { animation-duration: 1.6s !important; animation-iteration-count: infinite !important; }
 }
+
+.channel-picker { display: flex; flex-wrap: wrap; gap: 6px; }
+.channel-picker > small { color: var(--text-muted); font-size: var(--text-label); }
+.channel-picker button { display: grid; min-height: var(--control-height-compact); align-content: center; padding: 5px 10px; border: 1px solid var(--border-default); border-radius: var(--radius-control); color: var(--text-secondary); background: var(--surface-canvas); text-align: left; cursor: pointer; }
+.channel-picker button:hover { color: var(--text-primary); background: var(--surface-raised); }
+.channel-picker button.active { border-color: var(--accent-action); color: var(--text-primary); background: var(--surface-selected); }
+.channel-picker button strong { font-size: var(--text-label); font-weight: 500; }
+.channel-picker button small { color: var(--text-muted); font-size: var(--text-meta); line-height: 16px; }
+.channel-picker .channel-picker-manage { align-self: center; border-style: dashed; color: var(--text-muted); font-size: var(--text-label); }
+.channel-picker .channel-picker-manage:hover { color: var(--text-primary); }

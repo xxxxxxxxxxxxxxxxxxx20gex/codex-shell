@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Activity, Palette, Save, ServerCog, UserRound, X } from "lucide-react";
+import { Activity, Palette, Save, ServerCog, UserRound, Waypoints, X } from "lucide-react";
 import type { WindowsSandboxReadiness } from "../../generated/app-server/v2/WindowsSandboxReadiness";
 import type { WindowsSandboxSetupMode } from "../../generated/app-server/v2/WindowsSandboxSetupMode";
-import type { PersonalizationSettings, ThemePreference } from "../models/types";
+import { ProviderChannelsPanel } from "../models/ProviderChannelsPanel";
+import type { PersonalizationSettings, ProviderSettings, ThemePreference } from "../models/types";
 import type { RuntimeLogStore } from "../runtime/runtimeLogStore";
 import type { RuntimeNoticeStore } from "../runtime/runtimeNoticeStore";
 import { DiagnosticsPreferences } from "./DiagnosticsPreferences";
@@ -11,6 +12,9 @@ import "./PreferencesPanel.css";
 
 interface Props {
   settings: PersonalizationSettings;
+  providerSettings: ProviderSettings;
+  onSaveProviderSettings: (settings: ProviderSettings, requiresRestart?: boolean) => Promise<void>;
+  providerSwitchBlocked?: boolean;
   initialSection?: PreferencesSection;
   codexHome: string;
   codexHomeDisabled: boolean;
@@ -23,7 +27,7 @@ interface Props {
   onSave: (settings: PersonalizationSettings) => Promise<void>;
 }
 
-export type PreferencesSection = "personalization" | "appearance" | "runtime" | "diagnostics";
+export type PreferencesSection = "personalization" | "appearance" | "providers" | "runtime" | "diagnostics";
 
 const themeOptions: Array<{ value: ThemePreference; label: string; description: string }> = [
   { value: "dark", label: "深色", description: "适合长时间工作" },
@@ -33,6 +37,9 @@ const themeOptions: Array<{ value: ThemePreference; label: string; description: 
 
 export function PreferencesPanel({
   settings,
+  providerSettings,
+  onSaveProviderSettings,
+  providerSwitchBlocked = false,
   initialSection = "personalization",
   codexHome,
   codexHomeDisabled,
@@ -81,6 +88,7 @@ export function PreferencesPanel({
           <nav className="preferences-nav" aria-label="设置分类">
             <button className={section === "personalization" ? "active" : ""} onClick={() => setSection("personalization")}><UserRound aria-hidden="true" /><span>个性化提示词</span></button>
             <button className={section === "appearance" ? "active" : ""} onClick={() => setSection("appearance")}><Palette aria-hidden="true" /><span>外观</span></button>
+            <button className={section === "providers" ? "active" : ""} onClick={() => setSection("providers")}><Waypoints aria-hidden="true" /><span>模型渠道</span></button>
             <button className={section === "runtime" ? "active" : ""} onClick={() => setSection("runtime")}><ServerCog aria-hidden="true" /><span>运行环境</span></button>
             <button className={section === "diagnostics" ? "active" : ""} onClick={() => setSection("diagnostics")}><Activity aria-hidden="true" /><span>诊断</span></button>
           </nav>
@@ -102,12 +110,13 @@ export function PreferencesPanel({
                 </div>
               </div>
             )}
+            {section === "providers" && <ProviderChannelsPanel settings={providerSettings} onSave={onSaveProviderSettings} switchDisabled={providerSwitchBlocked} />}
             {section === "runtime" && <RuntimePreferences codexHome={codexHome} codexHomeDisabled={codexHomeDisabled} windowsSandboxReadiness={windowsSandboxReadiness} onSetupWindowsSandbox={onSetupWindowsSandbox} onRestart={onRestart} />}
             {section === "diagnostics" && <DiagnosticsPreferences noticeStore={noticeStore} logStore={logStore} />}
             {status && <div className="form-status">{status}</div>}
           </div>
         </div>
-        <footer><button className="secondary-button" onClick={onClose}>取消</button><button className="primary-button" onClick={() => void save()} disabled={saving}><Save aria-hidden="true" />{saving ? "保存中…" : "保存"}</button></footer>
+        <footer><button className="secondary-button" onClick={onClose}>{section === "providers" ? "关闭" : "取消"}</button>{section !== "providers" && <button className="primary-button" onClick={() => void save()} disabled={saving}><Save aria-hidden="true" />{saving ? "保存中…" : "保存"}</button>}</footer>
       </section>
     </div>
   );

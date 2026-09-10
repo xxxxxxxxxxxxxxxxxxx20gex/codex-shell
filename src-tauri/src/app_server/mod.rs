@@ -1,10 +1,11 @@
 use crate::codex_home::resolve_codex_home;
-use crate::config::read_settings;
-use crate::credentials::read_api_key;
+use crate::config::{Channel, VENDOR_DEEPSEEK, read_settings};
+use crate::credentials::read_channel_secret;
 use crate::runtime::resolve_codex_executable;
 use crate::workspace::resolve_default_project_directory;
 use serde::Serialize;
 use std::io::{BufRead, BufReader, Write};
+use std::path::Path;
 use std::process::{Child, ChildStdin, Command, Stdio};
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -82,13 +83,23 @@ pub fn app_server_start(
     }
 
     let settings = read_settings(&app)?;
-    let api_key = read_api_key()?;
+    let channel = settings
+        .active_channel()
+        .ok_or_else(|| "尚未配置模型渠道，请先在设置中新增渠道".to_string())?
+        .clone();
+    let api_key = read_channel_secret(&channel.id)?
+        .ok_or_else(|| format!("渠道「{}」尚未保存 API Key", channel.name))?;
     let executable = resolve_codex_executable()?;
     let codex_home = resolve_codex_home(&app)?;
+    let catalog_path = crate::catalog::materialize_catalog(&codex_home, &channel.vendor)?;
     let default_project_directory = resolve_default_project_directory(&app)?.path;
-    let model = serde_json::to_string(&settings.model_id)
-        .map_err(|error| format!("模型 ID 编码失败：{error}"))?;
-    let arguments = app_server_arguments(&settings, &model)?;
+    let model = match channel.conversation.model_id.as_deref() {
+        Some(model) => Some(
+            serde_json::to_string(model).map_err(|error| format!("模型 ID 编码失败：{error}"))?,
+        ),
+        None => None,
+    };
+    let arguments = app_server_arguments(&channel, catalog_path.as_deref(), model.as_deref())?;
 
     let mut command = Command::new(&executable);
     command
@@ -149,20 +160,27 @@ pub fn app_server_start(
     Ok(process)
 }
 
+/// 把激活渠道翻译成 app-server 启动参数。
+///
+/// provider 是进程级属性，切换渠道意味着重启进程，因此这里只处理单个渠道。
 fn app_server_arguments(
-    settings: &crate::config::ModelSettings,
-    encoded_model: &str,
+    channel: &Channel,
+    catalog_path: Option<&Path>,
+    encoded_model: Option<&str>,
 ) -> Result<Vec<String>, String> {
     const PROVIDER_ID: &str = "codex_shell_gateway";
-    let base_url = serde_json::to_string(&settings.base_url)
+    let base_url = serde_json::to_string(&channel.base_url)
         .map_err(|error| format!("Base URL 编码失败：{error}"))?;
     let mut arguments = vec![
         "app-server".to_string(),
         "--stdio".to_string(),
         "-c".to_string(),
         "features.code_mode_host=true".to_string(),
-        "-c".to_string(),
-        format!("model={encoded_model}"),
+    ];
+    if let Some(encoded_model) = encoded_model {
+        arguments.extend(["-c".to_string(), format!("model={encoded_model}")]);
+    }
+    arguments.extend([
         "-c".to_string(),
         format!("model_provider=\"{PROVIDER_ID}\""),
         "-c".to_string(),
@@ -175,26 +193,35 @@ fn app_server_arguments(
         format!("model_providers.{PROVIDER_ID}.env_key=\"OPENAI_API_KEY\""),
         "-c".to_string(),
         format!("model_providers.{PROVIDER_ID}.requires_openai_auth=false"),
-    ];
-    if let Some(reasoning_effort) = &settings.reasoning_effort {
+    ]);
+    if let Some(catalog_path) = catalog_path {
+        let encoded = serde_json::to_string(&catalog_path.to_string_lossy())
+            .map_err(|error| format!("模型目录路径编码失败：{error}"))?;
+        arguments.extend(["-c".to_string(), format!("model_catalog_json={encoded}")]);
+    }
+    if channel.vendor == VENDOR_DEEPSEEK {
+        arguments.extend(["-c".to_string(), "web_search=\"disabled\"".to_string()]);
+    }
+    let conversation = &channel.conversation;
+    if let Some(reasoning_effort) = &conversation.reasoning_effort {
         arguments.extend([
             "-c".to_string(),
             format!("model_reasoning_effort={reasoning_effort}"),
         ]);
     }
-    if let Some(reasoning_summary) = &settings.reasoning_summary {
+    if let Some(reasoning_summary) = &conversation.reasoning_summary {
         arguments.extend([
             "-c".to_string(),
             format!("model_reasoning_summary={reasoning_summary}"),
         ]);
     }
-    if let Some(verbosity) = &settings.verbosity {
+    if let Some(verbosity) = &conversation.verbosity {
         arguments.extend(["-c".to_string(), format!("model_verbosity={verbosity}")]);
     }
-    if !settings.service_tier.is_empty() {
+    if !conversation.service_tier.is_empty() {
         arguments.extend([
             "-c".to_string(),
-            format!("service_tier=\"{}\"", settings.service_tier),
+            format!("service_tier=\"{}\"", conversation.service_tier),
         ]);
     }
     Ok(arguments)

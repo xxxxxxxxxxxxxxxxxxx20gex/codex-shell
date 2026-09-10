@@ -1,6 +1,6 @@
 # 模型厂商与渠道 v1（目标方案）
 
-> 设计草案，尚未实现。本文只表达目标状态和迁移步骤，不代表任何功能已完成；当前行为以源码、通过兼容门禁的 Runtime 和实际验证为准。
+> 本方案已于 2026-09-10 落地。本文保留目标状态、迁移步骤和落地时对草案的修正；当前行为以源码和 [模型配置状态](../docs/status/model-config-status.md) 为准，本文不作为完成状态证据。
 
 - 记录日期：2026-09-10
 - 影响模块：`models`、`preferences`、`config`、`credentials`、`app_server`、`runtime`
@@ -41,6 +41,8 @@
 4. **`env_key` 注入可用**，无需采用 DeepSeek 文档中的 `experimental_bearer_token` 明文写法。
 5. `deepseek-flash` 支持图片输入与 `low/high/max` 推理档位，`serviceTiers` 为空；`deepseek-v4-pro` 不支持图片。
 6. DeepSeek 官方文档要求该 provider 设置 `web_search = "disabled"`。
+7. **按渠道生成的启动参数已端到端验证（2026-09-10）**：使用与 `app_server_arguments` 相同的 `-c` 组合启动 Runtime，注入 CODEX_HOME 内的 DeepSeek 目录后 `model/list` 只返回 `deepseek-flash`、`deepseek-v4-pro`；同一路由去掉 `model_catalog_json` 则恢复内置 GPT 目录；OpenAI 渠道不注入目录同样返回内置目录。
+8. **`GET {base}/models` 可作为连接探针（2026-09-10）**：`https://api.deepseek.com/models` 与 `.../v1/models` 在无效 Key 下均返回 401，说明端点存在，且能把鉴权失败与路由错误区分开。
 
 ### 2.3 与需求的结构性差距
 
@@ -89,7 +91,7 @@ Vendor 是代码内常量表，不是用户数据；新增厂商等于改代码�
 - `id`：由 CS 生成（`<vendor>-<8 位随机>`），不允许用户编辑，保证改名字不会遗失密钥。
 - `name`：用户标签，必填。
 - `baseUrl`：必填，规范化为绝对 URL，禁止空值与纯空白。
-- `defaultModelId`：可选；缺省时取该渠道目录的首个模型。
+- `conversation`：该渠道自己的对话参数（`modelId`、推理强度、推理摘要、回答冗余度、服务层级）；缺省模型时取该渠道目录的默认模型。
 - `catalog`：见 3.3。
 - 渠道不保存密钥，只保存 `id` 作为密钥索引。
 
@@ -118,20 +120,21 @@ v1 的 UI 只产生 `vendorDefault`。`file` 保留给后续自定义厂商，�
       "vendor": "deepseek",
       "name": "DeepSeek 官方",
       "baseUrl": "https://api.deepseek.com",
-      "defaultModelId": "deepseek-flash",
-      "catalog": { "kind": "vendorDefault" }
+      "catalog": { "kind": "vendorDefault" },
+      "conversation": {
+        "modelId": "deepseek-flash",
+        "reasoningEffort": null,
+        "reasoningSummary": null,
+        "verbosity": null,
+        "serviceTier": "default"
+      }
     }
-  ],
-  "conversation": {
-    "reasoningEffort": null,
-    "reasoningSummary": null,
-    "verbosity": null,
-    "serviceTier": "default"
-  }
+  ]
 }
 ```
 
-- `conversation` 段承载原来与 provider 无关的对话参数，语义不变，`null` 表示不覆盖 Core 与模型目录。
+- **对话参数挂在渠道上，不是全局一份。** 这是相对初稿的修正：初稿把 `conversation` 放在顶层，切换渠道后再切回来会丢失上一个渠道调好的参数。渠道之间共用同一份会让「OpenAI 的推理档位」被「DeepSeek 的档位」覆盖，与验收标准冲突。
+- `conversation` 承载与 provider 无关的对话参数，语义不变，`null` 表示不覆盖 Core 与模型目录；`modelId` 为空表示使用该渠道目录的默认模型。
 - 顶层不再出现 `baseUrl`、`modelId`，消除「一份配置既是 provider 又是对话参数」的混淆。
 - 读取时若 `schemaVersion` 缺失或为 1，执行第 7 节迁移。
 
@@ -152,8 +155,8 @@ v1 的 UI 只产生 `vendorDefault`。`file` 保留给后续自定义厂商，�
 ### 4.3 模型目录文件
 
 - DeepSeek 目录作为 Tauri 捆绑资源随应用分发（`assets/catalogs/deepseek-models.json`，内容取自 DeepSeek 官方 `models.json`）。
-- 启动时由 Rust 解析资源路径，把绝对路径写入 `model_catalog_json`；OpenAI 厂商省略该参数。
-- 待实现验证项：`model_catalog_json` 指向 CODEX_HOME 之外的路径是否被接受。本次探针把目录放在 CODEX_HOME 内验证通过，未验证外部路径；若不接受，退化为写入 `<CODEX_HOME>/models/<vendor>.json`。
+- 启动时由 Rust 把内置目录物化到 `<CODEX_HOME>/codex-shell/<vendor>-models.json`，再把该绝对路径写入 `model_catalog_json`；OpenAI 厂商省略该参数。
+- 初稿的待验证项（`model_catalog_json` 指向 CODEX_HOME 之外的路径是否被接受）在实现中直接规避：目录始终落在 CODEX_HOME 内，因此不依赖外部路径行为，也不需要额外的资源路径解析。
 
 **取舍**：DeepSeek 官方目录约 76 KB，其中包含其调优过的 Codex `instructions_template`。v1 采用原样内置，理由是能以最小成本获得正确的工具调用、图片输入与推理档位行为。代价是引入第三方文本内容并需要跟随官方更新。备选方案是只写最小元数据、依赖 Core 默认提示词，留待实测对比后再决定。
 
@@ -202,7 +205,7 @@ v1 的 UI 只产生 `vendorDefault`。`file` 保留给后续自定义厂商，�
 - 厂商分组列表：每个厂商一个分组标题，下面是该厂商的渠道行，显示渠道名、Base URL 主机名、默认模型、密钥状态与激活标记。
 - 行操作：编辑、删除。删除按钮默认中性，hover 与确认时使用 danger 语义；删除激活渠道前必须二次确认，并说明会影响新对话。
 - 新增渠道：选择厂商，填写名称、Base URL 与 API Key，Key 使用密码输入并在提交后清空，不回读。
-- 「测试连接」按钮：建议 v1 一并实现，否则用户只能在下一次对话中才发现配置错误。该能力已登记在 `credentials-status.md` 的下一步中，本次合并实现。
+- 「测试连接」按钮（v1 已纳入）：对当前编辑中的渠道发起 `GET {baseUrl}/models`，只用 `Authorization: Bearer` 携带密钥，报告路由可达性、密钥是否被接受和目录模型数；不发送推理请求，不产生用量，也不回传密钥。密钥优先取输入框中尚未保存的值，留空时回退到已保存密钥。
 
 ### 6.2 对话高级设置
 
@@ -231,14 +234,16 @@ v1 的 UI 只产生 `vendorDefault`。`file` 保留给后续自定义厂商，�
 ## 8 风险与未决问题
 
 - **切换中断成本**：切换渠道必须重启 app-server，正在执行的任务会中断。用户容易低估这一点，UI 必须显式表达。
-- **目录归属未验证**：`model_catalog_json` 指向 CODEX_HOME 之外的路径尚未实测，见 4.3。
+- **目录归属**：`model_catalog_json` 指向 CODEX_HOME 之外的路径仍未实测；实现选择把目录物化到 CODEX_HOME 内，见 4.3。
 - **第三方目录维护**：内置 DeepSeek 目录会随官方更新而漂移，需要记录来源与获取日期，并纳入 ADR-003 的兼容门禁思路。
 - **中转站密钥风险**：渠道模式鼓励用户配置第三方中转，密钥会被交给第三方。UI 应有一句事实性提示，但不做过度警告。
 - **DeepSeek 模型生命周期**：`deepseek-v4-pro` 自 2026-09-14 起被路由到 V4.1 Flash 并计划下线，不应作为默认模型内置。
 - **容量与一致性**：密钥集中在单条 keyring 记录，受系统凭据容量限制，写入需要与 `WRITE_LOCK` 同类的串行化。
 - **回读边界不可破**：渠道列表、日志与状态文档都不得包含密钥或密钥片段。
 
-## 9 实施步骤
+## 9 实施步骤（已执行）
+
+以下步骤已在 2026-09-10 全部执行；完成证据、当前接口和残留风险见 [模型配置状态](../docs/status/model-config-status.md) 等模块状态文档，本文不再维护完成状态。
 
 1. 验证 `model_catalog_json` 外部路径行为，确定目录落盘位置。
 2. Rust：`config` 引入 v2 schema 与迁移；`credentials` 增加渠道密钥映射；`app_server` 按激活渠道生成参数并注入目录。

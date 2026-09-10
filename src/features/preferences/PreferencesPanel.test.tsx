@@ -3,6 +3,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { check } from "@tauri-apps/plugin-updater";
+import type { ProviderSettings } from "../models/types";
 import { RuntimeLogStore } from "../runtime/runtimeLogStore";
 import { RuntimeNoticeStore } from "../runtime/runtimeNoticeStore";
 import { PreferencesPanel } from "./PreferencesPanel";
@@ -11,9 +12,24 @@ vi.mock("@tauri-apps/plugin-updater", () => ({ check: vi.fn(async () => null) })
 
 afterEach(cleanup);
 
+const providerSettings: ProviderSettings = {
+  schemaVersion: 2,
+  activeChannelId: "openai-1",
+  channels: [{
+    id: "openai-1",
+    vendor: "openai",
+    name: "OpenAI 官方",
+    baseUrl: "https://api.openai.com/v1",
+    catalog: { kind: "vendorDefault" },
+    conversation: { modelId: "gpt-test", reasoningEffort: null, reasoningSummary: null, verbosity: null, serviceTier: "default" },
+  }],
+};
+
 function panelProps() {
   return {
     settings: { customInstructions: "", theme: "dark" as const },
+    providerSettings,
+    onSaveProviderSettings: vi.fn(async () => undefined),
     codexHome: "C:\\Users\\example\\.codex-shell",
     codexHomeDisabled: false,
     windowsSandboxReadiness: "notConfigured" as const,
@@ -77,6 +93,17 @@ describe("PreferencesPanel", () => {
 
     await waitFor(() => expect(check).toHaveBeenCalled());
     expect(screen.getByText("当前已是最新版本")).toBeTruthy();
+  });
+
+  it("limits model channels to their own section without a shared save button", () => {
+    render(<PreferencesPanel {...panelProps()} initialSection="providers" onSave={async () => undefined} />);
+
+    expect(screen.getByRole("button", { name: "模型渠道" }).classList.contains("active")).toBe(true);
+    expect(screen.getByText("OpenAI")).toBeTruthy();
+    expect(screen.getByText("DeepSeek")).toBeTruthy();
+    expect(screen.getByText("OpenAI 官方")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "保存" })).toBeNull();
+    expect(screen.getByRole("button", { name: "关闭" })).toBeTruthy();
   });
 
   it("opens directly on the requested section", () => {

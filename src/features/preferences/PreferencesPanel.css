@@ -55,3 +55,37 @@
   .preferences-nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-right: 0; border-bottom: 1px solid var(--border-subtle); }
   .preferences-content { padding: 18px; }
 }
+
+.channel-vendor { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle); }
+.channel-vendor > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.channel-vendor > header > span { color: var(--text-primary); font-size: var(--text-ui); font-weight: 600; }
+.channel-vendor > header > button { display: inline-flex; min-height: var(--control-height-compact); align-items: center; gap: 5px; padding: 0 8px; border: 1px solid var(--border-subtle); border-radius: var(--radius-control); color: var(--text-secondary); background: transparent; font-size: var(--text-label); cursor: pointer; }
+.channel-vendor > header > button:hover { color: var(--text-primary); background: var(--surface-raised); }
+.channel-vendor > header > button svg { width: 16px; height: 16px; stroke-width: 1.75; }
+.channel-vendor > small { display: block; margin-top: 6px; color: var(--text-muted); font-size: var(--text-meta); line-height: 16px; }
+.channel-empty { margin: 10px 0 0; color: var(--text-muted); font-size: var(--text-label); }
+.channel-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; margin-top: 10px; padding: 10px 12px; border: 1px solid var(--border-subtle); border-radius: var(--radius-control); background: var(--surface-canvas); }
+.channel-row.active { border-color: var(--border-strong); background: var(--surface-selected); }
+.channel-row-main { min-width: 0; }
+.channel-row-main strong { display: block; overflow: hidden; color: var(--text-primary); font-size: var(--text-ui); font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.channel-row-main small { display: block; overflow: hidden; margin-top: 3px; color: var(--text-muted); font-size: var(--text-meta); line-height: 16px; text-overflow: ellipsis; white-space: nowrap; }
+.channel-row-actions { display: flex; align-items: center; gap: 4px; }
+.channel-row-actions button { display: inline-flex; min-height: var(--control-height-compact); align-items: center; padding: 0 8px; border: 0; border-radius: var(--radius-control); color: var(--text-secondary); background: transparent; font-size: var(--text-label); cursor: pointer; }
+.channel-row-actions button:hover { color: var(--text-primary); background: var(--surface-raised); }
+.channel-row-actions button.danger:hover { color: var(--accent-danger); }
+.channel-row-actions svg { width: 16px; height: 16px; stroke-width: 1.75; }
+.channel-active-flag { display: inline-flex; align-items: center; gap: 4px; padding: 0 8px; color: var(--accent-action); font-size: var(--text-label); }
+.channel-active-flag svg { width: 16px; height: 16px; stroke-width: 1.75; }
+.channel-confirm { display: flex; grid-column: 1 / -1; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 8px; border-top: 1px solid var(--border-subtle); }
+.channel-confirm span { flex: 1 1 180px; color: var(--text-muted); font-size: var(--text-meta); line-height: 16px; }
+.channel-confirm button { min-height: var(--control-height-compact); padding: 0 9px; border: 1px solid var(--border-subtle); border-radius: var(--radius-control); color: var(--text-secondary); background: transparent; font-size: var(--text-label); cursor: pointer; }
+.channel-confirm button:hover { color: var(--text-primary); background: var(--surface-raised); }
+.channel-confirm button.danger:hover { color: var(--accent-danger); }
+.channel-editor { margin-top: 16px; padding: 14px; border: 1px solid var(--border-default); border-radius: var(--radius-control); background: var(--surface-canvas); }
+.channel-editor > header { margin-bottom: 10px; color: var(--text-primary); font-size: var(--text-ui); font-weight: 600; }
+.channel-editor .preferences-field { margin-top: 10px; }
+.channel-editor-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.channel-probe { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: var(--text-meta); line-height: 16px; }
+.channel-probe svg { width: 16px; height: 16px; flex: 0 0 16px; stroke-width: 1.75; }
+.channel-probe.ok { color: var(--accent-success); }
+.channel-probe.error { color: var(--accent-danger); }

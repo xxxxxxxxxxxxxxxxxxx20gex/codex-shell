@@ -1,4 +1,6 @@
 mod app_server;
+mod catalog;
+mod channel_probe;
 mod codex_home;
 mod config;
 mod credentials;
@@ -21,11 +23,13 @@ pub fn run() {
             app_server::app_server_start,
             app_server::app_server_stop,
             codex_home::set_codex_home,
+            channel_probe::test_channel_connection,
             config::load_model_settings,
             config::save_model_settings,
             config::load_personalization_settings,
             config::save_personalization_settings,
-            credentials::save_api_key,
+            credentials::channel_secret_presence,
+            credentials::save_channel_secret,
             mcp_credentials::save_mcp_secret,
             skill_files::install_local_skill,
             skill_files::uninstall_local_skill,

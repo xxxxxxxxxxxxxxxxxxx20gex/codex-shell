@@ -1,12 +1,11 @@
 # 模型配置状态
 
-- 模型切换权限保持（2026-09-10）：模型快捷切换请求同时携带当前 Composer 的 sandboxPolicy、approvalPolicy 和 approvalsReviewer，避免只提交模型字段后由权威设置回流覆盖原权限选择。完全访问、工作区写入、只读三种模式的定向测试、TypeScript 与 ESLint 通过；未使用真实 Provider 做远端验证。
-
-- 模块职责：管理对话内模型/推理强度热切换，以及高级网关、密钥、自定义模型和模型特有参数。
-- 当前状态：输入框旁提供 Codex 风格轻量模型菜单；高级设置独立承载第三方网关，以及 Codex Core 确实允许壳子控制的推理摘要、回答冗余度和服务层级。CS 不提供内置网关或公共模型服务，用户必须自行配置目标 Provider。当前 Thread 收到 Core 权威 settings 通知后，Composer 会同步模型、推理强度、摘要和服务层级；Provider-only Base URL、verbosity 不会被 Thread 覆盖。
-- 最近变更：高级设置新增原生 `reasoning.summary` 与 `service_tier`；服务层级只显示 `model/list` 为当前模型声明的选项，不支持的已保存值会回退标准层级。推理强度、推理摘要和回答冗余度的新安装默认值均改为不覆盖 Core/模型目录；旧配置中的显式选择继续保留。`temperature`、`top_p`、`max_output_tokens`、工具选择、并行工具调用、缓存键、流式传输和存储策略没有可用的 Codex Core 壳层入口，因此不制造无效设置。
-- 当前接口：`ModelQuickPicker`、`ModelSettingsPanel`、`ModelSettings`、`model/list`、Provider capability read、Windows Credential Manager 持久化接口。
-- 已知问题：更改 Base URL、API Key 或回答冗余度后需要重启连接；`model/list` 不公开模型的 verbosity 和 reasoning summary 支持状态，因此通用 UI 无法在选择前可靠禁用不支持项，第三方 Provider 也尚无声明任意扩展参数 schema 的协议。
-- 下一步：把参数探针包装为桌面端显式“连接与兼容性测试”，并消费 Core 的 verbosity ignored 诊断，区分鉴权、模型不存在和参数不兼容。
-- 验证证据：2026-08-20 使用当前网关与兼容门禁 Runtime 对 `gpt-5.6-sol` 复测：low/medium/high/xhigh/max 均原样进入 `/v1/responses`，ultra 按 Core 设计映射为线上 max；low/medium/high verbosity、auto/concise/detailed/none 摘要行为与配置一致；标准层级省略 `service_tier`，Priority 独立复测时上游收到 `service_tier=priority`。成功样本均为 HTTP 200，未出现 verbosity ignored warning。探针不输出密钥、提示词或响应正文。
-- 最后更新：2026-09-04
+- 模块职责：管理厂商渠道（路由、密钥、模型目录）以及对话内模型、推理强度和原生参数。
+- 当前状态：设置窗口的「模型渠道」分区按厂商分组（OpenAI、DeepSeek）管理渠道，支持新增、编辑、删除、激活和连接测试。渠道 = Base URL + 密钥 + 模型目录 + 该渠道自己的对话参数；同一时刻只有一个激活渠道，所有 Session 共用。对话高级设置只选择渠道，不再输入 Base URL 与 Key。密钥只写入 Windows 凭据管理器，前端只能写入并查询「是否已保存」。模型快捷切换请求同时携带当前 Composer 的 sandboxPolicy、approvalPolicy 和 approvalsReviewer，避免只提交模型字段后由权威设置回流覆盖原权限选择。
+- 最近变更：由单 provider 配置改为「厂商分组 + 渠道列表」（settings v2，读取 v1 时自动迁移并保留 `settings.v1.bak.json`）；对话参数从全局一份改为每渠道一份，切换渠道不再覆盖其他渠道已经调好的参数；DeepSeek 渠道启动时注入内置官方模型目录，`model/list` 因此返回 DeepSeek 模型而不是内置 GPT 目录；新增连接测试 `GET {baseUrl}/models`；有回合正在执行时禁止切换渠道；参数校准只发生在执行核心按新渠道重启之后，并且只写激活渠道。
+- 当前接口：`ModelSettingsPanel`、`ProviderChannelsPanel`、`channels.ts`（`activeChannel`、`activeConversation`、`replaceChannel`、`reconcileConversation`、`providerSettingsFromThread`）、`load_model_settings`、`save_model_settings`、`channel_secret_presence`、`save_channel_secret`、`test_channel_connection`、app-server 的 `model/list` 与 provider capability read。
+- 已知问题：切换渠道必然重启执行核心，正在执行的回合会被中断（UI 在运行中禁止切换，但不排队切换）；`model/list` 不公开模型的 verbosity 与 reasoning summary 支持状态，通用 UI 无法在选择前可靠禁用不支持项；渠道级代理、超时、重试和并行多 provider 未实现；连接测试只验证路由、密钥与目录，不验证 Responses 对话本身可用；`settings.json` 的 `catalog.file` 已进入 schema 但还没有 UI。
+- 下一步：把连接测试扩展为可选的最小对话探测，区分鉴权、模型不存在和参数不兼容；为渠道提供导入导出；评估第三方渠道声明目录之外扩展参数 schema 的协议入口。
+- 验证证据：2026-09-10；`pnpm typecheck`、`pnpm lint`、`pnpm test`（62 个文件 / 298 项）、`pnpm build`、`pnpm quality:knip` 通过；`pnpm rust:check` 的 Cargo check、31 项 Rust 单测和严格 Clippy 通过。真实 app-server 探针（Runtime `codex-cli 0.153.4`）：按渠道生成的 `-c` 参数注入 CODEX_HOME 内的 DeepSeek 目录后 `model/list` 只返回 `deepseek-flash`、`deepseek-v4-pro`；同路由去掉 `model_catalog_json` 返回内置 6 个 GPT 模型；OpenAI 渠道不注入目录同样返回内置目录。端点探针确认 `https://api.deepseek.com/models` 与 `.../v1/models` 在无效 Key 下返回 401。未使用真实 DeepSeek 密钥完成一次对话。模型中转渠道设置与对话高级设置已通过 `pnpm test:channel-layout`（Playwright + 本机 Chrome，模拟回调）：1440×900、1280×780、1024×720、900×700 四档均无页面级横向溢出，模态框不越界，可见文字不小于 11px，键盘焦点可进入面板，删除二次确认、Escape 关闭和 reduced-motion 均生效；该脚本挂载真实组件但使用模拟回调，不是真实 Tauri 端到端。
+- 相关决策：[ADR-004：以厂商分组的渠道承载模型路由](../decisions/ADR-004-model-provider-channels.md)。
+- 最后更新：2026-09-10

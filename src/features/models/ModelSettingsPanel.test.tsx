@@ -1,13 +1,15 @@
 // @vitest-environment happy-dom
 
+import type { ComponentProps } from "react";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { Model } from "../../generated/app-server/v2/Model";
+import type { Channel, ProviderSettings } from "./types";
 import { ModelSettingsPanel } from "./ModelSettingsPanel";
 
 afterEach(cleanup);
 
-const settings = {
-  baseUrl: "https://example.test/v1",
+const conversation = {
   modelId: "custom-model",
   reasoningEffort: "none" as const,
   reasoningSummary: null,
@@ -15,7 +17,31 @@ const settings = {
   serviceTier: "default" as const,
 };
 
-const loadModels = vi.fn(async () => [{
+const openAiChannel: Channel = {
+  id: "openai-1",
+  vendor: "openai",
+  name: "OpenAI 官方",
+  baseUrl: "https://api.openai.com/v1",
+  catalog: { kind: "vendorDefault" },
+  conversation,
+};
+
+const deepSeekChannel: Channel = {
+  id: "deepseek-2",
+  vendor: "deepseek",
+  name: "DeepSeek 官方",
+  baseUrl: "https://api.deepseek.com",
+  catalog: { kind: "vendorDefault" },
+  conversation: { modelId: "deepseek-flash", reasoningEffort: null, reasoningSummary: null, verbosity: null, serviceTier: "default" },
+};
+
+const providerSettings: ProviderSettings = {
+  schemaVersion: 2,
+  activeChannelId: openAiChannel.id,
+  channels: [openAiChannel, deepSeekChannel],
+};
+
+const loadModels = vi.fn(async (): Promise<Model[]> => [{
   id: "custom-model",
   model: "custom-model",
   upgrade: null,
@@ -26,8 +52,8 @@ const loadModels = vi.fn(async () => [{
   modelSpecialty: null,
   hidden: false,
   supportedReasoningEfforts: [],
-  defaultReasoningEffort: "none" as const,
-  inputModalities: ["text" as const],
+  defaultReasoningEffort: "none",
+  inputModalities: ["text"],
   supportsPersonality: false,
   multiAgentVersion: null,
   additionalSpeedTiers: [],
@@ -36,126 +62,78 @@ const loadModels = vi.fn(async () => [{
   isDefault: true,
 }]);
 
+const loadProviderCapabilities = vi.fn(async () => ({
+  namespaceTools: false,
+  imageGeneration: false,
+  webSearch: false,
+}));
+
+function renderPanel(overrides: Partial<ComponentProps<typeof ModelSettingsPanel>> = {}) {
+  const onSave = vi.fn();
+  render(
+    <ModelSettingsPanel
+      settings={conversation}
+      providerSettings={providerSettings}
+      loadModels={loadModels}
+      loadProviderCapabilities={loadProviderCapabilities}
+      onManageChannels={vi.fn()}
+      onClose={vi.fn()}
+      onSave={onSave}
+      {...overrides}
+    />,
+  );
+  return { onSave };
+}
+
 describe("ModelSettingsPanel", () => {
-  it("keeps the native catalog and manual gateway fallback in one settings surface", () => {
-    render(
-      <ModelSettingsPanel
-        settings={settings}
-        loadModels={loadModels}
-        loadProviderCapabilities={vi.fn(async () => ({
-          namespaceTools: false,
-          imageGeneration: false,
-          webSearch: false,
-        }))}
-        onClose={vi.fn()}
-        onSave={vi.fn()}
-      />,
-    );
+  it("selects a channel instead of asking for a route and key again", () => {
+    const onManageChannels = vi.fn();
+    renderPanel({ onManageChannels });
 
     expect(screen.getByText("网关与自定义模型")).toBeTruthy();
-    expect(screen.getByDisplayValue("custom-model")).toBeTruthy();
-    expect(screen.getByText(/仅在模型支持时生效/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: /OpenAI 官方/ })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /DeepSeek 官方/ }));
+    expect(screen.getByRole("button", { name: /DeepSeek 官方/ }).className).toContain("active");
+
+    fireEvent.click(screen.getByRole("button", { name: "管理渠道" }));
+    expect(onManageChannels).toHaveBeenCalled();
+
+    expect(screen.getByDisplayValue("deepseek-flash")).toBeTruthy();
+    expect(screen.queryByDisplayValue("https://api.deepseek.com")).toBeNull();
     expect(screen.getByText(/由 Codex Core 管理/)).toBeTruthy();
-    expect(screen.getAllByRole("button", { name: "默认" })).toHaveLength(2);
     expect(screen.queryByText("能力模板")).toBeNull();
   });
 
-  it("requests a runtime restart when the Base URL changes", async () => {
-    const onSave = vi.fn();
-    render(
-      <ModelSettingsPanel
-        settings={settings}
-        loadModels={loadModels}
-        loadProviderCapabilities={vi.fn(async () => ({
-          namespaceTools: false,
-          imageGeneration: false,
-          webSearch: false,
-        }))}
-        onClose={vi.fn()}
-        onSave={onSave}
-      />,
-    );
+  it("requests a restart when the selected channel is not the active one", async () => {
+    const { onSave } = renderPanel();
+    await waitFor(() => expect(screen.getByRole("button", { name: /DeepSeek 官方/ })).toBeTruthy());
 
-    fireEvent.change(screen.getByDisplayValue(settings.baseUrl), {
-      target: { value: "https://next.example.test/v1" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "保存配置" }));
-
-    await waitFor(() => expect(onSave).toHaveBeenCalledWith(expect.objectContaining({
-      baseUrl: "https://next.example.test/v1",
-    }), true));
-  });
-
-  it("preserves custom reasoning efforts declared by the native catalog", async () => {
-    const onSave = vi.fn();
-    render(
-      <ModelSettingsPanel
-        settings={settings}
-        loadModels={loadModels}
-        loadProviderCapabilities={vi.fn(async () => ({
-          namespaceTools: false,
-          imageGeneration: false,
-          webSearch: false,
-        }))}
-        onClose={vi.fn()}
-        onSave={onSave}
-      />,
-    );
-
-    fireEvent.change(screen.getByDisplayValue(settings.modelId), { target: { value: "future-model" } });
-    fireEvent.click(screen.getByRole("button", { name: "保存配置" }));
-    await waitFor(() => expect(onSave).toHaveBeenCalledWith(expect.objectContaining({
-      modelId: "future-model",
-      reasoningEffort: "none",
-    })));
-  });
-
-  it("normalizes model identifiers and gateway URLs before saving", async () => {
-    const onSave = vi.fn();
-    render(
-      <ModelSettingsPanel
-        settings={settings}
-        loadModels={loadModels}
-        loadProviderCapabilities={vi.fn(async () => ({
-          namespaceTools: false,
-          imageGeneration: false,
-          webSearch: false,
-        }))}
-        onClose={vi.fn()}
-        onSave={onSave}
-      />,
-    );
-
-    fireEvent.change(screen.getByDisplayValue(settings.baseUrl), {
-      target: { value: "  https://next.example.test/v1  " },
-    });
-    fireEvent.change(screen.getByDisplayValue(settings.modelId), {
-      target: { value: "  next-model  " },
-    });
+    fireEvent.click(screen.getByRole("button", { name: /DeepSeek 官方/ }));
     fireEvent.click(screen.getByRole("button", { name: "保存配置" }));
 
     await waitFor(() => expect(onSave).toHaveBeenCalledWith({
-      ...settings,
-      baseUrl: "https://next.example.test/v1",
-      modelId: "next-model",
-    }, true));
+      conversation: deepSeekChannel.conversation,
+      channelId: deepSeekChannel.id,
+      requiresRestart: true,
+    }));
+  });
+
+  it("keeps the other channel's parameters out of the saved payload", async () => {
+    const { onSave } = renderPanel();
+    await waitFor(() => expect(screen.getByRole("button", { name: /DeepSeek 官方/ })).toBeTruthy());
+
+    fireEvent.change(screen.getByDisplayValue("custom-model"), { target: { value: "  next-model  " } });
+    fireEvent.click(screen.getByRole("button", { name: "保存配置" }));
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith({
+      conversation: { ...conversation, modelId: "next-model" },
+      channelId: openAiChannel.id,
+      requiresRestart: false,
+    }));
   });
 
   it("saves native reasoning summary and catalog-declared service tier without restarting", async () => {
-    const onSave = vi.fn();
-    render(
-      <ModelSettingsPanel
-        settings={settings}
-        loadModels={loadModels}
-        loadProviderCapabilities={vi.fn(async () => ({
-          namespaceTools: false,
-          imageGeneration: false,
-          webSearch: false,
-        }))}
-        onClose={vi.fn()}
-        onSave={onSave}
-      />,
-    );
+    const { onSave } = renderPanel();
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Fast" })).toBeTruthy());
     fireEvent.click(screen.getAllByRole("button", { name: "详细" })[0]);
@@ -163,59 +141,48 @@ describe("ModelSettingsPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "保存配置" }));
 
     await waitFor(() => expect(onSave).toHaveBeenCalledWith({
-      ...settings,
-      reasoningSummary: "detailed",
-      serviceTier: "priority",
+      conversation: { ...conversation, reasoningSummary: "detailed", serviceTier: "priority" },
+      channelId: openAiChannel.id,
+      requiresRestart: false,
     }));
   });
 
   it("restarts only when an app-server startup parameter changes", async () => {
-    const onSave = vi.fn();
-    render(
-      <ModelSettingsPanel
-        settings={settings}
-        loadModels={loadModels}
-        loadProviderCapabilities={vi.fn(async () => ({
-          namespaceTools: false,
-          imageGeneration: false,
-          webSearch: false,
-        }))}
-        onClose={vi.fn()}
-        onSave={onSave}
-      />,
-    );
+    const { onSave } = renderPanel();
 
     fireEvent.click(screen.getByRole("button", { name: "适中" }));
     fireEvent.click(screen.getByRole("button", { name: "保存配置" }));
 
     await waitFor(() => expect(onSave).toHaveBeenCalledWith({
-      ...settings,
-      verbosity: "medium",
-    }, true));
+      conversation: { ...conversation, verbosity: "medium" },
+      channelId: openAiChannel.id,
+      requiresRestart: true,
+    }));
   });
 
   it("does not persist a service tier that the selected model does not declare", async () => {
-    const onSave = vi.fn();
-    render(
-      <ModelSettingsPanel
-        settings={{ ...settings, serviceTier: "priority" }}
-        loadModels={vi.fn(async () => [{ ...await loadModels().then((items) => items[0]), serviceTiers: [] }])}
-        loadProviderCapabilities={vi.fn(async () => ({
-          namespaceTools: false,
-          imageGeneration: false,
-          webSearch: false,
-        }))}
-        onClose={vi.fn()}
-        onSave={onSave}
-      />,
-    );
+    const { onSave } = renderPanel({
+      settings: { ...conversation, serviceTier: "priority" },
+      loadModels: vi.fn(async () => [{ ...(await loadModels())[0], serviceTiers: [] }]),
+    });
 
     await waitFor(() => expect(screen.getByRole("button", { name: "标准" })).toBeTruthy());
     fireEvent.click(screen.getByRole("button", { name: "保存配置" }));
 
     await waitFor(() => expect(onSave).toHaveBeenCalledWith({
-      ...settings,
-      serviceTier: "default",
+      conversation: { ...conversation, serviceTier: "default" },
+      channelId: openAiChannel.id,
+      requiresRestart: false,
     }));
+  });
+
+  it("refuses to switch channels while a turn is running", () => {
+    renderPanel({ switchDisabled: true });
+
+    const other = screen.getByRole("button", { name: /DeepSeek 官方/ });
+    expect(other.hasAttribute("disabled")).toBe(true);
+    fireEvent.click(other);
+    expect(other.className).not.toContain("active");
+    expect(other.getAttribute("title")).toContain("完成或中断");
   });
 });

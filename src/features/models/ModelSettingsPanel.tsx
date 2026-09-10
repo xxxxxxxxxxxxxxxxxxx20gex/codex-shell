@@ -1,33 +1,37 @@
-import { useEffect, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
+import { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 import type { ReasoningSummary } from "../../generated/app-server/ReasoningSummary";
 import type { Model } from "../../generated/app-server/v2/Model";
 import type { ModelProviderCapabilitiesReadResponse } from "../../generated/app-server/v2/ModelProviderCapabilitiesReadResponse";
 import { errorMessage } from "../../shared/errors";
-import type { ModelSettings, ServiceTier, Verbosity } from "./types";
+import { vendorDescriptor } from "./channels";
+import type { ModelSettings, ProviderSettings, ServiceTier, Verbosity } from "./types";
 
 interface Props {
   settings: ModelSettings;
+  providerSettings: ProviderSettings;
   loadModels: () => Promise<Model[]>;
   loadProviderCapabilities: () => Promise<ModelProviderCapabilitiesReadResponse>;
+  onManageChannels: () => void;
+  /** 有回合正在执行时禁止切换渠道：切换必然重启执行核心。 */
+  switchDisabled?: boolean;
   onClose: () => void;
-  onSave: (settings: ModelSettings, requiresRestart?: boolean) => void;
-}
-
-function isTauri() {
-  return "__TAURI_INTERNALS__" in window;
+  onSave: (next: { conversation: ModelSettings; channelId: string; requiresRestart: boolean }) => void;
 }
 
 export function ModelSettingsPanel({
   settings,
+  providerSettings,
   loadModels,
   loadProviderCapabilities,
+  onManageChannels,
+  switchDisabled = false,
   onClose,
   onSave,
 }: Props) {
+  const activeChannelId = providerSettings.activeChannelId ?? providerSettings.channels[0]?.id ?? "";
+  const [channelId, setChannelId] = useState(activeChannelId);
   const [draft, setDraft] = useState(settings);
-  const [apiKey, setApiKey] = useState("");
   const [status, setStatus] = useState("");
   const [providerCapabilities, setProviderCapabilities] = useState<ModelProviderCapabilitiesReadResponse | null>(null);
   const [models, setModels] = useState<Model[]>([]);
@@ -50,48 +54,58 @@ export function ModelSettingsPanel({
     };
   }, [loadModels, loadProviderCapabilities]);
 
-  const selectedModel = models.find((model) => model.model === draft.modelId || model.id === draft.modelId);
-  const availableServiceTiers = selectedModel?.serviceTiers.filter((tier) => tier.id === "priority" || tier.id === "flex") ?? [];
+  // 模型目录属于当前运行的渠道；选择其他渠道时不能拿它的目录冒充。
+  const catalogApplies = channelId === activeChannelId;
+  const selectedModel = catalogApplies
+    ? models.find((model) => model.model === draft.modelId || model.id === draft.modelId)
+    : undefined;
+  const availableServiceTiers = useMemo(
+    () => selectedModel?.serviceTiers.filter((tier) => tier.id === "priority" || tier.id === "flex") ?? [],
+    [selectedModel],
+  );
 
-  async function save() {
-    const normalizedDraft = {
+  function save() {
+    const normalizedDraft: ModelSettings = {
       ...draft,
-      baseUrl: draft.baseUrl.trim(),
       modelId: draft.modelId.trim(),
       serviceTier: draft.serviceTier === "default" || availableServiceTiers.some((tier) => tier.id === draft.serviceTier)
         ? draft.serviceTier
         : "default",
     };
-    if (!normalizedDraft.baseUrl || !normalizedDraft.modelId) {
-      setStatus("Base URL 与模型 ID 不能为空");
-      return;
-    }
-    try {
-      if (isTauri()) {
-        await invoke("save_model_settings", { settings: normalizedDraft });
-        if (apiKey) await invoke("save_api_key", { apiKey });
-      }
-      setApiKey("");
-      const requiresRestart = Boolean(
-        apiKey
-        || normalizedDraft.baseUrl !== settings.baseUrl
-        || normalizedDraft.verbosity !== settings.verbosity,
-      );
-      if (requiresRestart) onSave(normalizedDraft, true);
-      else onSave(normalizedDraft);
-    } catch (error) {
-      setStatus(errorMessage(error));
-    }
+    onSave({
+      conversation: normalizedDraft,
+      channelId,
+      requiresRestart: channelId !== activeChannelId || normalizedDraft.verbosity !== settings.verbosity,
+    });
   }
 
   return (
     <div className="modal-backdrop" onMouseDown={onClose}>
       <section className="settings-modal" onMouseDown={(event) => event.stopPropagation()}>
-        <header><div><span className="eyebrow">高级设置</span><h2>网关与自定义模型</h2><p>密钥只写入 Windows 凭据管理器，项目配置不会保存明文。</p></div><button className="close-button" onClick={onClose} aria-label="关闭高级设置" title="关闭高级设置"><X aria-hidden="true" /></button></header>
+        <header><div><span className="eyebrow">高级设置</span><h2>网关与自定义模型</h2><p>渠道与密钥在设置中统一管理，这里只选择渠道并调整参数。</p></div><button className="close-button" onClick={onClose} aria-label="关闭高级设置" title="关闭高级设置"><X aria-hidden="true" /></button></header>
         <div className="settings-body">
-          <label className="field"><span>Base URL</span><input value={draft.baseUrl} onChange={(event) => setDraft({ ...draft, baseUrl: event.target.value })} placeholder="https://api.openai.com/v1" /></label>
-          <label className="field"><span>API Key</span><input type="password" value={apiKey} onChange={(event) => setApiKey(event.target.value)} placeholder="保留为空则继续使用已保存的密钥" autoComplete="off" /><small>保存后立即清空输入框；前端没有读取密钥的接口。</small></label>
-          <label className="field"><span>自定义模型 ID</span><input value={draft.modelId} onChange={(event) => setDraft({ ...draft, modelId: event.target.value })} placeholder="输入网关提供的模型 ID" /><small>模型与推理强度可在对话框中随时切换；这里用于自定义模型或后续扩展参数。</small></label>
+          <div className="field">
+            <span>渠道</span>
+            <div className="channel-picker">
+              {providerSettings.channels.length === 0 && <small>尚未配置渠道，请先在设置中新增。</small>}
+              {providerSettings.channels.map((item) => (
+                <button
+                  key={item.id}
+                  className={item.id === channelId ? "active" : ""}
+                  disabled={switchDisabled && item.id !== channelId}
+                  title={switchDisabled && item.id !== channelId ? "有回合正在执行，完成或中断后再切换渠道" : item.name}
+                  onClick={() => { setChannelId(item.id); setDraft(item.conversation); }}
+                >
+                  <strong>{item.name}</strong>
+                  <small>{vendorDescriptor(item.vendor).label}</small>
+                </button>
+              ))}
+              <button className="channel-picker-manage" onClick={onManageChannels}>管理渠道</button>
+            </div>
+            <small>{channelId !== activeChannelId ? (switchDisabled ? "有回合正在执行，完成或中断后才能切换渠道。" : "切换渠道会在保存后按新渠道的模型目录校准参数。") : "当前生效的渠道。"}</small>
+          </div>
+          <label className="field"><span>自定义模型 ID</span><input value={draft.modelId} onChange={(event) => setDraft({ ...draft, modelId: event.target.value })} placeholder="留空则使用该渠道目录的默认模型" /><small>模型与推理强度可在对话框中随时切换；这里用于目录之外的模型。</small></label>
+          {!catalogApplies && <div className="template-detail"><div><strong>切换到该渠道后校准</strong></div><small>模型目录属于当前生效的渠道。保存后 Codex Shell 会按新渠道的目录重新校准模型与推理档位。</small></div>}
           {providerCapabilities && <div className="template-detail"><div><strong>Provider 能力</strong></div><small>{providerCapabilities.webSearch ? "Web Search" : "无 Web Search"} · {providerCapabilities.imageGeneration ? "Image Generation" : "无图片生成"} · {providerCapabilities.namespaceTools ? "Namespace Tools" : "无 Namespace Tools"}</small></div>}
           <div className="field"><span>推理摘要</span><div className="segmented five"><button className={draft.reasoningSummary === null ? "active" : ""} onClick={() => setDraft({ ...draft, reasoningSummary: null })}>默认</button>{(["auto", "concise", "detailed", "none"] as ReasoningSummary[]).map((summary) => <button key={summary} className={draft.reasoningSummary === summary ? "active" : ""} onClick={() => setDraft({ ...draft, reasoningSummary: summary })}>{summary === "auto" ? "自动" : summary === "concise" ? "简洁" : summary === "detailed" ? "详细" : "关闭"}</button>)}</div><small>对应官方 `reasoning.summary`；默认表示不覆盖 Codex Core 与模型目录。模型不支持时 Core 会省略该字段。</small></div>
           <div className="field"><span>回答冗余度</span><div className="segmented four"><button className={draft.verbosity === null ? "active" : ""} onClick={() => setDraft({ ...draft, verbosity: null })}>默认</button>{(["low", "medium", "high"] as Verbosity[]).map((verbosity) => <button key={verbosity} className={draft.verbosity === verbosity ? "active" : ""} onClick={() => setDraft({ ...draft, verbosity })}>{verbosity === "low" ? "简洁" : verbosity === "medium" ? "适中" : "详细"}</button>)}</div><small>对应官方 `text.verbosity`；默认表示不覆盖 Core 与模型目录。显式设置仅在模型支持时生效，并需要重启连接。</small></div>

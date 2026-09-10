@@ -32,12 +32,14 @@ import { ComposerAddMenu } from "./features/composer/ComposerAddMenu";
 import { ComposerIntentControl } from "./features/composer/ComposerIntentControl";
 import { ComposerGoalStatus } from "./features/composer/ComposerGoalStatus";
 import { SlashCommandMenu } from "./features/commands/SlashCommandMenu";
-import { ModelSettingsPanel } from "./features/models/ModelSettingsPanel";
+import { activeChannel, replaceChannel } from "./features/models/channels";
 import { ModelQuickPicker } from "./features/models/ModelQuickPicker";
 import { modelIdDisplayName } from "./features/models/modelPresentation";
+import { ModelSettingsPanel } from "./features/models/ModelSettingsPanel";
 import { PreferencesPanel } from "./features/preferences/PreferencesPanel";
 import { RuntimeNoticeBanner } from "./features/runtime/RuntimeNoticeBanner";
 import { queuedTurnLabel, useAppController } from "./features/app/useAppController";
+import { errorMessage } from "./shared/errors";
 import { ServerInteractionDialog } from "./features/interactions/ServerInteractionDialog";
 import { ConversationTimeline } from "./features/threads/ConversationTimeline";
 import { ContextHeatBar } from "./features/threads/ContextHeatBar";
@@ -80,7 +82,9 @@ function App() {
     modelPickerOpen,
     setModelPickerOpen,
     settings,
+    conversation,
     saveModelSettings,
+    saveProviderSettings,
     personalization,
     savePersonalization,
     modelDisplayName,
@@ -235,7 +239,7 @@ function App() {
           />
           <button className="sidebar-footer" onClick={() => openPreferences()} aria-label="打开设置" title="设置">
             <Settings aria-hidden="true" />
-            <span><strong>{providerDisplayName(settings.baseUrl)}</strong></span>
+            <span><strong>{activeChannel(settings)?.name ?? "未配置渠道"}</strong></span>
           </button>
         </aside>
 
@@ -357,8 +361,8 @@ function App() {
                 </div>
                 <div className="composer-actions">
                   <div className="model-picker-anchor">
-                    <button className="model-button" onClick={() => setModelPickerOpen((open) => !open)} title="选择模型与推理强度"><span>{modelDisplayName ?? modelIdDisplayName(settings.modelId)}</span>{settings.reasoningEffort && <small>{settings.reasoningEffort}</small>}<ChevronDown className="chevron-icon" aria-hidden="true" /></button>
-                    {modelPickerOpen && <ModelQuickPicker settings={settings} loadModels={session.listModels} onChange={changeModelSettings} onDisplayName={setModelDisplayName} onAdvanced={() => { setModelPickerOpen(false); setSettingsOpen(true); }} onClose={() => setModelPickerOpen(false)} />}
+                    <button className="model-button" onClick={() => setModelPickerOpen((open) => !open)} title="选择模型与推理强度"><span>{conversation.modelId ? (modelDisplayName ?? modelIdDisplayName(conversation.modelId)) : "选择模型"}</span>{conversation.reasoningEffort && <small>{conversation.reasoningEffort}</small>}<ChevronDown className="chevron-icon" aria-hidden="true" /></button>
+                    {modelPickerOpen && <ModelQuickPicker settings={conversation} loadModels={session.listModels} onChange={changeModelSettings} onDisplayName={setModelDisplayName} onAdvanced={() => { setModelPickerOpen(false); setSettingsOpen(true); }} onClose={() => setModelPickerOpen(false)} />}
                   </div>
                   <SendModeControl
                     canSteer={session.canSteer}
@@ -425,9 +429,20 @@ function App() {
         </aside>
       </section>
 
-      {settingsOpen && <ModelSettingsPanel settings={settings} loadModels={session.listModels} loadProviderCapabilities={session.readModelProviderCapabilities} onClose={() => setSettingsOpen(false)} onSave={(next, requiresRestart = false) => { saveModelSettings(next, requiresRestart); setSettingsOpen(false); }} />}
+      {settingsOpen && <ModelSettingsPanel settings={conversation} providerSettings={settings} loadModels={session.listModels} loadProviderCapabilities={session.readModelProviderCapabilities} onManageChannels={() => { setSettingsOpen(false); openPreferences("providers"); }} switchDisabled={session.running} onClose={() => setSettingsOpen(false)} onSave={({ conversation: next, channelId, requiresRestart }) => {
+        const target = settings.channels.find((item) => item.id === channelId);
+        if (target && channelId !== settings.activeChannelId) {
+          void saveProviderSettings(replaceChannel(settings, { ...target, conversation: next }), true).catch((error) => setUiError(errorMessage(error)));
+        } else {
+          saveModelSettings(next, requiresRestart);
+        }
+        setSettingsOpen(false);
+      }} />}
       {preferencesOpen && <PreferencesPanel
         settings={personalization}
+        providerSettings={settings}
+        onSaveProviderSettings={saveProviderSettings}
+        providerSwitchBlocked={session.running}
         initialSection={preferencesSection}
         codexHome={session.codexHome}
         codexHomeDisabled={session.runningThreadCount > 0 || session.submitting}
@@ -442,16 +457,6 @@ function App() {
       <ServerInteractionDialog store={session.interactionStore} />
     </main>
   );
-}
-
-function providerDisplayName(baseUrl: string) {
-  try {
-    const host = new URL(baseUrl).hostname;
-    const label = host.split(".")[0]?.replace(/-/g, "_");
-    return label || "设置";
-  } catch {
-    return "设置";
-  }
 }
 
 export default App;
