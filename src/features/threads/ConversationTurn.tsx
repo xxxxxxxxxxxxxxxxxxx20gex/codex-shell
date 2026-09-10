@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from "react";
-import { ChevronDown, Copy } from "lucide-react";
+import { ChevronDown, Copy, Pencil } from "lucide-react";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import type { McpToolCallProgressNotification } from "../../generated/app-server/v2/McpToolCallProgressNotification";
 import type { Turn } from "../../generated/app-server/v2/Turn";
@@ -20,6 +20,7 @@ interface Props {
   active: boolean;
   retryingMessage?: string | null;
   canFork: boolean;
+  onEditMessage?: (item: Extract<ThreadItem, { type: "userMessage" }>) => void;
   onFork?: () => void;
   plan?: TurnPlanUpdatedNotification;
   activeItemTurnIds: Record<string, string>;
@@ -96,6 +97,7 @@ export function ConversationTurn({
   active,
   retryingMessage = null,
   canFork,
+  onEditMessage,
   onFork,
   plan,
   activeItemTurnIds,
@@ -180,13 +182,14 @@ export function ConversationTurn({
                   {(message.text || (block.item.id === firstUserMessageId && sentTiming)) && (
                     <div className="user-message-meta">
                       {block.item.id === firstUserMessageId && sentTiming && (
-                        <div className="message-timing user-message-timing" title={sentTiming}>{sentTiming.slice(-8, -3)}</div>
+                        <div className="message-timing user-message-timing" title={sentTiming}>{sentTiming.slice(0, -3)}</div>
                       )}
                       {message.text && (
                         <div className="message-actions user-message-actions">
                           <button type="button" onClick={() => void copyUserMessage(block.item.id, message.text)} aria-label={userCopyFeedbackId === block.item.id ? "已复制消息" : "复制消息"} title={userCopyFeedbackId === block.item.id ? "已复制消息" : "复制消息"}>
                             <Copy aria-hidden="true" />
                           </button>
+                          {onEditMessage && block.item.id === [...items].reverse().find((item) => item.type === "userMessage")?.id && <button type="button" title="编辑后再次发送" aria-label="编辑后再次发送" onClick={() => onEditMessage(block.item)}><Pencil aria-hidden="true" /></button>}
                         </div>
                       )}
                     </div>

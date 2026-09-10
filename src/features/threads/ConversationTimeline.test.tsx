@@ -65,7 +65,7 @@ describe("conversation timing", () => {
 
     expect(markup).toContain("2026/08/07 10:20:30");
     expect(markup).toContain("2026/08/07 10:20:38 · 8s");
-    expect(markup).toContain('<div class="user-message-meta"><div class="message-timing user-message-timing" title="2026/08/07 10:20:30">10:20</div><div class="message-actions user-message-actions">');
+    expect(markup).toContain('<div class="user-message-meta"><div class="message-timing user-message-timing" title="2026/08/07 10:20:30">2026/08/07 10:20</div><div class="message-actions user-message-actions">');
     expect(markup).not.toContain("发送于");
     expect(markup).not.toContain("回答于");
     expect(markup).not.toContain("耗时");

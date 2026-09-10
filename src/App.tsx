@@ -118,6 +118,7 @@ function App() {
     submitWithMode,
     steerQueuedTurn,
     editQueuedTurn,
+    editLastMessage,
     startNewTask,
     startSkillTask,
     changePermissionMode,
@@ -269,6 +270,7 @@ function App() {
               threadId={session.thread?.id}
               forkDisabled={session.submitting || session.openingThreadId !== null || session.threadActionId !== null}
               onFork={(threadId, lastTurnId) => void session.forkThread(threadId, lastTurnId)}
+              onEditMessage={editLastMessage}
               plansByTurnId={session.plansByTurnId}
               activeItemTurnIds={session.activeItemTurnIds}
               mcpProgressByItemId={session.mcpProgressByItemId}

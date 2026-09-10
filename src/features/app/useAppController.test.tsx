@@ -12,6 +12,17 @@ vi.mock("../runtime/useAgentSession", () => ({ useAgentSession: () => session, s
 vi.mock("../composer/useComposerDropPaths", () => ({ useComposerDropPaths: vi.fn() }));
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
 
+it("restores a message without overwriting an existing draft", () => {
+  const { result } = renderHook(useAppController);
+  const message = { type: "userMessage" as const, id: "u", clientId: null, content: [{ type: "text" as const, text: "original", text_elements: [] }] };
+  act(() => result.current.editLastMessage(message));
+  expect(result.current.draft).toBe("original");
+  act(() => result.current.setDraft("new draft"));
+  act(() => result.current.editLastMessage(message));
+  expect(result.current.draft).toBe("new draft");
+  expect(result.current.uiError).toContain("草稿");
+});
+
 it.each(["full", "workspace", "read"] as const)("preserves %s permission when switching model and effort", (mode) => {
   const { result } = renderHook(useAppController);
   act(() => result.current.changePermissionMode(mode));

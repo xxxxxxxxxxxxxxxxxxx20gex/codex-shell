@@ -42,6 +42,8 @@ import {
   resolveFileSearchPath,
 } from "../workspaces/workspaceState";
 import { errorMessage } from "../../shared/errors";
+import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
+import { userMessagePresentation } from "../runtime/userMessagePresentation";
 import { useDismissiblePopover } from "../../shared/useDismissiblePopover";
 import {
   approvalReviewerFromThread,
@@ -559,6 +561,20 @@ export function useAppController() {
     setComposerIntent(turn.collaborationMode === "plan" ? "plan" : "default"); session.removeQueued(turn.id);
   }
 
+  function editLastMessage(item: Extract<ThreadItem, { type: "userMessage" }>) {
+    if (draft || mentions.length || images.length || skills.length) {
+      setUiError("请先发送或清空当前草稿，再编辑历史消息。");
+      return;
+    }
+    const message = userMessagePresentation(item);
+    setDraft(message.text);
+    setMentions(message.files);
+    setImages(message.images);
+    setSkills(item.content.flatMap((content) => content.type === "skill" ? [{ name: content.name, path: content.path }] : []));
+    setCommandNotice("已恢复到输入框；发送将追加新消息，保留原对话记录。");
+    composerRef.current?.querySelector("textarea")?.focus();
+  }
+
   return {
     ...panels,
     session,
@@ -610,6 +626,7 @@ export function useAppController() {
     submitWithMode,
     steerQueuedTurn,
     editQueuedTurn,
+    editLastMessage,
     startNewTask,
     startSkillTask,
     changePermissionMode,

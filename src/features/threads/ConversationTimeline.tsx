@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { ArrowDown, ArrowDownToLine, ArrowUp } from "lucide-react";
 import type { McpToolCallProgressNotification } from "../../generated/app-server/v2/McpToolCallProgressNotification";
 import type { Turn } from "../../generated/app-server/v2/Turn";
+import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import type { TurnPlanUpdatedNotification } from "../../generated/app-server/v2/TurnPlanUpdatedNotification";
 import { userMessageText, type ThreadProcessEvent } from "../runtime/sessionState";
 import { ConversationTurn } from "./ConversationTurn";
@@ -10,6 +11,7 @@ import "./ConversationTimeline.css";
 interface Props {
   turns: Turn[];
   running: boolean;
+  onEditMessage?: (item: Extract<ThreadItem, { type: "userMessage" }>) => void;
   retryingMessage?: string | null;
   threadId?: string | null;
   forkDisabled?: boolean;
@@ -52,6 +54,7 @@ function isAtBottom(scroller: HTMLElement): boolean {
 export function ConversationTimeline({
   turns,
   running,
+  onEditMessage,
   retryingMessage = null,
   threadId = null,
   forkDisabled = false,
@@ -273,6 +276,7 @@ export function ConversationTimeline({
               retryingMessage={running && turn.status === "inProgress" ? retryingMessage : null}
               canFork={Boolean(onFork && threadId && !forkDisabled && turn.status !== "inProgress" && !(running && turnIndex === turns.length - 1))}
               onFork={threadId && onFork ? () => onFork(threadId, turn.id) : undefined}
+              onEditMessage={!forkDisabled && turnIndex === turns.length - 1 ? onEditMessage : undefined}
               plan={plansByTurnId[turn.id]}
               activeItemTurnIds={activeItemTurnIds}
               mcpProgressByItemId={mcpProgressByItemId}
