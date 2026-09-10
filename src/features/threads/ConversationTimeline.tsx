@@ -276,7 +276,7 @@ export function ConversationTimeline({
               retryingMessage={running && turn.status === "inProgress" ? retryingMessage : null}
               canFork={Boolean(onFork && threadId && !forkDisabled && turn.status !== "inProgress" && !(running && turnIndex === turns.length - 1))}
               onFork={threadId && onFork ? () => onFork(threadId, turn.id) : undefined}
-              onEditMessage={!forkDisabled && turnIndex === turns.length - 1 ? onEditMessage : undefined}
+              onEditMessage={!running && !forkDisabled && turn.status !== "inProgress" && turnIndex === turns.length - 1 ? onEditMessage : undefined}
               plan={plansByTurnId[turn.id]}
               activeItemTurnIds={activeItemTurnIds}
               mcpProgressByItemId={mcpProgressByItemId}

@@ -80,6 +80,7 @@ export function useAppController() {
   const [personalization, setPersonalization] = useState(initialPersonalization);
   const [modelDisplayName, setModelDisplayName] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
+  const [editingMessage, setEditingMessage] = useState<{ threadId: string; turnId: string } | null>(null);
   const [permissionMode, setPermissionMode] = useState<PermissionMode>(DEFAULT_PERMISSION_MODE);
   const [approvalReviewer, setApprovalReviewer] = useState<ApprovalReviewerMode>(DEFAULT_APPROVAL_REVIEWER);
   const [pendingProjectPath, setPendingProjectPath] = useState<string | null>(null);
@@ -98,6 +99,7 @@ export function useAppController() {
   const [slashSelectedIndex, setSlashSelectedIndex] = useState(0);
   const mentionRequestRef = useRef(0);
   const pendingModelRestartRef = useRef(false);
+  const editSubmittingRef = useRef(false);
   const composerRef = useRef<HTMLDivElement>(null);
   const panels = useResizablePanels();
   const newThreadCwd = pendingProjectPath ?? defaultProjectDirectory?.path ?? null;
@@ -191,6 +193,7 @@ export function useAppController() {
   useEffect(() => {
     setUiError("");
     setSkills([]);
+    setEditingMessage(null);
   }, [activeThreadId]);
 
   useEffect(() => {
@@ -326,6 +329,19 @@ export function useAppController() {
   async function submit() {
     const message = draft.trim();
     if (!message && mentions.length === 0 && images.length === 0) return;
+    if (editingMessage) {
+      if (editSubmittingRef.current) return;
+      editSubmittingRef.current = true;
+      try {
+        await session.revertLastMessage(editingMessage.threadId, editingMessage.turnId);
+        setEditingMessage(null);
+        if (await session.send(message, mentions, skills, collaborationMode, images)) {
+          setDraft(""); setMentions([]); setImages([]); setSkills([]); setCommandNotice("");
+        }
+      } catch (error) { setUiError(errorMessage(error)); }
+      finally { editSubmittingRef.current = false; }
+      return;
+    }
     const command = parseSlashCommand(message);
     if (command) {
       await runSlashCommand(command.id, command.args);
@@ -375,6 +391,7 @@ export function useAppController() {
   }
 
   async function submitWithMode(mode: "queue" | "steer") {
+    if (editingMessage) { await submit(); return; }
     if (mode === "steer") {
       if (parseSlashCommand(draft.trim())) {
         setUiError("Steer 只支持普通消息，不能直接引导斜杠命令");
@@ -562,16 +579,23 @@ export function useAppController() {
   }
 
   function editLastMessage(item: Extract<ThreadItem, { type: "userMessage" }>) {
+    const turn = session.turns[session.turns.length - 1];
+    if (!session.thread || session.running || session.submitting || !turn || turn.status === "inProgress") return;
+    if (turn.items.filter((entry) => entry.type === "userMessage").length !== 1 || !turn.items.some((entry) => entry.id === item.id)) {
+      setUiError("该回合包含追加指令，暂不支持单独替换其中一条消息。");
+      return;
+    }
     if (draft || mentions.length || images.length || skills.length) {
       setUiError("请先发送或清空当前草稿，再编辑历史消息。");
       return;
     }
     const message = userMessagePresentation(item);
+    setEditingMessage({ threadId: session.thread.id, turnId: turn.id });
     setDraft(message.text);
     setMentions(message.files);
     setImages(message.images);
     setSkills(item.content.flatMap((content) => content.type === "skill" ? [{ name: content.name, path: content.path }] : []));
-    setCommandNotice("已恢复到输入框；发送将追加新消息，保留原对话记录。");
+    setCommandNotice("正在编辑最后一条消息：发送将替换该回合历史，不撤销文件变更。");
     composerRef.current?.querySelector("textarea")?.focus();
   }
 
@@ -627,6 +651,8 @@ export function useAppController() {
     steerQueuedTurn,
     editQueuedTurn,
     editLastMessage,
+    editingMessage,
+    cancelMessageEdit: () => { setEditingMessage(null); setDraft(""); setMentions([]); setImages([]); setSkills([]); setCommandNotice(""); },
     startNewTask,
     startSkillTask,
     changePermissionMode,

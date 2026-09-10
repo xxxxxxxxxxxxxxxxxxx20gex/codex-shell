@@ -119,6 +119,8 @@ function App() {
     steerQueuedTurn,
     editQueuedTurn,
     editLastMessage,
+    editingMessage,
+    cancelMessageEdit,
     startNewTask,
     startSkillTask,
     changePermissionMode,
@@ -314,6 +316,7 @@ function App() {
               })}
             </div>}
             <div ref={composerRef} className="composer has-context-heatbar">
+              {editingMessage && <button type="button" onClick={cancelMessageEdit}>取消编辑</button>}
               <ContextHeatBar usage={session.tokenUsage} hasThread={Boolean(session.thread)} running={session.running} onCompact={() => runSlashCommand("compact", "", false)} />
               {skills.length > 0 && <div className="mention-chips">
                 {skills.map((skill) => <span className="skill-chip" key={skill.path} title={skill.path}><Sparkles aria-hidden="true" />{skill.name}<button type="button" aria-label={`移除 Skill ${skill.name}`} onClick={() => toggleSkill(skill)}><X aria-hidden="true" /></button></span>)}

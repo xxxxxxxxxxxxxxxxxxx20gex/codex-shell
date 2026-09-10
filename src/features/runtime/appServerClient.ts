@@ -365,6 +365,14 @@ export class AppServerClient {
     return this.request<SkillsListResponse>("skills/list", params);
   }
 
+  revertThread(params: import("../../generated/app-server/v2/ThreadRevertParams").ThreadRevertParams) {
+    return this.request<import("../../generated/app-server/v2/ThreadRevertResponse").ThreadRevertResponse>("thread/revert", params);
+  }
+
+  rollbackThread(params: import("../../generated/app-server/v2/ThreadRollbackParams").ThreadRollbackParams) {
+    return this.request<import("../../generated/app-server/v2/ThreadRollbackResponse").ThreadRollbackResponse>("thread/rollback", params);
+  }
+
   writeSkillConfig(params: SkillsConfigWriteParams) {
     return this.request<SkillsConfigWriteResponse>("skills/config/write", params);
   }

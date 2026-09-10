@@ -515,6 +515,30 @@ export function useThreadController(props: Props) {
 
   return {
     currentThreadId,
+    revertLastMessage: async (expectedThreadId: string, turnId: string) => {
+      if (threadIdRef.current !== expectedThreadId || threadOperationRef.current || isThreadRunning(expectedThreadId)) throw new Error("会话已切换或正在运行，不能编辑历史消息。");
+      threadOperationRef.current = true;
+      setSubmitting(true);
+      try {
+        const { client } = await ensureActiveThread();
+        const page = await client.listThreadTurns({ threadId: expectedThreadId, sortDirection: "desc", limit: 1, itemsView: "full" });
+        if (page.data[0]?.id !== turnId || page.data[0].status === "inProgress") throw new Error("只能编辑最后一个已结束回合的用户消息。");
+        if (page.data[0].items.filter((item) => item.type === "userMessage").length !== 1) throw new Error("该回合包含追加指令，不能单独替换消息。");
+        let thread: Thread;
+        try {
+          const response = await client.revertThread({ threadId: expectedThreadId, beforeTurnId: turnId });
+          const retained = response.turnsBackwardsCursor === null ? [] : (await client.listThreadTurns({ threadId: expectedThreadId, cursor: response.turnsBackwardsCursor, sortDirection: "desc", limit: 200, itemsView: "full" })).data.reverse();
+          thread = { ...response.thread, turns: retained };
+        } catch (error) {
+          if (!errorMessage(error).includes("thread/revert only supports paginated threads")) throw error;
+          thread = (await client.rollbackThread({ threadId: expectedThreadId, numTurns: 1 })).thread;
+        }
+        dispatch({ type: "loadThread", thread });
+      } finally {
+        threadOperationRef.current = false;
+        setSubmitting(false);
+      }
+    },
     ensureActiveThread,
     history,
     historyArchived,
