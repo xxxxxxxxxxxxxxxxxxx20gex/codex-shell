@@ -1,9 +1,13 @@
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
-import { ChevronRight, File, Files } from "lucide-react";
+import { ChevronRight, File, Files, FolderOpen } from "lucide-react";
+import { useState } from "react";
+import { errorMessage } from "../../shared/errors";
 import { parseUnifiedDiff } from "../diff/unifiedDiff";
 
 interface Props {
   items: Extract<ThreadItem, { type: "fileChange" }>[];
+  onOpenPath?: (path: string) => void | Promise<void>;
+  onOpenInExplorer?: (path: string) => void | Promise<void>;
 }
 
 interface FileSummary {
@@ -34,7 +38,12 @@ function summarize(items: Props["items"]): FileSummary[] {
 
 const kindLabels: Record<string, string> = { add: "新增", delete: "删除", update: "修改" };
 
-export function TurnFileChanges({ items }: Props) {
+export function TurnFileChanges({ items, onOpenPath, onOpenInExplorer }: Props) {
+  const [error, setError] = useState("");
+  async function open(path: string, action: (path: string) => void | Promise<void>) {
+    setError("");
+    try { await action(path); } catch (failure) { setError(errorMessage(failure)); }
+  }
   const files = summarize(items);
   if (files.length === 0) return null;
   const additions = files.reduce((total, file) => total + file.additions, 0);
@@ -54,7 +63,10 @@ export function TurnFileChanges({ items }: Props) {
         {files.map((file) => (
           <li key={file.path}>
             <File className="turn-file-icon" aria-label={kindLabels[file.kind] ?? file.kind} />
-            <code title={file.path}>{file.path}</code>
+            {onOpenPath && file.kind !== "delete"
+              ? <a href="#" title={`查看文件：${file.path}`} onClick={(event) => { event.preventDefault(); void open(file.path, onOpenPath); }}><code>{file.path}</code></a>
+              : <code title={file.path}>{file.path}</code>}
+            {onOpenInExplorer && file.kind !== "delete" && <button type="button" title="在资源管理器中定位" aria-label={`在资源管理器中定位 ${file.path}`} onClick={() => void open(file.path, onOpenInExplorer)}><FolderOpen aria-hidden="true" /></button>}
             {(file.additions > 0 || file.deletions > 0) && <small>
               {file.additions > 0 && <span className="added">+{file.additions}</span>}
               {file.deletions > 0 && <span className="removed">-{file.deletions}</span>}
@@ -62,6 +74,7 @@ export function TurnFileChanges({ items }: Props) {
           </li>
         ))}
       </ul>
+      {error && <p role="alert">{error}</p>}
     </details>
   );
 }

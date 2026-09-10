@@ -454,6 +454,10 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .turn-file-changes li { display: grid; min-height: 30px; grid-template-columns: 16px minmax(0,1fr) auto; align-items: center; gap: 8px; padding: 0 6px; border-radius: var(--radius-sm); }
 .turn-file-changes li:hover { background: var(--surface-raised); }
 .turn-file-icon { color: var(--accent-info); }
+.turn-file-changes li a { display: flex; min-width: 0; color: var(--accent-info); }
+.turn-file-changes li button { display: grid; flex: none; width: var(--control-height-compact); height: var(--control-height-compact); place-items: center; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--text-secondary); cursor: pointer; }
+.turn-file-changes li button svg { width: 16px; height: 16px; stroke-width: 1.75; }
+.turn-file-changes li button:hover { background: var(--surface-raised); }
 .turn-file-changes li code { overflow: hidden; color: var(--text-secondary); font: var(--text-label)/20px var(--font-mono); text-overflow: ellipsis; white-space: nowrap; }
 .turn-file-changes .added { color: var(--accent-success); }
 .turn-file-changes .removed { color: var(--accent-danger); }

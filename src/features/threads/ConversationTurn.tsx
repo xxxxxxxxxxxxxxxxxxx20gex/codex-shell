@@ -289,7 +289,7 @@ export function ConversationTurn({
           onOpenError={onOpenError}
         />
       )}
-      {fileChangeItems.length > 0 && <TurnFileChanges items={fileChangeItems} />}
+      {fileChangeItems.length > 0 && <TurnFileChanges items={fileChangeItems} onOpenPath={onOpenPath} onOpenInExplorer={onOpenInExplorer} />}
       {turn.error && <div className="turn-error">{turn.error.message}</div>}
     </section>
   );
