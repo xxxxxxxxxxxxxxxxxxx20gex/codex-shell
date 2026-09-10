@@ -132,6 +132,9 @@ export function useAppController() {
         effort: next.reasoningEffort,
         summary: next.reasoningSummary,
         serviceTier: next.serviceTier === "default" ? null : next.serviceTier,
+        approvalPolicy: getPermissionMode(permissionMode).approvalPolicy,
+        approvalsReviewer: getApprovalsReviewer(permissionMode, approvalReviewer),
+        sandboxPolicy: getTurnSandboxPolicy(permissionMode),
       }).catch((error) => setUiError(`Session 设置未能同步到 app-server：${errorMessage(error)}`));
     }
   }
