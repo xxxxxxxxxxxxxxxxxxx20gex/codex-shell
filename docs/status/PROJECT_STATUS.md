@@ -38,7 +38,7 @@
 
 ## 完整验证基线
 
-- 2026-09-10：模型配置改为厂商分组 + 渠道列表，并把对话参数按渠道归属；DeepSeek 渠道接入内置官方模型目录。`pnpm typecheck`、`pnpm lint`、`pnpm test`（62 个文件 / 298 项）、`pnpm quality:knip`、`pnpm build` 和 `pnpm rust:check`（Cargo check、31 项 Rust 单测、严格 Clippy）全部通过；真实 app-server 探针确认按渠道注入 `model_catalog_json` 后 `model/list` 返回对应目录，同路由不注入则返回内置 GPT 目录；端点探针确认 `https://api.deepseek.com/models` 在无效 Key 下返回 401。未使用真实 DeepSeek 密钥完成对话，模型中转渠道设置与对话高级设置已通过 `pnpm test:channel-layout`（Playwright + 本机 Chrome，模拟回调）：1440×900、1280×780、1024×720、900×700 四档均无页面级横向溢出，模态框不越界，可见文字不小于 11px，键盘焦点可进入面板，删除二次确认、Escape 关闭和 reduced-motion 均生效；该脚本挂载真实组件但使用模拟回调，不是真实 Tauri 端到端。
+- 2026-09-10：模型配置改为厂商分组 + 渠道列表，并把对话参数按渠道归属；DeepSeek 渠道接入内置官方模型目录。`pnpm typecheck`、`pnpm lint`、`pnpm test`（62 个文件 / 301 项）、`pnpm quality:knip`、`pnpm build` 和 `pnpm rust:check`（Cargo check、31 项 Rust 单测、严格 Clippy）全部通过；真实 app-server 探针确认按渠道注入 `model_catalog_json` 后 `model/list` 返回对应目录，同路由不注入则返回内置 GPT 目录；端点探针确认 `https://api.deepseek.com/models` 在无效 Key 下返回 401。未使用真实 DeepSeek 密钥完成对话，模型中转渠道设置与对话高级设置已通过 `pnpm test:channel-layout`（Playwright + 本机 Chrome，模拟回调）：1440×900、1280×780、1024×720、900×700 四档均无页面级横向溢出，模态框不越界，可见文字不小于 11px，键盘焦点可进入面板，删除二次确认、Escape 关闭和 reduced-motion 均生效；该脚本挂载真实组件但使用模拟回调，不是真实 Tauri 端到端。
 - 2026-09-07：公开 `v0.1.4` Release 已上传 `codex-shell_0.1.4_x64-setup.exe`、对应 minisign `.sig` 和 `latest.json`；发布 tag 记录兼容门禁 Runtime `codex-cli 0.153.4`，并完成干净 Windows 用户环境的 UAC、sandbox readiness 和 elevated 命令验证。
 
 - 2026-09-02：代码健康审查移除未被消费的 `tools.update_plan.enabled` 诊断读取、`config/read` 客户端包装和 `sendOrQueue` 的重复图片分支；保留生成协议类型及历史/旧 Runtime 兼容逻辑。`pnpm lint`、`pnpm typecheck`、57 个 Vitest 文件/261 个测试、Vite production build、Rust check、14 个 Rust 单测和 Clippy 通过。Knip 在 OXC 解析阶段因本机 ArrayBuffer 分配失败退出，未产生诊断；该结果不作为无效代码通过证据。

@@ -166,6 +166,43 @@ describe("ProviderChannelsPanel", () => {
     expect(onSave).not.toHaveBeenCalled();
   });
 
+  it("refuses a save that would restart the core while a turn is running", async () => {
+    const onSave = createOnSave();
+    render(<ProviderChannelsPanel settings={providerSettings} onSave={onSave} switchDisabled />);
+
+    fireEvent.click(screen.getByRole("button", { name: "编辑 OpenAI 官方" }));
+    fireEvent.change(screen.getByPlaceholderText("保留为空则继续使用已保存的密钥"), { target: { value: "sk-test-only" } });
+    fireEvent.click(screen.getByRole("button", { name: "保存渠道" }));
+
+    expect(await screen.findByText(/完成或中断后再修改会重启执行核心的渠道/)).toBeTruthy();
+    expect(onSave).not.toHaveBeenCalled();
+    expect(invoke).not.toHaveBeenCalledWith("save_channel_secret", expect.anything());
+  });
+
+  it("still allows registering a new channel while a turn is running", async () => {
+    const onSave = createOnSave();
+    render(<ProviderChannelsPanel settings={providerSettings} onSave={onSave} switchDisabled />);
+
+    fireEvent.click(screen.getAllByRole("button", { name: /新增渠道/ })[0]);
+    fireEvent.change(screen.getByPlaceholderText("例如 官方直连、备用中转"), { target: { value: "第二条路由" } });
+    fireEvent.click(screen.getByRole("button", { name: "保存渠道" }));
+
+    await waitFor(() => expect(onSave).toHaveBeenCalled());
+    expect(savedSettings(onSave).channels).toHaveLength(3);
+    expect(onSave.mock.calls[0][1]).toBe(false);
+  });
+
+  it("refuses to delete the active channel while a turn is running", async () => {
+    const onSave = createOnSave();
+    render(<ProviderChannelsPanel settings={providerSettings} onSave={onSave} switchDisabled />);
+
+    fireEvent.click(screen.getByRole("button", { name: "删除 OpenAI 官方" }));
+    fireEvent.click(screen.getByRole("button", { name: "确认删除" }));
+
+    expect(await screen.findByText(/完成或中断后再删除当前生效的渠道/)).toBeTruthy();
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
   it("refuses to activate another channel while a turn is running", () => {
     const onSave = createOnSave();
     render(<ProviderChannelsPanel settings={providerSettings} onSave={onSave} switchDisabled />);

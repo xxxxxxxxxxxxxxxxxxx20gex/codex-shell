@@ -144,6 +144,11 @@ export function ProviderChannelsPanel({ settings, onSave, switchDisabled = false
     const requiresRestart = Boolean(apiKey)
       || (activeChannelId === channel.id && (!existing || baseUrlChanged));
 
+    if (requiresRestart && switchDisabled) {
+      setStatus("有回合正在执行，完成或中断后再修改会重启执行核心的渠道");
+      return;
+    }
+
     if (apiKey) {
       if (!isTauri()) {
         setStatus("密钥只能在桌面应用中保存");
@@ -164,6 +169,11 @@ export function ProviderChannelsPanel({ settings, onSave, switchDisabled = false
   }
 
   async function remove(channel: Channel) {
+    if (switchDisabled && settings.activeChannelId === channel.id) {
+      setPendingDelete(null);
+      setStatus("有回合正在执行，完成或中断后再删除当前生效的渠道");
+      return;
+    }
     const channels = settings.channels.filter((current) => current.id !== channel.id);
     const activeChannelId = settings.activeChannelId === channel.id
       ? channels[0]?.id ?? null
