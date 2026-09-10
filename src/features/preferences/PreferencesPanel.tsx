@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Activity, Palette, Save, ServerCog, UserRound, Waypoints, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Activity, Maximize2, Minimize2, Minus, Palette, Save, ServerCog, Settings, UserRound, Waypoints, X } from "lucide-react";
 import type { WindowsSandboxReadiness } from "../../generated/app-server/v2/WindowsSandboxReadiness";
 import type { WindowsSandboxSetupMode } from "../../generated/app-server/v2/WindowsSandboxSetupMode";
 import { ProviderChannelsPanel } from "../models/ProviderChannelsPanel";
@@ -55,14 +55,36 @@ export function PreferencesPanel({
   const [draft, setDraft] = useState(settings);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState("");
+  const [maximized, setMaximized] = useState(false);
+  const [minimized, setMinimized] = useState(false);
+  const dialogRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
+    if (minimized) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    dialogRef.current?.focus();
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
+      if (event.key === "Tab") {
+        const controls = dialogRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), [tabindex="0"]');
+        const visible = Array.from(controls ?? []).filter((element) => element.getClientRects().length > 0);
+        const first = visible[0];
+        const last = visible[visible.length - 1];
+        if (event.shiftKey && (document.activeElement === first || document.activeElement === dialogRef.current)) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
+      }
     };
     window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [onClose]);
+    return () => {
+      window.removeEventListener("keydown", closeOnEscape);
+      previousFocus?.focus();
+    };
+  }, [minimized, onClose]);
 
   async function save() {
     setSaving(true);
@@ -78,11 +100,17 @@ export function PreferencesPanel({
   }
 
   return (
-    <div className="modal-backdrop" onMouseDown={onClose}>
-      <section className="preferences-modal" onMouseDown={(event) => event.stopPropagation()}>
+    <>
+    {minimized && <button className="preferences-restore secondary-button" onClick={() => setMinimized(false)} title="恢复设置"><Settings aria-hidden="true" />恢复设置</button>}
+    <div className="modal-backdrop preferences-backdrop" hidden={minimized} onMouseDown={onClose}>
+      <section ref={dialogRef} role="dialog" aria-modal="true" aria-label="设置" tabIndex={-1} className={`preferences-modal${maximized ? " maximized" : ""}`} onMouseDown={(event) => event.stopPropagation()}>
         <header className="preferences-header">
-          <div><span className="eyebrow">设置</span><h2>Codex Shell</h2></div>
-          <button className="close-button" onClick={onClose} aria-label="关闭设置" title="关闭设置"><X aria-hidden="true" /></button>
+          <h2>设置</h2>
+          <div className="preferences-window-actions">
+            <button className="close-button" onClick={() => setMinimized(true)} aria-label="最小化设置" title="最小化设置"><Minus aria-hidden="true" /></button>
+            <button className="close-button" onClick={() => setMaximized(!maximized)} aria-label={maximized ? "还原设置窗口" : "最大化设置"} title={maximized ? "还原设置窗口" : "最大化设置"}>{maximized ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />}</button>
+            <button className="close-button" onClick={onClose} aria-label="关闭设置" title="关闭设置"><X aria-hidden="true" /></button>
+          </div>
         </header>
         <div className="preferences-layout">
           <nav className="preferences-nav" aria-label="设置分类">
@@ -119,5 +147,6 @@ export function PreferencesPanel({
         <footer><button className="secondary-button" onClick={onClose}>{section === "providers" ? "关闭" : "取消"}</button>{section !== "providers" && <button className="primary-button" onClick={() => void save()} disabled={saving}><Save aria-hidden="true" />{saving ? "保存中…" : "保存"}</button>}</footer>
       </section>
     </div>
+    </>
   );
 }

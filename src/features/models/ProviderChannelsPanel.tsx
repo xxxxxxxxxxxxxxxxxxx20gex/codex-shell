@@ -188,9 +188,9 @@ export function ProviderChannelsPanel({ settings, onSave, switchDisabled = false
 
   return (
     <div className="preferences-section">
-      <h3>模型渠道</h3>
-      <p>按厂商管理路由与密钥。同一时刻只有一个渠道生效，切换渠道会重启执行核心。</p>
-      {VENDORS.map((vendor) => {
+      <h3>{draft ? (draft.isNew ? `新增 ${vendorDescriptor(draft.vendor).label} 渠道` : "编辑渠道") : "模型渠道"}</h3>
+      <p>{draft ? vendorDescriptor(draft.vendor).label : "同一时刻仅一个渠道生效。切换渠道将重启执行核心。"}</p>
+      {!draft && VENDORS.map((vendor) => {
         const channels = settings.channels.filter((channel) => channel.vendor === vendor.id);
         return (
           <section className="channel-vendor" key={vendor.id}>
@@ -255,7 +255,6 @@ export function ProviderChannelsPanel({ settings, onSave, switchDisabled = false
       })}
       {draft && (
         <section className="channel-editor">
-          <header><strong>{draft.isNew ? `新增 ${vendorDescriptor(draft.vendor).label} 渠道` : "编辑渠道"}</strong></header>
           <label className="preferences-field"><span>名称</span><input value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder="例如 官方直连、备用中转" /></label>
           <label className="preferences-field"><span>Base URL</span><input value={draft.baseUrl} onChange={(event) => setDraft({ ...draft, baseUrl: event.target.value })} /></label>
           <label className="preferences-field"><span>API Key</span><input type="password" value={apiKey} onChange={(event) => setApiKey(event.target.value)} placeholder="保留为空则继续使用已保存的密钥" autoComplete="off" /></label>

@@ -87,6 +87,32 @@ try {
       await page.evaluate((view) => window.show(view), kind);
       await assertSurface(kind, viewport);
       await page.screenshot({ path: join(output, `${kind}-${width}.png`) });
+      if (kind === "providers") {
+        await page.getByRole("button", { name: "编辑 DeepSeek 官方直连备用路由" }).click();
+        await page.getByLabel("名称", { exact: true }).fill("未保存的渠道名称");
+        await assertSurface(kind, viewport);
+        await page.screenshot({ path: join(output, `editor-${width}.png`) });
+        await page.getByRole("button", { name: "最大化设置", exact: true }).click();
+        await assertSurface(kind, viewport);
+        await page.screenshot({ path: join(output, `maximized-${width}.png`) });
+        await page.getByRole("button", { name: "最小化设置", exact: true }).click();
+        assert.equal(await page.getByRole("dialog").count(), 0);
+        const before = await page.evaluate(() => window.__closed ?? 0);
+        await page.keyboard.press("Escape");
+        assert.equal(await page.evaluate(() => window.__closed ?? 0), before);
+        await page.getByRole("button", { name: "恢复设置" }).click();
+        assert.equal(await page.getByLabel("名称", { exact: true }).inputValue(), "未保存的渠道名称");
+        await page.getByRole("button", { name: "还原设置窗口" }).click();
+        await page.getByRole("button", { name: "取消", exact: true }).click();
+        await page.getByRole("button", { name: "关闭设置", exact: true }).focus();
+        await page.keyboard.press("Tab");
+        assert.equal(await page.getByRole("button", { name: "个性化提示词" }).evaluate(el => el === document.activeElement), true);
+        await page.getByRole("button", { name: "关闭", exact: true }).focus();
+        await page.keyboard.press("Tab");
+        assert.equal(await page.getByRole("button", { name: "最小化设置", exact: true }).evaluate(el => el === document.activeElement), true);
+        await page.mouse.click(2, 2);
+        assert.equal(await page.evaluate(() => window.__closed ?? 0), before + 1);
+      }
     }
   }
 

@@ -207,6 +207,7 @@ Radii:
 - Popovers use `--surface-panel`, `--border-default`, 8px radius, and a single restrained shadow.
 - Menu rows are at least `32px` high, with icon, label, optional description, and shortcut in stable columns.
 - Dialogs use a clear title, short explanation only when necessary, and right-aligned actions.
+- Settings use a 1040px by 760px preferred surface constrained to the viewport, with a fixed navigation column and one scrolling content region. Maximize expands inside the application; minimize hides the modal and preserves drafts behind a restore action. Channel editing replaces the list in the content region instead of appending a nested form below it.
 - Clicking outside closes non-modal popovers; destructive confirmation remains modal.
 
 ## Window Chrome

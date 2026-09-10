@@ -42,6 +42,26 @@ function panelProps() {
 }
 
 describe("PreferencesPanel", () => {
+  it("preserves channel drafts across maximize and minimize without closing", () => {
+    const props = panelProps();
+    render(<PreferencesPanel {...props} initialSection="providers" onSave={async () => undefined} />);
+    fireEvent.click(screen.getByRole("button", { name: "编辑 OpenAI 官方" }));
+    fireEvent.change(screen.getByLabelText("名称"), { target: { value: "未保存渠道" } });
+    fireEvent.click(screen.getByRole("button", { name: "最大化设置" }));
+    expect(screen.getByRole("dialog").classList.contains("maximized")).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "最小化设置" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(props.onClose).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "恢复设置" }));
+    expect((screen.getByLabelText("名称") as HTMLInputElement).value).toBe("未保存渠道");
+    expect(screen.getByRole("dialog").classList.contains("maximized")).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "还原设置窗口" }));
+    expect(screen.getByRole("dialog").classList.contains("maximized")).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: "取消" }));
+    expect(screen.getByRole("button", { name: "编辑 OpenAI 官方" })).toBeTruthy();
+  });
+
   it("keeps general settings limited to personalization and appearance", async () => {
     const onSave = vi.fn(async () => undefined);
     render(<PreferencesPanel {...panelProps()} onSave={onSave} />);

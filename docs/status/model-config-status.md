@@ -1,6 +1,7 @@
 # 模型配置状态
 
 - 模块职责：管理厂商渠道（路由、密钥、模型目录）以及对话内模型、推理强度和原生参数。
+- 渠道编辑布局（2026-09-10）：新增/编辑在设置内容区独立展示，取消返回列表；表单输入框使用统一主题样式，设置最大化或最小化不清除未保存字段。未改变密钥、渠道保存与 Runtime 切换逻辑。四尺寸渠道布局脚本与前端 302 项测试通过。
 - 当前状态：设置窗口的「模型渠道」分区按厂商分组（OpenAI、DeepSeek）管理渠道，支持新增、编辑、删除、激活和连接测试。渠道 = Base URL + 密钥 + 模型目录 + 该渠道自己的对话参数；同一时刻只有一个激活渠道，所有 Session 共用。对话高级设置只选择渠道，不再输入 Base URL 与 Key。密钥只写入 Windows 凭据管理器，前端只能写入并查询「是否已保存」。模型快捷切换请求同时携带当前 Composer 的 sandboxPolicy、approvalPolicy 和 approvalsReviewer，避免只提交模型字段后由权威设置回流覆盖原权限选择。
 - 最近变更：由单 provider 配置改为「厂商分组 + 渠道列表」（settings v2，读取 v1 时自动迁移并保留 `settings.v1.bak.json`）；对话参数从全局一份改为每渠道一份，切换渠道不再覆盖其他渠道已经调好的参数；DeepSeek 渠道启动时注入内置官方模型目录，`model/list` 因此返回 DeepSeek 模型而不是内置 GPT 目录；新增连接测试 `GET {baseUrl}/models`；有回合正在执行时禁止切换渠道、禁止删除当前生效渠道，也禁止保存会重启执行核心的渠道改动（新渠道仍可登记）；参数校准只发生在执行核心按新渠道重启之后，并且只写激活渠道。
 - 当前接口：`ModelSettingsPanel`、`ProviderChannelsPanel`、`channels.ts`（`activeChannel`、`activeConversation`、`replaceChannel`、`reconcileConversation`、`providerSettingsFromThread`）、`load_model_settings`、`save_model_settings`、`channel_secret_presence`、`save_channel_secret`、`test_channel_connection`、app-server 的 `model/list` 与 provider capability read。
