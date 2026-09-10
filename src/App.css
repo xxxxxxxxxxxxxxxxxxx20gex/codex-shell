@@ -68,8 +68,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .conversation-empty-mark { width: 52px; height: 52px; pointer-events: none; user-select: none; }
 .conversation-empty h2 { margin: 14px 0 6px; color: var(--text-primary); font-size: 16px; }
 .conversation-empty p { max-width: 360px; margin: 0; color: var(--text-muted); font-size: var(--text-label); line-height: 16px; }
-.user-message-group { display: flex; width: fit-content; max-width: min(76%, 720px); align-items: flex-end; flex-direction: column; gap: 8px; margin-left: auto; }
-.user-message { padding: 9px 12px; border: 1px solid var(--border-default); border-radius: var(--radius-panel); color: var(--text-primary); background: var(--surface-panel); font-family: var(--font-ui); font-size: var(--conversation-font-size); line-height: 24px; }
+.user-message-group { display: flex; width: fit-content; max-width: min(76%, 720px); align-items: flex-end; flex-direction: column; gap: var(--space-2); margin-left: auto; }
+.user-message { padding: var(--space-2) var(--space-4); border: 0; border-radius: var(--radius-panel); color: var(--text-primary); background: var(--surface-raised); font-family: var(--font-ui); font-size: var(--text-conversation); line-height: 24px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .agent-block { display: grid; grid-template-columns: 2px minmax(0, 1fr); align-items: start; gap: 14px; margin-top: 28px; }
 .agent-block-continuation { margin-top: 0; }
 .agent-block-continuation .agent-content { grid-column: 2; }
@@ -92,8 +92,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .agent-response th { background: var(--surface-raised); }
 .agent-response hr { margin: 18px 0; border: 0; border-top: 1px solid var(--border-subtle); }
 .message-timing { color: var(--text-muted); font: var(--text-meta)/16px var(--font-mono); font-variant-numeric: tabular-nums; }
-.user-message-meta { display: flex; min-height: 28px; align-items: center; justify-content: flex-end; gap: 6px; margin-top: 4px; }
-.user-message-timing { margin: 0 3px 0 0; text-align: right; }
+.user-message-meta { display: flex; min-height: var(--control-height-compact); align-items: center; justify-content: flex-end; gap: var(--space-2); margin-top: 0; }
+.user-message-timing { margin: 0; text-align: right; font-family: var(--font-ui); font-size: var(--text-label); }
 .agent-message-timing { margin-top: 8px; }
 .message-actions { display: flex; gap: 4px; margin-top: 7px; }
 .user-message-actions { margin-top: 0; }

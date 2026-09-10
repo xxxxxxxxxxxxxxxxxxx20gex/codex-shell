@@ -220,6 +220,7 @@ Radii:
 ## Conversation Timeline
 
 - User messages are compact right-aligned bubbles sized to content, with a sensible maximum width.
+- User bubbles use the borderless raised surface, 8px vertical and 16px horizontal padding, and the shared 8px panel radius. Metadata follows after 8px, with local HH:mm time and 28px icon controls on one right-aligned row; the full date and time remain available on hover. User text preserves line breaks and wraps long unbroken strings.
 - Assistant responses are unframed and use one subtle 2px action marker at the first answer line; completed responses do not carry a full-height rail.
 - Reasoning, commands, MCP calls, and file work collapse into one process group after completion.
 - Command output and diffs use the mono family and conversation-small size.
