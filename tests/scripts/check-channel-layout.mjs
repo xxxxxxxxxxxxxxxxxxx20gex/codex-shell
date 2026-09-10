@@ -31,7 +31,7 @@ function SettingsHost() {
 window.show = (kind) => {
   const content = kind === "providers"
     ? React.createElement(SettingsHost)
-    : React.createElement(ModelSettingsPanel,{settings:conversation,providerSettings,loadModels:async()=>models,loadProviderCapabilities:async()=>({namespaceTools:false,imageGeneration:false,webSearch:false}),onManageChannels:noop,onClose:noop,onSave:noop});
+    : React.createElement(ModelSettingsPanel,{settings:conversation,providerSettings,loadModels:async()=>models,loadProviderCapabilities:async()=>({namespaceTools:false,imageGeneration:false,webSearch:false}),onManageChannels:()=>{window.__managed=(window.__managed||0)+1;},onClose:noop,onSave:noop});
   root.render(content);
 };
 `;
@@ -90,6 +90,22 @@ try {
       await page.evaluate((view) => window.show(view), kind);
       await assertSurface(kind, viewport);
       await page.screenshot({ path: join(output, `${kind}-${width}.png`) });
+      if (kind === "advanced") {
+        const manage = page.getByRole("button", { name: "管理渠道", exact: true });
+        assert.equal(await manage.evaluate(el => el.closest(".channel-picker")), null);
+        assert.equal((await manage.boundingBox()).height, 28);
+        await manage.focus();
+        const managed = await page.evaluate(() => window.__managed ?? 0);
+        await page.keyboard.press("Enter");
+        assert.equal(await page.evaluate(() => window.__managed), managed + 1);
+        const choice = page.getByRole("button", { name: /DeepSeek 官方直连备用路由/ });
+        await choice.click();
+        assert.equal(await choice.getAttribute("aria-pressed"), "true");
+        assert.equal((await choice.boundingBox()).height, 32);
+        await choice.locator("strong").evaluate(el => { el.textContent = "长渠道名称".repeat(30); });
+        await assertSurface(kind, viewport);
+        assert.equal(await page.locator('.channel-picker button[aria-pressed="true"] strong').evaluate(el => el.scrollWidth > el.clientWidth && getComputedStyle(el).textOverflow === "ellipsis"), true);
+      }
       if (kind === "providers") {
         await page.getByRole("button", { name: "编辑 DeepSeek 官方直连备用路由" }).click();
         await page.getByLabel("名称", { exact: true }).fill("未保存的渠道名称");

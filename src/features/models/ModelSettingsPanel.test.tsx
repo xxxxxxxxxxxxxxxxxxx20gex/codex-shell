@@ -120,6 +120,9 @@ describe("ModelSettingsPanel", () => {
     expect(screen.getByRole("button", { name: /OpenAI 官方/ })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /DeepSeek 官方/ }));
     expect(screen.getByRole("button", { name: /DeepSeek 官方/ }).className).toContain("active");
+    expect(screen.getByRole("button", { name: /DeepSeek 官方/ }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: /OpenAI 官方/ }).getAttribute("aria-pressed")).toBe("false");
+    expect(screen.getByRole("group", { name: "渠道选择" }).contains(screen.getByRole("button", { name: "管理渠道" }))).toBe(false);
 
     fireEvent.click(screen.getByRole("button", { name: "管理渠道" }));
     expect(onManageChannels).toHaveBeenCalled();

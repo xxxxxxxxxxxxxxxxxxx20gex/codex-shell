@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { X } from "lucide-react";
+import { ArrowRight, Check, X } from "lucide-react";
 import type { ReasoningSummary } from "../../generated/app-server/ReasoningSummary";
 import type { Model } from "../../generated/app-server/v2/Model";
 import type { ModelProviderCapabilitiesReadResponse } from "../../generated/app-server/v2/ModelProviderCapabilitiesReadResponse";
@@ -92,22 +92,23 @@ export function ModelSettingsPanel({
         <header><div><span className="eyebrow">高级设置</span><h2>网关与自定义模型</h2><p>渠道与密钥在设置中统一管理，这里只选择渠道并调整参数。</p></div><button className="close-button" onClick={onClose} aria-label="关闭高级设置" title="关闭高级设置"><X aria-hidden="true" /></button></header>
         <div className="settings-body" inert={saving}>
           <div className="field">
-            <span>渠道</span>
-            <div className="channel-picker">
+            <div className="channel-picker-header"><span>渠道</span><button className="channel-picker-manage" onClick={onManageChannels} title="前往设置管理渠道">管理渠道<ArrowRight aria-hidden="true" /></button></div>
+            <div className="channel-picker" role="group" aria-label="渠道选择">
               {providerSettings.channels.length === 0 && <small>尚未配置渠道，请先在设置中新增。</small>}
               {providerSettings.channels.map((item) => (
                 <button
                   key={item.id}
                   className={item.id === channelId ? "active" : ""}
+                  aria-pressed={item.id === channelId}
                   disabled={switchDisabled && item.id !== channelId}
                   title={switchDisabled && item.id !== channelId ? "有回合正在执行，完成或中断后再切换渠道" : item.name}
                   onClick={() => { setChannelId(item.id); setDraft(item.conversation); }}
                 >
+                  <Check aria-hidden="true" />
                   <strong>{item.name}</strong>
                   <small>{vendorDescriptor(item.vendor).label}</small>
                 </button>
               ))}
-              <button className="channel-picker-manage" onClick={onManageChannels}>管理渠道</button>
             </div>
             <small>{channelId !== activeChannelId ? (switchDisabled ? "有回合正在执行，完成或中断后才能切换渠道。" : "切换渠道会在保存后按新渠道的模型目录校准参数。") : "当前生效的渠道。"}</small>
           </div>
