@@ -70,10 +70,10 @@ src-tauri/target/debug/codex-shell.exe
 双击即可启动。首次使用时，在“设置 → 模型渠道”新增或编辑渠道：
 
 1. 选择厂商，填写渠道名称、Base URL、API Key 和可选默认模型 ID；
-2. 保存后使用渠道列表的“激活”入口切换；操作前确认所有 Session 和侧聊已停止，切换会重启共享核心；
+2. 保存后使用渠道列表的“激活”或对话高级设置切换；全部 Session 和侧聊停止后才允许切换，操作会重启共享核心；
 3. Composer 选择模型与推理强度，高级设置调整对话参数。
 
-当前高级设置跨渠道保存存在已知缺陷，请使用设置列表的激活入口。“测试连接”只检查 /models，不保证对话或工具可用。其他限制见 [模型配置状态](docs/status/model-config-status.md)。
+保存会等待重启和参数同步完成；若提示“配置已保存，但运行状态同步失败”，请排除连接问题后重试保存。“测试连接”只检查 /models，不保证对话或工具可用。其他限制见 [模型配置状态](docs/status/model-config-status.md)。
 
 API Key 只保存到 Windows Credential Manager，不写入项目文件、Session、日志或普通配置 JSON。
 
@@ -126,7 +126,7 @@ SmartScreen 提示。Tauri 更新签名与 Windows 代码签名是两套独立�
 CS 不强制绑定某一家模型服务，也不提供内置模型网关、公共 API 配额或代运营的中转服务。
 用户需要自行准备并配置官方 API、OpenAI 兼容的自建网关或其他可信模型服务，并自行承担
 该服务的费用、可用性和数据处理责任。模型 ID 手动填写，能力和可用参数优先读取 app-server
-的模型目录。OpenAI 使用 Core 内置目录，DeepSeek 使用应用内置目录；尚无通用第三方专属参数编辑器。当前切换校准会替换目录外自定义模型 ID，详见 [已知问题](docs/status/model-config-status.md)。
+的模型目录。OpenAI 使用 Core 内置目录，DeepSeek 使用应用内置目录；尚无通用第三方专属参数编辑器。目录外自定义模型 ID 保留原值，可用性由服务端决定；文件模型目录配置暂不支持，详见 [模型配置状态](docs/status/model-config-status.md)。
 
 ### 权限策略
 
@@ -298,4 +298,4 @@ Rust/Node 构建环境并重新执行该命令；用户端不需要任何额外�
 - [docs/README.md](docs/README.md)：状态文档、ADR 和文档地图；
 - [docs/status/PROJECT_STATUS.md](docs/status/PROJECT_STATUS.md)：项目当前快照、风险和验证基线。
 
-当前项目仍处于持续开发阶段。本地插件、Skills 与 MCP 管理已接入，断线恢复和多渠道一致性仍待完善；官方远程目录、OpenAI 账户与 Connector 登录不在当前个人 API Key 产品范围内。
+当前项目仍处于持续开发阶段。本地插件、Skills 与 MCP 管理已接入，自动断线恢复仍待完善，多渠道仍需真实系统凭据与对话人工验收；官方远程目录、OpenAI 账户与 Connector 登录不在当前个人 API Key 产品范围内。

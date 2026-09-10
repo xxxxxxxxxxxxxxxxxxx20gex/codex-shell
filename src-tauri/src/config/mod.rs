@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
+use std::io::Write;
+use std::sync::Mutex;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Manager};
@@ -9,6 +11,14 @@ use crate::credentials::channel_id_is_valid;
 const CONFIG_FILE_NAME: &str = "settings.json";
 const PREFERENCES_FILE_NAME: &str = "preferences.json";
 const LEGACY_BACKUP_FILE_NAME: &str = "settings.v1.bak.json";
+static SETTINGS_LOCK: Mutex<()> = Mutex::new(());
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ChannelSecretChange {
+    channel_id: String,
+    secret: Option<String>,
+}
 
 pub const SETTINGS_SCHEMA_VERSION: u32 = 2;
 pub const VENDOR_OPENAI: &str = "openai";
@@ -188,7 +198,7 @@ struct LegacyModelSettings {
 fn migrate_legacy_settings(legacy: LegacyModelSettings) -> (ModelSettings, String) {
     let base_url = legacy.base_url.trim().to_string();
     let vendor = vendor_for_base_url(&base_url);
-    let channel_id = generate_channel_id(vendor, &[]);
+    let channel_id = format!("{vendor}-legacy");
     let reduced = legacy.legacy_capability_template.as_deref() == Some("openai-compatible-basic");
     let conversation = ChannelConversationSettings {
         model_id: Some(legacy.model_id.trim().to_string()).filter(|value| !value.is_empty()),
@@ -271,6 +281,9 @@ fn normalize_settings(mut settings: ModelSettings) -> ModelSettings {
 fn validate_settings(settings: &ModelSettings) -> Result<(), String> {
     let mut seen: Vec<&str> = Vec::new();
     for channel in &settings.channels {
+        if matches!(channel.catalog, ChannelCatalog::File { .. }) {
+            return Err("尚不支持文件模型目录，请使用 vendorDefault".to_string());
+        }
         if !channel_id_is_valid(channel.id.trim()) {
             return Err("渠道标识格式无效".to_string());
         }
@@ -321,30 +334,38 @@ fn write_settings_file(path: &Path, settings: &ModelSettings) -> Result<(), Stri
     fs::create_dir_all(directory).map_err(|error| format!("创建配置目录失败：{error}"))?;
     let contents = serde_json::to_string_pretty(settings)
         .map_err(|error| format!("序列化模型配置失败：{error}"))?;
-    fs::write(path, contents).map_err(|error| format!("写入模型配置失败：{error}"))
+    let mut staged = tempfile::NamedTempFile::new_in(directory)
+        .map_err(|error| format!("创建临时模型配置失败：{error}"))?;
+    staged.write_all(contents.as_bytes())
+        .and_then(|()| staged.as_file().sync_all())
+        .map_err(|error| format!("写入模型配置失败：{error}"))?;
+    staged.persist(path).map_err(|error| format!("替换模型配置失败：{}", error.error))?;
+    Ok(())
 }
 
-/// 迁移成功才落盘，并保留一份 v1 备份；落盘失败不影响本次会话使用迁移结果。
-fn persist_migration(path: &Path, legacy_contents: &str, settings: &ModelSettings) {
-    let Some(directory) = path.parent() else {
-        return;
-    };
-    if fs::create_dir_all(directory).is_err() {
-        return;
-    }
+/// 保留 v1 备份；任何落盘错误都必须阻止本次迁移报告成功。
+fn persist_migration(path: &Path, legacy_contents: &str, settings: &ModelSettings) -> Result<(), String> {
+    let directory = path.parent().ok_or("模型配置路径缺少父目录")?;
+    fs::create_dir_all(directory).map_err(|error| format!("创建配置目录失败：{error}"))?;
     let backup = directory.join(LEGACY_BACKUP_FILE_NAME);
-    if !backup.exists() && fs::write(&backup, legacy_contents).is_err() {
-        return;
+    if !backup.exists() {
+        fs::write(&backup, legacy_contents).map_err(|error| format!("备份旧配置失败：{error}"))?;
     }
-    let _ = write_settings_file(path, settings);
+    write_settings_file(path, settings)
 }
 
 pub fn read_settings(app: &AppHandle) -> Result<ModelSettings, String> {
-    let path = config_path(app)?;
+    let _guard = SETTINGS_LOCK.lock().map_err(|_| "模型配置锁不可用")?;
+    read_settings_file(&config_path(app)?)
+}
+
+fn read_settings_file(path: &Path) -> Result<ModelSettings, String> {
     if !path.exists() {
-        return Ok(default_settings());
+        let settings = default_settings();
+        write_settings_file(path, &settings)?;
+        return Ok(settings);
     }
-    let contents = fs::read_to_string(&path)
+    let contents = fs::read_to_string(path)
         .map_err(|error| format!("读取模型配置失败（{}）：{error}", path.display()))?;
     let value: serde_json::Value = serde_json::from_str(&contents)
         .map_err(|error| format!("模型配置格式无效：{error}"))?;
@@ -355,16 +376,13 @@ pub fn read_settings(app: &AppHandle) -> Result<ModelSettings, String> {
     if version >= u64::from(SETTINGS_SCHEMA_VERSION) {
         let settings: ModelSettings = serde_json::from_value(value)
             .map_err(|error| format!("模型配置格式无效：{error}"))?;
+        validate_settings(&settings)?;
         return Ok(normalize_settings(settings));
     }
     let legacy: LegacyModelSettings = serde_json::from_value(value)
         .map_err(|error| format!("旧版模型配置格式无效：{error}"))?;
     let (settings, channel_id) = migrate_legacy_settings(legacy);
-    if let Err(error) = crate::credentials::migrate_legacy_channel_secret(&channel_id) {
-        // 密钥迁移失败不阻断启动：用户仍可以在设置中为渠道重新保存密钥。
-        eprintln!("Codex Shell: {error}");
-    }
-    persist_migration(&path, &contents, &settings);
+    crate::credentials::migrate_legacy_channel_secret(&channel_id, || persist_migration(path, &contents, &settings))?;
     Ok(settings)
 }
 
@@ -374,10 +392,23 @@ pub fn load_model_settings(app: AppHandle) -> Result<ModelSettings, String> {
 }
 
 #[tauri::command]
-pub fn save_model_settings(app: AppHandle, settings: ModelSettings) -> Result<(), String> {
+pub fn save_model_settings(app: AppHandle, settings: ModelSettings, expected: ModelSettings, secret_change: Option<ChannelSecretChange>) -> Result<(), String> {
+    let _guard = SETTINGS_LOCK.lock().map_err(|_| "模型配置锁不可用")?;
     validate_settings(&settings)?;
     let settings = normalize_settings(settings);
-    write_settings_file(&config_path(&app)?, &settings)
+    let path = config_path(&app)?;
+    if read_settings_file(&path)? != normalize_settings(expected) {
+        return Err("模型配置已被其他操作修改，请重新打开设置后重试".to_string());
+    }
+    let commit = || write_settings_file(&path, &settings);
+    if let Some(change) = secret_change {
+        if change.secret.is_some() && !settings.channels.iter().any(|channel| channel.id == change.channel_id) {
+            return Err("密钥对应的渠道不存在".to_string());
+        }
+        crate::credentials::save_channel_secret_with(change.channel_id, change.secret, commit)
+    } else {
+        commit()
+    }
 }
 
 fn normalize_preferences(mut settings: PersonalizationSettings) -> PersonalizationSettings {

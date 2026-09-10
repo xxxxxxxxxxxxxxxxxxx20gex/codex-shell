@@ -84,8 +84,10 @@ export function useAgentSession(
   const runtimeNoticeStore = useStableStore(() => new RuntimeNoticeStore());
   const interactionStore: ServerInteractionStore = useStableStore(() => new InteractionStore());
   const sandboxReadinessCheckedRef = useRef(false);
+  const restartThreadRef = useRef<string | null>(null);
   const {
     runningTurns,
+    hasRunningTurns,
     markThreadRunning,
     markThreadStopped,
     markThreadStatus,
@@ -383,8 +385,9 @@ export function useAgentSession(
     }
   }, [activeProjectCwd, ensureConnected, runtimeNoticeStore]);
 
-  const restart = useCallback(async () => {
-    const threadIdToRestore = currentThreadId();
+  const restart = useCallback(async (connect = true) => {
+    const threadIdToRestore = currentThreadId() ?? restartThreadRef.current;
+    restartThreadRef.current = threadIdToRestore;
     dispatchRetryingError({ type: "clear" });
     setSubmitting(false);
     clearRunningTurns();
@@ -393,12 +396,17 @@ export function useAgentSession(
     setWindowsSandboxReadiness(null);
     try {
       await clientRef.current?.stop();
-      await refreshHistory();
-      if (threadIdToRestore) await openThread(threadIdToRestore);
+      if (!connect) return true;
+      await ensureConnected();
+      if (await refreshHistory() === false) throw new Error("重启后历史列表读取失败");
+      if (threadIdToRestore && await openThread(threadIdToRestore) === false) throw new Error("重启后恢复 Session 失败");
+      restartThreadRef.current = null;
+      return true;
     } catch (restartError) {
       setError(errorMessage(restartError));
+      return false;
     }
-  }, [clearRunningTurns, currentThreadId, interactionStore, openThread, refreshHistory]);
+  }, [clearRunningTurns, currentThreadId, ensureConnected, interactionStore, openThread, refreshHistory]);
 
   const currentRunningTurn = sessionState.thread
     ? runningTurns.get(sessionState.thread.id)
@@ -412,6 +420,10 @@ export function useAgentSession(
   const runningThreadIds = new Set(runningTurns.keys());
 
   return {
+    acquireProviderSwitch: () => {
+      if (hasRunningTurns() || submitting || sideChat.submitting) throw new Error("有任务正在执行或提交，请完成后再切换渠道");
+      return clientRef.current!.pauseExecution();
+    },
     codexHome,
     skillsRevision,
     extensionsChanged,

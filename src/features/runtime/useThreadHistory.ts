@@ -76,8 +76,10 @@ export function useThreadHistory({ ensureConnected, dispatch, currentThreadId, e
       });
       nextCursorRef.current = response.nextCursor;
       setHasMore(response.nextCursor !== null);
+      return true;
     } catch (loadError) {
       if (requestId === requestSequenceRef.current) setError(errorMessage(loadError));
+      return false;
     } finally {
       if (requestId === requestSequenceRef.current) setLoading(false);
     }

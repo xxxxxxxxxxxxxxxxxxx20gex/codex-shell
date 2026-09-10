@@ -3,6 +3,20 @@ import { AppServerClient, REVERSE_REQUEST_DISMISSED } from "./appServerClient";
 import { FakeTransport } from "./appServerClientTestSupport";
 
 describe("AppServerClient", () => {
+  it("blocks new execution and refuses switching with an execution request in flight", async () => {
+    const transport = new FakeTransport();
+    const client = new AppServerClient(transport);
+    await client.start();
+    const release = client.pauseExecution();
+    await expect(client.request("turn/start", {})).rejects.toThrow("渠道正在切换");
+    release();
+    const pending = client.request("turn/start", {});
+    expect(() => client.pauseExecution()).toThrow("正在提交");
+    const request = transport.sent[transport.sent.length - 1];
+    transport.emit({ id: request?.id, result: {} });
+    await pending;
+    client.pauseExecution()();
+  });
   it("deduplicates concurrent starts and performs one handshake", async () => {
     const transport = new FakeTransport();
     const client = new AppServerClient(transport);

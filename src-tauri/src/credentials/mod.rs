@@ -61,8 +61,11 @@ pub fn read_channel_secret(channel_id: &str) -> Result<Option<String>, String> {
     Ok(read_channel_secrets()?.get(channel_id).cloned())
 }
 
-#[tauri::command]
-pub fn save_channel_secret(channel_id: String, secret: Option<String>) -> Result<(), String> {
+pub fn save_channel_secret_with(
+    channel_id: String,
+    secret: Option<String>,
+    commit: impl FnOnce() -> Result<(), String>,
+) -> Result<(), String> {
     if !channel_id_is_valid(&channel_id) {
         return Err("渠道标识格式无效".to_string());
     }
@@ -75,7 +78,8 @@ pub fn save_channel_secret(channel_id: String, secret: Option<String>) -> Result
     let _guard = WRITE_LOCK
         .lock()
         .map_err(|_| "渠道密钥存储锁不可用".to_string())?;
-    let mut values = read_channel_secrets()?;
+    let previous = read_channel_secrets()?;
+    let mut values = previous.clone();
     match secret {
         Some(secret) => {
             values.insert(channel_id, secret.trim().to_string());
@@ -84,7 +88,23 @@ pub fn save_channel_secret(channel_id: String, secret: Option<String>) -> Result
             values.remove(&channel_id);
         }
     }
-    write_channel_secrets(&values)
+    commit_secret_change(&previous, &values, write_channel_secrets, commit)
+}
+
+fn commit_secret_change(
+    previous: &BTreeMap<String, String>,
+    next: &BTreeMap<String, String>,
+    mut write: impl FnMut(&BTreeMap<String, String>) -> Result<(), String>,
+    commit: impl FnOnce() -> Result<(), String>,
+) -> Result<(), String> {
+    write(next)?;
+    if let Err(error) = commit() {
+        return match write(previous) {
+            Ok(()) => Err(error),
+            Err(_) => Err(format!("{error}；密钥回滚失败，请重新保存该渠道密钥")),
+        };
+    }
+    Ok(())
 }
 
 /// 只报告哪些渠道已经保存密钥，不返回密钥本身。
@@ -96,7 +116,7 @@ pub fn channel_secret_presence() -> Result<Vec<String>, String> {
 ///
 /// 没有旧密钥不是错误；已经存在同渠道密钥时不覆盖。迁移成功后删除旧条目，
 /// 删除失败只报告而不回滚，避免迁移过程中丢失用户密钥。
-pub fn migrate_legacy_channel_secret(channel_id: &str) -> Result<(), String> {
+pub fn migrate_legacy_channel_secret(channel_id: &str, commit: impl FnOnce() -> Result<(), String>) -> Result<(), String> {
     if !channel_id_is_valid(channel_id) {
         return Err("渠道标识格式无效".to_string());
     }
@@ -105,12 +125,13 @@ pub fn migrate_legacy_channel_secret(channel_id: &str) -> Result<(), String> {
         .map_err(|_| "渠道密钥存储锁不可用".to_string())?;
     let legacy = match entry(LEGACY_API_KEY_ACCOUNT)?.get_password() {
         Ok(value) => value,
-        Err(keyring::Error::NoEntry) => return Ok(()),
+        Err(keyring::Error::NoEntry) => return commit(),
         Err(_) => return Err("无法读取旧版 API Key".to_string()),
     };
     let mut values = read_channel_secrets()?;
     values.entry(channel_id.to_string()).or_insert(legacy);
     write_channel_secrets(&values)?;
+    commit()?;
     match entry(LEGACY_API_KEY_ACCOUNT)?.delete_credential() {
         Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
         Err(_) => Err("旧版 API Key 已迁移，但未能删除原条目".to_string()),
@@ -120,6 +141,33 @@ pub fn migrate_legacy_channel_secret(channel_id: &str) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::channel_id_is_valid;
+
+    #[test]
+    fn restores_secrets_on_config_failure_and_reports_failed_compensation() {
+        use std::collections::BTreeMap;
+        let previous = BTreeMap::from([("channel".to_string(), "test-only-old".to_string())]);
+        let next = BTreeMap::new();
+        let mut writes = Vec::new();
+        let result = super::commit_secret_change(&previous, &next, |values| {
+            writes.push(values.clone());
+            Ok(())
+        }, || Err("config failed".to_string()));
+        assert_eq!(result, Err("config failed".to_string()));
+        assert_eq!(writes, vec![next.clone(), previous.clone()]);
+        let mut calls = 0;
+        let result = super::commit_secret_change(&previous, &next, |_| {
+            calls += 1;
+            if calls == 2 { Err("write failed".to_string()) } else { Ok(()) }
+        }, || Err("config failed".to_string()));
+        assert!(result.unwrap_err().contains("回滚失败"));
+    }
+
+    #[test]
+    fn credential_failure_never_commits_config() {
+        let values = std::collections::BTreeMap::new();
+        let result = super::commit_secret_change(&values, &values, |_| Err("credential failed".to_string()), || panic!("must not commit"));
+        assert_eq!(result, Err("credential failed".to_string()));
+    }
 
     #[test]
     fn accepts_generated_channel_ids() {

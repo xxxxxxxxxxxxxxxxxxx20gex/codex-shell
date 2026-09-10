@@ -1,13 +1,13 @@
 # 凭据安全状态
 
-- 审查风险（2026-09-10，尚未修复）：先写/删 Key 再保存配置，后一步失败不会回滚；删除 Key 失败被忽略。v1 迁移先迁密钥再落盘配置，落盘失败被忽略且下次生成不同渠道 ID，存在密钥失联风险。
-- 模块职责：在 Windows Credential Manager 中维护用户 API Key，并只向授权的 app-server 子进程注入。
-- 当前状态：密钥按渠道保存。服务名 `com.codexshell.desktop`，账号名 `provider-channel-credentials`，值是一个 `{ "<channelId>": "<secret>" }` JSON 映射，渠道删除时尝试移除对应键（失败一致性见审查风险）；映射为空时删除整条凭据。MCP HTTP Token 按 CODEX_HOME 隔离，app-server 启动时注入 CS 专用环境变量，前端不能回读。
-- 最近变更：主 API Key 由单条 `primary-openai-api-key` 改为按渠道索引的映射；新增 `channel_secret_presence`，只返回已保存密钥的渠道 id 列表，不返回密钥本身；读取 v1 模型配置时把旧条目迁移到新渠道，迁移成功后删除旧条目，删除失败只报告不回滚；渠道 id 必须先通过 `^[a-z0-9][a-z0-9-]{0,63}$` 校验才允许作为映射键。
-- 当前接口：`save_channel_secret(channelId, secret | null)`、`channel_secret_presence()`、`channel_id_is_valid`、`migrate_legacy_channel_secret`、`read_channel_secret`（仅后端启动与连接测试调用）、`save_mcp_secret`、`read_environment`。
-- 安全边界：Key 不进入项目源码、普通设置、命令行参数或状态文档；第三方 provider 通过 `env_key=OPENAI_API_KEY` 在子进程内读取，不创建明文 `auth.json`；连接测试只在 Rust 侧使用密钥发起请求，返回值不含密钥或响应正文。前端只能写入和查询存在性，没有回读通道。
-- 已知问题：更换或删除密钥后需重启 app-server 才会更新子进程环境；多条渠道密钥集中在单条凭据记录中，受系统凭据容量限制，写入已串行化但超大映射仍可能失败；真实 Credential Manager 写入与迁移仍需人工验收。
-- 下一步：在渠道数量增长后评估密钥分片存储；为迁移失败提供可重试的设置内入口。
-- 验证证据：2026-09-10；Rust 单测覆盖渠道 id 校验与配置转换；源码核查确认没有实际 Keyring 映射增删或密钥迁移失败恢复测试，`pnpm rust:check` 的 31 项单测和 Clippy 通过；Vitest 覆盖 `channel_secret_presence` 只被调用一次、密钥经 `save_channel_secret` 写入且渲染从不回读、连接测试失败不回传密钥。未在真实 Windows 凭据管理器上做人工增删验收。
-- 相关决策：[ADR-002：隔离运行数据与凭据](../decisions/ADR-002-isolated-runtime-data.md)、[ADR-004：以厂商分组的渠道承载模型路由](../decisions/ADR-004-model-provider-channels.md)。
+- 模块职责：在 Windows Credential Manager 保存渠道 API Key，仅在后端读取并注入授权子进程。
+- 当前状态：服务 com.codexshell.desktop、账号 provider-channel-credentials 保存按渠道 ID 索引的映射。前端只能提交密钥和查询存在性，无回读接口；MCP Token 继续使用独立的 CS 环境变量注入。
+- 最近变更：删除独立 save_channel_secret 前端命令，密钥增删与渠道配置统一经 save_model_settings 提交。配置先校验并检查预期版本，再在凭据锁内更新映射并提交配置；配置失败恢复旧映射，恢复失败明确报错，不吞掉删除失败。settings.json 使用同目录临时文件同步后原子替换。
+- 迁移边界：v1 使用稳定的 vendor-legacy ID，保留 settings.v1.bak.json；新映射及配置成功写入后才删除旧凭据。备份或落盘失败上报且保留旧凭据，重试不会生成另一个随机身份。首次启动也先持久化默认渠道身份。
+- 当前接口：save_model_settings(settings, expected, secretChange)、channel_secret_presence、read_channel_secret（后端）、migrate_legacy_channel_secret、save_mcp_secret、read_environment。
+- 安全边界：Key 不进入源码、普通配置、日志、命令行参数或前端回读。连接探针返回状态与数量，不返回密钥或响应正文。
+- 已知问题：文件系统与系统凭据不支持跨存储崩溃原子提交；进程被强制结束、断电或补偿写入失败时可能需要重新保存渠道密钥。v1 最后删除旧凭据失败时新配置已有效，旧条目可能残留，不能假定自动清理成功。单条映射受 Windows 凭据容量限制。未在真实 Credential Manager 执行本次增删与故障注入验收。
+- 下一步：人工验证真实系统凭据增删、迁移及容量边界；不为测试改动现有用户密钥。
+- 验证证据：2026-09-10；Rust 测试使用内存写入替身覆盖配置失败补偿、补偿失败报错、密钥失败不提交配置；临时目录测试覆盖初始身份持久化、原子替换、迁移失败和稳定 ID。上述不等于真实 Keyring 测试，完整基线见 [测试与发布](testing-release-status.md)。
+- 相关决策：[ADR-002](../decisions/ADR-002-isolated-runtime-data.md)、[ADR-004](../decisions/ADR-004-model-provider-channels.md)。
 - 最后更新：2026-09-10

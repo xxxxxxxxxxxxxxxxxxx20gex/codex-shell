@@ -3,7 +3,7 @@ import { Activity, Maximize2, Minimize2, Minus, Palette, Save, ServerCog, Settin
 import type { WindowsSandboxReadiness } from "../../generated/app-server/v2/WindowsSandboxReadiness";
 import type { WindowsSandboxSetupMode } from "../../generated/app-server/v2/WindowsSandboxSetupMode";
 import { ProviderChannelsPanel } from "../models/ProviderChannelsPanel";
-import type { PersonalizationSettings, ProviderSettings, ThemePreference } from "../models/types";
+import type { ChannelSecretChange, PersonalizationSettings, ProviderSettings, ThemePreference } from "../models/types";
 import type { RuntimeLogStore } from "../runtime/runtimeLogStore";
 import type { RuntimeNoticeStore } from "../runtime/runtimeNoticeStore";
 import { DiagnosticsPreferences } from "./DiagnosticsPreferences";
@@ -15,7 +15,7 @@ interface Props {
   onMinimizedChange: (minimized: boolean) => void;
   settings: PersonalizationSettings;
   providerSettings: ProviderSettings;
-  onSaveProviderSettings: (settings: ProviderSettings, requiresRestart?: boolean) => Promise<void>;
+  onSaveProviderSettings: (settings: ProviderSettings, requiresRestart?: boolean, secretChange?: ChannelSecretChange) => Promise<void>;
   providerSwitchBlocked?: boolean;
   initialSection?: PreferencesSection;
   codexHome: string;

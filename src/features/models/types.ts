@@ -39,6 +39,11 @@ export interface ProviderSettings {
   channels: Channel[];
 }
 
+export interface ChannelSecretChange {
+  channelId: string;
+  secret: string | null;
+}
+
 export type ThemePreference = "dark" | "light" | "system";
 
 export interface PersonalizationSettings {

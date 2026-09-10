@@ -86,6 +86,32 @@ function renderPanel(overrides: Partial<ComponentProps<typeof ModelSettingsPanel
 }
 
 describe("ModelSettingsPanel", () => {
+  it("preserves tiers while another channel's catalog is unknown", async () => {
+    const { onSave } = renderPanel({ providerSettings: { ...providerSettings, channels: [openAiChannel, { ...deepSeekChannel, conversation: { ...deepSeekChannel.conversation, serviceTier: "priority" } }] } });
+    await screen.findByText("Provider 能力");
+    fireEvent.click(screen.getByRole("button", { name: /DeepSeek 官方/ }));
+    expect(screen.queryByText("Provider 能力")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "保存配置" }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ conversation: expect.objectContaining({ serviceTier: "priority" }) })));
+  });
+
+  it("keeps the draft and reports restart failures", async () => {
+    const onClose = vi.fn();
+    renderPanel({ onClose, onSave: vi.fn(async () => { throw new Error("重启失败"); }) });
+    fireEvent.change(screen.getByDisplayValue("custom-model"), { target: { value: "keep-me" } });
+    fireEvent.click(screen.getByRole("button", { name: "保存配置" }));
+    expect(await screen.findByText("重启失败")).toBeTruthy();
+    expect(screen.getByDisplayValue("keep-me")).toBeTruthy();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("blocks verbosity restarts if a task starts while the editor is open", async () => {
+    const { onSave } = renderPanel({ switchDisabled: true });
+    fireEvent.click(screen.getByRole("button", { name: "适中" }));
+    fireEvent.click(screen.getByRole("button", { name: "保存配置" }));
+    expect(await screen.findByText(/完成后再保存需要重启/)).toBeTruthy();
+    expect(onSave).not.toHaveBeenCalled();
+  });
   it("selects a channel instead of asking for a route and key again", () => {
     const onManageChannels = vi.fn();
     renderPanel({ onManageChannels });

@@ -94,7 +94,7 @@ describe("ProviderChannelsPanel", () => {
     fireEvent.change(keyInput, { target: { value: "  sk-test-only  " } });
     fireEvent.click(screen.getByRole("button", { name: "保存渠道" }));
 
-    await waitFor(() => expect(invoke).toHaveBeenCalledWith("save_channel_secret", {
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith(expect.anything(), true, {
       channelId: openAiChannel.id,
       secret: "  sk-test-only  ",
     }));
@@ -126,7 +126,7 @@ describe("ProviderChannelsPanel", () => {
     await waitFor(() => expect(onSave).toHaveBeenCalled());
     expect(savedSettings(onSave).channels.map((channel) => channel.id)).toEqual([openAiChannel.id]);
     expect(savedSettings(onSave).activeChannelId).toBe(openAiChannel.id);
-    expect(invoke).toHaveBeenCalledWith("save_channel_secret", { channelId: deepSeekChannel.id, secret: null });
+    expect(onSave).toHaveBeenCalledWith(expect.anything(), false, { channelId: deepSeekChannel.id, secret: null });
   });
 
   it("reports what the connection test saw", async () => {
@@ -185,6 +185,7 @@ describe("ProviderChannelsPanel", () => {
 
     fireEvent.click(screen.getAllByRole("button", { name: /新增渠道/ })[0]);
     fireEvent.change(screen.getByPlaceholderText("例如 官方直连、备用中转"), { target: { value: "第二条路由" } });
+    fireEvent.change(screen.getByPlaceholderText("保留为空则继续使用已保存的密钥"), { target: { value: "test-only-key" } });
     fireEvent.click(screen.getByRole("button", { name: "保存渠道" }));
 
     await waitFor(() => expect(onSave).toHaveBeenCalled());

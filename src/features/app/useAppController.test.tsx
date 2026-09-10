@@ -24,10 +24,26 @@ const session = vi.hoisted(() => ({
   send: vi.fn(async () => true),
   updateThreadSettings: vi.fn(async () => true),
   getThreadGoal: vi.fn(async () => null),
+  acquireProviderSwitch: vi.fn(() => () => {}),
+  restart: vi.fn(async () => true),
+  listModels: vi.fn(async () => []),
 }));
 vi.mock("../runtime/useAgentSession", () => ({ useAgentSession: () => session, sendOrQueue: vi.fn() }));
 vi.mock("../composer/useComposerDropPaths", () => ({ useComposerDropPaths: vi.fn() }));
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
+
+it("activates the advanced editor's chosen channel and only closes after restart succeeds", async () => {
+  const { result } = renderHook(useAppController);
+  const target = { ...channelSettings.channels[0], id: "openai-2", name: "Alternate" };
+  act(() => { result.current.setSettings({ ...channelSettings, channels: [...channelSettings.channels, target] }); result.current.setSettingsOpen(true); });
+  session.restart.mockResolvedValueOnce(false);
+  await act(async () => { await expect(result.current.saveAdvancedModelSettings({ conversation: target.conversation, channelId: target.id, requiresRestart: true })).rejects.toThrow("配置已保存"); });
+  expect(result.current.settings.activeChannelId).toBe(target.id);
+  expect(result.current.settingsOpen).toBe(true);
+  await act(() => result.current.saveAdvancedModelSettings({ conversation: target.conversation, channelId: target.id, requiresRestart: false }));
+  expect(result.current.settingsOpen).toBe(false);
+  expect(session.restart).toHaveBeenCalledTimes(2);
+});
 
 it("restores minimized settings from the settings entry and after closing", () => {
   const { result } = renderHook(useAppController);
@@ -80,12 +96,12 @@ it("keeps the edit draft when history revert fails", async () => {
   expect(result.current.editingMessage).not.toBeNull();
 });
 
-it.each(["full", "workspace", "read"] as const)("preserves %s permission when switching model and effort", (mode) => {
+it.each(["full", "workspace", "read"] as const)("preserves %s permission when switching model and effort", async (mode) => {
   const { result } = renderHook(useAppController);
   act(() => result.current.setSettings(channelSettings));
   act(() => result.current.changePermissionMode(mode));
   session.updateThreadSettings.mockClear();
-  act(() => result.current.changeModelSettings({ ...result.current.conversation, modelId: "other-model", reasoningEffort: "high" }));
+  await act(() => result.current.changeModelSettings({ ...result.current.conversation, modelId: "other-model", reasoningEffort: "high" }));
   expect(result.current.permissionMode).toBe(mode);
   expect(session.updateThreadSettings).toHaveBeenCalledWith(expect.objectContaining({
     model: "other-model", effort: "high",

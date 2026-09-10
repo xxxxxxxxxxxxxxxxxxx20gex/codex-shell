@@ -32,14 +32,13 @@ import { ComposerAddMenu } from "./features/composer/ComposerAddMenu";
 import { ComposerIntentControl } from "./features/composer/ComposerIntentControl";
 import { ComposerGoalStatus } from "./features/composer/ComposerGoalStatus";
 import { SlashCommandMenu } from "./features/commands/SlashCommandMenu";
-import { activeChannel, replaceChannel } from "./features/models/channels";
+import { activeChannel } from "./features/models/channels";
 import { ModelQuickPicker } from "./features/models/ModelQuickPicker";
 import { modelIdDisplayName } from "./features/models/modelPresentation";
 import { ModelSettingsPanel } from "./features/models/ModelSettingsPanel";
 import { PreferencesPanel } from "./features/preferences/PreferencesPanel";
 import { RuntimeNoticeBanner } from "./features/runtime/RuntimeNoticeBanner";
 import { queuedTurnLabel, useAppController } from "./features/app/useAppController";
-import { errorMessage } from "./shared/errors";
 import { ServerInteractionDialog } from "./features/interactions/ServerInteractionDialog";
 import { ConversationTimeline } from "./features/threads/ConversationTimeline";
 import { ContextHeatBar } from "./features/threads/ContextHeatBar";
@@ -85,7 +84,7 @@ function App() {
     setModelPickerOpen,
     settings,
     conversation,
-    saveModelSettings,
+    saveAdvancedModelSettings,
     saveProviderSettings,
     personalization,
     savePersonalization,
@@ -431,22 +430,14 @@ function App() {
         </aside>
       </section>
 
-      {settingsOpen && <ModelSettingsPanel settings={conversation} providerSettings={settings} loadModels={session.listModels} loadProviderCapabilities={session.readModelProviderCapabilities} onManageChannels={() => { setSettingsOpen(false); openPreferences("providers"); }} switchDisabled={session.running} onClose={() => setSettingsOpen(false)} onSave={({ conversation: next, channelId, requiresRestart }) => {
-        const target = settings.channels.find((item) => item.id === channelId);
-        if (target && channelId !== settings.activeChannelId) {
-          void saveProviderSettings(replaceChannel(settings, { ...target, conversation: next }), true).catch((error) => setUiError(errorMessage(error)));
-        } else {
-          saveModelSettings(next, requiresRestart);
-        }
-        setSettingsOpen(false);
-      }} />}
+      {settingsOpen && <ModelSettingsPanel settings={conversation} providerSettings={settings} loadModels={session.listModels} loadProviderCapabilities={session.readModelProviderCapabilities} onManageChannels={() => { setSettingsOpen(false); openPreferences("providers"); }} switchDisabled={session.running || session.runningThreadCount > 0 || session.sideChat.submitting} onClose={() => setSettingsOpen(false)} onSave={saveAdvancedModelSettings} />}
       {preferencesOpen && <PreferencesPanel
         minimized={preferencesMinimized}
         onMinimizedChange={setPreferencesMinimized}
         settings={personalization}
         providerSettings={settings}
         onSaveProviderSettings={saveProviderSettings}
-        providerSwitchBlocked={session.running}
+        providerSwitchBlocked={session.running || session.runningThreadCount > 0 || session.sideChat.submitting}
         initialSection={preferencesSection}
         codexHome={session.codexHome}
         codexHomeDisabled={session.runningThreadCount > 0 || session.submitting}
@@ -454,7 +445,7 @@ function App() {
         noticeStore={session.runtimeNoticeStore}
         logStore={session.runtimeLogStore}
         onSetupWindowsSandbox={session.setupWindowsSandbox}
-        onRestart={session.restart}
+        onRestart={async () => { if (!await session.restart()) throw new Error("执行核心重启失败"); }}
         onClose={() => setPreferencesOpen(false)}
         onSave={async (next) => { await savePersonalization(next); setPreferencesOpen(false); }}
       />}

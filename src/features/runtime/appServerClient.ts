@@ -126,6 +126,7 @@ type ReverseRequestHandler = (params: unknown, requestId: JsonRpcId) => Promise<
 type ProtocolErrorHandler = (error: Error) => void;
 
 const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
+const EXECUTION_METHODS = new Set(["turn/start", "turn/steer", "review/start", "thread/compact/start", "thread/queue/add", "thread/queue/start", "thread/goal/set", "thread/start", "thread/fork"]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -144,6 +145,15 @@ function parseMessage(raw: string): JsonRpcMessage {
 }
 
 export class AppServerClient {
+  private executionPaused = false;
+
+  pauseExecution() {
+    if (this.executionPaused || [...this.pending.values()].some((request) => EXECUTION_METHODS.has(request.method))) {
+      throw new Error("执行请求正在提交，请稍后切换渠道");
+    }
+    this.executionPaused = true;
+    return () => { this.executionPaused = false; };
+  }
   private nextId = 1;
   readonly extensions = new ExtensionClient(this.request.bind(this));
   private pending = new Map<JsonRpcId, PendingRequest>();
@@ -193,6 +203,7 @@ export class AppServerClient {
   }
 
   request<T>(method: string, params?: unknown) {
+    if (this.executionPaused && EXECUTION_METHODS.has(method)) return Promise.reject<T>(new Error("渠道正在切换，请稍后发送"));
     if (this.status !== "ready") {
       return Promise.reject(new Error("app-server 尚未完成初始化"));
     }

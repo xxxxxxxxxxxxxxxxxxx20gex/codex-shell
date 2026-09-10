@@ -3,11 +3,11 @@ import { invoke } from "@tauri-apps/api/core";
 import { AlertTriangle, Check, Pencil, Plus, Trash2 } from "lucide-react";
 import { errorMessage } from "../../shared/errors";
 import { VENDORS, activeChannel, createChannel, defaultConversation, vendorDescriptor } from "./channels";
-import type { Channel, ProviderSettings, VendorId } from "./types";
+import type { Channel, ChannelSecretChange, ProviderSettings, VendorId } from "./types";
 
 interface Props {
   settings: ProviderSettings;
-  onSave: (settings: ProviderSettings, requiresRestart?: boolean) => Promise<void>;
+  onSave: (settings: ProviderSettings, requiresRestart?: boolean, secretChange?: ChannelSecretChange) => Promise<void>;
   /** 有回合正在执行时禁止切换渠道：切换必然重启执行核心。 */
   switchDisabled?: boolean;
 }
@@ -73,13 +73,14 @@ export function ProviderChannelsPanel({ settings, onSave, switchDisabled = false
     let active = true;
     void invoke<string[]>("channel_secret_presence")
       .then((ids) => { if (active) setKeyedChannels(ids); })
-      .catch(() => undefined);
+      .catch((error) => { if (active) setStatus(errorMessage(error)); });
     return () => { active = false; };
   }, []);
 
   const current = activeChannel(settings);
 
   function openDraft(next: ChannelDraft) {
+    if (busy) return;
     setApiKey("");
     setProbe(null);
     setStatus("");
@@ -113,11 +114,14 @@ export function ProviderChannelsPanel({ settings, onSave, switchDisabled = false
     }
   }
 
-  async function commit(next: ProviderSettings, requiresRestart: boolean) {
+  async function commit(next: ProviderSettings, requiresRestart: boolean, secretChange?: ChannelSecretChange) {
     setBusy(true);
     setStatus("");
     try {
-      await onSave(next, requiresRestart);
+      await onSave(next, requiresRestart, secretChange);
+      if (secretChange) setKeyedChannels((ids) => secretChange.secret === null
+        ? ids.filter((id) => id !== secretChange.channelId)
+        : [...new Set([...ids, secretChange.channelId])]);
       setDraft(null);
       setApiKey("");
       setStatus("已保存");
@@ -129,7 +133,7 @@ export function ProviderChannelsPanel({ settings, onSave, switchDisabled = false
   }
 
   async function saveDraft() {
-    if (!draft) return;
+    if (!draft || busy) return;
     if (!draft.name.trim() || !draft.baseUrl.trim()) {
       setStatus("渠道名称与 Base URL 不能为空");
       return;
@@ -141,31 +145,18 @@ export function ProviderChannelsPanel({ settings, onSave, switchDisabled = false
       : [...settings.channels, channel];
     const activeChannelId = settings.activeChannelId ?? channel.id;
     const baseUrlChanged = Boolean(existing) && existing?.baseUrl !== channel.baseUrl;
-    const requiresRestart = Boolean(apiKey)
-      || (activeChannelId === channel.id && (!existing || baseUrlChanged));
+    const requiresRestart = activeChannelId === channel.id && (Boolean(apiKey) || !existing || baseUrlChanged);
 
     if (requiresRestart && switchDisabled) {
       setStatus("有回合正在执行，完成或中断后再修改会重启执行核心的渠道");
       return;
     }
 
-    if (apiKey) {
-      if (!isTauri()) {
-        setStatus("密钥只能在桌面应用中保存");
-        return;
-      }
-      setBusy(true);
-      try {
-        await invoke("save_channel_secret", { channelId: channel.id, secret: apiKey });
-        setKeyedChannels((ids) => (ids.includes(channel.id) ? ids : [...ids, channel.id]));
-      } catch (error) {
-        setBusy(false);
-        setStatus(errorMessage(error));
-        return;
-      }
-      setBusy(false);
+    if (apiKey && !isTauri()) {
+      setStatus("密钥只能在桌面应用中保存");
+      return;
     }
-    await commit({ ...settings, channels, activeChannelId }, requiresRestart);
+    await commit({ ...settings, channels, activeChannelId }, requiresRestart, apiKey ? { channelId: channel.id, secret: apiKey } : undefined);
   }
 
   async function remove(channel: Channel) {
@@ -179,11 +170,7 @@ export function ProviderChannelsPanel({ settings, onSave, switchDisabled = false
       ? channels[0]?.id ?? null
       : settings.activeChannelId;
     setPendingDelete(null);
-    setKeyedChannels((ids) => ids.filter((id) => id !== channel.id));
-    if (isTauri()) {
-      await invoke("save_channel_secret", { channelId: channel.id, secret: null }).catch(() => undefined);
-    }
-    await commit({ ...settings, channels, activeChannelId }, settings.activeChannelId === channel.id);
+    await commit({ ...settings, channels, activeChannelId }, settings.activeChannelId === channel.id, { channelId: channel.id, secret: null });
   }
 
   return (
@@ -198,6 +185,7 @@ export function ProviderChannelsPanel({ settings, onSave, switchDisabled = false
               <span><strong>{vendor.label}</strong></span>
               <button
                 type="button"
+                disabled={busy}
                 onClick={() => openDraft({
                   id: createChannel(vendor.id, settings.channels).id,
                   vendor: vendor.id,
@@ -233,11 +221,12 @@ export function ProviderChannelsPanel({ settings, onSave, switchDisabled = false
                     type="button"
                     aria-label={`编辑 ${channel.name}`}
                     title="编辑渠道"
+                    disabled={busy}
                     onClick={() => openDraft({ id: channel.id, vendor: channel.vendor, name: channel.name, baseUrl: channel.baseUrl, modelId: channel.conversation.modelId, isNew: false })}
                   >
                     <Pencil aria-hidden="true" />
                   </button>
-                  <button type="button" aria-label={`删除 ${channel.name}`} title="删除渠道" className="danger" onClick={() => setPendingDelete(channel.id)}>
+                  <button type="button" disabled={busy} aria-label={`删除 ${channel.name}`} title="删除渠道" className="danger" onClick={() => setPendingDelete(channel.id)}>
                     <Trash2 aria-hidden="true" />
                   </button>
                 </div>
@@ -245,7 +234,7 @@ export function ProviderChannelsPanel({ settings, onSave, switchDisabled = false
                   <div className="channel-confirm">
                     <span>删除后该渠道的密钥也会移除，历史对话不受影响。</span>
                     <button type="button" onClick={() => setPendingDelete(null)}>取消</button>
-                    <button type="button" className="danger" onClick={() => void remove(channel)}>确认删除</button>
+                    <button type="button" disabled={busy} className="danger" onClick={() => void remove(channel)}>确认删除</button>
                   </div>
                 )}
               </article>
@@ -254,7 +243,7 @@ export function ProviderChannelsPanel({ settings, onSave, switchDisabled = false
         );
       })}
       {draft && (
-        <section className="channel-editor">
+        <section className="channel-editor" inert={busy}>
           <label className="preferences-field"><span>名称</span><input value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder="例如 官方直连、备用中转" /></label>
           <label className="preferences-field"><span>Base URL</span><input value={draft.baseUrl} onChange={(event) => setDraft({ ...draft, baseUrl: event.target.value })} /></label>
           <label className="preferences-field"><span>API Key</span><input type="password" value={apiKey} onChange={(event) => setApiKey(event.target.value)} placeholder="保留为空则继续使用已保存的密钥" autoComplete="off" /></label>
@@ -262,7 +251,7 @@ export function ProviderChannelsPanel({ settings, onSave, switchDisabled = false
           <small className="preferences-hint">密钥写入 Windows 凭据管理器；前端只能写入，不能读回。</small>
           <div className="channel-editor-actions">
             <button type="button" className="secondary-button" disabled={probing || busy} onClick={() => void testConnection()}>{probing ? "测试中…" : "测试连接"}</button>
-            <button type="button" className="secondary-button" onClick={() => { setDraft(null); setApiKey(""); setProbe(null); }}>取消</button>
+            <button type="button" className="secondary-button" disabled={busy || probing} onClick={() => { setDraft(null); setApiKey(""); setProbe(null); }}>取消</button>
             <button type="button" className="primary-button" disabled={busy} onClick={() => void saveDraft()}>{busy ? "保存中…" : "保存渠道"}</button>
           </div>
           {probe && (

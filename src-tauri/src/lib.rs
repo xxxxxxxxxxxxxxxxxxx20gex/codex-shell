@@ -29,7 +29,6 @@ pub fn run() {
             config::load_personalization_settings,
             config::save_personalization_settings,
             credentials::channel_secret_presence,
-            credentials::save_channel_secret,
             mcp_credentials::save_mcp_secret,
             skill_files::install_local_skill,
             skill_files::uninstall_local_skill,

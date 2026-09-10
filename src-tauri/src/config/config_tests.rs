@@ -4,6 +4,39 @@ use super::{
 };
 use crate::config::Channel;
 
+#[test]
+fn persists_initial_identity_and_atomically_replaces_settings() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("settings.json");
+    let first = super::read_settings_file(&path).unwrap();
+    assert_eq!(super::read_settings_file(&path).unwrap(), first);
+    let mut changed = first.clone();
+    changed.channels[0].name = "changed".to_string();
+    super::write_settings_file(&path, &changed).unwrap();
+    assert_eq!(super::read_settings_file(&path).unwrap(), changed);
+}
+
+#[test]
+fn rejects_unsupported_catalog_on_read_and_reports_failed_migration_backup() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("settings.json");
+    let mut settings = default_settings();
+    settings.channels[0].catalog = ChannelCatalog::File { path: "models.json".to_string() };
+    super::write_settings_file(&path, &settings).unwrap();
+    assert!(super::read_settings_file(&path).unwrap_err().contains("vendorDefault"));
+    let invalid_path = directory.path().join("not-a-directory").join("settings.json");
+    std::fs::write(directory.path().join("not-a-directory"), "block").unwrap();
+    assert!(super::persist_migration(&invalid_path, "legacy", &settings).is_err());
+}
+
+#[test]
+fn migration_retries_use_the_same_credential_identity() {
+    let legacy = r#"{"baseUrl":"https://api.openai.com/v1","modelId":"custom"}"#;
+    let (_, first) = migrate_legacy_settings(serde_json::from_str(legacy).unwrap());
+    let (_, second) = migrate_legacy_settings(serde_json::from_str(legacy).unwrap());
+    assert_eq!(first, second);
+}
+
 fn channel(id: &str, vendor: &str, base_url: &str) -> Channel {
     Channel {
         id: id.to_string(),

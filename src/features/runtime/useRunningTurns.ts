@@ -115,6 +115,7 @@ export function useRunningTurns() {
   );
 
   return {
+    hasRunningTurns: () => runningTurnsRef.current.size > 0,
     runningTurns,
     markThreadRunning,
     markThreadStopped,

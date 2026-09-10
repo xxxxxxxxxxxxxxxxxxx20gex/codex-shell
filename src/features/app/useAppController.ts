@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { FuzzyFileSearchResult } from "../../generated/app-server/FuzzyFileSearchResult";
 import {
@@ -26,7 +26,8 @@ import {
 } from "../composer/composerIntent";
 import { useComposerDropPaths } from "../composer/useComposerDropPaths";
 import { useResizablePanels } from "../layout/useResizablePanels";
-import { activeChannel, activeConversation, reconcileConversation, replaceChannel } from "../models/channels";
+import { activeChannel, activeConversation, replaceChannel } from "../models/channels";
+import { useProviderSettingsSave } from "../models/useProviderSettingsSave";
 import type { ModelSettings, PersonalizationSettings, ProviderSettings } from "../models/types";
 import type { PreferencesSection } from "../preferences/PreferencesPanel";
 import {
@@ -97,8 +98,6 @@ export function useAppController() {
   const [slashMenuDismissed, setSlashMenuDismissed] = useState(false);
   const [slashSelectedIndex, setSlashSelectedIndex] = useState(0);
   const mentionRequestRef = useRef(0);
-  const pendingModelRestartRef = useRef(false);
-  const settingsRef = useRef(settings);
   const editSubmittingRef = useRef(false);
   const composerRef = useRef<HTMLDivElement>(null);
   const panels = useResizablePanels();
@@ -114,8 +113,6 @@ export function useAppController() {
     }).catch((error) => { if (active) setUiError(errorMessage(error)); });
     return () => { active = false; };
   }, [session.skillsRevision, listAvailableSkills]);
-  const restartSession = session.restart;
-  const listModels = session.listModels;
   const searchFiles = session.searchFiles;
   const currentProjectPath = session.thread?.cwd ? String(session.thread.cwd) : newThreadCwd;
   const mentionQuery = activeFileMentionQuery(draft);
@@ -127,49 +124,39 @@ export function useAppController() {
   const authoritativeThreadSettings = session.threadSettings;
   const activeThreadId = session.thread?.id ?? null;
   const readAuthoritativeGoal = session.getThreadGoal;
-  const persistProviderSettings = useCallback((next: ProviderSettings) => {
-    if ("__TAURI_INTERNALS__" in window) {
-      void invoke("save_model_settings", { settings: next }).catch((error) => setUiError(errorMessage(error)));
-    }
-  }, []);
+  const providerSave = useProviderSettingsSave(settings, setSettings, session, settingsReady, async (next) => {
+    if (!session.thread) return;
+    const model = activeConversation(next);
+    await session.updateThreadSettings({
+      model: model.modelId || null, effort: model.reasoningEffort, summary: model.reasoningSummary,
+      serviceTier: model.serviceTier === "default" ? null : model.serviceTier,
+      approvalPolicy: getPermissionMode(permissionMode).approvalPolicy,
+      approvalsReviewer: getApprovalsReviewer(permissionMode, approvalReviewer),
+      sandboxPolicy: getTurnSandboxPolicy(permissionMode),
+    });
+  });
+  async function changeModelSettings(next: ModelSettings) {
+    try { await saveModelSettings(next); }
+    catch (error) { setUiError(errorMessage(error)); }
+  }
 
-  function changeModelSettings(next: ModelSettings) {
+  async function saveModelSettings(next: ModelSettings, requiresRestart = false) {
     const channel = activeChannel(settings);
     if (!channel) return;
     const nextSettings = replaceChannel(settings, { ...channel, conversation: next });
-    setSettings(nextSettings);
-    persistProviderSettings(nextSettings);
-    if (session.thread) {
-      void session.updateThreadSettings({
-        model: next.modelId || null,
-        effort: next.reasoningEffort,
-        summary: next.reasoningSummary,
-        serviceTier: next.serviceTier === "default" ? null : next.serviceTier,
-        approvalPolicy: getPermissionMode(permissionMode).approvalPolicy,
-        approvalsReviewer: getApprovalsReviewer(permissionMode, approvalReviewer),
-        sandboxPolicy: getTurnSandboxPolicy(permissionMode),
-      }).catch((error) => setUiError(`Session 设置未能同步到 app-server：${errorMessage(error)}`));
-    }
+    await providerSave.save(nextSettings, requiresRestart);
+    setModelDisplayName(null);
   }
 
-  function saveModelSettings(next: ModelSettings, requiresRestart = false) {
-    const channel = activeChannel(settings);
-    if (!channel) return;
-    const nextSettings = replaceChannel(settings, { ...channel, conversation: next });
-    setSettings(nextSettings);
+  const saveProviderSettings = providerSave.save;
+  async function saveAdvancedModelSettings({ conversation: next, channelId, requiresRestart }: { conversation: ModelSettings; channelId: string; requiresRestart: boolean }) {
+    const target = settings.channels.find((channel) => channel.id === channelId);
+    if (!target) throw new Error("所选渠道不存在，请重新打开设置");
+    await saveProviderSettings({ ...replaceChannel(settings, { ...target, conversation: next }), activeChannelId: channelId }, requiresRestart);
     setModelDisplayName(null);
-    persistProviderSettings(nextSettings);
-    if (requiresRestart) pendingModelRestartRef.current = true;
+    setSettingsOpen(false);
   }
-
-  async function saveProviderSettings(next: ProviderSettings, requiresRestart = false) {
-    if ("__TAURI_INTERNALS__" in window) {
-      await invoke("save_model_settings", { settings: next });
-    }
-    setSettings(next);
-    setModelDisplayName(null);
-    if (requiresRestart) pendingModelRestartRef.current = true;
-  }
+  const persistedSettings = providerSave.persisted;
 
   async function savePersonalization(next: PersonalizationSettings) {
     if ("__TAURI_INTERNALS__" in window) {
@@ -185,60 +172,32 @@ export function useAppController() {
     }
     let active = true;
     const loadSettings = invoke<ProviderSettings>("load_model_settings")
-      .then((loaded) => { if (active) setSettings(loaded); })
-      .catch(() => undefined);
+      .then((loaded) => {
+        if (!active) return;
+        const normalized = { ...loaded, channels: loaded.channels.map((channel) => ({ ...channel, conversation: { ...channel.conversation, modelId: channel.conversation.modelId ?? "" } })) };
+        persistedSettings.current = normalized;
+        setSettings(normalized);
+      })
+      .catch((error) => { if (active) setUiError(`模型配置读取失败：${errorMessage(error)}`); });
     const loadPersonalization = invoke<PersonalizationSettings>("load_personalization_settings")
       .then((loaded) => { if (active) setPersonalization(loaded); })
       .catch(() => undefined);
     const loadProjectDirectory = invoke<DefaultProjectDirectory>("get_default_project_directory")
       .then((directory) => { if (active) setDefaultProjectDirectory(directory); })
       .catch((error) => { if (active) setUiError(errorMessage(error)); });
-    void Promise.allSettled([loadSettings, loadPersonalization, loadProjectDirectory])
-      .then(() => { if (active) setSettingsReady(true); });
+    void Promise.allSettled([loadSettings, loadPersonalization, loadProjectDirectory]).then(() => {
+      if (active && persistedSettings.current) setSettingsReady(true);
+    });
     return () => { active = false; };
-  }, []);
+  }, [persistedSettings]);
 
   useEffect(() => {
-    settingsRef.current = settings;
-  }, [settings]);
-
-  /**
-   * 把当前激活渠道的参数收敛到它自己的模型目录。
-   *
-   * 渠道切换会换掉整个模型目录，旧渠道的模型与推理档位可能不存在。校准必须发生在
-   * 执行核心按新渠道重启之后：重启前进程仍在用上一个渠道的目录，此时校准会把新渠道
-   * 刚调好的参数改写成旧目录里的模型。校准只写当前激活渠道，其他渠道不受影响。
-   */
-  const calibrateActiveChannel = useCallback(async () => {
-    const channelId = settingsRef.current.activeChannelId;
-    if (!channelId) return;
-    try {
-      const models = await listModels();
-      const channel = settingsRef.current.channels.find((item) => item.id === channelId);
-      if (!channel) return;
-      const reconciled = reconcileConversation(channel.conversation, models);
-      if (!reconciled) return;
-      const next = replaceChannel(settingsRef.current, { ...channel, conversation: reconciled });
-      setSettings(next);
-      persistProviderSettings(next);
-    } catch {
-      // 校准失败不阻断使用：保留用户当前参数，下次切换渠道时再校准。
-    }
-  }, [listModels, persistProviderSettings]);
-
-  useEffect(() => {
-    if (!settingsReady || !pendingModelRestartRef.current) return;
-    pendingModelRestartRef.current = false;
-    void restartSession().then(() => calibrateActiveChannel());
-  }, [calibrateActiveChannel, restartSession, settings, settingsReady]);
-
-  useEffect(() => {
-    if (!authoritativeThreadSettings) return;
+    if (!authoritativeThreadSettings || providerSave.saving.current) return;
     setSettings((current) => providerSettingsFromThread(current, authoritativeThreadSettings));
     setPermissionMode(permissionModeFromThread(authoritativeThreadSettings));
     setApprovalReviewer(approvalReviewerFromThread(authoritativeThreadSettings));
     setModelDisplayName(null);
-  }, [authoritativeThreadSettings]);
+  }, [authoritativeThreadSettings, providerSave.saving]);
 
   useEffect(() => {
     setUiError("");
@@ -628,8 +587,7 @@ export function useAppController() {
     const channel = activeChannel(settings);
     if (channel) {
       const restored = replaceChannel(settings, { ...channel, conversation: turn.settings });
-      setSettings(restored);
-      persistProviderSettings(restored);
+      void saveProviderSettings(restored).catch((error) => setUiError(errorMessage(error)));
     }
     setPermissionMode(turn.permissionMode); setApprovalReviewer(turn.approvalReviewer);
     setComposerIntent(turn.collaborationMode === "plan" ? "plan" : "default"); session.removeQueued(turn.id);
@@ -672,7 +630,7 @@ export function useAppController() {
     settings,
     conversation,
     setSettings,
-    saveModelSettings,
+    saveAdvancedModelSettings,
     saveProviderSettings,
     personalization,
     savePersonalization,

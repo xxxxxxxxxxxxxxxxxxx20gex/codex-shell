@@ -338,7 +338,8 @@ export function useThreadController(props: Props) {
   });
 
   const openThread = useCallback(async (threadId: string) => {
-    if (threadOperationRef.current || isActionInProgress() || threadId === threadIdRef.current) return;
+    if (threadOperationRef.current || isActionInProgress()) return false;
+    if (threadId === threadIdRef.current) return true;
     threadOperationRef.current = true;
     setOpeningThreadId(threadId);
     setError("");
@@ -365,8 +366,10 @@ export function useThreadController(props: Props) {
       setSubmitting(false);
       dispatch({ type: "loadThread", thread: openedThread });
       void refreshNativeQueue(openedThread.id).catch(() => undefined);
+      return true;
     } catch (readError) {
       setError(errorMessage(readError));
+      return false;
     } finally {
       threadOperationRef.current = false;
       setOpeningThreadId(null);

@@ -97,7 +97,7 @@ function conversationEquals(left: ModelSettings, right: ModelSettings): boolean 
  * 把渠道参数收敛到当前模型目录允许的范围。
  *
  * 切换渠道会换掉整个模型目录，因此模型 ID 和推理档位可能不再存在。收敛规则：
- * 目录里找不到的模型回退到目录默认模型，目录不支持的推理档位回退为「不覆盖」，
+ * 显式自定义模型保留原参数；空模型选择目录默认项，已知模型不支持的推理档位回退为「不覆盖」，
  * 服务层级回退为 `default`。返回 `null` 表示无需写回，避免无意义的状态更新。
  */
 export function reconcileConversation(
@@ -105,6 +105,7 @@ export function reconcileConversation(
   models: Model[],
 ): ModelSettings | null {
   if (models.length === 0) return null;
+  if (conversation.modelId && !models.some((model) => model.model === conversation.modelId || model.id === conversation.modelId)) return null;
   const selected = models.find(
     (model) => model.model === conversation.modelId || model.id === conversation.modelId,
   ) ?? models.find((model) => model.isDefault) ?? models[0];

@@ -103,9 +103,10 @@ describe("reconcileConversation", () => {
     model({ id: "deepseek-v4-pro", model: "deepseek-v4-pro" }),
   ];
 
-  it("falls back to the catalog default when the saved model is not offered", () => {
+  it("preserves custom models not offered by the catalog", () => {
     const reconciled = reconcileConversation({ ...deepSeek.conversation, modelId: "gpt-6-astra" }, catalog);
-    expect(reconciled?.modelId).toBe("deepseek-flash");
+    expect(reconciled).toBeNull();
+    expect(reconcileConversation({ ...deepSeek.conversation, modelId: "" }, catalog)?.modelId).toBe("deepseek-flash");
   });
 
   it("drops reasoning efforts and service tiers the new catalog does not declare", () => {
@@ -131,7 +132,7 @@ describe("reconcileConversation", () => {
 
   it("calibrating one channel cannot change another channel's parameters", () => {
     const current = settings("deepseek-2", [openAi, deepSeek]);
-    const reconciled = reconcileConversation(deepSeek.conversation, [model({ id: "deepseek-v4-pro", model: "deepseek-v4-pro", isDefault: true })]);
+    const reconciled = reconcileConversation({ ...deepSeek.conversation, modelId: "" }, [model({ id: "deepseek-v4-pro", model: "deepseek-v4-pro", isDefault: true })]);
     const next = replaceChannel(current, { ...deepSeek, conversation: reconciled ?? deepSeek.conversation });
 
     expect(next.channels[0]).toBe(current.channels[0]);
