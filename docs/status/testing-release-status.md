@@ -1,6 +1,7 @@
 # 测试与发布状态
 - 设置窗口定向验证（2026-09-10）：`pnpm test` 62 个文件 / 302 项、`pnpm typecheck`、`pnpm lint`、`pnpm quality:knip` 通过；`pnpm test:channel-layout` 使用真实组件与模拟回调，覆盖四视口列表、独立编辑、最大化、最小化后草稿恢复、Tab 循环、外部点击、Escape 与 reduced-motion。浏览器验证不替代真实 Tauri 端到端测试。
 
+- 渠道审查（2026-09-10）：本次重跑 pnpm test，62 个文件 / 302 项通过。未使用真实 Key、未切换本机渠道；测试遗漏 App 激活 ID 更新、后台运行保护、Key/配置失败一致性、切换重启完成与异步校准竞争，因此不能据此宣称多渠道链路正常。完整旧基线保留其原日期，不冒充本次重新运行。
 - 模块职责：维护类型检查、前端单元测试、Rust 校验、Windows 构建与发行物验证。
 - 当前状态：公开稳定版本仍为 `v0.1.4`；当前版本已接入 Tauri Updater，设置中的“检查并更新”会校验正式 GitHub Release 签名后下载并在 Windows 上自动重启安装。个人发布通过 `pnpm release:package` 在本机暂存经过批准的 Runtime、生成签名 NSIS 安装包和 `latest.json`，再手动上传到同名 Release。
 - 最近变更：扩展管理新增安全凭据配置、配置冲突、Skill 所有权、插件待认证状态及 MCP 关闭/监听释放测试；提供隔离 Runtime 和浏览器布局脚本。

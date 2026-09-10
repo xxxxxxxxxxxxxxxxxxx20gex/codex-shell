@@ -1,6 +1,6 @@
 # Codex Runtime 0.152.x 对齐记录
 
-CS 使用暂存 Runtime 生成的 app-server 协议，当前基线为 `codex-cli 0.152.1`。本文件只记录已经由协议和代码证实的能力，不把实验接口描述成已启用的 UI 功能。
+本页仅为 0.152.x 接入范围的参考索引，不维护当前 Runtime 或完成状态。运行版本与生成基线见 [协议状态](protocol-status.md)，生命周期见 [客户端状态](app-server-client-status.md)，任务行为见 [线程状态](workspace-thread-status.md)。历史兼容说明仍有参考价值，不能作为当前验证证据。
 
 ## 对齐范围
 

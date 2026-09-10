@@ -10,8 +10,8 @@
 - 产品使用 Tauri 2、React、TypeScript 与 Rust 构建，以原版 `codex app-server` 为唯一执行核心，通过 stdio JSON-RPC 通信；公开 `v0.1.4` 已发布安装器、minisign 签名和 updater manifest。当前 Runtime 为通过兼容门禁的 `codex-cli 0.153.4`，生成协议类型仍以 `0.152.1` 为基线。参见 [ADR-001](../decisions/ADR-001-unmodified-codex-app-server.md) 与 [ADR-003](../decisions/ADR-003-compatible-runtime-updates.md)。
 - 核心工作流已形成闭环：用户可以选择项目、创建和恢复多个 Session、发送文本/文件/图片、查看结构化执行时间线、处理审批、审查实时与历史 Diff，并按完成 Turn 分叉会话。
 - Composer 已统一模型、推理强度、权限、Goal、Plan、Review、Skills、MCP 和压缩入口；Thread 的模型、权限、审批者和 Goal 状态以 Core 权威通知及查询结果为准，不在 Shell 维护第二套执行状态。
-- 模型配置已改为「厂商分组 + 渠道列表」（[ADR-004](../decisions/ADR-004-model-provider-channels.md)）：设置中维护 OpenAI / DeepSeek 渠道的 Base URL、密钥、模型目录和该渠道自己的对话参数，对话高级设置只选择渠道；同一时刻只有一个激活渠道，切换渠道会重启 app-server，有回合执行时禁止切换。DeepSeek 渠道注入随应用编译的官方模型目录，连接测试只验证路由、密钥与目录。
-- Windows 桌面界面已收敛到 `DESIGN.md` 和语义 Token；三栏布局在窄窗口下保留功能入口，设置承载个性化、外观、模型渠道、运行环境和诊断，右栏提供项目文件浏览和独立只读侧边聊天。
+- 模型配置已改为「厂商分组 + 渠道列表」（[ADR-004](../decisions/ADR-004-model-provider-channels.md)）：设置中维护 OpenAI / DeepSeek 渠道的 Base URL、密钥、模型目录和该渠道自己的对话参数，对话高级设置只选择渠道；同一时刻只有一个激活渠道，切换渠道会重启 app-server，当前 Session 有回合执行时禁止切换（后台任务保护尚不完整）。DeepSeek 渠道注入随应用编译的官方模型目录，连接测试只验证路由、密钥与目录。
+- Windows 桌面界面正在逐步收敛到 `DESIGN.md` 和语义 Token；三栏布局在窄窗口下保留功能入口，设置承载个性化、外观、模型渠道、运行环境和诊断，右栏提供项目文件浏览和独立只读侧边聊天。
 - Codex Shell 的配置、凭据、Session、SQLite、Skills、日志和缓存与官方 Codex 隔离；API Key 只保存在 Windows Credential Manager。默认项目按日期创建于系统文档目录。参见 [ADR-002](../decisions/ADR-002-isolated-runtime-data.md)。
 - 选择项目后，右侧 inspector 的“项目文件”入口复用 app-server 文件读取与 watch 能力打开右侧 WorkspaceExplorer 抽屉；“侧边聊天”入口复用同一 app-server 连接，以 `ephemeral` fork 和独立事件 reducer 提供旁聊；目录根始终来自待创建 Thread 的项目路径或当前 Thread 的服务端 `cwd`。文件变更仍在会话时间线内查看。
 - 前端状态、日志、通知、资源预览、过程事件和可见 Turn 均有硬上限；时间线使用单一原生滚动容器，并只保留最近 200 个 Turn 的前端视图状态。
@@ -19,10 +19,12 @@
 
 ## 项目级风险
 
+- 2026-09-10 审查：多渠道切换尚未完整闭环，存在激活 ID 遗漏、后台任务保护缺失、密钥/配置失败不同步与自定义模型被覆盖。优先修复并补集成测试，详见 [模型配置](model-config-status.md)。
+
 - app-server 自动断线恢复尚未完成；代际隔离可以阻止旧进程事件污染新连接，但不会主动重启崩溃进程或恢复进行中的 Turn。
 - Runtime 二进制不进入 Git；个人发布通过本机脚本暂存同源 Runtime、运行兼容门禁并生成安装器、minisign 签名和 updater manifest，再手动上传 Release。`v0.1.4` 已完成该发布流程及干净 Windows 环境的 UAC、sandbox readiness 和 elevated 命令验证；Windows Authenticode 代码签名仍未完成。MSI 不是默认发布目标。
 - 模型路由同一时刻只能有一个 provider：并行多厂商会话需要按 provider 启动第二个 app-server 并重构前端单连接假设，尚未排期。内置的第三方模型目录需要跟随上游维护。
-- 渠道切换依赖重启 app-server，正在执行的回合会被中断；当前策略是运行中禁止切换，没有排队、切换后自动恢复或并行执行。
+- 渠道切换依赖重启 app-server，正在执行的回合会被中断；目标策略是所有任务运行中禁止切换，但当前只检查当前 Session，没有排队、切换后自动恢复或并行执行。
 - Skills 独立安装/启停/可恢复卸载、MCP 用户配置与安全 Token 输入、本地 Marketplace/Plugin 管理页面已接入；扩展变化刷新状态，不自动中断任务。
 - 文件预览仍会先经 IPC 读取完整文件；超大 Diff、单个超长活动和二进制 Diff 缺少源端预算或专用视图。
 - 侧边聊天当前固定只读沙箱、`approvalPolicy: never`，不会替代主会话执行写入或审批流程；侧聊状态暂不持久化，也不会出现在历史列表；关闭时在连接可用的情况下先中断活动 Turn，再退订临时 Thread，Runtime 已停止时不触发重连；切换主 Session 或 Runtime 重置后返回右侧功能入口。
@@ -40,18 +42,3 @@
 
 - 2026-09-10：模型配置改为厂商分组 + 渠道列表，并把对话参数按渠道归属；DeepSeek 渠道接入内置官方模型目录。`pnpm typecheck`、`pnpm lint`、`pnpm test`（62 个文件 / 301 项）、`pnpm quality:knip`、`pnpm build` 和 `pnpm rust:check`（Cargo check、31 项 Rust 单测、严格 Clippy）全部通过；真实 app-server 探针确认按渠道注入 `model_catalog_json` 后 `model/list` 返回对应目录，同路由不注入则返回内置 GPT 目录；端点探针确认 `https://api.deepseek.com/models` 在无效 Key 下返回 401。未使用真实 DeepSeek 密钥完成对话，模型中转渠道设置与对话高级设置已通过 `pnpm test:channel-layout`（Playwright + 本机 Chrome，模拟回调）：1440×900、1280×780、1024×720、900×700 四档均无页面级横向溢出，模态框不越界，可见文字不小于 11px，键盘焦点可进入面板，删除二次确认、Escape 关闭和 reduced-motion 均生效；该脚本挂载真实组件但使用模拟回调，不是真实 Tauri 端到端。
 - 2026-09-07：公开 `v0.1.4` Release 已上传 `codex-shell_0.1.4_x64-setup.exe`、对应 minisign `.sig` 和 `latest.json`；发布 tag 记录兼容门禁 Runtime `codex-cli 0.153.4`，并完成干净 Windows 用户环境的 UAC、sandbox readiness 和 elevated 命令验证。
-
-- 2026-09-02：代码健康审查移除未被消费的 `tools.update_plan.enabled` 诊断读取、`config/read` 客户端包装和 `sendOrQueue` 的重复图片分支；保留生成协议类型及历史/旧 Runtime 兼容逻辑。`pnpm lint`、`pnpm typecheck`、57 个 Vitest 文件/261 个测试、Vite production build、Rust check、14 个 Rust 单测和 Clippy 通过。Knip 在 OXC 解析阶段因本机 ArrayBuffer 分配失败退出，未产生诊断；该结果不作为无效代码通过证据。
-
-- 2026-09-04：修复首次启动在持久化网关配置读取完成前提前启动 app-server，以及保存网关配置时用旧 React 状态重启的问题；历史加载受配置就绪闸门控制，设置重启在新状态提交后执行。新增回归测试；前端完整回归为 57 个文件/262 个测试，TypeScript、ESLint、Vite production build、Rust check、14 个 Rust 单测和 Clippy 通过。
-
-- 2026-08-21：固定 Runtime `0.148.0-alpha.15` 的 Thread 权威 settings/Goal 同步、审查状态单调更新及原生滚动条释放与可信 scroll 兜底完成；时间线移除 react-virtuoso，改用单一原生滚动容器、程序定位隔离、用户滚动 settle 锁、运行中受控贴底和 Session 切换重置；新增 Session 临时提示关闭/自动消失。
-- 2026-08-25：项目文件浏览器改为以内嵌方式挂载到右侧 inspector，与侧边聊天共享面板生命周期；标题栏操作统一为无边框图标按钮，最大化/恢复直接控制右侧栏宽度，长项目路径不会再挤出关闭操作区；时间线离开底部后使用三个图标按钮跳转上一条用户消息、下一条用户消息和最新位置；清理未再被 App 引用的旧 DiffInspector 组件、样式和测试。TypeScript、ESLint、57 个 Vitest 文件/256 项测试、Vite production build、Rust check、14 项 Rust 单测、Clippy 和 Tauri debug build 通过；确认默认 target 的拒绝访问来自仍在运行的本项目 app-server，构建脚本现会按路径只回收该项目 target 下的旧进程后再构建；Knip 仍受 Windows/Node Oxc parser 内存分配失败影响。
-- 2026-08-26：Runtime staging 改为兼容更新通道，使用本机 `codex-cli 0.149.0-alpha.4.1` 与同目录 companion binaries 重新生成协议；新增协议兼容门禁，确认 CS 现有生成文件、RPC、通知和反向请求未被删除或修改。补齐生成类型变化后的 `projectId`、agent message `delivery` 测试夹具。TypeScript、ESLint、57 个 Vitest 文件/258 项测试、Vite production build、Rust check、14 项 Rust 单测、Clippy 和 Tauri debug build 通过；debug NSIS 安装包重新生成。
-- 2026-08-26：正式 `pnpm desktop:package` 通过，生成使用兼容门禁 Runtime 的 release NSIS 安装包（约 89.0 MB）。
-- 2026-08-24：右侧 inspector 新增 Codex 风格侧边聊天；通过 `thread/fork`/`thread/start` 创建 `ephemeral` 只读线程，新增主线程与侧聊事件路由隔离、关闭时中断活动 Turn 后退订、`Ctrl/Cmd+Alt+S` 快捷打开和最大化/恢复；fork 的父级历史仅作为模型上下文，不在侧栏重复渲染；Thread 创建完成前不展示详情 Composer，避免首条消息在无 Thread ID 时被静默丢弃；主 Session 切换或 Runtime 重置后返回功能入口；加入事件路由、面板交互、未就绪发送和关闭生命周期测试，前端回归为 58 个 Vitest 文件/255 项测试。
-- 定向滚动与临时提示测试通过；完整前端回归为 56 个文件/247 项测试，TypeScript、ESLint、Vite production build、Rust check 和 14 项 Rust 测试通过。当前构建约 555.91 kB，仍有 Vite bundle size warning。
-- Knip 因当前 Windows/Node Oxc parser 的 ArrayBuffer 分配错误短路，未产生无效代码报告；该结果不能作为无效代码检查通过的证据。
-- 2026-08-21：`pnpm desktop:package` 在低并发 release 配置下成功生成 NSIS 安装包；隔离临时目录静默安装检查主程序、4 个 Runtime/companion 文件和 LICENSE/NOTICE 资源存在，随后静默卸载成功。安装包未签名，正式公开分发前需完成签名和干净 Windows 验收。
-- 真实网关探针确认 low 至 ultra、三档 verbosity、四种 summary 和 Priority 参数正确进入 `/v1/responses`。真实 app-server smoke 已覆盖多 Turn 恢复、并行 Thread、文件 RPC、Skills/MCP/Goal、Plan 和本机工具；这些证据对应本次通过兼容门禁的 `0.149.0-alpha.4.1` Runtime，不代表 Codex 最新开发分支。
-- 静态审查未发现 PAT、API Key、用户密钥或开发机绝对路径。

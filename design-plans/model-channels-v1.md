@@ -1,6 +1,6 @@
 # 模型厂商与渠道 v1（目标方案）
 
-> 本方案已于 2026-09-10 落地。本文保留目标状态、迁移步骤和落地时对草案的修正；当前行为以源码和 [模型配置状态](../docs/status/model-config-status.md) 为准，本文不作为完成状态证据。
+> 本文仅为目标方案与验收清单。2026-09-10 审查发现切换与一致性仍有缺口，不代表全部落地；当前事实见 [模型配置状态](../docs/status/model-config-status.md)。
 
 - 记录日期：2026-09-10
 - 影响模块：`models`、`preferences`、`config`、`credentials`、`app_server`、`runtime`
@@ -241,9 +241,9 @@ v1 的 UI 只产生 `vendorDefault`。`file` 保留给后续自定义厂商，�
 - **容量与一致性**：密钥集中在单条 keyring 记录，受系统凭据容量限制，写入需要与 `WRITE_LOCK` 同类的串行化。
 - **回读边界不可破**：渠道列表、日志与状态文档都不得包含密钥或密钥片段。
 
-## 9 实施步骤（已执行）
+## 9 实施步骤（目标）
 
-以下步骤已在 2026-09-10 全部执行；完成证据、当前接口和残留风险见 [模型配置状态](../docs/status/model-config-status.md) 等模块状态文档，本文不再维护完成状态。
+以下是原定实施步骤，不代表验收通过；完成证据、当前接口和残留风险见 [模型配置状态](../docs/status/model-config-status.md) 等模块状态文档，本文不再维护完成状态。
 
 1. 验证 `model_catalog_json` 外部路径行为，确定目录落盘位置。
 2. Rust：`config` 引入 v2 schema 与迁移；`credentials` 增加渠道密钥映射；`app_server` 按激活渠道生成参数并注入目录。
