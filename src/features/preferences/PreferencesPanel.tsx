@@ -11,6 +11,8 @@ import { RuntimePreferences } from "./RuntimePreferences";
 import "./PreferencesPanel.css";
 
 interface Props {
+  minimized: boolean;
+  onMinimizedChange: (minimized: boolean) => void;
   settings: PersonalizationSettings;
   providerSettings: ProviderSettings;
   onSaveProviderSettings: (settings: ProviderSettings, requiresRestart?: boolean) => Promise<void>;
@@ -36,6 +38,8 @@ const themeOptions: Array<{ value: ThemePreference; label: string; description: 
 ];
 
 export function PreferencesPanel({
+  minimized,
+  onMinimizedChange,
   settings,
   providerSettings,
   onSaveProviderSettings,
@@ -56,7 +60,6 @@ export function PreferencesPanel({
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState("");
   const [maximized, setMaximized] = useState(false);
-  const [minimized, setMinimized] = useState(false);
   const dialogRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -101,13 +104,13 @@ export function PreferencesPanel({
 
   return (
     <>
-    {minimized && <button className="preferences-restore secondary-button" onClick={() => setMinimized(false)} title="恢复设置"><Settings aria-hidden="true" />恢复设置</button>}
+    {minimized && <button className="preferences-restore secondary-button" onClick={() => onMinimizedChange(false)} title="恢复设置"><Settings aria-hidden="true" />恢复设置</button>}
     <div className="modal-backdrop preferences-backdrop" hidden={minimized} onMouseDown={onClose}>
       <section ref={dialogRef} role="dialog" aria-modal="true" aria-label="设置" tabIndex={-1} className={`preferences-modal${maximized ? " maximized" : ""}`} onMouseDown={(event) => event.stopPropagation()}>
         <header className="preferences-header">
           <h2>设置</h2>
           <div className="preferences-window-actions">
-            <button className="close-button" onClick={() => setMinimized(true)} aria-label="最小化设置" title="最小化设置"><Minus aria-hidden="true" /></button>
+            <button className="close-button" onClick={() => onMinimizedChange(true)} aria-label="最小化设置" title="最小化设置"><Minus aria-hidden="true" /></button>
             <button className="close-button" onClick={() => setMaximized(!maximized)} aria-label={maximized ? "还原设置窗口" : "最大化设置"} title={maximized ? "还原设置窗口" : "最大化设置"}>{maximized ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />}</button>
             <button className="close-button" onClick={onClose} aria-label="关闭设置" title="关闭设置"><X aria-hidden="true" /></button>
           </div>

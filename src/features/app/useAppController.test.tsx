@@ -29,6 +29,22 @@ vi.mock("../runtime/useAgentSession", () => ({ useAgentSession: () => session, s
 vi.mock("../composer/useComposerDropPaths", () => ({ useComposerDropPaths: vi.fn() }));
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
 
+it("restores minimized settings from the settings entry and after closing", () => {
+  const { result } = renderHook(useAppController);
+  act(() => result.current.openPreferences("providers"));
+  act(() => result.current.setPreferencesMinimized(true));
+  expect(result.current.preferencesOpen).toBe(true);
+  expect(result.current.preferencesMinimized).toBe(true);
+  act(() => result.current.openPreferences());
+  expect(result.current.preferencesOpen).toBe(true);
+  expect(result.current.preferencesMinimized).toBe(false);
+  act(() => { result.current.setPreferencesMinimized(true); result.current.setPreferencesOpen(false); });
+  act(() => result.current.openPreferences("runtime"));
+  expect(result.current.preferencesOpen).toBe(true);
+  expect(result.current.preferencesMinimized).toBe(false);
+  expect(result.current.preferencesSection).toBe("runtime");
+});
+
 it("restores a message without overwriting an existing draft", () => {
   const { result } = renderHook(useAppController);
   const message = { type: "userMessage" as const, id: "u", clientId: null, content: [{ type: "text" as const, text: "original", text_elements: [] }] };

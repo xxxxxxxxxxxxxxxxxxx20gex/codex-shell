@@ -71,6 +71,7 @@ export function queuedTurnLabel(turn: { text: string; mentions: FileMention[]; i
 export function useAppController() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [preferencesMinimized, setPreferencesMinimized] = useState(false);
   const [preferencesSection, setPreferencesSection] = useState<PreferencesSection>("personalization");
   const [modelPickerOpen, setModelPickerOpen] = useState(false);
   const [settings, setSettings] = useState(initialProviderSettings);
@@ -618,6 +619,7 @@ export function useAppController() {
 
   function openPreferences(section: PreferencesSection = "personalization") {
     setPreferencesSection(section);
+    setPreferencesMinimized(false);
     setPreferencesOpen(true);
   }
 
@@ -661,6 +663,8 @@ export function useAppController() {
     setSettingsOpen,
     preferencesOpen,
     setPreferencesOpen,
+    preferencesMinimized,
+    setPreferencesMinimized,
     preferencesSection,
     openPreferences,
     modelPickerOpen,

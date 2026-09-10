@@ -77,6 +77,8 @@ function App() {
     setSettingsOpen,
     preferencesOpen,
     setPreferencesOpen,
+    preferencesMinimized,
+    setPreferencesMinimized,
     preferencesSection,
     openPreferences,
     modelPickerOpen,
@@ -439,6 +441,8 @@ function App() {
         setSettingsOpen(false);
       }} />}
       {preferencesOpen && <PreferencesPanel
+        minimized={preferencesMinimized}
+        onMinimizedChange={setPreferencesMinimized}
         settings={personalization}
         providerSettings={settings}
         onSaveProviderSettings={saveProviderSettings}

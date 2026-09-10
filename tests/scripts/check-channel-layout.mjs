@@ -25,9 +25,15 @@ const providerSettings = {schemaVersion:2,activeChannelId:"openai-1",channels:[
  {id:"deepseek-3",vendor:"deepseek",name:"备用中转",baseUrl:"https://relay.example.test/v1",catalog:{kind:"vendorDefault"},conversation},
 ]};
 const models = [{id:"deepseek-flash",model:"deepseek-flash",upgrade:null,upgradeInfo:null,availabilityNux:null,displayName:"DeepSeek Flash",description:"",modelSpecialty:null,hidden:false,supportedReasoningEfforts:[{reasoningEffort:"low",description:""}],defaultReasoningEffort:"low",inputModalities:["text"],supportsPersonality:false,multiAgentVersion:null,additionalSpeedTiers:[],serviceTiers:[],defaultServiceTier:null,isDefault:true}];
+function SettingsHost() {
+  const [minimized, setMinimized] = React.useState(false);
+  return React.createElement(React.Fragment,null,
+    React.createElement("button",{onClick:()=>setMinimized(false)},"打开设置"),
+    React.createElement(PreferencesPanel,{minimized,onMinimizedChange:setMinimized,settings:{customInstructions:"",theme:"dark"},providerSettings,onSaveProviderSettings:async()=>{},initialSection:"providers",codexHome:"C:/cs",codexHomeDisabled:false,windowsSandboxReadiness:"notConfigured",noticeStore:new RuntimeNoticeStore(),logStore:new RuntimeLogStore(),onSetupWindowsSandbox:async()=>true,onRestart:async()=>{},onClose:()=>{window.__closed=(window.__closed||0)+1;},onSave:async()=>{}}));
+}
 window.show = (kind) => {
   const content = kind === "providers"
-    ? React.createElement(PreferencesPanel,{settings:{customInstructions:"",theme:"dark"},providerSettings,onSaveProviderSettings:async()=>{},initialSection:"providers",codexHome:"C:/cs",codexHomeDisabled:false,windowsSandboxReadiness:"notConfigured",noticeStore:new RuntimeNoticeStore(),logStore:new RuntimeLogStore(),onSetupWindowsSandbox:async()=>true,onRestart:async()=>{},onClose:()=>{window.__closed=(window.__closed||0)+1;},onSave:async()=>{}})
+    ? React.createElement(SettingsHost)
     : React.createElement(ModelSettingsPanel,{settings:conversation,providerSettings,loadModels:async()=>models,loadProviderCapabilities:async()=>({namespaceTools:false,imageGeneration:false,webSearch:false}),onManageChannels:noop,onClose:noop,onSave:noop});
   root.render(content);
 };
@@ -102,6 +108,10 @@ try {
         assert.equal(await page.evaluate(() => window.__closed ?? 0), before);
         await page.getByRole("button", { name: "恢复设置" }).click();
         assert.equal(await page.getByLabel("名称", { exact: true }).inputValue(), "未保存的渠道名称");
+        await page.getByRole("button", { name: "最小化设置", exact: true }).click();
+        await page.getByRole("button", { name: "打开设置", exact: true }).click();
+        assert.equal(await page.getByLabel("名称", { exact: true }).inputValue(), "未保存的渠道名称");
+        assert.equal(await page.getByRole("dialog").evaluate(el => el.classList.contains("maximized")), true);
         await page.getByRole("button", { name: "还原设置窗口" }).click();
         await page.getByRole("button", { name: "取消", exact: true }).click();
         await page.getByRole("button", { name: "关闭设置", exact: true }).focus();

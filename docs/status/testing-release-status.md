@@ -1,5 +1,6 @@
 # 测试与发布状态
-- 设置窗口定向验证（2026-09-10）：`pnpm test` 62 个文件 / 302 项、`pnpm typecheck`、`pnpm lint`、`pnpm quality:knip` 通过；`pnpm test:channel-layout` 使用真实组件与模拟回调，覆盖四视口列表、独立编辑、最大化、最小化后草稿恢复、Tab 循环、外部点击、Escape 与 reduced-motion。浏览器验证不替代真实 Tauri 端到端测试。
+- 本次设置恢复修复的 `pnpm desktop:build` 通过（2026-09-10，包含 `pnpm build`），已更新本地 Debug 可执行文件；未生成生产发行物。Vite 主 chunk 大小提示仍存在。
+- 设置窗口定向验证（2026-09-10）：`pnpm test` 62 个文件 / 303 项、`pnpm typecheck`、`pnpm lint`、`pnpm quality:knip`、`cargo check --manifest-path src-tauri/Cargo.toml` 通过；新增控制器最小化后重新打开回归，组件测试覆盖外部设置入口及恢复按钮保留草稿与最大化状态。`pnpm test:channel-layout` 使用真实组件与模拟回调，覆盖四视口列表、独立编辑、最大化、两条最小化恢复入口、Tab 循环、外部点击、Escape 与 reduced-motion。浏览器验证不替代真实 Tauri 端到端测试。
 
 - 渠道审查（2026-09-10）：本次重跑 pnpm test，62 个文件 / 302 项通过。未使用真实 Key、未切换本机渠道；测试遗漏 App 激活 ID 更新、后台运行保护、Key/配置失败一致性、切换重启完成与异步校准竞争，因此不能据此宣称多渠道链路正常。完整旧基线保留其原日期，不冒充本次重新运行。
 - 模块职责：维护类型检查、前端单元测试、Rust 校验、Windows 构建与发行物验证。

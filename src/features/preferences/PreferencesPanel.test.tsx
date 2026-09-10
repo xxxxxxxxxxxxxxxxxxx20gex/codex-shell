@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { check } from "@tauri-apps/plugin-updater";
 import type { ProviderSettings } from "../models/types";
@@ -27,6 +28,8 @@ const providerSettings: ProviderSettings = {
 
 function panelProps() {
   return {
+    minimized: false,
+    onMinimizedChange: vi.fn(),
     settings: { customInstructions: "", theme: "dark" as const },
     providerSettings,
     onSaveProviderSettings: vi.fn(async () => undefined),
@@ -44,7 +47,14 @@ function panelProps() {
 describe("PreferencesPanel", () => {
   it("preserves channel drafts across maximize and minimize without closing", () => {
     const props = panelProps();
-    render(<PreferencesPanel {...props} initialSection="providers" onSave={async () => undefined} />);
+    function SettingsHost() {
+      const [minimized, setMinimized] = useState(false);
+      return <>
+        <button onClick={() => setMinimized(false)}>打开设置</button>
+        <PreferencesPanel {...props} minimized={minimized} onMinimizedChange={setMinimized} initialSection="providers" onSave={async () => undefined} />
+      </>;
+    }
+    render(<SettingsHost />);
     fireEvent.click(screen.getByRole("button", { name: "编辑 OpenAI 官方" }));
     fireEvent.change(screen.getByLabelText("名称"), { target: { value: "未保存渠道" } });
     fireEvent.click(screen.getByRole("button", { name: "最大化设置" }));
@@ -54,6 +64,10 @@ describe("PreferencesPanel", () => {
     fireEvent.keyDown(window, { key: "Escape" });
     expect(props.onClose).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "恢复设置" }));
+    expect((screen.getByLabelText("名称") as HTMLInputElement).value).toBe("未保存渠道");
+    expect(screen.getByRole("dialog").classList.contains("maximized")).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "最小化设置" }));
+    fireEvent.click(screen.getByRole("button", { name: "打开设置" }));
     expect((screen.getByLabelText("名称") as HTMLInputElement).value).toBe("未保存渠道");
     expect(screen.getByRole("dialog").classList.contains("maximized")).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "还原设置窗口" }));
