@@ -40,6 +40,8 @@
 
 ## 完整验证基线
 
+- 2026-09-11 v0.1.5 生产打包：版本号、Cargo lock 和 Tauri 配置同步；TypeScript、ESLint、Knip、317 项前端测试、36 项 Rust 单测、Cargo check、Clippy、协议门禁及其负向回归、四视口渠道布局通过。NSIS 安装器已生成并使用沿用公钥验签；GitHub 发布待上传，尚未重复干净机器安装及升级验收。
+
 - 2026-09-11 协议审查修复：TypeScript、ESLint、Knip、Vitest（63 个文件 / 317 项）、production build、Cargo check、36 项 Rust 单测、严格 Clippy、Debug 构建与当前 Runtime 兼容门禁通过。隔离本机协议探针验证设置、队列与元数据，并确认分页和运行中设置的 Runtime 限制；未重跑远端 API 或四视口布局。详见 [测试与发布](testing-release-status.md)。
 
 - 2026-09-10：模型配置改为厂商分组 + 渠道列表，并把对话参数按渠道归属；DeepSeek 渠道接入内置官方模型目录。`pnpm typecheck`、`pnpm lint`、`pnpm test`（62 个文件 / 301 项）、`pnpm quality:knip`、`pnpm build` 和 `pnpm rust:check`（Cargo check、31 项 Rust 单测、严格 Clippy）全部通过；真实 app-server 探针确认按渠道注入 `model_catalog_json` 后 `model/list` 返回对应目录，同路由不注入则返回内置 GPT 目录；端点探针确认 `https://api.deepseek.com/models` 在无效 Key 下返回 401。未使用真实 DeepSeek 密钥完成对话，模型中转渠道设置与对话高级设置已通过 `pnpm test:channel-layout`（Playwright + 本机 Chrome，模拟回调）：1440×900、1280×780、1024×720、900×700 四档均无页面级横向溢出，模态框不越界，可见文字不小于 11px，键盘焦点可进入面板，删除二次确认、Escape 关闭和 reduced-motion 均生效；该脚本挂载真实组件但使用模拟回调，不是真实 Tauri 端到端。

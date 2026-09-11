@@ -24,7 +24,7 @@ CS 将模型回答、执行过程、文件变更和本轮产出整合到同一�
 
 ## 核心工作方式
 
-### 管理扩展（当前开发版）
+### 管理扩展
 
 - 左侧 **Skills** 可从包含 `SKILL.md` 的目录安装独立技能，或启动 Installer 会话。启停由 Core 持久化；卸载仅用于 CS 用户目录中的独立技能，内容移到当前 CODEX_HOME 的 `uninstalled-skills`，可手动恢复。项目、系统、管理员和 Plugin 技能不提供此卸载入口。
 - 在 Composer 的 **MCP** 面板添加、编辑、启停或删除用户级服务器，支持 stdio 命令、JSON 参数数组、环境变量引用及 HTTP。原配置中未编辑的工具策略等字段会保留；项目和 Plugin 配置不会被此表单删除。
@@ -275,20 +275,22 @@ Runtime 不要求与上一次 manifest 的完整版本号相同。暂存时会�
 个人开发者推荐使用本机打包并手动上传 Release。当前项目使用无密码的 Tauri signing key，发布时只需保管私钥文件；私钥本身仍不能提交仓库：
 
 ```powershell
-pnpm release:package -- -Repository "OWNER/REPOSITORY" -Tag "v0.1.4"
+pnpm release:package -- -Repository "OWNER/REPOSITORY" -Tag "v0.1.5"
 ```
 
 私钥位于默认路径 `%USERPROFILE%\\.tauri\\codex-shell.key` 时无需额外参数；也可以显式指定：
 
 ```powershell
-pnpm release:package -- -SigningKeyPath "C:\\secure\\codex-shell.key" -Repository "OWNER/REPOSITORY" -Tag "v0.1.4"
+pnpm release:package -- -SigningKeyPath "C:\\secure\\codex-shell.key" -Repository "OWNER/REPOSITORY" -Tag "v0.1.5"
 ```
 
 命令会暂存本机 Runtime、运行协议兼容门禁、构建签名 NSIS 安装包，并在
-`release-artifacts/v0.1.4/` 生成三个必须上传到同一个 GitHub Release 的文件：安装器、`.sig` 和
-`latest.json`。在 GitHub 创建同名 Tag/Release（例如 `v0.1.4`）并上传这三个文件后，已安装的旧版本
+`release-artifacts/v0.1.5/` 生成三个必须上传到同一个 GitHub Release 的文件：安装器、`.sig` 和
+`latest.json`。在 GitHub 创建同名 Tag/Release（例如 `v0.1.5`）并上传这三个文件后，已安装的旧版本
 即可通过“检查并更新”自动发现、验签和安装新版本。换电脑时只需准备同版本 Runtime 和签名私钥、
 Rust/Node 构建环境并重新执行该命令；用户端不需要任何额外配置。
+这里的签名是 Tauri Updater 的 minisign 签名，不是 Windows Authenticode 代码签名；
+安装器仍可能显示未知发布者，不能据此承诺消除 SmartScreen 提示。
 
 脚本会校验四个 companion binaries 和 `codex-cli` 版本。Runtime 不应放入仓库；公开分发前还必须
 确认其许可证和再分发授权。签名私钥不提交 Git，换电脑时通过安全方式复制到新机器。

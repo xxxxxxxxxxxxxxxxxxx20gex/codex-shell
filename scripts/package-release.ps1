@@ -55,7 +55,7 @@ try {
     if ($installer.Count -ne 1) { throw "Expected exactly one NSIS installer for version $($config.version); found $($installer.Count)." }
     $signature = "$($installer[0].FullName).sig"
     Write-Output "Signing the installer with the passwordless updater key..."
-    pnpm tauri signer sign --private-key-path $resolvedSigningKeyPath --password "" $installer[0].FullName
+    pnpm tauri signer sign --private-key-path $resolvedSigningKeyPath --password= $installer[0].FullName
     if ($LASTEXITCODE -ne 0) { throw "Updater signing failed, exit code: $LASTEXITCODE" }
     if (-not (Test-Path -LiteralPath $signature -PathType Leaf)) { throw "Tauri did not create the updater signature: $signature" }
 
