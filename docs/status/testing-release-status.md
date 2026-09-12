@@ -1,8 +1,8 @@
 # 测试与发布状态
 
 - 模块职责：维护类型检查、单元测试、Rust 校验、Debug 构建和生产发布验证。
-- 当前状态：公开稳定版为 v0.1.5；生产安装器、Updater 签名及 latest.json 已上传 GitHub 并设为 Latest，三项远端 SHA-256 与本地一致，公开更新清单下载验证通过。Debug 已同步到 0.1.5。未配置 Windows Authenticode 证书，Updater 签名不消除未知发布者提示。
-- 最近变更：发布版本统一为 0.1.5，修复签名命令经 pnpm 传递空密码时参数丢失的问题，使用 --password=。本机 NSIS 缓存初始化重命名失败，通过复制已校验工具及匹配官方哈希的插件恢复，不改应用逻辑。
+- 当前状态：公开稳定版为 v0.1.5，当前开发版本为 v0.1.6；生产安装器、Updater 签名及 latest.json 已上传 GitHub 并设为 Latest，三项远端 SHA-256 与本地一致，公开更新清单下载验证通过。Debug 已同步到 0.1.5。未配置 Windows Authenticode 证书，Updater 签名不消除未知发布者提示。
+- 最近变更：发布版本 0.1.5 已完成，当前功能准备进入 0.1.6，修复签名命令经 pnpm 传递空密码时参数丢失的问题，使用 --password=。本机 NSIS 缓存初始化重命名失败，通过复制已校验工具及匹配官方哈希的插件恢复，不改应用逻辑。
 - 当前接口：pnpm typecheck、pnpm lint、pnpm test、pnpm quality:knip、pnpm build、pnpm rust:check、pnpm test:channel-layout、pnpm desktop:build；生产发布命令和资产要求以 README 为准。
 - 已知问题：真实 Windows Credential Manager 写入、迁移与真实多渠道 API 对话未在本次测试；跨存储断电一致性不由单测保证。仍缺 CI、Windows Authenticode 签名，以及超长活动和三栏拖拽自动化覆盖。Vite 主 chunk 仍超过 500 kB。
 - 下一步：人工验收真实系统凭据和渠道对话；维持 Runtime 兼容门禁，完善 CI 与签名。

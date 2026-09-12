@@ -52,6 +52,16 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
     catch (value) { setError(errorMessage(value)); }
     finally { setBusy(false); }
   }
+  async function installBuiltin() {
+    setBusy(true); setError("");
+    try {
+      const path = await invoke<string>("install_builtin_skill");
+      await setEnabled(path, false);
+      setNotice("image-gen 已安装，默认未启用；启用后请新建会话使用。\n");
+      onChanged?.(); setRefresh((value) => value + 1);
+    } catch (value) { setError(errorMessage(value)); }
+    finally { setBusy(false); }
+  }
   async function uninstall(skill: SkillMetadata) {
     if (skill.scope !== "user" || skill.pluginId) return;
     setBusy(true); setError("");
@@ -70,7 +80,7 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
   return <div className="skill-management-page">
     <header className="skill-management-header"><div><h1>Skills</h1><p>按来源管理技能；变更后请新建会话使用。</p></div><div><button type="button" disabled={busy} onClick={() => void install()}>从目录安装</button><button type="button" onClick={onAddSkill}>通过 Installer 添加</button><button type="button" disabled={busy} onClick={() => setRefresh((value) => value + 1)}>刷新</button><button type="button" onClick={onClose}>返回会话</button></div></header>
     <div className="skill-management-search"><Search aria-hidden="true" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索 Skills" /></div>
-    <div className="skill-management-section"><h2>可发现的技能</h2>{notice && <p role="status">{notice}</p>}{error && <p className="error" role="alert">{error}</p>}{filtered.map((skill) => {
+    <div className="skill-management-section"><h2>CS 市场</h2>{!skills.some((skill) => skill.name === "image-gen") && <article className="skill-management-card"><span className="skill-management-icon"><Sparkles aria-hidden="true" /></span><div><strong>Image Gen<em className="skill-scope-badge">CS 内置市场</em></strong><p>通过兔子渠道生成商品图、海报和场景图片。</p></div><span className="skill-management-actions"><button type="button" className="skill-management-toggle" disabled={busy} onClick={() => void installBuiltin()}>安装</button></span></article>}<h2>已安装与可发现</h2>{notice && <p role="status">{notice}</p>}{error && <p className="error" role="alert">{error}</p>}{filtered.map((skill) => {
       const disabled = !skill.enabled;
       const scopeLabel = skill.pluginId ? `插件 · ${skill.pluginId}` : ({ user: "个人", system: "系统", admin: "管理员", repo: "项目" })[skill.scope];
       const root = `${codexHome.split("\\").join("/").replace(/\/$/, "").toLowerCase()}/skills/`;

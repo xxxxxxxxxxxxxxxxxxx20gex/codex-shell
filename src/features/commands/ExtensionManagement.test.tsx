@@ -70,6 +70,15 @@ it("only offers uninstall for CS-owned user skills, and reports dialog errors", 
   expect(await screen.findByRole("alert")).toHaveProperty("textContent", "目录选择失败");
 });
 
+it("installs the bundled image skill disabled by default", async () => {
+  const setEnabled = vi.fn(async () => false);
+  vi.mocked(invoke).mockResolvedValueOnce("C:/cs/skills/image-gen/SKILL.md");
+  render(<SkillManagementPage codexHome="C:/cs" revision={0} loadSkills={async () => []} setEnabled={setEnabled} onClose={vi.fn()} onAddSkill={vi.fn()} />);
+  fireEvent.click(await screen.findByText("安装"));
+  await waitFor(() => expect(setEnabled).toHaveBeenCalledWith("C:/cs/skills/image-gen/SKILL.md", false));
+  expect((await screen.findByRole("status")).textContent).toContain("默认未启用");
+});
+
 it("shows pending Connector authentication rather than treating plugin installation as ready", async () => {
   const plugin = { id: "demo@local", name: "demo", installed: false, enabled: true, availability: "AVAILABLE", installPolicy: "AVAILABLE", authPolicy: "ON_INSTALL", interface: null } as PluginSummary;
   const installPlugin = vi.fn(async () => ({ authPolicy: "ON_INSTALL" as const, appsNeedingAuth: [{ id: "connector", name: "Example Connector", description: null, category: null, installUrl: null }] }));

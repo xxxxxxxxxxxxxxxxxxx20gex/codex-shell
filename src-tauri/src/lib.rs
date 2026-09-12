@@ -1,4 +1,5 @@
 mod app_server;
+mod builtin_skills;
 mod catalog;
 mod channel_probe;
 mod codex_home;
@@ -32,6 +33,7 @@ pub fn run() {
             mcp_credentials::save_mcp_secret,
             skill_files::install_local_skill,
             skill_files::uninstall_local_skill,
+            builtin_skills::install_builtin_skill,
             workspace::get_default_project_directory,
             workspace::reveal_path_in_explorer,
         ])

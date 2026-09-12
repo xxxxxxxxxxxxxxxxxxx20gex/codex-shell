@@ -26,7 +26,7 @@ CS 将模型回答、执行过程、文件变更和本轮产出整合到同一�
 
 ### 管理扩展
 
-- 左侧 **Skills** 可从包含 `SKILL.md` 的目录安装独立技能，或启动 Installer 会话。启停由 Core 持久化；卸载仅用于 CS 用户目录中的独立技能，内容移到当前 CODEX_HOME 的 `uninstalled-skills`，可手动恢复。项目、系统、管理员和 Plugin 技能不提供此卸载入口。
+- 左侧 **Skills** 的 CS 市场随安装包携带 `image-gen` 生图技能，用户点击安装后才复制到独立 CODEX_HOME 的用户 Skill 目录，并默认保持关闭；启用由 Core 持久化。它可像其他用户 Skill 一样启用、卸载和恢复。也可从包含 `SKILL.md` 的目录安装独立技能，或启动 Installer 会话；项目、管理员和 Plugin 技能不提供卸载入口。
 - 在 Composer 的 **MCP** 面板添加、编辑、启停或删除用户级服务器，支持 stdio 命令、JSON 参数数组、环境变量引用及 HTTP。原配置中未编辑的工具策略等字段会保留；项目和 Plugin 配置不会被此表单删除。
 - HTTP Bearer Token 输入后保存到 Windows Credential Manager，普通配置只写环境变量名。新增或更换 Token 后，等待任务结束，在“设置 → 运行环境”重启使其生效；不会自动中断当前任务。stdio 服务的密钥可通过系统环境变量引用。
 - 左侧 **插件** 支持添加本地目录或 Git Marketplace、更新来源、查看详情、安装与卸载 Plugin。仅支持本地 Marketplace 管理，不提供 OpenAI 账户、官方远程目录或 ChatGPT Connector 登录；MCP 自身 OAuth 仍可使用。
@@ -275,18 +275,18 @@ Runtime 不要求与上一次 manifest 的完整版本号相同。暂存时会�
 个人开发者推荐使用本机打包并手动上传 Release。当前项目使用无密码的 Tauri signing key，发布时只需保管私钥文件；私钥本身仍不能提交仓库：
 
 ```powershell
-pnpm release:package -- -Repository "OWNER/REPOSITORY" -Tag "v0.1.5"
+pnpm release:package -- -Repository "OWNER/REPOSITORY" -Tag "v0.1.6"
 ```
 
 私钥位于默认路径 `%USERPROFILE%\\.tauri\\codex-shell.key` 时无需额外参数；也可以显式指定：
 
 ```powershell
-pnpm release:package -- -SigningKeyPath "C:\\secure\\codex-shell.key" -Repository "OWNER/REPOSITORY" -Tag "v0.1.5"
+pnpm release:package -- -SigningKeyPath "C:\\secure\\codex-shell.key" -Repository "OWNER/REPOSITORY" -Tag "v0.1.6"
 ```
 
 命令会暂存本机 Runtime、运行协议兼容门禁、构建签名 NSIS 安装包，并在
-`release-artifacts/v0.1.5/` 生成三个必须上传到同一个 GitHub Release 的文件：安装器、`.sig` 和
-`latest.json`。在 GitHub 创建同名 Tag/Release（例如 `v0.1.5`）并上传这三个文件后，已安装的旧版本
+`release-artifacts/v0.1.6/` 生成三个必须上传到同一个 GitHub Release 的文件：安装器、`.sig` 和
+`latest.json`。在 GitHub 创建同名 Tag/Release（例如 `v0.1.6`）并上传这三个文件后，已安装的旧版本
 即可通过“检查并更新”自动发现、验签和安装新版本。换电脑时只需准备同版本 Runtime 和签名私钥、
 Rust/Node 构建环境并重新执行该命令；用户端不需要任何额外配置。
 这里的签名是 Tauri Updater 的 minisign 签名，不是 Windows Authenticode 代码签名；
