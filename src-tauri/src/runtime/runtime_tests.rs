@@ -1,4 +1,5 @@
 use super::RUNTIME_FILE_NAME;
+use super::bundled_tool_path;
 use super::find_on_path;
 use super::resolve_candidate;
 use std::env;
@@ -83,4 +84,67 @@ fn finds_runtime_in_first_existing_path_entry() {
     let resolved = find_on_path(Some(&search_path));
 
     assert_eq!(resolved, Some(expected));
+}
+
+#[test]
+fn bundled_tools_require_the_shipped_executable() {
+    let directory = TestDirectory::new();
+    assert!(bundled_tool_path(&directory.path().join("cs.exe"), None).is_err());
+}
+
+#[test]
+fn bundled_tools_prepend_application_directory_and_preserve_path() {
+    let directory = TestDirectory::new();
+    fs::write(directory.path().join("rg.exe"), b"test").unwrap();
+    let inherited = env::join_paths([directory.path().join("other tools")]).unwrap();
+    let result = bundled_tool_path(&directory.path().join("cs.exe"), Some(&inherited)).unwrap();
+    assert_eq!(
+        env::split_paths(&result).collect::<Vec<_>>(),
+        vec![
+            directory.path().to_path_buf(),
+            directory.path().join("other tools")
+        ]
+    );
+    let without_path = bundled_tool_path(&directory.path().join("cs.exe"), None).unwrap();
+    assert_eq!(
+        env::split_paths(&without_path).collect::<Vec<_>>(),
+        vec![directory.path()]
+    );
+}
+
+#[cfg(windows)]
+#[test]
+fn powershell_finds_bundled_rg_without_host_tools_on_path() {
+    let directory = TestDirectory::new();
+    let tools = directory.path().join("CS tools with spaces");
+    fs::create_dir(&tools).unwrap();
+    fs::copy(
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("binaries/rg-x86_64-pc-windows-msvc.exe"),
+        tools.join("rg.exe"),
+    )
+    .expect("run pnpm tools:stage before Rust tests");
+    fs::write(
+        directory.path().join("sample.txt"),
+        "bundled-rg-search-proof\n",
+    )
+    .unwrap();
+    let original_path = env::var_os("PATH");
+    let path = bundled_tool_path(&tools.join("cs.exe"), None).unwrap();
+    let powershell = PathBuf::from(env::var_os("SystemRoot").unwrap())
+        .join("System32/WindowsPowerShell/v1.0/powershell.exe");
+    let output = std::process::Command::new(powershell)
+        .args(["-NoProfile", "-NonInteractive", "-Command",
+            "rg --version; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; rg --fixed-strings bundled-rg-search-proof sample.txt; exit $LASTEXITCODE"])
+        .current_dir(directory.path())
+        .env("PATH", path)
+        .output().unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("ripgrep 15.2.0"));
+    assert!(stdout.contains("bundled-rg-search-proof"));
+    assert_eq!(env::var_os("PATH"), original_path);
 }

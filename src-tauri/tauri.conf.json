@@ -4,9 +4,9 @@
   "version": "0.1.6",
   "identifier": "com.codexshell.desktop",
   "build": {
-    "beforeDevCommand": "pnpm dev",
+    "beforeDevCommand": "pnpm tools:stage && pnpm dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "pnpm build",
+    "beforeBuildCommand": "pnpm tools:stage && pnpm build",
     "frontendDist": "../dist"
   },
   "app": {
@@ -41,7 +41,8 @@
       "binaries/codex",
       "binaries/codex-code-mode-host",
       "binaries/codex-windows-sandbox-setup",
-      "binaries/codex-command-runner"
+      "binaries/codex-command-runner",
+      "binaries/rg"
     ],
     "icon": [
       "icons/32x32.png",
@@ -53,6 +54,7 @@
     "resources": [
       "../licenses/Apache-2.0.txt",
       "../licenses/CODEX-NOTICE",
+      "../licenses/RIPGREP-MIT.txt",
       "../licenses/README.md",
       "../bundled/skills"
     ]

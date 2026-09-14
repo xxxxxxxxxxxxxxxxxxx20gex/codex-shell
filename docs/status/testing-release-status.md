@@ -1,5 +1,7 @@
 # 测试与发布状态
 
+- 内置搜索工具验证（2026-09-14）：新增 Runtime PATH 边界与真实 PowerShell 搜索测试；Cargo check、39 项 Rust 单测、严格 Clippy、TypeScript、ESLint、64 文件 / 328 项 Vitest、production build 和 Debug 构建通过。`pnpm runtime:probe-tools` 验证不含官方 Codex PATH 的真实 app-server 命令执行链，无模型调用；staging 下载/缓存校验及错误来源拒绝通过。尚未进行 elevated Sandbox 和安装器验收。Knip 仍仅报告既有图片布局脚本未登记入口；Cargo fmt --check 仍有既有跨模块格式差异，不作全库格式化。
+
 - 回复资源验证（2026-09-14）：TypeScript、ESLint、Vitest（64 文件 / 328 项）、Cargo check、Debug 构建通过。定向测试覆盖引用式链接、代码/外链排除、Windows 路径去重、过程图片延迟读取；共享批注窗口四视口脚本通过（含 Escape、外部点击、reduced-motion）。尚未做真实 Tauri 图片链接点击端到端验证。Knip 未通过：既有 `check-image-annotation-layout.mjs` 未登记入口；不将此项记为通过。
 
 - 图片入口验证（2026-09-14）：TypeScript、ESLint、Knip、Vitest（63 文件 / 326 项）、production build、独立目标目录 Cargo check、Debug 构建通过。新增 `tests/scripts/check-image-annotation-layout.mjs`，四视口 1440×900、1280×780、1024×720、900×700 通过预览、添加批注、回填、Escape、外部点击与边界检查，并在 reduced-motion 环境执行；使用真实组件与模拟回填，不代表真实 API 或 Tauri 端到端验证。

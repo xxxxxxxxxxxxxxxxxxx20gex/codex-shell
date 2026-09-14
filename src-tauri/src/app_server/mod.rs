@@ -102,12 +102,17 @@ pub fn app_server_start(
     let arguments = app_server_arguments(&channel, catalog_path.as_deref(), model.as_deref())?;
 
     let mut command = Command::new(&executable);
+    let application =
+        std::env::current_exe().map_err(|error| format!("无法解析 CS 可执行文件路径：{error}"))?;
+    let tool_path =
+        crate::runtime::bundled_tool_path(&application, std::env::var_os("PATH").as_deref())?;
     command
         .args(arguments)
         .current_dir(&default_project_directory)
         .env("CODEX_HOME", &codex_home)
         .env("OPENAI_API_KEY", api_key)
         .envs(crate::mcp_credentials::read_environment(&codex_home)?)
+        .env("PATH", tool_path)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());

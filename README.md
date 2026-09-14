@@ -233,6 +233,13 @@ pnpm tauri dev
 
 如果需要指定 Runtime，可以设置 `CODEX_SHELL_RUNTIME` 为 `codex.exe` 文件或其所在目录。相对路径按启动目录解析；未设置时，CS 会依次检查桌面端同目录的 sidecar 和系统 PATH，并验证为规范化绝对路径。
 
+CS 开发构建内置 ripgrep 15.2.0（`rg.exe`）；后续安装包也会携带，无需用户另装。
+CS 只为 app-server 及其子进程前置应用目录到 PATH，不修改系统 PATH，不依赖官方 Codex 的工具目录。
+Tauri 开发和构建入口会自动准备并校验该工具，首次需要下载官方 Windows x64 包，之后使用已校验的本地副本。
+网络受限时可先执行 `pnpm tools:stage -Proxy http://127.0.0.1:7897`；离线可用
+`pnpm tools:stage -Source "C:\tools\rg.exe"`，仅接受相同官方版本及哈希。直接运行 Cargo 检查前也应先执行 `pnpm tools:stage`。
+该代理参数只用于工具下载，不传入应用运行环境。缺少内置 `rg.exe` 时 CS 会明确要求重新构建或安装。
+
 ## 构建与质量验证
 
 ```powershell

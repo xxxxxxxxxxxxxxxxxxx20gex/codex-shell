@@ -1,9 +1,23 @@
 use std::env;
-use std::ffi::OsStr;
+use std::ffi::{OsStr, OsString};
 use std::path::Path;
 use std::path::PathBuf;
 
 const RUNTIME_FILE_NAME: &str = "codex.exe";
+
+pub fn bundled_tool_path(application: &Path, inherited: Option<&OsStr>) -> Result<OsString, String> {
+    let directory = application
+        .parent()
+        .ok_or_else(|| "无法解析 CS 工具目录".to_string())?;
+    if !directory.join("rg.exe").is_file() {
+        return Err("CS 内置 rg.exe 缺失，请重新构建或重新安装应用".to_string());
+    }
+    let mut paths = vec![directory.to_path_buf()];
+    if let Some(inherited) = inherited {
+        paths.extend(env::split_paths(inherited));
+    }
+    env::join_paths(paths).map_err(|error| format!("无法构造 CS 工具 PATH：{error}"))
+}
 
 pub fn resolve_codex_executable() -> Result<PathBuf, String> {
     let current_directory =
