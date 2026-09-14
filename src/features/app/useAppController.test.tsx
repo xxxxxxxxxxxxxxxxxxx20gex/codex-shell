@@ -3,6 +3,7 @@ import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import type { ProviderSettings } from "../models/types";
 import { useAppController } from "./useAppController";
+import type { KeyboardEvent } from "react";
 
 const channelSettings: ProviderSettings = {
   schemaVersion: 2,
@@ -31,6 +32,44 @@ const session = vi.hoisted(() => ({
 vi.mock("../runtime/useAgentSession", () => ({ useAgentSession: () => session, sendOrQueue: vi.fn() }));
 vi.mock("../composer/useComposerDropPaths", () => ({ useComposerDropPaths: vi.fn() }));
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
+
+it.each(["click", "Enter"])("preserves text, image annotations and attachments when selecting /skills via %s", async (method) => {
+  const { result } = renderHook(useAppController);
+  const text = "请调整图片\n图像：screen.png\n1. (x: 71.9%, y: 20.3%) 修改这里\n";
+  const images = [{ name: "screen.png", url: "data:image/png;base64,AA==" }];
+  const files = [{ name: "notes.md", path: "C:/work/notes.md" }];
+  act(() => { result.current.setDraft(`${text}/skills`); result.current.setImages(images); result.current.setMentions(files); });
+  expect(result.current.slashMenuVisible).toBe(true);
+  await act(async () => {
+    if (method === "click") await result.current.runSlashCommand("skills");
+    else result.current.handleComposerKeyDown({ key: "Enter", nativeEvent: { isComposing: false }, preventDefault: vi.fn() } as unknown as KeyboardEvent<HTMLTextAreaElement>);
+  });
+  expect(result.current.commandPanel).toBe("skills");
+  expect(result.current.draft).toBe(text);
+  act(() => result.current.toggleSkill({ name: "image-gen", path: "C:/skills/image-gen/SKILL.md" }));
+  expect(result.current.draft).toBe(text);
+  expect(result.current.images).toEqual(images);
+  expect(result.current.mentions).toEqual(files);
+  expect(result.current.skills).toHaveLength(1);
+});
+
+it("dismisses the slash menu with Escape without changing the draft", () => {
+  const { result } = renderHook(useAppController);
+  act(() => result.current.setDraft("保留正文\n/skills"));
+  act(() => result.current.handleComposerKeyDown({ key: "Escape", nativeEvent: { isComposing: false }, preventDefault: vi.fn() } as unknown as KeyboardEvent<HTMLTextAreaElement>));
+  expect(result.current.draft).toBe("保留正文\n/skills");
+  expect(result.current.slashMenuVisible).toBe(false);
+});
+
+it("consumes a standalone /skills but preserves drafts opened from the add menu", async () => {
+  const { result } = renderHook(useAppController);
+  act(() => result.current.setDraft("/skills"));
+  await act(() => result.current.runSlashCommand("skills"));
+  expect(result.current.draft).toBe("");
+  act(() => result.current.setDraft("正文 /skills"));
+  await act(() => result.current.runSlashCommand("skills", "", false));
+  expect(result.current.draft).toBe("正文 /skills");
+});
 
 it("activates the advanced editor's chosen channel and only closes after restart succeeds", async () => {
   const { result } = renderHook(useAppController);

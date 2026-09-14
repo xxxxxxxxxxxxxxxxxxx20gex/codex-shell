@@ -283,7 +283,7 @@ export function useAppController() {
 
   async function runSlashCommand(id: SlashCommandId, args = "", clearDraft = true) {
     setSlashMenuDismissed(true);
-    if (clearDraft) setDraft("");
+    if (clearDraft) setDraft((current) => args ? "" : current.replace(/(^|\s)\/[^\s/]*$/, "$1"));
     setUiError("");
     setCommandNotice("");
     try {
@@ -535,7 +535,6 @@ export function useAppController() {
       if (event.key === "Escape") {
         event.preventDefault();
         setSlashMenuDismissed(true);
-        if (typedSlashQuery !== null) setDraft("");
         return;
       }
       if (event.key === "Enter" && !event.shiftKey) {

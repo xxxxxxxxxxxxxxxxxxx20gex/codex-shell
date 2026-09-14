@@ -9,4 +9,5 @@
 - 验证证据：2026-09-11；0.1.5 的 TypeScript、ESLint、Knip、Vitest（63 文件 / 317 项）、Cargo check、36 项 Rust 单测、Clippy、协议门禁及门禁负向回归通过。生产构建和 NSIS 打包成功；用应用公钥和 minisign-verify 验证安装器签名通过。未做干净机器安装、真实密钥迁移及远端对话验收。历史分页与运行中换模型限制仍见协议状态。
 - 布局证据：2026-09-11；提供 Playwright 模块、Chrome 和本地 Vite 后，pnpm test:channel-layout 在 1440x900、1280x780、1024x720、900x700 全部通过；覆盖真实组件但使用模拟回调，不是真实 Tauri 端到端。
 - Runtime 历史证据：2026-09-10 的既有探针确认 codex-cli 0.153.4 注入 DeepSeek model_catalog_json 后只返回对应目录；本次未重跑远端 API 探针，不以 /models 成功推断对话可用。
-- 最后更新：2026-09-11
+- 开发验证：2026-09-14 `/skills` 草稿保留修复；TypeScript、ESLint、Knip、Vitest（63 文件 / 322 项）、production build、Cargo check（使用独立 `.codex-shell-cargo-check` 目标目录）和 `pnpm desktop:build` 通过，Debug 已更新为 0.1.6。保留现有 Vite chunk 大小与 MSVC 链接信息警告。本次没有视觉布局变更，未重跑四视口及真实 API 验收。
+- 最后更新：2026-09-14
