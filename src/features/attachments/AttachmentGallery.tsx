@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { File, FolderOpen, X } from "lucide-react";
+import { Check, File, FolderOpen, Pencil, Trash2, X } from "lucide-react";
 import { errorMessage } from "../../shared/errors";
 import type { FileMention, ImageAttachment } from "../runtime/sessionInput";
 import { decodeFilePreview, formatFileSize, type FilePreview } from "../workspaces/filePreview";
 import "./AttachmentGallery.css";
+import { ImageAnnotationCanvas, type ImageAnnotation } from "./ImageAnnotationCanvas";
 
 type ReadFile = (path: string) => Promise<string>;
 
@@ -16,12 +17,18 @@ interface Props {
   onRemoveImage?: (index: number) => void;
   onOpenPath?: (path: string) => void | Promise<void>;
   onOpenInExplorer?: (path: string) => void | Promise<void>;
+  onApplyImageAnnotation?: (image: ImageAttachment, text: string) => void;
   align?: "start" | "end";
 }
 
 type PreviewTarget =
   | { kind: "file"; name: string; path: string }
   | { kind: "image"; name: string; path?: string; url?: string };
+
+function formatImageAnnotations(name: string, annotations: ImageAnnotation[], note: string) {
+  const lines = annotations.map((annotation, index) => `${index + 1}. (x: ${(annotation.x * 100).toFixed(1)}%, y: ${(annotation.y * 100).toFixed(1)}%)${annotation.comment.trim() ? ` ${annotation.comment.trim()}` : ""}`);
+  return [`图像：${name}（坐标以原图左上角为原点，x 向右、y 向下）`, ...lines, ...(note.trim() ? ["", "补充说明：", note.trim()] : [])].join("\n");
+}
 
 function fileKind(name: string) {
   const extension = /\.([^.]+)$/.exec(name)?.[1]?.toLocaleUpperCase();
@@ -79,18 +86,23 @@ export function ImageAttachmentPreview({ path, name, readFile, onOpenPath, onOpe
   );
 }
 
-function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath, onOpenInExplorer }: {
+function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath, onOpenInExplorer, onApplyAnnotation }: {
   target: PreviewTarget;
   readFile: ReadFile;
   onClose: () => void;
   onOpenPath?: (path: string) => void | Promise<void>;
   onOpenInExplorer?: (path: string) => void | Promise<void>;
+  onApplyAnnotation?: (text: string) => void;
 }) {
   const local = usePathPreview(target.path, readFile, Boolean(target.path));
   const preview = target.kind === "image" && target.url
     ? { kind: "image" as const, dataUrl: target.url, byteSize: 0 }
     : local.preview;
   const [openError, setOpenError] = useState("");
+  const [annotating, setAnnotating] = useState(false);
+  const [annotations, setAnnotations] = useState<ImageAnnotation[]>([]);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [note, setNote] = useState("");
 
   async function openResource() {
     if (!target.path || !onOpenPath) return;
@@ -118,17 +130,19 @@ function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath, onOpen
         <header>
           <div><strong>{target.name}</strong><small>{target.path ?? "剪贴板图片"}</small></div>
           <div className="attachment-preview-actions">
+            {target.kind === "image" && preview?.kind === "image" && onApplyAnnotation && <button type="button" onClick={() => { setAnnotating((value) => !value); setSelected(null); }} aria-label={annotating ? "结束图片批注" : "添加图片批注"} title={annotating ? "结束图片批注" : "添加图片批注"}><Pencil aria-hidden="true" /></button>}
             {target.path && (onOpenInExplorer || onOpenPath) && <button type="button" onClick={() => void openResource()} aria-label="在资源管理器中打开" title="在资源管理器中打开"><FolderOpen aria-hidden="true" /></button>}
             <button type="button" onClick={onClose} aria-label="关闭附件预览"><X aria-hidden="true" /></button>
           </div>
         </header>
-        <div className="attachment-preview-content">
+        <div className={`attachment-preview-content ${annotating ? "is-annotating" : ""}`}>
           {openError && <div className="attachment-preview-state error"><strong>无法打开资源管理器</strong><p>{openError}</p></div>}
           {local.loading && <div className="attachment-preview-state"><span className="attachment-loading" /><strong>正在读取附件…</strong></div>}
           {local.error && <div className="attachment-preview-state error"><strong>无法预览附件</strong><p>{local.error}</p></div>}
-          {preview?.kind === "image" && <img src={preview.dataUrl} alt={target.name} />}
+          {preview?.kind === "image" && <ImageAnnotationCanvas source={preview.dataUrl} name={target.name} editing={annotating} annotations={annotations} selected={selected} onAdd={(point) => { setAnnotations((current) => { setSelected(current.length); return [...current, point]; }); }} onSelect={setSelected} />}
           {preview?.kind === "text" && <pre>{preview.content}</pre>}
           {preview?.kind === "binary" && <div className="attachment-preview-state"><strong>{fileKind(target.name)}</strong><p>{formatFileSize(preview.byteSize)} · 当前仅支持图片和文本内容预览</p></div>}
+          {annotating && <aside className="image-annotation-editor" aria-label="图片批注编辑"><strong>图片批注</strong><small>点击图片添加位置，坐标相对于原图。</small>{selected !== null && <><label>批注 {selected + 1}<textarea value={annotations[selected]?.comment ?? ""} onChange={(event) => setAnnotations((current) => current.map((item, index) => index === selected ? { ...item, comment: event.target.value } : item))} placeholder="描述这个位置" /></label><button type="button" onClick={() => { setAnnotations((current) => current.filter((_, index) => index !== selected)); setSelected(null); }}><Trash2 aria-hidden="true" />删除位置</button></>}<label>补充说明<textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="给模型的整体说明" /></label>{onApplyAnnotation && <button type="button" className="image-annotation-apply" disabled={annotations.length === 0} onClick={() => { onApplyAnnotation(formatImageAnnotations(target.name, annotations, note)); onClose(); }}><Check aria-hidden="true" />插入到消息</button>}</aside>}
         </div>
       </section>
     </div>,
@@ -144,6 +158,7 @@ export function AttachmentGallery({
   onRemoveImage,
   onOpenPath,
   onOpenInExplorer,
+  onApplyImageAnnotation,
   align = "start",
 }: Props) {
   const [previewTarget, setPreviewTarget] = useState<PreviewTarget | null>(null);
@@ -171,7 +186,7 @@ export function AttachmentGallery({
           </div>
         ))}
       </div>
-      {previewTarget && <AttachmentPreviewDialog target={previewTarget} readFile={readFile} onClose={() => setPreviewTarget(null)} onOpenPath={onOpenPath} onOpenInExplorer={onOpenInExplorer} />}
+      {previewTarget && <AttachmentPreviewDialog target={previewTarget} readFile={readFile} onClose={() => setPreviewTarget(null)} onOpenPath={onOpenPath} onOpenInExplorer={onOpenInExplorer} onApplyAnnotation={previewTarget.kind === "image" && onApplyImageAnnotation ? (text) => onApplyImageAnnotation(previewTarget.path ? { name: previewTarget.name, path: previewTarget.path } : { name: previewTarget.name, url: previewTarget.url! }, text) : undefined} />}
     </>
   );
 }

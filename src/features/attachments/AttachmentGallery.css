@@ -29,7 +29,25 @@
 .attachment-preview-actions button:hover { color: var(--text-primary); background: var(--surface-raised); }
 .attachment-preview-actions svg { width: 16px; height: 16px; stroke-width: 1.75; }
 .attachment-preview-content { display: grid; min-width: 0; min-height: 0; place-items: center; overflow: auto; padding: 18px; }
+.attachment-preview-content.is-annotating { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
 .attachment-preview-content > img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.attachment-image-canvas { position: relative; display: grid; max-width: 100%; max-height: 100%; place-items: center; }
+.image-annotation-stage { display: grid; width: 100%; height: 100%; min-width: 0; min-height: 0; place-items: center; }
+.image-annotation-target { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: transparent; cursor: crosshair; }
+.attachment-image-canvas > img { display: block; max-width: 100%; max-height: 100%; object-fit: contain; }
+.attachment-preview-content.is-annotating .attachment-image-canvas { cursor: crosshair; }
+.image-annotation-marker { position: absolute; transform: translate(-50%, -50%); display: grid; width: 24px; height: 24px; place-items: center; padding: 0; border: 2px solid var(--surface-panel); border-radius: 50%; color: var(--ui-accent-ink); background: var(--accent-action); box-shadow: 0 0 0 1px var(--accent-action); cursor: pointer; }
+.image-annotation-marker.selected { background: var(--accent-info); }
+.image-annotation-marker span { font: 600 var(--text-meta)/1 var(--font-ui); }
+.image-annotation-editor { display: flex; width: 220px; flex: none; flex-direction: column; gap: 8px; padding: 12px; border-left: 1px solid var(--border-subtle); color: var(--text-secondary); background: var(--surface-panel); font-size: var(--text-label); }
+.image-annotation-editor strong { color: var(--text-primary); font-size: var(--text-title); }
+.image-annotation-editor small { color: var(--text-muted); line-height: 16px; }
+.image-annotation-editor label { display: flex; flex-direction: column; gap: 4px; }
+.image-annotation-editor textarea { min-height: 52px; resize: vertical; padding: 6px; border: 1px solid var(--border-default); border-radius: var(--radius-control); color: var(--text-primary); background: var(--surface-canvas); font: inherit; }
+.image-annotation-editor button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 28px; padding: 4px 8px; border: 1px solid var(--border-default); border-radius: var(--radius-control); color: var(--text-secondary); background: transparent; cursor: pointer; }
+.image-annotation-editor button:hover { color: var(--text-primary); background: var(--surface-raised); }
+.image-annotation-editor .image-annotation-apply { color: var(--ui-accent-ink); background: var(--accent-action); border-color: var(--accent-action); }
+.image-annotation-editor button:disabled { opacity: .5; cursor: not-allowed; }
 .attachment-preview-content > pre { box-sizing: border-box; width: 100%; min-height: 100%; margin: 0; padding: 15px; overflow: auto; color: var(--text-primary); background: var(--surface-canvas); font: var(--text-meta)/16px var(--font-mono); white-space: pre-wrap; word-break: break-word; }
 .attachment-preview-state { display: flex; align-items: center; flex-direction: column; gap: 9px; color: var(--text-secondary); text-align: center; }
 .attachment-preview-state strong { color: var(--text-primary); font-size: 12px; }
