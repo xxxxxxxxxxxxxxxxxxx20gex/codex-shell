@@ -18,8 +18,8 @@ spec = importlib.util.spec_from_file_location("tuzi_image_gen", script)
 skill = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(skill)
 CONNECTION = {
-    "CODEX_SHELL_IMAGE_API_KEY": "test-image-key",
-    "CODEX_SHELL_IMAGE_BASE_URL": "https://images.example.test/v1/",
+    "TUZI_API_KEY": "test-image-key",
+    "TUZI_BASE_URL": "https://images.example.test/v1/",
 }
 
 
@@ -29,18 +29,18 @@ class TuziSkillTests(unittest.TestCase):
             self.assertEqual(skill.load_connection(), ("test-image-key", "https://images.example.test/v1"))
 
     def test_missing_pair_never_reads_legacy_credentials(self):
-        for values in ({}, {"TUZI_API_KEY": "old-key", "OPENAI_API_KEY": "chat-key"},
-                       {"CODEX_SHELL_IMAGE_API_KEY": "test-image-key"},
-                       {"CODEX_SHELL_IMAGE_BASE_URL": "https://images.example.test/v1"}):
+        for values in ({}, {"CODEX_SHELL_IMAGE_API_KEY": "old-key", "CODEX_SHELL_IMAGE_BASE_URL": "https://old.example.test/v1", "OPENAI_API_KEY": "chat-key"},
+                       {"TUZI_API_KEY": "test-image-key"},
+                       {"TUZI_BASE_URL": "https://images.example.test/v1"}):
             with self.subTest(values=list(values)), patch.dict(os.environ, values, clear=True), \
                     patch.object(Path, "open", side_effect=AssertionError("must not read credential files")):
-                with self.assertRaisesRegex(ValueError, "CODEX_SHELL_IMAGE_API_KEY.*CODEX_SHELL_IMAGE_BASE_URL"):
+                with self.assertRaisesRegex(ValueError, "TUZI_API_KEY.*TUZI_BASE_URL"):
                     skill.load_connection()
 
     def test_rejects_unsafe_base_urls_without_echoing_them(self):
         for url in ("http://images.example.test/v1", "https://user:secret@example.test/v1",
                     "https://example.test/v1?key=secret", "https://example.test/v1#secret", "not-a-url"):
-            with self.subTest(url=url), patch.dict(os.environ, {**CONNECTION, "CODEX_SHELL_IMAGE_BASE_URL": url}, clear=True):
+            with self.subTest(url=url), patch.dict(os.environ, {**CONNECTION, "TUZI_BASE_URL": url}, clear=True):
                 with self.assertRaises(ValueError) as error:
                     skill.load_connection()
                 self.assertNotIn("secret", str(error.exception))
@@ -60,7 +60,10 @@ class TuziSkillTests(unittest.TestCase):
                 self.assertEqual(request.url.host, "images.example.test")
                 self.assertEqual(request.url.path, route)
                 self.assertEqual(request.headers["authorization"], "Bearer test-image-key")
-                self.assertEqual(json.loads(request.content)["model"], model)
+                payload = json.loads(request.content)
+                self.assertEqual(payload["model"], model)
+                prompt = payload["messages"][0]["content"][0]["text"] if route.endswith("completions") else payload["prompt"]
+                self.assertEqual(prompt, "test")
                 if route.endswith("completions"):
                     return httpx.Response(200, json={"choices": [{"message": {"content": "![image](https://cdn.example.test/image.png)"}, "finish_reason": "stop"}]})
                 return httpx.Response(200, json={"data": [{"b64_json": base64.b64encode(png.getvalue()).decode()}]})

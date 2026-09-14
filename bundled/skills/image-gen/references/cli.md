@@ -26,8 +26,18 @@ python $imageScript @common --image ./sketch.png --prompt-file ./reference-promp
 ```
 
 路径移动后修改 imageScript 即可。插件内则从 skills/image-gen/SKILL.md 所在目录解析脚本。
-用户级环境变量更新后，新启动的终端和 Codex 才会继承；当前 PowerShell 的 $env: 设置只作用于该进程及子进程。脚本不自动加载 .env。
-凭据和路由必须成对配置为 CODEX_SHELL_IMAGE_API_KEY、CODEX_SHELL_IMAGE_BASE_URL（兔子通常为 https://api.tu-zi.com/v1）。缺少任一项就停止并提示本机配置；不会读取旧 TUZI_API_KEY、本机凭据库或聊天用的 OPENAI_API_KEY、OPENAI_BASE_URL。升级后旧变量需要显式迁移，不能把密钥粘贴进对话。
+
+## 首次配置
+
+脚本固定读取以下两个进程环境变量，无需在提示词或命令参数中重复指定：
+
+| 变量 | 内容 |
+| --- | --- |
+| TUZI_API_KEY | 兔子渠道密钥 |
+| TUZI_BASE_URL | HTTPS API 根地址，通常为 https://api.tu-zi.com/v1，包含 /v1，不带具体接口后缀 |
+
+在 Windows 用户环境变量中配齐后，重新启动 CS；不要把密钥粘贴进对话。当前 PowerShell 的 $env: 设置仅对子进程生效，其他入口启动的 CS 不会继承。脚本不自动加载 .env。
+两项缺一就停止，不回读凭据文档或借用聊天渠道。曾配置 CODEX_SHELL_IMAGE_API_KEY / CODEX_SHELL_IMAGE_BASE_URL 的用户需改用上表名称；模型仍用 --model，不设环境变量。修改地址不代表其他渠道已验证兼容。
 
 ## 多张图片与文件命名
 

@@ -34,10 +34,7 @@ CS 将模型回答、执行过程、文件变更和本轮产出整合到同一�
 
 MCP 的 reload、OAuth 和插件下载可能主动连接各自服务；这些通信独立于模型请求。
 
-CS 市场的兔子 `image-gen` Skill 使用独立环境变量 `CODEX_SHELL_IMAGE_API_KEY` 和
-`CODEX_SHELL_IMAGE_BASE_URL`（兔子通常为 `https://api.tu-zi.com/v1`），两项必须配齐并由 CS 进程继承。
-配置后重新启动 CS；不要把密钥发到对话里。它不自动借用聊天渠道，也不再读取旧 `TUZI_API_KEY` 或凭据文档。
-模型由任务中的 `--model` 指定，未指定时默认 `gpt-image-2.5`，不自动追踪最新型号。
+CS 市场的兔子 `image-gen` Skill 使用独立生图配置，首次使用见 [配置说明](bundled/skills/image-gen/references/cli.md#首次配置)。
 更新应用不会覆盖已安装的用户 Skill；已有安装请备份自定义修改后，在 CS 市场卸载并重新安装新版，再按需启用。
 
 ```text

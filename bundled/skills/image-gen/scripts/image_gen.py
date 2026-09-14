@@ -38,16 +38,16 @@ def image_item(result, api):
 
 
 def load_connection():
-    key = os.environ.get("CODEX_SHELL_IMAGE_API_KEY", "").strip()
-    base_url = os.environ.get("CODEX_SHELL_IMAGE_BASE_URL", "").strip().rstrip("/")
+    key = os.environ.get("TUZI_API_KEY", "").strip()
+    base_url = os.environ.get("TUZI_BASE_URL", "").strip().rstrip("/")
     if not key or not base_url:
-        raise ValueError("请在本机配置 CODEX_SHELL_IMAGE_API_KEY 和 CODEX_SHELL_IMAGE_BASE_URL（兔子 API 根地址通常为 https://api.tu-zi.com/v1），然后重启 CS。不要在对话中发送密钥。")
+        raise ValueError("请在本机配置 TUZI_API_KEY 和 TUZI_BASE_URL（兔子 API 根地址通常为 https://api.tu-zi.com/v1），然后重启 CS。不要在对话中发送密钥。")
     try:
         url = httpx.URL(base_url)
     except httpx.InvalidURL:
-        raise ValueError("CODEX_SHELL_IMAGE_BASE_URL 不是有效的 HTTPS API 根地址。") from None
+        raise ValueError("TUZI_BASE_URL 不是有效的 HTTPS API 根地址。") from None
     if url.scheme != "https" or not url.host or url.userinfo or url.query or url.fragment:
-        raise ValueError("CODEX_SHELL_IMAGE_BASE_URL 必须是 HTTPS API 根地址，不能包含账号密码、查询参数或片段。")
+        raise ValueError("TUZI_BASE_URL 必须是 HTTPS API 根地址，不能包含账号密码、查询参数或片段。")
     return key, base_url
 
 
@@ -162,7 +162,7 @@ if __name__ == "__main__":
         main()
     except Exception as error:
         message = str(error)
-        key = os.environ.get("CODEX_SHELL_IMAGE_API_KEY", "").strip()
+        key = os.environ.get("TUZI_API_KEY", "").strip()
         if key:
             message = message.replace(key, "[REDACTED]")
         print(f"ERROR: {message}", file=sys.stderr)

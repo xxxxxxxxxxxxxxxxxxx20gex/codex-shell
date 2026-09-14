@@ -1,6 +1,6 @@
 # 测试与发布状态
 
-- 兔子 Skill 验证（2026-09-14）：`python -B tests/scripts/test_tuzi_skill.py` 5 项离线测试通过；`quick_validate.py` 首次因 Windows GBK 默认解码失败，使用 `python -X utf8` 后通过。TypeScript、production build、Cargo check、39 项 Rust 单测、严格 Clippy 与 Debug 构建通过。仅验证模拟请求，不代表真实生图、系统环境变量继承或已安装 Skill 升级已验收；本次未重跑前端全量测试及 Knip。
+- 兔子 Skill 验证（2026-09-14）：变量恢复 tuzi 命名后，`python -B tests/scripts/test_tuzi_skill.py` 5 项离线测试通过，覆盖新变量配对、旧 CS 变量不回退、请求提示词原样传递及既有 URL/密钥边界；`python -X utf8 quick_validate.py` 通过。TypeScript、production build、Cargo check、39 项 Rust 单测、严格 Clippy 与 Debug 构建通过。仅验证模拟请求，不代表模型一定遵循精简后的说明，也不代表真实生图、系统环境变量继承或已安装 Skill 升级已验收；本次未重跑前端全量测试及 Knip。
 
 - 内置搜索工具验证（2026-09-14）：新增 Runtime PATH 边界与真实 PowerShell 搜索测试；Cargo check、39 项 Rust 单测、严格 Clippy、TypeScript、ESLint、64 文件 / 328 项 Vitest、production build 和 Debug 构建通过。`pnpm runtime:probe-tools` 验证不含官方 Codex PATH 的真实 app-server 命令执行链，无模型调用；staging 下载/缓存校验及错误来源拒绝通过。尚未进行 elevated Sandbox 和安装器验收。Knip 仍仅报告既有图片布局脚本未登记入口；Cargo fmt --check 仍有既有跨模块格式差异，不作全库格式化。
 

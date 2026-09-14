@@ -2,7 +2,7 @@
 
 核对日期：2026-09-11。来源：[渠道配置](https://api.tu-zi.com/api/pricing)、[Chat 文档](https://tuzi-api.apifox.cn/343647063e0.md)与实际调用。
 
-以下地址以兔子为例；脚本实际使用 CODEX_SHELL_IMAGE_BASE_URL 拼接接口路径，以 CODEX_SHELL_IMAGE_API_KEY 鉴权，两项均必填，不读取聊天渠道配置。
+以下地址以兔子为例；脚本按已配置的 API 根地址拼接接口路径，配置方法见 [首次配置](cli.md#首次配置)。
 
 ## Chat
 

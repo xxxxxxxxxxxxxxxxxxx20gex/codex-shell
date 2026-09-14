@@ -2,7 +2,7 @@
 
 - 模块职责：把 app-server 的 Skill、MCP、上下文压缩、目标、计划和 Review 映射为 Composer `+` 菜单与 `/` 快捷命令体验。
 - 当前状态：`image-gen` Skill 随安装包资源携带，在 CS 市场中由用户主动安装到独立 CODEX_HOME 的用户 Skill 目录，安装后默认关闭；Skills 目录安装、Core 启停和可恢复卸载已接入；MCP 用户配置增删改、启停、stdio 参数及环境变量、HTTP Token 输入已接入；本地 Marketplace 添加/更新/移除和 Plugin 详情/安装/卸载已接入。
-- 最近变更：CS 市场兔子 `image-gen` 仅从 `CODEX_SHELL_IMAGE_API_KEY`、`CODEX_SHELL_IMAGE_BASE_URL` 成对读取生图配置，移除旧 `TUZI_API_KEY` 与本机凭据文档回退，不借用聊天 Key。缺配置时在请求前提示本机配置，URL 要求 HTTPS 且不带账号密码、查询参数或片段；模型仍由 `--model` 指定，默认改为当前维护的 `gpt-image-2.5`，不增加模型变量或自动追新。没有新增设置表单或凭据注入机制；环境变量需由用户配置并由 CS 继承。市场更新不覆盖已安装副本，需要用户备份自定义修改后卸载重装。Skill 不再依赖官方 Codex 的固定 Python 路径。
+- 最近变更：兔子 Skill 恢复使用 `TUZI_API_KEY`，配套路由为 `TUZI_BASE_URL`；脚本固定成对读取，不回读凭据文档或借用聊天渠道。配置细节集中于 Skill CLI 文档“首次配置”，主说明只保留运行、缺配置处理和提示词边界，删除重复变量说明及历史迁移说明表；生图提示词只描述画面，不带鉴权或脚本指令。默认模型及协议行为不变。环境变量需由 CS 继承；市场更新不覆盖已安装副本，已有安装需用户备份修改后卸载重装。
 - 草稿行为：选择草稿末尾的 `/skills` 等无参数快捷命令时只移除命令片段，保留正文、图片批注文字和附件；Escape 仅关闭斜杠菜单，不清空草稿。`+` 菜单继续保留全部输入。扩展变更刷新与失效 Skill 选择清理行为不变。
 - 当前接口：`ComposerAddMenu`、`ComposerIntentControl`、`SlashCommandMenu`、`SkillPicker`、`McpStatusPanel`、`ReviewPanel`、`useAgentCommands` 及固定协议 RPC 包装。
 - 能力边界：Plan 是当前唯一启用的实验字段，只在 initialize 能力声明和 `turn/start` 客户端封装中最小扩展，不生成或暴露整套 experimental schema。Codex Core 从模型元数据动态决定自动压缩阈值：缺省为原始上下文窗口的 90%，模型或配置提供的更低值优先且不会超过 90%；Codex Shell 不设置、不复制也不触发该阈值，只展示 app-server 上报的实际用量。独立 CODEX_HOME 只会列出安装到 Codex Shell 环境的 Skills 和 MCP 配置，不自动读取官方 Codex 用户目录。
