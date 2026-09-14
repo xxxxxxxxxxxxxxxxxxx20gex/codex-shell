@@ -31,6 +31,7 @@ describe("MarkdownContent links", () => {
   });
 
   it("rejects executable URL schemes and decodes file URLs", () => {
+    expect(markdownLinkTarget("/C:/work/final.png")).toEqual({ type: "localPath", value: "C:/work/final.png" });
     expect(markdownLinkTarget("javascript:alert(1)")).toBeNull();
     expect(markdownLinkTarget("file:///C:/work/My%20File.md#L8")).toEqual({
       type: "localPath",

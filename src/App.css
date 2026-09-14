@@ -430,6 +430,9 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .turn-resource-outputs header small { color: var(--text-muted); font-size: var(--text-meta); }
 .turn-resource-images { display: flex; flex-wrap: wrap; gap: 7px; }
 .turn-resource-images .attachment-image-preview { width: 132px; height: 88px; }
+.turn-process-resources { margin-top: var(--space-3); color: var(--text-secondary); font-size: var(--text-ui); }
+.turn-process-resources > summary { cursor: pointer; padding: var(--space-2) 0; }
+.turn-process-resources > summary:focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; }
 .turn-resource-unavailable { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: var(--text-meta); }
 .turn-resource-unavailable svg { width: 16px; height: 16px; }
 .turn-resource-files { display: grid; gap: 3px; margin: 7px 0 0; padding: 0; list-style: none; }

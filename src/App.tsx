@@ -21,7 +21,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState, type CSSProperties } from "react";
 import "./App.css";
 import { PermissionModeSelector } from "./features/approvals/PermissionModeSelector";
-import { AttachmentGallery } from "./features/attachments/AttachmentGallery";
+import { AttachmentGallery, AttachmentPreviewDialog } from "./features/attachments/AttachmentGallery";
 import { ImageAnnotationContext } from "./features/attachments/ImageAnnotationContext";
 import { McpStatusPanel } from "./features/commands/McpStatusPanel";
 import { ReviewPanel } from "./features/commands/ReviewPanel";
@@ -180,6 +180,10 @@ function App() {
       ? resolveLinkedProjectPath(currentProjectPath, path)
       : null;
     if (!resolvedPath) throw new Error("相对文件路径需要先选择项目");
+    if (/\.(avif|bmp|gif|jpe?g|png|svg|webp)$/i.test(resolvedPath)) {
+      setConversationImage(resolvedPath);
+      return;
+    }
     if (currentProjectPath && isPathWithinRoot(currentProjectPath, resolvedPath)) {
       setInspectorOpen(true);
       setInspectorView("files");
@@ -193,6 +197,8 @@ function App() {
     await invoke("reveal_path_in_explorer", { path });
   }
 
+  const [conversationImage, setConversationImage] = useState<string | null>(null);
+
   return (
     <ImageAnnotationContext.Provider value={(image, text) => {
       setImages((current) => current.some((item) => (item.path ?? item.url) === (image.path ?? image.url)) ? current : [...current, image]);
@@ -202,6 +208,7 @@ function App() {
       setCommandNotice("图片与批注已加入草稿，请确认后发送。");
     }}>
     <main className="app-shell" data-theme={personalization.theme}>
+      {conversationImage && <AttachmentPreviewDialog key={conversationImage} target={{ kind: "image", name: conversationImage.split(/[\\/]/).pop() || "图片", path: conversationImage }} readFile={session.readWorkspaceFile} onClose={() => setConversationImage(null)} onOpenPath={openResourceInExplorer} onOpenInExplorer={openResourceInExplorer} />}
       <WindowTitleBar />
       <section
         ref={workspaceGridRef}

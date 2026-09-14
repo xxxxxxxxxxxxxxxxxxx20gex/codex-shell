@@ -45,7 +45,7 @@ function fileUrlPath(href: string) {
 }
 
 export function markdownLinkTarget(href: string): LinkTarget | null {
-  const value = href.trim();
+  const value = href.trim().replace(/^\/([a-zA-Z]:[\\/])/, "$1");
   if (!value) return null;
   if (value.startsWith("#")) return { type: "fragment", value };
   if (/^(?:https?:|mailto:|tel:)/i.test(value)) return { type: "external", value };
