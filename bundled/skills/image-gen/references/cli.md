@@ -10,7 +10,7 @@ python ./scripts/image_gen.py --model gpt-image-2.5 --image ./reference.png --pr
 
 --prompt 与 --prompt-file 必选其一。--image 读取实际本地图片。--api 默认 auto，gpt-image-2.5 和 gpt-image-2.5-vip 自动选择 Chat。多图未实测。
 Chat 不接受 --size 或 --quality。Images 文生图可使用，默认 1024x1024 和 low。
-脚本默认型号仍为 gpt-image-2，参考图工作流显式指定 gpt-image-2.5。
+脚本默认型号为 gpt-image-2.5，不设置模型环境变量；--model 可指定其他型号。默认值不会自动追踪渠道最新型号。
 --timeout 默认 300 秒，是网络操作超时，不是严格的总耗时上限。
 --out 必须是新 PNG 路径，同名 JSON 也不能存在。不自动重试，不自动替换模型。
 
@@ -19,7 +19,7 @@ Chat 不接受 --size 或 --quality。Images 文生图可使用，默认 1024x10
 本文件参考个人 imagegen 的 CLI 文档，所有示例已改为当前兔子脚本语法。建议激活 Python 3.11+ 的 conda 环境后运行。
 
 ```powershell
-$imageScript = 'D:/23262/image-gen/scripts/image_gen.py'
+$imageScript = Join-Path (Get-Location) 'scripts/image_gen.py'
 $common = @('--model', 'gpt-image-2.5')
 python $imageScript @common --prompt-file ./scene.txt --out ./results/scene.png
 python $imageScript @common --image ./sketch.png --prompt-file ./reference-prompt.txt --out ./results/sketch-render.png
@@ -27,7 +27,7 @@ python $imageScript @common --image ./sketch.png --prompt-file ./reference-promp
 
 路径移动后修改 imageScript 即可。插件内则从 skills/image-gen/SKILL.md 所在目录解析脚本。
 用户级环境变量更新后，新启动的终端和 Codex 才会继承；当前 PowerShell 的 $env: 设置只作用于该进程及子进程。脚本不自动加载 .env。
-凭据使用 TUZI_API_KEY 或本机凭据库，不能照抄源文档中的 OPENAI_API_KEY、OPENAI_BASE_URL。
+凭据和路由必须成对配置为 CODEX_SHELL_IMAGE_API_KEY、CODEX_SHELL_IMAGE_BASE_URL（兔子通常为 https://api.tu-zi.com/v1）。缺少任一项就停止并提示本机配置；不会读取旧 TUZI_API_KEY、本机凭据库或聊天用的 OPENAI_API_KEY、OPENAI_BASE_URL。升级后旧变量需要显式迁移，不能把密钥粘贴进对话。
 
 ## 多张图片与文件命名
 

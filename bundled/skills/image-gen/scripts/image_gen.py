@@ -9,14 +9,12 @@ import re
 from pathlib import Path
 import sys
 import time
-import tomllib
 from contextlib import ExitStack
 
 import httpx
 from PIL import Image
 
 
-BASE_URL = "https://api.tu-zi.com/v1"
 IMAGE_EDIT_MODELS = {"gpt-image-1", "gpt-image-1-vip", "gpt-image-1.5", "gpt-image-2", "gpt-image-2-1k", "gpt-image-2.5-1k"}
 IMAGE_GENERATE_MODELS = {"gpt-image-2-vip", "gpt-image-2.5-flare", "gpt-image-2.5-sunburst"}
 CHAT_MODELS = {"gpt-image-2.5", "gpt-image-2.5-vip", "chatgpt-image-latest", "gpt-image-2-count", "gpt-image-2-exact", "gpt-image-2.5-prism", "gpt-image2", "gpt-image-2-free"}
@@ -39,22 +37,18 @@ def image_item(result, api):
     return items[0]
 
 
-def load_key():
-    key = os.environ.get("TUZI_API_KEY")
-    if key:
-        return key
-    location = os.environ.get("LOCAL_CREDENTIAL_MEMORY_PATH")
-    path = Path(os.path.expandvars(location)).expanduser() if location else Path.home() / ".local-credential-memory/credentials.toml"
-    if path.exists():
-        with path.open("rb") as handle:
-            data = tomllib.loads(handle.read().decode("utf-8-sig"))
-        entry = data.get("api", {}).get("tuzi", {})
-        if entry.get("base_url", "").rstrip("/") != "https://api.tu-zi.com":
-            raise ValueError("api.tuzi must target https://api.tu-zi.com")
-        key = entry.get("api_key")
-        if key:
-            return key
-    raise ValueError("Set TUZI_API_KEY or configure api.tuzi in the local credential store.")
+def load_connection():
+    key = os.environ.get("CODEX_SHELL_IMAGE_API_KEY", "").strip()
+    base_url = os.environ.get("CODEX_SHELL_IMAGE_BASE_URL", "").strip().rstrip("/")
+    if not key or not base_url:
+        raise ValueError("请在本机配置 CODEX_SHELL_IMAGE_API_KEY 和 CODEX_SHELL_IMAGE_BASE_URL（兔子 API 根地址通常为 https://api.tu-zi.com/v1），然后重启 CS。不要在对话中发送密钥。")
+    try:
+        url = httpx.URL(base_url)
+    except httpx.InvalidURL:
+        raise ValueError("CODEX_SHELL_IMAGE_BASE_URL 不是有效的 HTTPS API 根地址。") from None
+    if url.scheme != "https" or not url.host or url.userinfo or url.query or url.fragment:
+        raise ValueError("CODEX_SHELL_IMAGE_BASE_URL 必须是 HTTPS API 根地址，不能包含账号密码、查询参数或片段。")
+    return key, base_url
 
 
 def check_response(response, key):
@@ -72,7 +66,7 @@ def main():
     source.add_argument("--prompt-file", type=Path)
     parser.add_argument("--image", type=Path, action="append", default=[], help="Repeat for multiple reference images.")
     parser.add_argument("--mask", type=Path, help="Images edit only: optional PNG mask defining the editable area.")
-    parser.add_argument("--model", default="gpt-image-2")
+    parser.add_argument("--model", default="gpt-image-2.5")
     parser.add_argument("--api", choices=["auto", "images", "chat"], default="auto")
     parser.add_argument("--size", help="Images only; default 1024x1024")
     parser.add_argument("--quality", choices=["auto", "low", "medium", "high"], help="Images only; default low")
@@ -104,7 +98,7 @@ def main():
     for path in args.image:
         with Image.open(path) as reference:
             reference.verify()
-    key = load_key()
+    key, base_url = load_connection()
     args.out.parent.mkdir(parents=True, exist_ok=True)
     payload = {"model": args.model, "prompt": prompt, "size": args.size or "1024x1024", "quality": args.quality or "low", "n": 1}
     if api == "chat":
@@ -116,7 +110,7 @@ def main():
         payload = {"model": args.model, "stream": False, "messages": [{"role": "user", "content": content}]}
     endpoint = "/chat/completions" if api == "chat" else ("/images/edits" if args.image else "/images/generations")
     parameters = {"model": args.model, "stream": False, "prompt": prompt} if api == "chat" else payload
-    record = {"endpoint": BASE_URL + endpoint, "api": api, "parameters": parameters, "input_images": [str(p.resolve()) for p in args.image], "mask": str(args.mask.resolve()) if args.mask else None, "status": "started"}
+    record = {"endpoint": base_url + endpoint, "api": api, "parameters": parameters, "input_images": [str(p.resolve()) for p in args.image], "mask": str(args.mask.resolve()) if args.mask else None, "status": "started"}
     # Reserve the record before a potentially billable request; never retry POSTs.
     with record_path.open("x", encoding="utf-8") as handle:
         json.dump(record, handle, ensure_ascii=False, indent=2)
@@ -127,9 +121,9 @@ def main():
             if api == "images" and args.image:
                 field = "image" if len(args.image) == 1 else "image[]"
                 files = [(field, (p.name, stack.enter_context(p.open("rb")))) for p in args.image]
-                response = client.post(BASE_URL + endpoint, headers=headers, data={k: str(v) for k, v in payload.items()}, files=files)
+                response = client.post(base_url + endpoint, headers=headers, data={k: str(v) for k, v in payload.items()}, files=files)
             else:
-                response = client.post(BASE_URL + endpoint, headers=headers, json=payload)
+                response = client.post(base_url + endpoint, headers=headers, json=payload)
             check_response(response, key)
             result = response.json()
             item = image_item(result, api)
@@ -168,10 +162,9 @@ if __name__ == "__main__":
         main()
     except Exception as error:
         message = str(error)
-        try:
-            message = message.replace(load_key(), "[REDACTED]")
-        except (OSError, ValueError):
-            pass
+        key = os.environ.get("CODEX_SHELL_IMAGE_API_KEY", "").strip()
+        if key:
+            message = message.replace(key, "[REDACTED]")
         print(f"ERROR: {message}", file=sys.stderr)
         print("No automatic retry. If the request was sent, check provider billing before resubmitting.", file=sys.stderr)
         sys.exit(1)
