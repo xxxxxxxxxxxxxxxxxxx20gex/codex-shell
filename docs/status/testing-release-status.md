@@ -1,5 +1,7 @@
 # 测试与发布状态
 
+- 图片入口验证（2026-09-14）：TypeScript、ESLint、Knip、Vitest（63 文件 / 326 项）、production build、独立目标目录 Cargo check、Debug 构建通过。新增 `tests/scripts/check-image-annotation-layout.mjs`，四视口 1440×900、1280×780、1024×720、900×700 通过预览、添加批注、回填、Escape、外部点击与边界检查，并在 reduced-motion 环境执行；使用真实组件与模拟回填，不代表真实 API 或 Tauri 端到端验证。
+
 - 模块职责：维护类型检查、单元测试、Rust 校验、Debug 构建和生产发布验证。
 - 当前状态：公开稳定版为 v0.1.5，当前开发版本为 v0.1.6；生产安装器、Updater 签名及 latest.json 已上传 GitHub 并设为 Latest，三项远端 SHA-256 与本地一致，公开更新清单下载验证通过。Debug 已同步到 0.1.5。未配置 Windows Authenticode 证书，Updater 签名不消除未知发布者提示。
 - 最近变更：发布版本 0.1.5 已完成，当前功能准备进入 0.1.6，修复签名命令经 pnpm 传递空密码时参数丢失的问题，使用 --password=。本机 NSIS 缓存初始化重命名失败，通过复制已校验工具及匹配官方哈希的插件恢复，不改应用逻辑。

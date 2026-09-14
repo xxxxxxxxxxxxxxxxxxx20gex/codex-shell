@@ -22,6 +22,7 @@ import { useEffect, useState, type CSSProperties } from "react";
 import "./App.css";
 import { PermissionModeSelector } from "./features/approvals/PermissionModeSelector";
 import { AttachmentGallery } from "./features/attachments/AttachmentGallery";
+import { ImageAnnotationContext } from "./features/attachments/ImageAnnotationContext";
 import { McpStatusPanel } from "./features/commands/McpStatusPanel";
 import { ReviewPanel } from "./features/commands/ReviewPanel";
 import { SkillPicker } from "./features/commands/SkillPicker";
@@ -193,6 +194,13 @@ function App() {
   }
 
   return (
+    <ImageAnnotationContext.Provider value={(image, text) => {
+      setImages((current) => current.some((item) => (item.path ?? item.url) === (image.path ?? image.url)) ? current : [...current, image]);
+      setDraft((current) => current ? `${current}\n\n${text}` : text);
+      setMainView("conversation");
+      setSideChatMaximized(false);
+      setCommandNotice("图片与批注已加入草稿，请确认后发送。");
+    }}>
     <main className="app-shell" data-theme={personalization.theme}>
       <WindowTitleBar />
       <section
@@ -331,7 +339,6 @@ function App() {
                 onOpenPath={openConversationPath}
                 onRemoveFile={(path) => setMentions((current) => current.filter((item) => item.path !== path))}
                 onRemoveImage={(index) => setImages((current) => current.filter((_, itemIndex) => itemIndex !== index))}
-                onApplyImageAnnotation={(image, text) => { setImages((current) => current.some((item) => (item.path ?? item.url) === (image.path ?? image.url)) ? current : [...current, image]); setDraft((current) => current.trim() ? `${current.trim()}\n\n${text}` : text); }}
               />
               <textarea value={draft} onChange={(event) => { setDraft(event.target.value); setUiError(""); setCommandNotice(""); setSlashMenuDismissed(false); }} onPaste={(event) => void handleComposerPaste(event)} onKeyDown={handleComposerKeyDown} placeholder={session.running ? "输入下一条消息，当前回答完成后发送…" : composerIntent === "goal" ? "描述你的目标，最好包含可衡量的结果…" : composerIntent === "plan" ? "描述需要分析和规划的任务…" : currentProjectPath ? "交给 Codex 一个任务，输入 / 使用命令，输入 @ 引用文件…" : "正在准备默认项目目录…"} />
               {currentProjectPath && mentionQuery !== null && <FileMentionMenu query={mentionQuery} results={mentionResults} loading={mentionLoading} onSelect={selectMention} />}
@@ -448,6 +455,7 @@ function App() {
       />}
       <ServerInteractionDialog store={session.interactionStore} />
     </main>
+    </ImageAnnotationContext.Provider>
   );
 }
 

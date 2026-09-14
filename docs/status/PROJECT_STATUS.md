@@ -7,6 +7,8 @@
 
 ## 跨模块当前快照
 
+- 2026-09-14 图片批注入口已贯通历史附件、生成/工具图片与项目文件预览，统一回填主会话草稿；不改 Core 或图片文件。四视口组件检查、326 项前端测试、类型/静态检查、Cargo check 和 Debug 构建通过，边界见时间线与测试状态。
+
 - 产品使用 Tauri 2、React、TypeScript 与 Rust 构建，以原版 `codex app-server` 为唯一执行核心，通过 stdio JSON-RPC 通信；公开 `v0.1.5` 已发布安装器、minisign 签名和 updater manifest。当前 Runtime 为通过兼容门禁的 `codex-cli 0.153.4`，生成协议类型已与 `0.153.4` 的实验导出对齐；静态门禁不代表所有运行时功能可用，见 [协议状态](protocol-status.md)。参见 [ADR-001](../decisions/ADR-001-unmodified-codex-app-server.md) 与 [ADR-003](../decisions/ADR-003-compatible-runtime-updates.md)。
 - 核心工作流已形成闭环：用户可以选择项目、创建和恢复多个 Session、发送文本/文件/图片、查看结构化执行时间线、处理审批、审查实时与历史 Diff，并按完成 Turn 分叉会话。
 - Composer 已统一模型、推理强度、权限、Goal、Plan、Review、Skills、MCP 和压缩入口；Thread 的模型、权限、审批者和 Goal 状态以 Core 权威通知及查询结果为准，不在 Shell 维护第二套执行状态。

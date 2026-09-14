@@ -48,3 +48,5 @@
 .preview-line:hover { background: var(--surface-sidebar); }.preview-line > i { position: sticky; left: 0; padding-right: 11px; color: var(--text-disabled); text-align: right; background: var(--surface-canvas); font-style: normal; user-select: none; }.preview-line > code { padding: 0 15px; color: var(--text-secondary); white-space: pre; }
 
 @media (max-width: 899px) { .explorer-body { grid-template-columns: var(--explorer-tree-width, 225px) 8px minmax(0,1fr); } }
+.explorer-image-open { display: contents; cursor: zoom-in; }
+.explorer-image-open:focus-visible img { outline: 2px solid var(--accent-info); outline-offset: 2px; }

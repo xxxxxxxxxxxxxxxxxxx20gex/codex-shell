@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, File, FolderOpen, Pencil, Trash2, X } from "lucide-react";
 import { errorMessage } from "../../shared/errors";
@@ -6,6 +6,7 @@ import type { FileMention, ImageAttachment } from "../runtime/sessionInput";
 import { decodeFilePreview, formatFileSize, type FilePreview } from "../workspaces/filePreview";
 import "./AttachmentGallery.css";
 import { ImageAnnotationCanvas, type ImageAnnotation } from "./ImageAnnotationCanvas";
+import { ImageAnnotationContext } from "./ImageAnnotationContext";
 
 type ReadFile = (path: string) => Promise<string>;
 
@@ -17,7 +18,6 @@ interface Props {
   onRemoveImage?: (index: number) => void;
   onOpenPath?: (path: string) => void | Promise<void>;
   onOpenInExplorer?: (path: string) => void | Promise<void>;
-  onApplyImageAnnotation?: (image: ImageAttachment, text: string) => void;
   align?: "start" | "end";
 }
 
@@ -86,14 +86,14 @@ export function ImageAttachmentPreview({ path, name, readFile, onOpenPath, onOpe
   );
 }
 
-function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath, onOpenInExplorer, onApplyAnnotation }: {
+export function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath, onOpenInExplorer }: {
   target: PreviewTarget;
   readFile: ReadFile;
   onClose: () => void;
   onOpenPath?: (path: string) => void | Promise<void>;
   onOpenInExplorer?: (path: string) => void | Promise<void>;
-  onApplyAnnotation?: (text: string) => void;
 }) {
+  const applyAnnotation = useContext(ImageAnnotationContext);
   const local = usePathPreview(target.path, readFile, Boolean(target.path));
   const preview = target.kind === "image" && target.url
     ? { kind: "image" as const, dataUrl: target.url, byteSize: 0 }
@@ -103,6 +103,12 @@ function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath, onOpen
   const [annotations, setAnnotations] = useState<ImageAnnotation[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [note, setNote] = useState("");
+  const onApplyAnnotation = applyAnnotation && preview?.kind === "image" ? (text: string) => {
+    const image: ImageAttachment = target.path
+      ? { name: target.name, path: target.path }
+      : { name: target.name, url: preview.dataUrl };
+    applyAnnotation(image, text);
+  } : null;
 
   async function openResource() {
     if (!target.path || !onOpenPath) return;
@@ -158,7 +164,6 @@ export function AttachmentGallery({
   onRemoveImage,
   onOpenPath,
   onOpenInExplorer,
-  onApplyImageAnnotation,
   align = "start",
 }: Props) {
   const [previewTarget, setPreviewTarget] = useState<PreviewTarget | null>(null);
@@ -186,7 +191,7 @@ export function AttachmentGallery({
           </div>
         ))}
       </div>
-      {previewTarget && <AttachmentPreviewDialog target={previewTarget} readFile={readFile} onClose={() => setPreviewTarget(null)} onOpenPath={onOpenPath} onOpenInExplorer={onOpenInExplorer} onApplyAnnotation={previewTarget.kind === "image" && onApplyImageAnnotation ? (text) => onApplyImageAnnotation(previewTarget.path ? { name: previewTarget.name, path: previewTarget.path } : { name: previewTarget.name, url: previewTarget.url! }, text) : undefined} />}
+      {previewTarget && <AttachmentPreviewDialog target={previewTarget} readFile={readFile} onClose={() => setPreviewTarget(null)} onOpenPath={onOpenPath} onOpenInExplorer={onOpenInExplorer} />}
     </>
   );
 }

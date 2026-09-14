@@ -21,6 +21,7 @@ import { decodeFilePreview, formatFileSize, type FilePreview } from "./filePrevi
 import { useWorkspaceDirectoryWatches } from "./useWorkspaceDirectoryWatches";
 import { joinProjectPath, projectName, projectRelativePath } from "./workspaceState";
 import "./WorkspaceExplorer.css";
+import { AttachmentPreviewDialog } from "../attachments/AttachmentGallery";
 
 interface Props {
   rootPath: string;
@@ -63,6 +64,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set([rootPath]));
   const [filter, setFilter] = useState("");
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
+  const [annotationPath, setAnnotationPath] = useState<string | null>(null);
   const [preview, setPreview] = useState<FilePreview | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState("");
@@ -142,7 +144,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
 
   useEffect(() => {
     function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape" && !document.querySelector(".attachment-preview-layer")) onClose();
     }
     window.addEventListener("keydown", closeOnEscape);
     return () => window.removeEventListener("keydown", closeOnEscape);
@@ -286,7 +288,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
             {previewLoading && <div className="explorer-empty"><span className="preview-spinner"><LoaderCircle aria-hidden="true" /></span><strong>正在读取文件…</strong></div>}
             {previewError && <div className="explorer-empty error"><span><FileWarning aria-hidden="true" /></span><strong>无法预览文件</strong><p>{previewError}</p></div>}
             {preview?.kind === "binary" && <div className="explorer-empty"><span><FileCog aria-hidden="true" /></span><strong>二进制文件</strong><p>该文件共 {formatFileSize(preview.byteSize)}，不适合以文本方式显示。</p></div>}
-            {preview?.kind === "image" && <div className="explorer-image-preview"><img src={preview.dataUrl} alt={fileName(selectedPath ?? "图片预览")} /></div>}
+            {preview?.kind === "image" && <div className="explorer-image-preview"><button type="button" className="explorer-image-open" onClick={() => setAnnotationPath(selectedPath)} title="打开图片预览与批注" aria-label="打开图片预览与批注"><img src={preview.dataUrl} alt={fileName(selectedPath ?? "图片预览")} /></button></div>}
             {preview?.kind === "text" && <div className="explorer-code-preview">
               {preview.truncated && <div className="preview-truncated">文件较大，仅显示前 200 KB / 4000 行。</div>}
               <pre>{previewLines.map((line, index) => <span className="preview-line" key={index}><i>{index + 1}</i><code>{line || " "}</code></span>)}</pre>
@@ -294,6 +296,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
           </main>
         </div>
       </section>
+      {annotationPath && <AttachmentPreviewDialog key={annotationPath} target={{ kind: "image", name: fileName(annotationPath), path: annotationPath }} readFile={readFile} onClose={() => setAnnotationPath(null)} />}
     </div>
   );
 }

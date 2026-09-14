@@ -59,3 +59,7 @@
   .attachment-preview-layer { padding: 12px; }
   .attachment-preview-dialog { width: 100%; height: min(760px, 92vh); }
 }
+.markdown-image-open { padding: 0; border: 0; background: transparent; cursor: zoom-in; }
+.image-annotation-editor svg { width: 16px; height: 16px; stroke-width: 1.75; }
+.attachment-preview-dialog :is(button, textarea):focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .attachment-loading { animation: none; } }

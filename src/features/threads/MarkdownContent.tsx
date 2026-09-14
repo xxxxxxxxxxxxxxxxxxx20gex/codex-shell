@@ -86,6 +86,7 @@ export function MarkdownContent({ children, className, onOpenPath, onOpenError }
         skipHtml
         urlTransform={safeUrlTransform}
         components={{
+          img: ({ src, alt }) => src ? <button type="button" className="markdown-image-open" onClick={() => void openLink(src)} aria-label={`打开图片 ${alt || src}`} title="打开图片"><img src={src} alt={alt ?? "图片"} /></button> : null,
           pre: ({ children: codeElement }) => {
             if (!isValidElement(codeElement)) return <pre>{codeElement}</pre>;
             return <MarkdownCodeBlock codeElement={codeElement as ReactElement<{ children?: ReactNode; className?: string }>} />;
