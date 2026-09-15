@@ -1,7 +1,6 @@
 import { useContext, useEffect, useState } from "react";
-import { openPath } from "@tauri-apps/plugin-opener";
 import { createPortal } from "react-dom";
-import { Check, ExternalLink, File, FolderOpen, Pencil, Trash2, X } from "lucide-react";
+import { Check, File, FolderOpen, Pencil, Trash2, X } from "lucide-react";
 import { errorMessage } from "../../shared/errors";
 import type { FileMention, ImageAttachment } from "../runtime/sessionInput";
 import { decodeFilePreview, formatFileSize, type FilePreview } from "../workspaces/filePreview";
@@ -139,7 +138,6 @@ export function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath,
           <div className="attachment-preview-actions">
             {target.kind === "image" && preview?.kind === "image" && onApplyAnnotation && <button type="button" onClick={() => { setAnnotating((value) => !value); setSelected(null); }} aria-label={annotating ? "结束图片批注" : "添加图片批注"} title={annotating ? "结束图片批注" : "添加图片批注"}><Pencil aria-hidden="true" /></button>}
             {target.path && (onOpenInExplorer || onOpenPath) && <button type="button" onClick={() => void openResource()} aria-label="在资源管理器中打开" title="在资源管理器中打开"><FolderOpen aria-hidden="true" /></button>}
-            {target.path && <button type="button" onClick={() => void openPath(target.path!)} aria-label="用外部应用打开" title="用外部应用打开"><ExternalLink aria-hidden="true" /></button>}
             <button type="button" onClick={onClose} aria-label="关闭附件预览"><X aria-hidden="true" /></button>
           </div>
         </header>

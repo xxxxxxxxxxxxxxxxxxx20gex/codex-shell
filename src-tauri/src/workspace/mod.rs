@@ -50,7 +50,8 @@ pub fn reveal_path_in_explorer(path: String) -> Result<(), String> {
         return Err("只能打开绝对本地路径".to_string());
     }
     Command::new("explorer.exe")
-        .arg(format!("/select,{}", target.display()))
+        .arg("/select,")
+        .arg(&target)
         .spawn()
         .map(|_| ())
         .map_err(|error| format!("启动资源管理器失败：{error}"))
