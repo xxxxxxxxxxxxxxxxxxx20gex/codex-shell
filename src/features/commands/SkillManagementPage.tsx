@@ -66,8 +66,8 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
     if (skill.scope !== "user" || skill.pluginId) return;
     setBusy(true); setError("");
     try {
-      const recoveryPath = await invoke<string>("uninstall_local_skill", { path: skill.path });
-      setNotice(`已卸载，可从以下位置恢复：${recoveryPath}`);
+      await invoke<string>("uninstall_local_skill", { path: skill.path });
+      setNotice("已卸载。");
       onChanged?.(); setRefresh((value) => value + 1);
     }
     catch (value) { setError(errorMessage(value)); }
