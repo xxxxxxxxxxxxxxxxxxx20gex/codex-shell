@@ -194,7 +194,11 @@ function App() {
   }
 
   async function openResourceInExplorer(path: string) {
-    await invoke("reveal_path_in_explorer", { path });
+    const resolvedPath = currentProjectPath
+      ? resolveLinkedProjectPath(currentProjectPath, path)
+      : null;
+    if (!resolvedPath) throw new Error("相对文件路径需要先选择项目");
+    await invoke("reveal_path_in_explorer", { path: resolvedPath });
   }
 
   const [conversationImage, setConversationImage] = useState<string | null>(null);
