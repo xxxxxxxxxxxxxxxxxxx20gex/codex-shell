@@ -43,15 +43,24 @@ pub fn get_default_project_directory(app: AppHandle) -> Result<DefaultProjectDir
     resolve_default_project_directory(&app)
 }
 
+fn explorer_select_argument(path: &Path) -> String {
+    format!("/select,\"{}\"", path.display())
+}
+
 #[tauri::command]
 pub fn reveal_path_in_explorer(path: String) -> Result<(), String> {
     let target = PathBuf::from(path);
     if !target.is_absolute() {
         return Err("只能打开绝对本地路径".to_string());
     }
+    if !target.is_file() {
+        return Err("只能定位到已存在的文件".to_string());
+    }
+    let target = target
+        .canonicalize()
+        .map_err(|error| format!("解析文件路径失败：{error}"))?;
     Command::new("explorer.exe")
-        .arg("/select,")
-        .arg(&target)
+        .arg(explorer_select_argument(&target))
         .spawn()
         .map(|_| ())
         .map_err(|error| format!("启动资源管理器失败：{error}"))

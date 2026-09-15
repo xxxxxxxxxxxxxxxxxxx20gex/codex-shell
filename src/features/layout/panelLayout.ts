@@ -1,7 +1,7 @@
 export type ResizablePanel = "sidebar" | "inspector";
 
 export const DEFAULT_SIDEBAR_WIDTH = 248;
-export const DEFAULT_INSPECTOR_WIDTH = 288;
+export const DEFAULT_INSPECTOR_WIDTH = 400;
 export const THREE_PANEL_BREAKPOINT = 1180;
 export const COMPACT_OVERLAY_BREAKPOINT = 900;
 

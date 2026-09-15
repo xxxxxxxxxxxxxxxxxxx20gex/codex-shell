@@ -13,7 +13,7 @@
 .explorer-close svg, .explorer-size-button svg, .explorer-filter > svg, .explorer-root svg, .explorer-tree-row svg, .explorer-empty svg { width: 16px; height: 16px; stroke-width: 1.75; }
 .explorer-close:hover, .explorer-size-button:hover { color: var(--text-primary); background: var(--surface-raised); }
 .explorer-close:focus-visible, .explorer-size-button:focus-visible, .explorer-resizer:focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; }
-.explorer-body { display: grid; min-height: 0; grid-template-columns: var(--explorer-tree-width, 285px) 8px minmax(0,1fr); will-change: grid-template-columns; }
+.explorer-body { display: grid; min-height: 0; grid-template-columns: var(--explorer-tree-width, 220px) 8px minmax(0,1fr); will-change: grid-template-columns; }
 .explorer-tree-pane { display: grid; min-width: 0; min-height: 0; grid-template-rows: auto auto minmax(0,1fr); border-right: 1px solid var(--border-subtle); background: var(--surface-sidebar); }
 .explorer-resizer { position: relative; z-index: 2; width: 8px; cursor: col-resize; touch-action: none; background: transparent; }
 .explorer-resizer::after { position: absolute; top: 0; bottom: 0; left: 3px; width: 1px; background: var(--border-subtle); content: ""; transition: background-color var(--motion-fast), width var(--motion-fast); }

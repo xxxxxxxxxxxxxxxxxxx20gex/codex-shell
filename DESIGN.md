@@ -135,7 +135,7 @@ Stable dimensions:
 - history row: `56px` high when the title and timestamp are stacked;
 - composer toolbar: `32px` high;
 - icon: `16px`, stroke `1.75px`;
-- sidebar target width: `248px`, inspector target width: `288px`;
+  - sidebar target width: `248px`, inspector target width: `400px` when displaying project files or previews;
 - conversation readable width: `760px` to `820px`;
 - composer maximum width: `860px`.
 - queued messages are a sibling panel immediately above the composer; queue rows must not be nested inside the composer input surface;
