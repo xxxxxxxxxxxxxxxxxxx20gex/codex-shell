@@ -76,7 +76,7 @@ it("installs the bundled image skill disabled by default", async () => {
   render(<SkillManagementPage codexHome="C:/cs" revision={0} loadSkills={async () => []} setEnabled={setEnabled} onClose={vi.fn()} onAddSkill={vi.fn()} />);
   fireEvent.click(await screen.findByText("安装"));
   await waitFor(() => expect(setEnabled).toHaveBeenCalledWith("C:/cs/skills/image-gen/SKILL.md", false));
-  expect((await screen.findByRole("status")).textContent).toContain("默认未启用");
+  expect(screen.queryByRole("status")).toBeNull();
 });
 
 it("shows pending Connector authentication rather than treating plugin installation as ready", async () => {

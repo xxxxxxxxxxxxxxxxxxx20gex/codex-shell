@@ -57,7 +57,7 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
     try {
       const path = await invoke<string>("install_builtin_skill");
       await setEnabled(path, false);
-      setNotice("image-gen 已安装，默认未启用；启用后请新建会话使用。\n");
+      setNotice("");
       onChanged?.(); setRefresh((value) => value + 1);
     } catch (value) { setError(errorMessage(value)); }
     finally { setBusy(false); }
