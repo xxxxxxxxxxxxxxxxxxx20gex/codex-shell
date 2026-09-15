@@ -289,6 +289,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
             {previewError && <div className="explorer-empty error"><span><FileWarning aria-hidden="true" /></span><strong>无法预览文件</strong><p>{previewError}</p></div>}
             {preview?.kind === "binary" && <div className="explorer-empty"><span><FileCog aria-hidden="true" /></span><strong>二进制文件</strong><p>该文件共 {formatFileSize(preview.byteSize)}，不适合以文本方式显示。</p></div>}
             {preview?.kind === "image" && <div className="explorer-image-preview"><button type="button" className="explorer-image-open" onClick={() => setAnnotationPath(selectedPath)} title="打开图片预览与批注" aria-label="打开图片预览与批注"><img src={preview.dataUrl} alt={fileName(selectedPath ?? "图片预览")} /></button></div>}
+            {preview?.kind === "pdf" && <iframe className="explorer-pdf-preview" src={preview.dataUrl} title={`预览 ${fileName(selectedPath ?? "PDF")}`} />}
             {preview?.kind === "text" && <div className="explorer-code-preview">
               {preview.truncated && <div className="preview-truncated">文件较大，仅显示前 200 KB / 4000 行。</div>}
               <pre>{previewLines.map((line, index) => <span className="preview-line" key={index}><i>{index + 1}</i><code>{line || " "}</code></span>)}</pre>

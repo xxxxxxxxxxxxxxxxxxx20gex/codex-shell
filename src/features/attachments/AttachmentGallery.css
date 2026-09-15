@@ -63,3 +63,4 @@
 .image-annotation-editor svg { width: 16px; height: 16px; stroke-width: 1.75; }
 .attachment-preview-dialog :is(button, textarea):focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .attachment-loading { animation: none; } }
+.attachment-pdf-preview { width: 100%; min-height: 560px; border: 0; background: var(--surface-panel); }

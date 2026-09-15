@@ -14,6 +14,7 @@ const IMAGE_TYPES: Record<string, string> = {
 export type FilePreview =
   | { kind: "text"; content: string; byteSize: number; truncated: boolean }
   | { kind: "image"; dataUrl: string; byteSize: number }
+  | { kind: "pdf"; dataUrl: string; byteSize: number }
   | { kind: "binary"; byteSize: number };
 
 function extension(path: string) {
@@ -36,6 +37,7 @@ export function decodeFilePreview(path: string, dataBase64: string): FilePreview
   const byteSize = decodedSize(dataBase64);
   const imageType = IMAGE_TYPES[extension(path)];
   if (imageType) return { kind: "image", dataUrl: `data:${imageType};base64,${dataBase64}`, byteSize };
+  if (extension(path) === ".pdf") return { kind: "pdf", dataUrl: `data:application/pdf;base64,${dataBase64}`, byteSize };
 
   const bytes = decodePrefix(dataBase64);
   if (bytes.some((byte) => byte === 0)) return { kind: "binary", byteSize };
