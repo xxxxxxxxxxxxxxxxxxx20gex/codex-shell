@@ -1,6 +1,6 @@
 # 项目总状态
 
-- 当前阶段：Milestone 2 - P0 桌面编程工作台；公开稳定版本 `v0.1.6` 已启用 Tauri Updater
+- 当前阶段：Milestone 2 - P0 桌面编程工作台；`main` 开发版本为 `0.1.7`，公开稳定版本 `v0.1.6` 已启用 Tauri Updater
 - 总体状态：核心对话、Session、工具活动、审批、文件、Diff 和模型配置可用；已发布带 minisign 更新签名的 NSIS Windows 安装包，Windows Authenticode 代码签名、CI 与 Runtime 恢复能力尚未完成。
 - 文档边界：本文件只记录跨模块当前快照、项目级风险、下一里程碑和完整验证基线。模块行为和定向证据以 [模块状态索引](../README.md#当前状态) 为准，历史由 Git 保留。
 - 最后更新：2026-09-16
