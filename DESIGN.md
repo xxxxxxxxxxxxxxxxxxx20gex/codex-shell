@@ -224,6 +224,7 @@ Radii:
 - User bubbles use the borderless raised surface, 8px vertical and 16px horizontal padding, and the shared 8px panel radius. Metadata follows after 8px, with local HH:mm time and 28px icon controls on one right-aligned row; the full date and time remain available on hover. User text preserves line breaks and wraps long unbroken strings.
 - Assistant responses are unframed and use one subtle 2px action marker at the first answer line; completed responses do not carry a full-height rail.
 - Reasoning, commands, MCP calls, and file work collapse into one process group after completion.
+- Process summaries are low-contrast, unframed rows. Their verbs come only from structured Core events: tool calls are described as calls rather than loads, and command text may be shown inline when exactly one command is represented.
 - Command output and diffs use the mono family and conversation-small size.
 - Timestamps and duration sit at least 6px away from message content.
 - File changes appear once at the end of the turn, grouped by file with semantic status color.

@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from "react";
-import { ChevronDown, Copy, Pencil } from "lucide-react";
+import { ChevronDown, Copy, FilePenLine, Pencil, Terminal, Wrench } from "lucide-react";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import type { McpToolCallProgressNotification } from "../../generated/app-server/v2/McpToolCallProgressNotification";
 import type { Turn } from "../../generated/app-server/v2/Turn";
@@ -92,6 +92,24 @@ function lastActivityBlockIndex(blocks: TurnBlock[]) {
   return -1;
 }
 
+function completedProcessSummary(items: ThreadItem[]) {
+  const hasTool = items.some((item) => item.type === "mcpToolCall" || item.type === "dynamicToolCall");
+  const hasFileChange = items.some((item) => item.type === "fileChange" && item.status === "completed");
+  const hasCommand = items.some((item) => item.type === "commandExecution" && item.status !== "declined");
+  const actions = [
+    hasTool && "调用了工具",
+    hasFileChange && "编辑了文件",
+    hasCommand && "运行了命令",
+  ].filter((action): action is string => Boolean(action));
+  const label = actions.length > 1
+    ? `${actions.slice(0, -1).join("、")}并${actions[actions.length - 1]}`
+    : actions[0] ?? "已处理";
+  return {
+    label,
+    icon: hasFileChange ? "file" : hasTool ? "tool" : hasCommand ? "command" : "status",
+  } as const;
+}
+
 export function ConversationTurn({
   turn,
   active,
@@ -125,7 +143,8 @@ export function ConversationTurn({
   const collapseCompletedProcess = !active && turn.status === "completed" && userMessageCount <= 1 && answerItems.length > 0
     && activityBlocks.length > 0 && finalActivityBlockIndex < finalAnswerBlockIndex;
   const durationMs = turnDurationMs(turn);
-  const completedProcessDuration = durationMs === null ? "" : ` ${formatTurnDuration(durationMs)}`;
+  const completedProcessDuration = durationMs === null ? "" : ` · ${formatTurnDuration(durationMs)}`;
+  const completedProcess = completedProcessSummary(items);
   const lastAgentMessageId = answerItems[answerItems.length - 1]?.id;
   const sentTiming = userMessageTiming(turn);
   const answerTiming = agentMessageTiming(turn, active);
@@ -204,8 +223,16 @@ export function ConversationTurn({
               ? blockIndex === firstActivityBlockIndex && (
                 <details className="turn-process-disclosure">
                   <summary>
-                    <span className="turn-activity-indicator" aria-hidden="true" />
-                    <strong>{`已处理${completedProcessDuration}`}</strong>
+                    <span className="turn-process-icon" aria-hidden="true">
+                      {completedProcess.icon === "file"
+                        ? <FilePenLine />
+                        : completedProcess.icon === "tool"
+                          ? <Wrench />
+                          : completedProcess.icon === "command"
+                            ? <Terminal />
+                            : <span className="turn-activity-indicator" />}
+                    </span>
+                    <strong>{`${completedProcess.label}${completedProcessDuration}`}</strong>
                     <i><ChevronDown aria-hidden="true" /></i>
                   </summary>
                   <div className="turn-process-content">

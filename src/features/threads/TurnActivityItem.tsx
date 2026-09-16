@@ -61,9 +61,9 @@ function activityTitle(item: ThreadItem) {
     case "reasoning": return item.summary.find((part) => part.trim()) ?? "分析过程";
     case "plan": return "执行计划";
     case "commandExecution": return "运行命令";
-    case "fileChange": return `修改文件 · ${item.changes.length}`;
-    case "mcpToolCall": return `${item.server} · ${item.tool}`;
-    case "dynamicToolCall": return `${item.namespace ? `${item.namespace} · ` : ""}${item.tool}`;
+    case "fileChange": return `编辑了 ${item.changes.length} 个文件`;
+    case "mcpToolCall": return `调用工具 · ${item.server} / ${item.tool}`;
+    case "dynamicToolCall": return `调用工具 · ${item.namespace ? `${item.namespace} / ` : ""}${item.tool}`;
     case "collabAgentToolCall": return `协作智能体 · ${item.tool}`;
     case "subAgentActivity": return `子智能体 · ${item.kind}`;
     case "webSearch": return `搜索网页 · ${item.query}`;

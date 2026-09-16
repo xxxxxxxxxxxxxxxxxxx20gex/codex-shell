@@ -7,9 +7,9 @@
 - 图片跳转（2026-09-14）：主会话与侧聊回复中的本地图片链接直接打开共享预览与批注窗口，项目外的绝对图片路径也适用；相对路径按当前项目解析。普通文件沿用项目文件面板/资源管理器路径。支持 `/C:/...` Windows 链接。
 - 模块职责：把用户消息、智能体消息、计划、工具、命令和错误归一化为结构化多轮时间线。
 - 当前状态：消息、计划、推理、命令、文件、MCP、动态工具、搜索、图片与子智能体活动均已进入连续的结构化多轮时间线；最近 200 个 Turn 直接挂载在单一原生滚动容器中，避免虚拟列表测量与滚动控制互相竞争。
-- 最近变更：终端空 stdin 轮询不再进入时间线；非空终端交互不保存原文，并收纳到默认折叠的计数组中，避免长命令轮询产生大量不可折叠的“0 字符”记录。历史适配按降序收集最新 200 轮后恢复时间顺序，上下文压缩只消费 canonical contextCompaction Item。
+- 最近变更：命令、工具和完成过程摘要改为低对比无卡片行；单条命令可直接显示截断命令文本和耗时，完成过程根据原生 `mcpToolCall`/`dynamicToolCall`、`fileChange`、`commandExecution` 组合显示“调用了工具 / 编辑了文件 / 运行了命令”，不把工具调用误称为工具加载。终端空 stdin 轮询不进入时间线；非空终端交互不保存原文，并收纳到默认折叠的计数组中。
 - 当前接口：`agentSessionReducer`、`ConversationTimeline`、`ConversationTurn`、`TurnActivityGroup`、`TurnActivityItem`、`MarkdownContent`、`TurnFileChanges`、`TurnPlanView`。
 - 已知问题：MCP/动态工具的结构化结果仍以安全截断 JSON 展示；自动审批通知由 Core 标记为不稳定协议，因此 UI 只依赖最小摘要字段；尚未提供活动类型过滤。
 - 下一步：增加活动筛选、单个超长命令日志的局部截断/虚拟化，补消息编辑真实 Runtime 验收。
-- 验证证据：DOM 测试覆盖稳定初始底部、历史消息定位、返回最新、完成态不抢回底部、运行中仅在跟随模式贴底、重复历史滚动不跳动、新活动提示、底部 settle 后恢复跟随、Session 切换重置和消息轨同步；reducer 测试覆盖自动审查合并、延迟 started 不倒退、空 stdin 忽略、非空 stdin 脱敏、有界过程事件与 Turn 裁剪。终端交互分组在四视口下覆盖默认折叠、键盘切换、字号、横向溢出和 reduced-motion。
+- 验证证据：2026-09-16 运行完整 `pnpm test:quality`，64 个前端测试文件共 331 项、42 项 Rust 单测、TypeScript、ESLint、production build、Knip 和 Cargo 检查全部通过；`pnpm test:protocol-surface` 通过。命令与组合过程摘要在 1440×900、1280×780、1024×720 和 900×700 下覆盖默认折叠、键盘切换、长命令截断、横向溢出和 reduced-motion。
 - 最后更新：2026-09-16

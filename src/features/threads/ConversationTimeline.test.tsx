@@ -219,10 +219,66 @@ describe("conversation timing", () => {
     const markup = renderTurn({ ...completedTurn(), items: [reasoning, answer] });
 
     expect(markup).toContain('class="turn-process-disclosure"');
-    expect(markup).toContain("已处理 8s");
+    expect(markup).toContain("已处理 · 8s");
     expect(markup).toContain("检查完成");
     expect(markup).toContain("最终回答");
     expect(markup).not.toContain('class="turn-process-disclosure" open=""');
+  });
+
+  it("summarizes completed Core activity without claiming tools were loaded", () => {
+    const tool: ThreadItem = {
+      type: "mcpToolCall",
+      id: "mcp-complete",
+      server: "docs",
+      tool: "search",
+      status: "completed",
+      arguments: { query: "app-server" },
+      appContext: null,
+      pluginId: null,
+      readOnlyHint: true,
+      result: { content: [], structuredContent: null, _meta: null },
+      error: null,
+      durationMs: 500,
+    };
+    const fileChange: ThreadItem = {
+      type: "fileChange",
+      id: "file-complete",
+      status: "completed",
+      changes: [{
+        path: "src/App.tsx",
+        kind: { type: "update", move_path: null },
+        diff: "@@ -1 +1 @@\n-old\n+new",
+      }],
+    };
+    const command: ThreadItem = {
+      type: "commandExecution",
+      id: "command-complete",
+      pluginId: null,
+      scriptPath: null,
+      command: "pnpm test",
+      cwd: "C:\\work",
+      processId: null,
+      source: "agent",
+      status: "completed",
+      commandActions: [],
+      aggregatedOutput: "passed",
+      exitCode: 0,
+      durationMs: 1200,
+    };
+    const answer: ThreadItem = {
+      type: "agentMessage",
+      id: "answer-after-work",
+      text: "完成。",
+      phase: "final_answer",
+      memoryCitation: null,
+      questions: null,
+      delivery: null,
+    };
+    const markup = renderTurn({ ...completedTurn(), items: [tool, fileChange, command, answer] });
+
+    expect(markup).toContain("调用了工具、编辑了文件并运行了命令 · 8s");
+    expect(markup).toContain("pnpm test");
+    expect(markup).not.toContain("加载了工具");
   });
 
   it("shows pre-turn compaction between the initial user message and final answer", () => {
@@ -340,7 +396,7 @@ describe("conversation timing", () => {
     const answer: ThreadItem = { type: "agentMessage", id: "answer-1", text: "检查完成。", phase: "final_answer", memoryCitation: null, questions: null, delivery: null };
     const markup = renderTurn({ ...completedTurn(), items: [commentary, reasoning, answer] });
 
-    expect(markup).toContain("已处理 8s");
+    expect(markup).toContain("已处理 · 8s");
     expect(markup).toContain('class="turn-commentary"');
     expect(markup).toContain("我先检查项目结构。");
     expect(markup).toContain('class="activity-reasoning-note"');
