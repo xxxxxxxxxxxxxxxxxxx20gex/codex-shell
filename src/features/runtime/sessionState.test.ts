@@ -21,6 +21,7 @@ function turn(id: string, items: ThreadItem[] = []): Turn {
 function thread(turns: Turn[] = []): Thread {
   return {
     id: "thread-1",
+    environments: null,
     sessionId: "thread-1",
     forkedFromId: null,
     parentThreadId: null,
@@ -42,12 +43,14 @@ function thread(turns: Turn[] = []): Thread {
     path: null,
     cwd: "C:\\work",
     cliVersion: "test",
+    originator: null,
     source: "appServer",
     threadSource: null,
     agentNickname: null,
     agentRole: null,
     gitInfo: null,
     name: null,
+    daybreakEnabled: null,
     turns,
   };
 }

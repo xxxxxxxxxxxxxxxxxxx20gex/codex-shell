@@ -145,4 +145,26 @@ describe("ServerInteractionDialog", () => {
 
     expect(openUrl).toHaveBeenCalledWith("https://example.com/authorize");
   });
+
+  it("declines unsupported OpenAI user verification elicitations", async () => {
+    const store = new ServerInteractionStore();
+    const result = store.request("mcp-verification", {
+      kind: "mcpElicitation",
+      params: {
+        mode: "openai/userVerification",
+        threadId: "thread-1",
+        turnId: null,
+        serverName: "protected",
+        title: "验证身份",
+        description: "需要确认当前用户身份。",
+        challenge: "challenge",
+      },
+    });
+    render(<ServerInteractionDialog store={store} />);
+
+    expect(screen.getByText("当前 API Key 模式不支持 OpenAI 账户用户验证。")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "拒绝" }));
+
+    await expect(result).resolves.toEqual({ action: "decline", content: null, _meta: null });
+  });
 });

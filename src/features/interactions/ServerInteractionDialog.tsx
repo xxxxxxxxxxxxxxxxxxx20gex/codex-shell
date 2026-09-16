@@ -292,6 +292,20 @@ function McpFormInteraction({ interaction, store }: Props & { interaction: Serve
     );
   }
 
+  if (params.mode === "openai/userVerification") {
+    return (
+      <>
+        <span className="eyebrow">MCP · {params.serverName}</span>
+        <h2 id="interaction-title">{params.title}</h2>
+        <p>{params.description}</p>
+        <p className="interaction-error">当前 API Key 模式不支持 OpenAI 账户用户验证。</p>
+        <footer>
+          <button className="secondary-button danger-button" onClick={store.declineCurrent}>拒绝</button>
+        </footer>
+      </>
+    );
+  }
+
   if (params.mode === "openai/form") {
     return (
       <>

@@ -25,6 +25,7 @@ function turn(id: string, status: Turn["status"] = "inProgress"): Turn {
 function thread(id: string, overrides: Partial<Thread> = {}): Thread {
   return {
     id,
+    environments: null,
     sessionId: id,
     forkedFromId: null,
     parentThreadId: null,
@@ -46,12 +47,14 @@ function thread(id: string, overrides: Partial<Thread> = {}): Thread {
     path: null,
     cwd: "C:\\work",
     cliVersion: "test",
+    originator: null,
     source: "appServer",
     threadSource: null,
     agentNickname: null,
     agentRole: null,
     gitInfo: null,
     name: null,
+    daybreakEnabled: null,
     turns: [],
     ...overrides,
   };

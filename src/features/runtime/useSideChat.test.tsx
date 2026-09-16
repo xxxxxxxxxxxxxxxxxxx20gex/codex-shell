@@ -20,6 +20,7 @@ const settings: ModelSettings = {
 function fakeThread(): Thread {
   return {
     id: "side-thread",
+    environments: null,
     sessionId: "session",
     forkedFromId: null,
     parentThreadId: null,
@@ -41,12 +42,14 @@ function fakeThread(): Thread {
     path: null,
     cwd: "C:\\work",
     cliVersion: "test",
+    originator: null,
     source: "appServer",
     threadSource: "codex-shell-side-chat",
     agentNickname: null,
     agentRole: null,
     gitInfo: null,
     name: null,
+    daybreakEnabled: null,
     turns: [],
   };
 }

@@ -1,7 +1,7 @@
 # Codex Runtime 状态
 
 - 模块职责：动态发现、兼容性验证、启动、停止并最终打包 `codex.exe` 及其同源 companion binaries。
-- 当前状态：当前待发布 `v0.1.6` 安装包使用兼容门禁的 `codex-cli 0.153.4` Runtime；当前版本已接入 Tauri Updater，设置中的“检查并更新”会校验正式 GitHub Release 的 minisign 签名后下载并安装。安装包同时携带可选的 CS 市场 Skill 资源，只有用户主动安装才写入 CODEX_HOME。个人发布使用本机 `pnpm release:package` 生成安装器、`.sig` 和 `latest.json` 后手动上传；Runtime 不进入 Git。
+- 当前状态：当前待发布 `v0.1.6` 安装包使用兼容门禁的 `codex-cli 0.154.0-alpha.6.2` Runtime；当前版本已接入 Tauri Updater，设置中的“检查并更新”会校验正式 GitHub Release 的 minisign 签名后下载并安装。安装包同时携带可选的 CS 市场 Skill 资源，只有用户主动安装才写入 CODEX_HOME。个人发布使用本机 `pnpm release:package` 生成安装器、`.sig` 和 `latest.json` 后手动上传；Runtime 不进入 Git。
 - 最近变更：CS 独立携带官方 ripgrep 15.2.0 Windows x64 MSVC；Tauri dev/build 的前置步骤按固定 SHA-256 校验或下载工具，随 sidecar 放到应用目录。app-server 启动时只为子进程 PATH 前置 CS 目录，保留其余继承项，不修改系统 PATH，也不依赖官方 Codex 工具目录。缺少 rg.exe 会明确报错；工具与同源 Core helpers 分开管理，许可证随包分发。
 - 启动与兼容行为：渠道保存等待 Runtime 重启、历史刷新及原 Session 恢复成功，失败返回 false 并显示明确错误；重试保留待恢复的 Session ID。删除最后一个渠道仅停止核心。切换入口在实际提交前检查全局任务并暂停新执行 RPC；app-server 启动参数改为按激活渠道生成：`model_provider` 固定为 `codex_shell_gateway`，`base_url`、`model` 与对话参数来自渠道配置，`model_catalog_json` 和 `web_search="disabled"` 只在 DeepSeek 渠道注入；启动前先把内置目录物化到 `<CODEX_HOME>/codex-shell/`，没有激活渠道或缺少该渠道密钥时直接报错而不启动进程。Runtime staging 不再要求与历史 manifest 完全匹配，改为运行 app-server 协议兼容门禁，允许新增协议并阻止当前调用面被删除；主 Runtime 与三个 helper 必须来自同一目录并分别校验 SHA-256。生成协议同步升级仍由 `pnpm protocol:generate` 显式触发。首条消息进入目标模式时，前端先创建普通 Session，再通过原生 `thread/goal/set` 写入目标，随后启动同一条 Turn，不再要求用户先发送无关消息。独立 `/` 仍直接唤出 Skills、MCP、计划和目标等命令菜单。每次 app-server 启动仍以进程代际隔离旧 reader 线程事件。首次启动会等待持久化模型网关成功读取，以及个性化和默认目录读取结束后再加载历史，避免 app-server 以默认网关抢先启动；高级渠道设置保存后的重启也在新状态提交后执行，并按新渠道目录校准参数后再发出请求。
 - 当前接口：`resolve_codex_executable`、`resolve_codex_home`、`set_codex_home`、`resolve_default_project_directory`、按激活渠道生成启动参数的 `app_server_arguments`、`catalog::materialize_catalog`、返回进程身份的 `app_server_start`、`app_server_stop`。
@@ -16,4 +16,5 @@
 - 验证证据（2026-09-10）：使用与 `app_server_arguments` 相同的 `-c` 组合启动 `codex-cli 0.153.4`，DeepSeek 渠道注入 CODEX_HOME 内的目录后 `model/list` 只返回 `deepseek-flash`、`deepseek-v4-pro`；同一路由去掉 `model_catalog_json`、以及不注入目录的 OpenAI 渠道，均返回内置 6 个 GPT 模型；探针不发送 Turn，未使用真实上游密钥。
 - 相关决策：[ADR-001：使用原版 Codex app-server](../decisions/ADR-001-unmodified-codex-app-server.md)、[ADR-002：隔离运行数据与凭据](../decisions/ADR-002-isolated-runtime-data.md)、[ADR-004：以厂商分组的渠道承载模型路由](../decisions/ADR-004-model-provider-channels.md)。
 - 工具验证（2026-09-14）：官方压缩包与 exe 哈希校验、重复 staging、错误来源拒绝通过；Cargo check、39 项 Rust 单测、严格 Clippy、TypeScript、ESLint、328 项 Vitest 与 Debug 构建通过。`pnpm runtime:probe-tools` 使用独立临时 CODEX_HOME 和不含宿主工具目录的 PATH，真实 app-server → PowerShell → 内置 rg 完成版本检查与源码搜索，不发送模型请求。未验收 elevated Windows Sandbox 或干净机器安装；用户自行覆写命令环境或 Shell profile 仍可能覆盖 PATH。
-- 最后更新：2026-09-14
+- 验证证据（2026-09-16）：codex-cli 0.154.0-alpha.6.2 及三个同目录 helper 已重新暂存，主 Runtime SHA-256 为 `081e4de4be8e38fac6ed4d95e3b1a0b9f6d31c090ddc36e1696b349fe406f575`；协议兼容门禁、真实本地协议探针和 Debug 构建通过。正式生产安装器尚未在本条证据时生成。
+- 最后更新：2026-09-16
