@@ -13,7 +13,12 @@ import {
   Minimize2,
   Search,
   X,
+  Copy,
+  Eye,
+  Paperclip,
 } from "lucide-react";
+import { ExplorerContextMenu, type ExplorerMenuAction } from "./ExplorerContextMenu";
+import { writeClipboardText } from "../threads/clipboard";
 import type { FsReadDirectoryEntry } from "../../generated/app-server/v2/FsReadDirectoryEntry";
 import { errorMessage } from "../../shared/errors";
 import type { WatchWorkspacePath } from "../runtime/useWorkspaceFiles";
@@ -32,6 +37,8 @@ interface Props {
   watchPath: WatchWorkspacePath;
   maximized: boolean;
   onToggleMaximize: () => void;
+  onAddToConversation?: (path: string) => void;
+  onRevealPath?: (path: string, directory: boolean) => Promise<void>;
 }
 
 interface DirectoryState {
@@ -56,7 +63,29 @@ function pathsAffectFile(changedPaths: string[], filePath: string) {
   });
 }
 
-export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, readDirectory, readFile, watchPath, maximized, onToggleMaximize }: Props) {
+export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, readDirectory, readFile, watchPath, maximized, onToggleMaximize, onAddToConversation, onRevealPath }: Props) {
+  const [menu, setMenu] = useState<{ path: string; directory: boolean; x: number; y: number; anchor: HTMLElement } | null>(null);
+  const [actionError, setActionError] = useState("");
+  const closeMenu = useCallback(() => setMenu(null), []);
+  function contextHandlers(path: string, directory: boolean) {
+    const open = (anchor: HTMLElement, x: number, y: number) => {
+      setActionError("");
+      if (!directory) selectFile(path);
+      setMenu({ path, directory, x, y, anchor });
+    };
+    return {
+      onContextMenu: (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+        open(event.currentTarget, event.clientX, event.clientY);
+      },
+      onKeyDown: (event: React.KeyboardEvent<HTMLButtonElement>) => {
+        if (event.key !== "ContextMenu" && !(event.shiftKey && event.key === "F10")) return;
+        event.preventDefault();
+        const bounds = event.currentTarget.getBoundingClientRect();
+        open(event.currentTarget, bounds.left, bounds.bottom);
+      },
+    };
+  }
   const loadingDirectoriesRef = useRef(new Set<string>());
   const previewRequestRef = useRef(0);
   const selectedPathRef = useRef<string | null>(null);
@@ -130,6 +159,8 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
     setPreviewLoading(false);
     setPreviewError("");
     setWatchError("");
+    setMenu(null);
+    setActionError("");
     const relativeParts = initialFilePath
       ? projectRelativePath(rootPath, initialFilePath).split(/[\\/]/).filter(Boolean)
       : [];
@@ -144,7 +175,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
 
   useEffect(() => {
     function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape" && !document.querySelector(".attachment-preview-layer")) onClose();
+      if (event.key === "Escape" && !document.querySelector(".attachment-preview-layer, .explorer-context-menu")) onClose();
     }
     window.addEventListener("keydown", closeOnEscape);
     return () => window.removeEventListener("keydown", closeOnEscape);
@@ -242,7 +273,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
         const isExpanded = expanded.has(path);
         return (
           <div key={path}>
-            <button className="explorer-tree-row directory" style={{ paddingLeft: 10 + depth * 16 }} onClick={() => toggleDirectory(path)} title={path}>
+            <button {...contextHandlers(path, true)} className={`explorer-tree-row directory ${menu?.path === path ? "selected" : ""}`} style={{ paddingLeft: 10 + depth * 16 }} onClick={() => toggleDirectory(path)} title={path}>
               <i>{isExpanded ? <ChevronDown aria-hidden="true" /> : <ChevronRight aria-hidden="true" />}</i><span className="tree-folder">{isExpanded ? <FolderOpen aria-hidden="true" /> : <Folder aria-hidden="true" />}</span><span>{entry.fileName}</span>
             </button>
             {isExpanded && renderDirectory(path, depth + 1)}
@@ -251,7 +282,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
       }
       if (!entry.isFile) return null;
       return (
-        <button key={path} className={`explorer-tree-row file ${selectedPath === path ? "selected" : ""}`} style={{ paddingLeft: 30 + depth * 16 }} onClick={() => selectFile(path)} title={path}>
+        <button {...contextHandlers(path, false)} key={path} className={`explorer-tree-row file ${selectedPath === path ? "selected" : ""}`} style={{ paddingLeft: 30 + depth * 16 }} onClick={() => selectFile(path)} title={path}>
           <span className="tree-file"><File aria-hidden="true" /></span><span>{entry.fileName}</span>
         </button>
       );
@@ -259,6 +290,23 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
   }
 
   const previewLines = preview?.kind === "text" ? preview.content.split("\n") : [];
+  const menuActions: ExplorerMenuAction[] = [];
+  if (menu) {
+    if (menu.directory) menuActions.push({ label: expanded.has(menu.path) ? "折叠文件夹" : "展开文件夹", icon: <FolderOpen />, run: () => toggleDirectory(menu.path) });
+    else {
+      if (preview && selectedPath === menu.path && preview.kind !== "binary") menuActions.push({
+        label: preview.kind === "image" ? "预览与批注" : "在 CS 中预览", icon: <Eye />,
+        run: () => { if (preview.kind === "image") setAnnotationPath(menu.path); else selectFile(menu.path); },
+      });
+      if (onAddToConversation) menuActions.push({ label: "添加到当前对话", icon: <Paperclip />, run: () => onAddToConversation(menu.path) });
+    }
+    if (onRevealPath) menuActions.push({ label: menu.directory ? "在资源管理器中打开" : "在资源管理器中显示", icon: <FolderOpen />, run: () => onRevealPath(menu.path, menu.directory) });
+    menuActions.push(
+      { label: "复制完整路径", icon: <Copy />, run: () => writeClipboardText(menu.path) },
+      { label: "复制相对路径", icon: <Copy />, run: () => writeClipboardText(menu.path === rootPath ? "." : projectRelativePath(rootPath, menu.path)) },
+      { label: "复制文件名", icon: <Copy />, run: () => writeClipboardText(fileName(menu.path)) },
+    );
+  }
 
   return (
     <div className="workspace-explorer-layer" role="dialog" aria-modal="true" aria-label="项目文件浏览器">
@@ -275,11 +323,12 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
         <div className="explorer-body" style={{ "--explorer-tree-width": `${treeWidth}px` } as CSSProperties}>
           <aside className="explorer-tree-pane">
             <div className="explorer-filter"><Search aria-hidden="true" /><input value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="筛选已展开文件…" /></div>
-            <button className="explorer-root" onClick={() => toggleDirectory(rootPath)}><i>{expanded.has(rootPath) ? <ChevronDown aria-hidden="true" /> : <ChevronRight aria-hidden="true" />}</i><span><FolderRoot aria-hidden="true" /></span><strong>{projectName(rootPath)}</strong></button>
+            <button {...contextHandlers(rootPath, true)} className="explorer-root" onClick={() => toggleDirectory(rootPath)}><i>{expanded.has(rootPath) ? <ChevronDown aria-hidden="true" /> : <ChevronRight aria-hidden="true" />}</i><span><FolderRoot aria-hidden="true" /></span><strong>{projectName(rootPath)}</strong></button>
             <div className="explorer-tree-scroll">{expanded.has(rootPath) && renderDirectory(rootPath, 0)}</div>
           </aside>
           <div className="explorer-resizer" role="separator" aria-label="调整文件树宽度" aria-orientation="vertical" onPointerDown={beginTreeResize} onPointerMove={resizeTree} onPointerUp={finishTreeResize} onPointerCancel={finishTreeResize} />
           <main className="explorer-preview-pane">
+            {actionError && <p className="explorer-action-error" role="alert">{actionError}</p>}
             <div className="explorer-preview-bar">
               <span>{selectedPath ? projectRelativePath(rootPath, selectedPath) : "文件预览"}</span>
               {preview && <small>{formatFileSize(preview.byteSize)}</small>}
@@ -297,6 +346,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
           </main>
         </div>
       </section>
+      {menu && <ExplorerContextMenu x={menu.x} y={menu.y} anchor={menu.anchor} actions={menuActions} onClose={closeMenu} onError={(error) => setActionError(errorMessage(error))} />}
       {annotationPath && <AttachmentPreviewDialog key={annotationPath} target={{ kind: "image", name: fileName(annotationPath), path: annotationPath }} readFile={readFile} onClose={() => setAnnotationPath(null)} />}
     </div>
   );

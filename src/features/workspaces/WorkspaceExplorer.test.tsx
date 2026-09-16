@@ -1,12 +1,47 @@
 // @vitest-environment happy-dom
 
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { FsReadDirectoryEntry } from "../../generated/app-server/v2/FsReadDirectoryEntry";
 import type { DisposeWorkspaceWatch } from "../runtime/useWorkspaceFiles";
 import { WorkspaceExplorer } from "./WorkspaceExplorer";
 
 describe("WorkspaceExplorer", () => {
+  afterEach(cleanup);
+  it("targets the right-clicked file and dismisses the menu without closing the explorer", async () => {
+    const onClose = vi.fn();
+    const onAddToConversation = vi.fn();
+    const onRevealPath = vi.fn(async () => { throw new Error("文件已移动"); });
+    const writeText = vi.fn(async () => {});
+    vi.stubGlobal("navigator", { clipboard: { writeText } });
+    const view = render(<WorkspaceExplorer rootPath={"C:\\work"} maximized={false} onToggleMaximize={() => {}} onClose={onClose}
+      readDirectory={async () => [{ fileName: "audio.m4s", isDirectory: false, isFile: true }]}
+      readFile={async () => "AA=="} watchPath={async () => () => {}}
+      onAddToConversation={onAddToConversation} onRevealPath={onRevealPath} />);
+    const row = await screen.findByRole("button", { name: "audio.m4s" });
+    fireEvent.contextMenu(row, { clientX: 400, clientY: 300 });
+    await screen.findByText("二进制文件");
+    expect(screen.queryByRole("menuitem", { name: "在 CS 中预览" })).toBeNull();
+    fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
+    expect(screen.queryByRole("menu")).toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(row);
+    fireEvent.keyDown(row, { key: "F10", shiftKey: true });
+    fireEvent.click(screen.getByRole("menuitem", { name: "复制相对路径" }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith("audio.m4s"));
+    fireEvent.contextMenu(row);
+    fireEvent.click(screen.getByRole("menuitem", { name: "添加到当前对话" }));
+    expect(onAddToConversation).toHaveBeenCalledWith("C:\\work\\audio.m4s");
+    fireEvent.contextMenu(row);
+    fireEvent.click(screen.getByRole("menuitem", { name: "在资源管理器中显示" }));
+    await screen.findByRole("alert");
+    expect(onRevealPath).toHaveBeenCalledWith("C:\\work\\audio.m4s", false);
+    fireEvent.contextMenu(row);
+    fireEvent.pointerDown(document.body);
+    expect(screen.queryByRole("menu")).toBeNull();
+    view.unmount();
+    vi.unstubAllGlobals();
+  });
   it("uses one persistent inspector maximize toggle", async () => {
     let maximized = false;
     const onToggleMaximize = vi.fn(() => { maximized = !maximized; });

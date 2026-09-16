@@ -53,14 +53,14 @@ pub fn reveal_path_in_explorer(path: String) -> Result<(), String> {
     if !target.is_absolute() {
         return Err("只能打开绝对本地路径".to_string());
     }
-    if !target.is_file() {
-        return Err("只能定位到已存在的文件".to_string());
+    if !target.is_file() && !target.is_dir() {
+        return Err("只能定位到已存在的文件或文件夹".to_string());
     }
     let target = target
         .canonicalize()
         .map_err(|error| format!("解析文件路径失败：{error}"))?;
     Command::new("explorer.exe")
-        .arg(explorer_select_argument(&target))
+        .arg(if target.is_dir() { target.to_string_lossy().into_owned() } else { explorer_select_argument(&target) })
         .spawn()
         .map(|_| ())
         .map_err(|error| format!("启动资源管理器失败：{error}"))

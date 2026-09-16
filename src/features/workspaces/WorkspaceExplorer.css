@@ -51,3 +51,9 @@
 .explorer-image-open { display: contents; cursor: zoom-in; }
 .explorer-image-open:focus-visible img { outline: 2px solid var(--accent-info); outline-offset: 2px; }
 .explorer-pdf-preview { width: 100%; height: min(70vh, 720px); border: 0; background: var(--surface-panel); }
+.explorer-context-menu { position: fixed; z-index: 1000; min-width: 200px; max-width: calc(100vw - 16px); max-height: calc(100vh - 16px); overflow: auto; padding: var(--space-1); border: 1px solid var(--border-default); border-radius: var(--radius-panel); background: var(--surface-panel); box-shadow: var(--shadow-popover); }
+.explorer-context-menu button { display: flex; align-items: center; gap: var(--space-2); width: 100%; min-height: var(--control-height); padding: var(--space-1) var(--space-2); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-secondary); font-size: var(--text-ui); text-align: left; cursor: pointer; }
+.explorer-context-menu button:hover, .explorer-context-menu button:focus-visible { background: var(--surface-selected); color: var(--text-primary); }
+.explorer-context-menu button:focus-visible { outline: 2px solid var(--accent-info); outline-offset: -2px; }
+.explorer-context-menu svg { width: 16px; height: 16px; stroke-width: 1.75; flex: none; }
+.explorer-action-error { position: absolute; z-index: 3; bottom: var(--space-2); margin: var(--space-2); padding: var(--space-2); color: var(--accent-danger); background: var(--surface-panel); font-size: var(--text-ui); overflow-wrap: anywhere; }
