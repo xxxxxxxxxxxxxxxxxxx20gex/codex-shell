@@ -392,6 +392,14 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .turn-process-events { display: grid; gap: 5px; margin: 6px 0 2px; }
 .turn-process-event { display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: var(--conversation-font-size-small); }
 .turn-process-event svg { width: 15px; height: 15px; flex: 0 0 auto; color: var(--accent-action); stroke-width: 1.75; }
+.terminal-interaction-disclosure { color: var(--text-muted); font-size: var(--conversation-font-size-small); }
+.terminal-interaction-disclosure > summary { display: grid; min-height: 28px; grid-template-columns: 15px minmax(0,1fr) 14px; align-items: center; gap: 8px; cursor: pointer; list-style: none; }
+.terminal-interaction-disclosure > summary::-webkit-details-marker { display: none; }
+.terminal-interaction-disclosure > summary:hover { color: var(--text-secondary); }
+.terminal-interaction-disclosure > summary svg { width: 15px; height: 15px; color: var(--accent-action); stroke-width: 1.75; }
+.terminal-interaction-disclosure > summary svg:last-child { width: 14px; height: 14px; color: var(--text-muted); transition: transform var(--motion-fast); }
+.terminal-interaction-disclosure[open] > summary svg:last-child { transform: rotate(180deg); }
+.terminal-interaction-disclosure > div { display: grid; gap: 5px; padding: 3px 0 3px 23px; }
 @keyframes activity-pulse { 50% { opacity: .5; } }
 @keyframes activity-breathe {
   0%, 100% { opacity: .3; }

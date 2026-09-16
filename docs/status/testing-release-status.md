@@ -1,5 +1,7 @@
 # 测试与发布状态
 
+- 终端交互时间线验证（2026-09-16）：空 stdin 轮询过滤与非空交互折叠分组的定向测试（22 项）、TypeScript、ESLint、Vitest（64 文件 / 328 项）、production build、Cargo check、四视口布局检查和 Debug 构建通过；四视口覆盖默认折叠、键盘展开/收起、字号、横向溢出及 reduced-motion。Knip 仍仅报告既有 `check-image-annotation-layout.mjs` 未登记入口，不属于本次新增问题。Debug 产物为 `src-tauri/target/debug/codex-shell.exe`。
+
 - 兔子 Skill 验证（2026-09-14）：变量恢复 tuzi 命名后，`python -B tests/scripts/test_tuzi_skill.py` 5 项离线测试通过，覆盖新变量配对、旧 CS 变量不回退、请求提示词原样传递及既有 URL/密钥边界；`python -X utf8 quick_validate.py` 通过。TypeScript、production build、Cargo check、39 项 Rust 单测、严格 Clippy 与 Debug 构建通过。仅验证模拟请求，不代表模型一定遵循精简后的说明，也不代表真实生图、系统环境变量继承或已安装 Skill 升级已验收；本次未重跑前端全量测试及 Knip。
 - Skill 卸载提示验证（2026-09-15）：Skill 管理页面仅显示“已卸载”，不向用户暴露后端恢复目录路径；定向组件测试覆盖成功状态及路径隐藏。
 

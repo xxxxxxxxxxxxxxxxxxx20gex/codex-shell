@@ -691,6 +691,16 @@ describe("agentSessionReducer", () => {
         stdin: "super-secret\n",
       },
     });
+    const emptyTerminal = agentSessionReducer(terminal, {
+      type: "terminalInteraction",
+      notification: {
+        threadId: "thread-1",
+        turnId: "turn-1",
+        itemId: "command-1",
+        processId: "42",
+        stdin: "",
+      },
+    });
 
     expect(terminal.processEventsByTurnId["turn-1"]).toMatchObject([
       { kind: "autoApprovalReview", reviewId: "review-1", status: "completed", reviewStatus: "approved" },
@@ -709,5 +719,6 @@ describe("agentSessionReducer", () => {
       { kind: "autoApprovalReview", reviewId: "review-1", status: "completed" },
     ]);
     expect(JSON.stringify(terminal.processEventsByTurnId)).not.toContain("super-secret");
+    expect(emptyTerminal).toBe(terminal);
   });
 });

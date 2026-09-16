@@ -607,6 +607,7 @@ export function agentSessionReducer(
     case "terminalInteraction": {
       const { notification } = action;
       if (state.thread?.id !== notification.threadId) return state;
+      if (notification.stdin.length === 0) return state;
       return {
         ...state,
         processEventsByTurnId: appendProcessEvent(state.processEventsByTurnId, notification.turnId, {

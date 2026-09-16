@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { TurnProcessEvents } from "./TurnProcessEvents";
 
 describe("TurnProcessEvents", () => {
-  it("renders safe summaries for auto review and terminal interaction", () => {
+  it("renders safe summaries and groups terminal interactions in a disclosure", () => {
     const markup = renderToStaticMarkup(<TurnProcessEvents events={[
       {
         kind: "autoApprovalReview",
@@ -22,10 +22,18 @@ describe("TurnProcessEvents", () => {
         processId: "42",
         stdinLength: 13,
       },
+      {
+        kind: "terminalInteraction",
+        itemId: "command-2",
+        processId: "43",
+        stdinLength: 1,
+      },
     ]} />);
 
     expect(markup).toContain("自动审查已批准 · 风险 medium");
+    expect(markup).toContain("终端交互 · 2 次");
     expect(markup).toContain("已向运行中的命令发送输入 · 13 字符");
+    expect(markup).not.toContain("<details open");
     expect(markup).not.toContain("stdin");
   });
 });
