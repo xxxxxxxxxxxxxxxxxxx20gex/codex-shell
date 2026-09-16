@@ -286,13 +286,13 @@ Runtime 不要求与上一次 manifest 的完整版本号相同。暂存时会�
 个人开发者推荐使用本机打包并手动上传 Release。当前项目使用无密码的 Tauri signing key，发布时只需保管私钥文件；私钥本身仍不能提交仓库：
 
 ```powershell
-pnpm release:package -- -Repository "OWNER/REPOSITORY" -Tag "v0.1.6"
+pnpm release:package -Repository "OWNER/REPOSITORY" -Tag "v0.1.6"
 ```
 
 私钥位于默认路径 `%USERPROFILE%\\.tauri\\codex-shell.key` 时无需额外参数；也可以显式指定：
 
 ```powershell
-pnpm release:package -- -SigningKeyPath "C:\\secure\\codex-shell.key" -Repository "OWNER/REPOSITORY" -Tag "v0.1.6"
+pnpm release:package -SigningKeyPath "C:\\secure\\codex-shell.key" -Repository "OWNER/REPOSITORY" -Tag "v0.1.6"
 ```
 
 命令会暂存本机 Runtime、运行协议兼容门禁、构建签名 NSIS 安装包，并在
