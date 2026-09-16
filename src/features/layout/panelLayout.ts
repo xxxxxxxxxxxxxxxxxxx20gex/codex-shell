@@ -1,7 +1,9 @@
 export type ResizablePanel = "sidebar" | "inspector";
+export type InspectorView = "home" | "files" | "chat";
 
 export const DEFAULT_SIDEBAR_WIDTH = 248;
-export const DEFAULT_INSPECTOR_WIDTH = 400;
+export const DEFAULT_INSPECTOR_WIDTH = 288;
+const FILE_INSPECTOR_WIDTH = 400;
 export const THREE_PANEL_BREAKPOINT = 1180;
 export const COMPACT_OVERLAY_BREAKPOINT = 900;
 
@@ -15,6 +17,10 @@ interface WorkspaceBounds {
   left: number;
   right: number;
   width: number;
+}
+
+export function defaultInspectorWidth(view: InspectorView) {
+  return view === "files" ? FILE_INSPECTOR_WIDTH : DEFAULT_INSPECTOR_WIDTH;
 }
 
 export function resizedPanelWidth(

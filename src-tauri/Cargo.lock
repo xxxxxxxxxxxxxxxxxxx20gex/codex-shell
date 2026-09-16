@@ -480,6 +480,7 @@ dependencies = [
 name = "codex-shell"
 version = "0.1.6"
 dependencies = [
+ "base64 0.22.1",
  "chrono",
  "keyring",
  "reqwest",

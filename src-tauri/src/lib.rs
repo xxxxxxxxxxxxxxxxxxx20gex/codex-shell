@@ -1,4 +1,5 @@
 mod app_server;
+mod attachments;
 mod builtin_skills;
 mod catalog;
 mod channel_probe;
@@ -23,6 +24,7 @@ pub fn run() {
             app_server::app_server_send,
             app_server::app_server_start,
             app_server::app_server_stop,
+            attachments::save_pasted_image,
             codex_home::set_codex_home,
             channel_probe::test_channel_connection,
             config::load_model_settings,

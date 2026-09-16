@@ -34,6 +34,7 @@ serde_json = "1"
 tempfile = "3"
 keyring = { version = "3", features = ["windows-native"] }
 chrono = "0.4"
+base64 = "0.22"
 # 连接测试需要发起 HTTPS 请求。Tauri Updater 已经引入 reqwest 与 rustls，
 # 这里复用同一份依赖与 ring 后端，不新增第三方 crate。
 reqwest = { version = "0.13", default-features = false, features = ["json"] }

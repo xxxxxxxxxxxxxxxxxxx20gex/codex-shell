@@ -502,7 +502,12 @@ export function useAppController() {
         reader.onerror = () => reject(reader.error ?? new Error("无法读取剪贴板图片"));
         reader.readAsDataURL(file);
       });
-      setImages((current) => [...current, { name: `粘贴图片 ${current.length + 1}`, url }]);
+      if (!("__TAURI_INTERNALS__" in window)) {
+        setImages((current) => [...current, { name: `粘贴图片 ${current.length + 1}`, url }]);
+      } else {
+        const path = await invoke<string>("save_pasted_image", { dataUrl: url });
+        setImages((current) => [...current, { name: path.split(/[\\/]/).pop() ?? "粘贴图片", path }]);
+      }
       setUiError("");
     } catch (error) {
       setUiError(errorMessage(error));

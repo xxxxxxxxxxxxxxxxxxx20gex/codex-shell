@@ -16,7 +16,7 @@ Codex Shell（简称 **CS**）是一个面向个人开发者的 Windows 智能�
 
 ## 产品界面
 
-CS 将模型回答、执行过程、文件变更和本轮产出整合到同一条时间线中；左侧管理多 Session，底部 Composer 支持模型、权限、队列/引导和附件操作，右侧按需打开项目文件与侧边工具。
+CS 将模型回答、执行过程、文件变更、回复文件和折叠过程资源整合到同一条时间线中；左侧管理多 Session，底部 Composer 支持模型、权限、队列/引导和附件操作，右侧按需打开项目文件与侧边工具。
 
 ![Codex Shell 产品界面](docs/assets/product-showcase.png)
 
@@ -54,7 +54,7 @@ CS 不修改 Codex Core，也不在前端复制一套 Agent 执行循环。所�
 ### 下载 Windows 安装包
 
 当前公开稳定版为 [Codex Shell v0.1.5](https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/releases/tag/v0.1.5)：下载
-`codex-shell_0.1.4_x64-setup.exe` 后按向导安装。`v0.1.5` 已启用 Tauri Updater，但当前公开 Release 未进行 Windows Authenticode 代码签名，
+`codex-shell_0.1.5_x64-setup.exe` 后按向导安装。`v0.1.5` 已启用 Tauri Updater，但当前公开 Release 未进行 Windows Authenticode 代码签名，
 Windows SmartScreen 可能在首次运行时显示提示；这是个人二开项目，不代表 OpenAI
 官方产品或背书。
 
@@ -148,6 +148,7 @@ Codex Shell 使用应用标识 `com.codexshell.desktop`，不会复用官方 Cod
 - 应用配置：`%APPDATA%\com.codexshell.desktop`
 - 本地数据：`%LOCALAPPDATA%\com.codexshell.desktop`
 - 独立 CODEX_HOME：默认 `%USERPROFILE%\.codex-shell`
+- 粘贴图片：`%USERPROFILE%\.codex-shell\attachments`；支持 PNG、JPEG、GIF、WebP、BMP 和 AVIF，单张不超过 20 MiB
 - 默认项目目录：`%USERPROFILE%\Documents\Codex-Shell\YYYY-MM-DD`
 
 用户可以在设置中指定其他绝对路径，但必须与官方 `%USERPROFILE%\.codex` 保持隔离。项目目录选择只改变新 Thread 的 `cwd`，不会复制项目或改变 Session 数据归属。

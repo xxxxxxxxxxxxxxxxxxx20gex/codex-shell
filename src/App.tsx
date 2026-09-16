@@ -54,9 +54,10 @@ import { ProductMark } from "./shared/ProductMark";
 import { TransientNotice } from "./shared/TransientNotice";
 import "./styles/tokens.css";
 import { isPathWithinRoot, resolveLinkedProjectPath } from "./features/workspaces/workspaceState";
+import { defaultInspectorWidth, type InspectorView } from "./features/layout/panelLayout";
 
 function App() {
-  const [inspectorView, setInspectorView] = useState<"home" | "files" | "chat">("home");
+  const [inspectorView, setInspectorView] = useState<InspectorView>("home");
   const [mainView, setMainView] = useState<"conversation" | "skills" | "plugins">("conversation");
   const [sideChatMaximized, setSideChatMaximized] = useState(false);
   const {
@@ -68,6 +69,7 @@ function App() {
     setInspectorOpen,
     sidebarWidth,
     inspectorWidth,
+    setInspectorWidth,
     resizingPanel,
     beginPanelResize,
     resizePanel,
@@ -140,6 +142,10 @@ function App() {
     clearActiveGoal,
   } = useAppController();
   const openSideChat = session.sideChat.openChat;
+
+  useEffect(() => {
+    setInspectorWidth(defaultInspectorWidth(inspectorView));
+  }, [inspectorView, setInspectorWidth]);
 
   function toggleInspectorMaximized(view?: "chat" | "files") {
     setInspectorOpen(true);

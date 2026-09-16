@@ -1,8 +1,8 @@
 # 桌面 UI 壳状态
 
 - 模块职责：提供 Windows 三栏工作台、设置面板、主题与系统窗口交互；视觉契约以 [DESIGN.md](../../DESIGN.md) 为准。
-- 当前状态：左栏管理 Session，中间承载对话或扩展管理页，右栏提供项目文件和只读侧边聊天。项目文件视图默认使用 400px Inspector 宽度，文件树默认 220px，为图片和文本预览保留可见空间；用户仍可拖拽调整。支持深色、浅色和跟随系统主题。历史行标题使用 14px Token，操作列在 hover/focus 时展开为 56px，不使用渐变遮罩。
-- 最近变更：移除设置面板的最大化、最小化、恢复入口及相关状态和样式，标题栏只保留关闭按钮。保持默认 1040×760 并受视口约束，不改变 Windows 主窗口控制。渠道编辑独占内容区域；打开时聚焦面板，Tab 循环，支持 Escape 和外部点击关闭。
+- 当前状态：左栏管理 Session，中间承载对话或扩展管理页，右栏提供项目文件和只读侧边聊天。Inspector 主页与侧聊默认 288px，项目文件视图默认 400px；文件树默认 220px，为图片和文本预览保留可见空间，用户仍可拖拽调整。支持深色、浅色和跟随系统主题。历史行标题使用 14px Token，操作列在 hover/focus 时展开为 56px，不使用渐变遮罩。
+- 最近变更：项目文件视图使用独立的 400px 默认宽度，返回功能主页或打开侧聊时恢复 288px，避免 1280px 三栏布局持续压缩对话列。设置面板保持默认 1040×760 并受视口约束，标题栏只保留关闭按钮。
 - 当前接口：`App`、`WindowTitleBar`、`PreferencesPanel`、`useResizablePanels`、`WorkspaceExplorer`、`SideChatPanel`、`TransientNotice`。
 - 布局边界：右侧详情共享 Inspector 生命周期；最大化保留左栏并收起对话列，恢复回到三栏。分隔线通过 CSS 变量及 requestAnimationFrame 更新，释放后同步状态。窗口自绘按钮不保证 Windows 11 Snap Layout 悬停菜单。
 - 模块归属：渠道见 [模型配置](model-config-status.md)，消息与资源见 [时间线](timeline-status.md) 和 [Diff](diff-status.md)，Skills/MCP/Plugins 见 [扩展能力](agent-capabilities-status.md)，侧聊生命周期见 [项目与线程](workspace-thread-status.md)。

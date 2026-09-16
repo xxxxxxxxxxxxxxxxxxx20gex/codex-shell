@@ -111,6 +111,7 @@ export function useResizablePanels() {
     setInspectorOpen,
     sidebarWidth,
     inspectorWidth,
+    setInspectorWidth,
     resizingPanel,
     beginPanelResize,
     resizePanel,

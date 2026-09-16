@@ -43,4 +43,11 @@ describe("buildUserInput", () => {
       { type: "image", url: "data:image/png;base64,AA==" },
     ]);
   });
+
+  it("uses a local path for pasted images once the attachment bridge persists them", () => {
+    expect(buildUserInput("inspect", [], [], [{ name: "pasted-1.png", path: "C:\\home\\.codex-shell\\attachments\\pasted-1.png" }])).toEqual([
+      { type: "text", text: "inspect", text_elements: [] },
+      { type: "localImage", path: "C:\\home\\.codex-shell\\attachments\\pasted-1.png" },
+    ]);
+  });
 });

@@ -1,9 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { resizedPanelWidth } from "./panelLayout";
+import { defaultInspectorWidth, resizedPanelWidth } from "./panelLayout";
 
 const bounds = { left: 100, right: 1_500, width: 1_400 };
 
 describe("resizedPanelWidth", () => {
+  it("uses the wider default only for project files", () => {
+    expect(defaultInspectorWidth("home")).toBe(288);
+    expect(defaultInspectorWidth("chat")).toBe(288);
+    expect(defaultInspectorWidth("files")).toBe(400);
+  });
+
   it("clamps both panels to their own minimum and maximum widths", () => {
     expect(resizedPanelWidth("sidebar", 120, bounds, 310)).toBe(200);
     expect(resizedPanelWidth("sidebar", 900, bounds, 310)).toBe(420);

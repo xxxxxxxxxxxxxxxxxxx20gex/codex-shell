@@ -21,6 +21,7 @@
     "runtime:probe-extensions": "node tests/scripts/probe-extensions-runtime.mjs",
     "test:extension-layout": "node tests/scripts/check-extension-layout.mjs",
     "test:channel-layout": "node tests/scripts/check-channel-layout.mjs",
+    "test:image-annotation-layout": "node tests/scripts/check-image-annotation-layout.mjs",
     "test:terminal-layout": "node tests/scripts/check-terminal-interaction-layout.mjs",
     "runtime:probe-model-parameters": "node tests/scripts/probe-model-parameters.mjs",
     "runtime:probe-local-tool": "node tests/scripts/probe-local-tool-runtime.mjs",
