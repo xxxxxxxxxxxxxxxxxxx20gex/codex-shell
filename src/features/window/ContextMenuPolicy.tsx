@@ -5,7 +5,7 @@ import { inputContextActions } from "./inputContextActions";
 import { writeClipboardText } from "../threads/clipboard";
 import { errorMessage } from "../../shared/errors";
 import { TransientNotice } from "../../shared/TransientNotice";
-import { resolveLinkedProjectPath } from "../workspaces/workspaceState";
+import { resolveAbsoluteLinkedPath } from "../workspaces/workspaceState";
 
 export function ContextMenuPolicy({ projectPath }: { projectPath?: string | null }) {
   const [selectionMenu, setSelectionMenu] = useState<{ x: number; y: number; actions: ContextMenuAction[]; anchor: HTMLElement } | null>(null);
@@ -24,7 +24,7 @@ export function ContextMenuPolicy({ projectPath }: { projectPath?: string | null
         event.preventDefault();
         const path = resource.dataset.localPath!;
         const resolved = projectPath || /^(?:[a-zA-Z]:[\\/]|\\\\)/.test(path)
-          ? resolveLinkedProjectPath(projectPath ?? "", path) : null;
+          ? resolveAbsoluteLinkedPath(projectPath ?? "", path) : null;
         const bounds = resource.getBoundingClientRect();
         setSelectionMenu({ x: event.clientX || bounds.left, y: event.clientY || bounds.bottom, anchor: resource.querySelector<HTMLElement>("a, button") ?? resource, actions: [{
           label: "复制绝对路径", icon: <Copy aria-hidden="true" />, run: async () => {

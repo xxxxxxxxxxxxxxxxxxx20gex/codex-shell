@@ -29,6 +29,14 @@ it("copies resolved paths from reply links, resource thumbnails and file changes
   expect(screen.queryByRole("menu")).toBeNull();
 });
 
+it("normalizes parent segments before copying a resource path", async () => {
+  const writeText = vi.mocked(writeClipboardText).mockResolvedValue();
+  render(<><ContextMenuPolicy projectPath="C:/work/project" /><button data-local-path="../shared/report.pdf">上级文档</button></>);
+  fireEvent.contextMenu(screen.getByText("上级文档"));
+  fireEvent.click(screen.getByRole("menuitem", { name: "复制绝对路径" }));
+  await waitFor(() => expect(writeText).toHaveBeenCalledWith("C:/work/shared/report.pdf"));
+});
+
 it("handles resource SVG targets, current project changes and missing project errors", async () => {
   const writeText = vi.mocked(writeClipboardText).mockResolvedValue();
   const view = render(<><ContextMenuPolicy projectPath="C:/first" /><button data-local-path="image.png"><svg data-testid="icon" /></button></>);

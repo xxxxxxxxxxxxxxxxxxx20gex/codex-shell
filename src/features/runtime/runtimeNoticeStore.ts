@@ -1,4 +1,5 @@
 type RuntimeNoticeKind = "info" | "warning" | "security" | "deprecation";
+export type RuntimeNoticeDestination = "runtime" | "diagnostics";
 
 export interface RuntimeNotice {
   id: number;
@@ -6,6 +7,7 @@ export interface RuntimeNotice {
   title: string;
   message: string;
   path?: string;
+  destination: RuntimeNoticeDestination;
   receivedAt: number;
 }
 

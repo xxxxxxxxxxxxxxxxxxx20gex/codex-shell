@@ -5,7 +5,7 @@ describe("RuntimeNoticeStore", () => {
   it("deduplicates repeated warnings and refreshes their recency", () => {
     vi.spyOn(Date, "now").mockReturnValueOnce(10).mockReturnValueOnce(20);
     const store = new RuntimeNoticeStore();
-    const notice = { kind: "warning" as const, title: "配置警告", message: "bad config" };
+    const notice = { kind: "warning" as const, destination: "diagnostics" as const, title: "配置警告", message: "bad config" };
 
     store.push(notice);
     store.push(notice);
@@ -17,7 +17,7 @@ describe("RuntimeNoticeStore", () => {
   it("keeps a bounded list and supports dismissal", () => {
     const store = new RuntimeNoticeStore();
     for (let index = 0; index < 55; index += 1) {
-      store.push({ kind: "info", title: `notice-${index}`, message: "message" });
+      store.push({ kind: "info", destination: "diagnostics", title: `notice-${index}`, message: "message" });
     }
     expect(store.getSnapshot()).toHaveLength(50);
     const firstId = store.getSnapshot()[0].id;
@@ -29,6 +29,7 @@ describe("RuntimeNoticeStore", () => {
     const store = new RuntimeNoticeStore();
     store.push({
       kind: "warning",
+      destination: "diagnostics",
       title: "t".repeat(300),
       message: "m".repeat(5_000),
       path: "p".repeat(1_500),

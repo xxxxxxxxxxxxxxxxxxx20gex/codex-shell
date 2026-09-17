@@ -51,6 +51,33 @@ export function resolveLinkedProjectPath(root: string, path: string) {
   return resolveProjectRelativePath(root, path);
 }
 
+/** Resolve a display-only link for clipboard use without changing workspace access rules. */
+export function resolveAbsoluteLinkedPath(root: string, path: string) {
+  const candidate = isAbsoluteLocalPath(path)
+    ? path
+    : `${root.replace(/[\\/]+$/, "")}/${path}`;
+  const normalized = candidate.replace(/\\/g, "/");
+  const drive = /^([a-zA-Z]:)\/(.*)$/.exec(normalized);
+  const unc = /^\/\/([^/]+)\/([^/]+)(?:\/(.*))?$/.exec(normalized);
+  if (!drive && !unc) return null;
+  const segments = (drive ? drive[2] : unc?.[3] ?? "").split("/");
+  const resolved: string[] = [];
+  for (const segment of segments) {
+    if (!segment || segment === ".") continue;
+    if (segment === "..") {
+      if (resolved.length === 0) return null;
+      resolved.pop();
+    } else {
+      resolved.push(segment);
+    }
+  }
+  if (drive) {
+    const separator = candidate.includes("\\") ? "\\" : "/";
+    return `${drive[1]}${separator}${resolved.join(separator)}`;
+  }
+  return `\\\\${unc![1]}\\${unc![2]}${resolved.length ? `\\${resolved.join("\\")}` : ""}`;
+}
+
 export function projectRelativePath(root: string, path: string) {
   const normalizedRoot = root.replace(/[\\/]+$/, "");
   if (path.toLowerCase() === normalizedRoot.toLowerCase()) return projectName(root);

@@ -105,6 +105,7 @@ export function useAgentSession(
       if (response.status !== "ready") {
         runtimeNoticeStore.push({
           kind: "security",
+          destination: "runtime",
           title: "Windows Sandbox 尚未就绪",
           message: windowsSandboxSetupMessage(response.status),
         });
@@ -216,27 +217,32 @@ export function useAgentSession(
       onServerRequestResolved: (notification) => interactionStore.dismiss(notification.requestId),
       onWarning: (notification) => runtimeNoticeStore.push({
         kind: "warning",
+        destination: "diagnostics",
         title: "app-server 提示",
         message: notification.message,
       }),
       onGuardianWarning: (notification) => runtimeNoticeStore.push({
         kind: "security",
+        destination: "diagnostics",
         title: "Guardian 安全提示",
         message: notification.message,
       }),
       onConfigWarning: (notification) => runtimeNoticeStore.push({
         kind: "warning",
+        destination: "diagnostics",
         title: notification.summary,
         message: notification.details ?? "配置没有完全生效，请检查对应文件。",
         path: notification.path,
       }),
       onDeprecation: (notification) => runtimeNoticeStore.push({
         kind: "deprecation",
+        destination: "diagnostics",
         title: notification.summary,
         message: notification.details ?? "当前能力将在未来版本中移除。",
       }),
       onWorldWritableWarning: (notification) => runtimeNoticeStore.push({
         kind: "security",
+        destination: "diagnostics",
         title: "检测到世界可写目录",
         message: notification.failedScan
           ? "app-server 未能完成目录安全扫描。"
@@ -246,17 +252,20 @@ export function useAgentSession(
         setWindowsSandboxReadiness(notification.success ? "ready" : "notConfigured");
         runtimeNoticeStore.push({
           kind: notification.success ? "info" : "security",
+          destination: "runtime",
           title: notification.success ? "Windows Sandbox 已就绪" : "Windows Sandbox 设置失败",
           message: notification.error ?? `已完成 ${notification.mode} 模式设置。`,
         });
       },
       onModelRerouted: (notification) => runtimeNoticeStore.push({
         kind: "warning",
+        destination: "diagnostics",
         title: "模型已被重新路由",
         message: `${notification.fromModel} → ${notification.toModel}（${notification.reason}）`,
       }),
       onModelVerification: (notification) => runtimeNoticeStore.push({
         kind: "warning",
+        destination: "diagnostics",
         title: "模型需要额外验证",
         message: `当前请求需要：${notification.verifications.join("、")}`,
       }),
@@ -264,6 +273,7 @@ export function useAgentSession(
         if (!notification.showBufferingUi) return;
         runtimeNoticeStore.push({
           kind: "warning",
+          destination: "diagnostics",
           title: "模型响应正在安全缓冲",
           message: notification.fasterModel
             ? `可改用 ${notification.fasterModel} 以更快响应。`
@@ -272,11 +282,13 @@ export function useAgentSession(
       },
       onMcpOauthLoginCompleted: (notification) => { setSkillsRevision((value) => value + 1); runtimeNoticeStore.push({
         kind: notification.success ? "info" : "warning",
+        destination: "diagnostics",
         title: notification.success ? `MCP ${notification.name} 登录成功` : `MCP ${notification.name} 登录失败`,
         message: notification.error ?? (notification.success ? "app-server 已完成 OAuth 登录。" : "请重新发起 OAuth 登录。"),
       }); },
       onMcpServerStatusUpdated: (notification) => { setSkillsRevision((value) => value + 1); runtimeNoticeStore.push({
         kind: notification.status === "failed" ? "warning" : "info",
+        destination: "diagnostics",
         title: `MCP ${notification.name} · ${notification.status}`,
         message: notification.error ?? (notification.status === "ready" ? "服务器已就绪。" : "服务器启动状态已更新。"),
       }); },
@@ -370,6 +382,7 @@ export function useAgentSession(
       await client.startWindowsSandboxSetup({ mode, cwd: activeProjectCwd });
       runtimeNoticeStore.push({
         kind: "info",
+        destination: "runtime",
         title: "Windows Sandbox 设置已开始",
         message: "app-server 会在设置完成后发送结果。",
       });

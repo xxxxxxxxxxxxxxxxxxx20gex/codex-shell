@@ -6,6 +6,7 @@ import {
   joinProjectPath,
   replaceActiveFileMention,
   resolveFileSearchPath,
+  resolveAbsoluteLinkedPath,
   resolveLinkedProjectPath,
   resolveProjectRelativePath,
   projectRelativePath,
@@ -66,4 +67,12 @@ describe("workspace paths", () => {
       "C:\\Users\\example\\Documents\\Codex-Shell",
     )).toBe(false);
   });
+});
+
+it("normalizes parent segments only for absolute clipboard paths", () => {
+  expect(resolveAbsoluteLinkedPath("C:\\work", "images/../result.png")).toBe("C:\\work\\result.png");
+  expect(resolveAbsoluteLinkedPath("C:/work", "../shared/report.pdf")).toBe("C:/shared/report.pdf");
+  expect(resolveAbsoluteLinkedPath("C:/work", "C:/work/images/../result.png")).toBe("C:/work/result.png");
+  expect(resolveAbsoluteLinkedPath("C:/work", "../../outside.txt")).toBeNull();
+  expect(resolveAbsoluteLinkedPath("C:/work", "\\\\server\\share\\folder\\..\\report.pdf")).toBe("\\\\server\\share\\report.pdf");
 });

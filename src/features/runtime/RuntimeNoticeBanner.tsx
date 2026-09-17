@@ -1,11 +1,11 @@
 import { useSyncExternalStore } from "react";
 import { X } from "lucide-react";
-import type { RuntimeNoticeStore } from "./runtimeNoticeStore";
+import type { RuntimeNoticeDestination, RuntimeNoticeStore } from "./runtimeNoticeStore";
 import "./RuntimeNotices.css";
 
 interface Props {
   store: RuntimeNoticeStore;
-  onShowStatus: () => void;
+  onShowStatus: (destination: RuntimeNoticeDestination) => void;
 }
 
 export function RuntimeNoticeBanner({ store, onShowStatus }: Props) {
@@ -14,7 +14,7 @@ export function RuntimeNoticeBanner({ store, onShowStatus }: Props) {
   if (!notice) return null;
   return (
     <div className="runtime-notice-banner" data-kind={notice.kind}>
-      <button type="button" onClick={onShowStatus}>
+      <button type="button" onClick={() => onShowStatus(notice.destination)}>
         <strong>{notice.title}</strong>
         <span>{notice.message}</span>
         {notices.length > 1 && <i>另有 {notices.length - 1} 项</i>}

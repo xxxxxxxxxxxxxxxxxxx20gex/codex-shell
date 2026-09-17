@@ -11,10 +11,12 @@
 - 已知问题：Runtime 二进制被 Git 忽略，跨机器发布需要安全复制同版本 Runtime 与无密码 signing key；兼容门禁覆盖现有生成文件、方法、通知和反向请求保留，但不替代真实 smoke；旧 CODEX_HOME 迁移仍依赖同卷 `rename`，跨卷用户目录需要单独的可恢复复制方案；进程崩溃后的自动恢复尚未实现。实时 stderr 仅保存在当前窗口的有界内存中，应用退出后仍以 Core 的 SQLite 日志为长期诊断来源。
 - 发布状态：2026-09-16，v0.1.6 生产安装器携带 codex-cli 0.154.0-alpha.6.2 与三个同源 helper；Updater 公钥未更换，安装器已通过 Ed25519 + BLAKE2b 验签，安装器、`.sig` 和 `latest.json` 已上传 GitHub 并设为 Latest。本次未重复 v0.1.4 的干净 Windows 环境 UAC 与 elevated 执行验收。
 - 交互校正：Windows Sandbox 未配置或需要更新时，运行时提示会明确引导到“设置 → 运行环境 → 使用管理员权限配置”，不再指向不存在的右侧状态页。
+- 提示跳转：运行提示携带明确目标；Windows Sandbox 配置与结果进入“运行环境”，其他 app-server、配置、Guardian、模型与 MCP 提示进入“诊断”，不再统一跳到无关的运行环境页面。
 - 验证证据（2026-09-08）：Sandbox 提示文案定向 Vitest、TypeScript、ESLint、production build 和 `cargo check --manifest-path src-tauri/Cargo.toml` 均通过。
 - 验证证据：2026-09-04，`codex-cli 0.153.0-alpha.5` 与同目录 helper 通过协议兼容门禁；真实第三方网关探针在低推理模式下产生两次 `commandExecution` 并完成 Turn，独立 Cargo target 中 `cargo check`、14 项 Rust 单元测试和严格 Clippy 均通过。2026-09-07，`v0.1.4` manifest 更新为 `codex-cli 0.153.4` 并记录主 Runtime 与三个同源 helper 的 SHA-256，正式 Release 上传安装器、`.sig` 和 `latest.json`。
 - 验证证据（2026-09-10）：使用与 `app_server_arguments` 相同的 `-c` 组合启动 `codex-cli 0.153.4`，DeepSeek 渠道注入 CODEX_HOME 内的目录后 `model/list` 只返回 `deepseek-flash`、`deepseek-v4-pro`；同一路由去掉 `model_catalog_json`、以及不注入目录的 OpenAI 渠道，均返回内置 6 个 GPT 模型；探针不发送 Turn，未使用真实上游密钥。
 - 相关决策：[ADR-001：使用原版 Codex app-server](../decisions/ADR-001-unmodified-codex-app-server.md)、[ADR-002：隔离运行数据与凭据](../decisions/ADR-002-isolated-runtime-data.md)、[ADR-004：以厂商分组的渠道承载模型路由](../decisions/ADR-004-model-provider-channels.md)。
 - 工具验证（2026-09-14）：官方压缩包与 exe 哈希校验、重复 staging、错误来源拒绝通过；Cargo check、39 项 Rust 单测、严格 Clippy、TypeScript、ESLint、328 项 Vitest 与 Debug 构建通过。`pnpm runtime:probe-tools` 使用独立临时 CODEX_HOME 和不含宿主工具目录的 PATH，真实 app-server → PowerShell → 内置 rg 完成版本检查与源码搜索，不发送模型请求。未验收 elevated Windows Sandbox 或干净机器安装；用户自行覆写命令环境或 Shell profile 仍可能覆盖 PATH。
 - 验证证据（2026-09-16）：codex-cli 0.154.0-alpha.6.2 及三个同目录 helper 已重新暂存，主 Runtime SHA-256 为 `081e4de4be8e38fac6ed4d95e3b1a0b9f6d31c090ddc36e1696b349fe406f575`；协议兼容门禁、真实本地协议探针、Debug 构建和生产打包通过。最终安装器 SHA-256 为 `4542c20c49e49854bb3aabb9ef724cbe635ccd2b782a633b6491a34388ce83b9`。
+- 提示跳转验证（2026-09-17）：通知横幅定向测试验证诊断与运行环境目标分流；完整质量检查和 Debug 构建通过。未执行真实 app-server 错误注入，完整结果见测试与发布状态。
 - 最后更新：2026-09-16
