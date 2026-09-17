@@ -191,7 +191,7 @@ function App() {
       setConversationImage(resolvedPath);
       return;
     }
-    if (currentProjectPath && isPathWithinRoot(currentProjectPath, resolvedPath)) {
+    if (currentProjectPath && (isPathWithinRoot(currentProjectPath, resolvedPath) || /\.(md|markdown)$/i.test(resolvedPath))) {
       setInspectorOpen(true);
       setInspectorView("files");
       openWorkspaceExplorer(resolvedPath);

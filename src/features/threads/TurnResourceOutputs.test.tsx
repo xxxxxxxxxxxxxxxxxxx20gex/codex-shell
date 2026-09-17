@@ -13,11 +13,22 @@ it("extracts reply references, ignores code and web links, and lazily retains pr
     { type: "imageView", id: "p", path: "C:/work/mask.png" },
   ];
   const view = render(<TurnResourceOutputs items={items} readFile={readFile} />);
-  expect(view.getByRole("region", { name: "回复中的文件" })).toBeTruthy();
+  expect(view.getByRole("region", { name: "回复中的图片" })).toBeTruthy();
   expect(view.queryByLabelText("本轮产出")).toBeNull();
   expect(readFile).toHaveBeenCalledTimes(1);
   const details = view.getByText("过程资源 · 1 个").parentElement as HTMLDetailsElement;
   details.open = true;
   fireEvent(details, new Event("toggle"));
   expect(readFile).toHaveBeenCalledWith("C:/work/mask.png");
+});
+
+it("only repeats images below replies, leaving document links in the reply body", () => {
+  const message: ThreadItem = { type: "agentMessage", id: "a", text: "[skill](C:/skills/SKILL.md) [notes](notes.markdown) [pdf](report.pdf) [sheet](data.xlsx) [image](image.png)", phase: "final_answer", memoryCitation: null, questions: null, delivery: null };
+  const view = render(<TurnResourceOutputs items={[message]} />);
+  expect(view.getByText("image.png")).toBeTruthy();
+  expect(view.queryByText("SKILL.md")).toBeNull();
+  expect(view.queryByText("report.pdf")).toBeNull();
+  expect(view.queryByText("data.xlsx")).toBeNull();
+  view.rerender(<TurnResourceOutputs items={[{ ...message, text: "[notes](notes.md)" }]} />);
+  expect(view.container.textContent).toBe("");
 });

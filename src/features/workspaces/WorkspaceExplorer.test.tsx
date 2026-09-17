@@ -8,6 +8,15 @@ import { WorkspaceExplorer } from "./WorkspaceExplorer";
 
 describe("WorkspaceExplorer", () => {
   afterEach(cleanup);
+  it("previews a Markdown file outside the project without loading fictitious project folders", async () => {
+    const readDirectory = vi.fn(async () => []);
+    const readFile = vi.fn(async () => btoa("# External skill"));
+    render(<WorkspaceExplorer rootPath="C:/work" initialFilePath="C:/skills/amap/SKILL.md" maximized={false} onToggleMaximize={() => {}} onClose={() => {}}
+      readDirectory={readDirectory} readFile={readFile} watchPath={async () => () => {}} />);
+    await screen.findByText("# External skill");
+    expect(readFile).toHaveBeenCalledWith("C:/skills/amap/SKILL.md");
+    expect(readDirectory.mock.calls).toEqual([["C:/work"]]);
+  });
   it("targets the right-clicked file and dismisses the menu without closing the explorer", async () => {
     const onClose = vi.fn();
     const onAddToConversation = vi.fn();

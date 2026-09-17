@@ -16,9 +16,11 @@ try {
     await import('/src/styles/tokens.css'); await import('/src/App.css');
     const {WorkspaceExplorer}=await import('/src/features/workspaces/WorkspaceExplorer.tsx');
     const {ContextMenuPolicy}=await import('/src/features/window/ContextMenuPolicy.tsx');
+    const {TurnResourceOutputs}=await import('/src/features/threads/TurnResourceOutputs.tsx');
     function Draft(){const [value,setValue]=React.useState('hello world');return React.createElement('textarea',{id:'draft',value,onChange:e=>setValue(e.target.value),onPaste:e=>{if(e.clipboardData.files.length){e.preventDefault();window.imagePasted=true;}}});}
     ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(React.Fragment,null,
     React.createElement(ContextMenuPolicy),React.createElement('p',{id:'selection-text'},'正文复制测试'),
+    React.createElement(TurnResourceOutputs,{items:[{type:'agentMessage',id:'reply',text:'[文档](C:/skills/SKILL.md) [图片](result.png)',phase:'final_answer'}],onOpenPath:()=>{}}),
     React.createElement(Draft),
     React.createElement('div',{id:'editable',contentEditable:true,suppressContentEditableWarning:true},'可编辑'),
     React.createElement(WorkspaceExplorer,{
@@ -32,6 +34,9 @@ try {
     await page.setViewportSize({width,height});
     await page.goto(`http://127.0.0.1:${process.argv[4] ?? 1435}/explorer-menu-check`);
     const row = page.getByRole("button",{name:"audio.m4s"});
+    await page.getByRole('region',{name:'回复中的图片'}).waitFor();
+    assert.equal(await page.getByText('SKILL.md',{exact:true}).count(),0);
+    assert.equal(await page.getByText('result.png',{exact:true}).count(),1);
     await row.evaluate((el, point) => el.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, clientX: point.x, clientY: point.y })), { x: width-2, y: height-2 });
     await page.getByText("二进制文件",{exact:true}).waitFor();
     const menu = page.getByRole("menu");

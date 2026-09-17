@@ -24,7 +24,7 @@ import { errorMessage } from "../../shared/errors";
 import type { WatchWorkspacePath } from "../runtime/useWorkspaceFiles";
 import { decodeFilePreview, formatFileSize, type FilePreview } from "./filePreview";
 import { useWorkspaceDirectoryWatches } from "./useWorkspaceDirectoryWatches";
-import { joinProjectPath, projectName, projectRelativePath } from "./workspaceState";
+import { isPathWithinRoot, joinProjectPath, projectName, projectRelativePath } from "./workspaceState";
 import "./WorkspaceExplorer.css";
 import { AttachmentPreviewDialog } from "../attachments/AttachmentGallery";
 
@@ -161,7 +161,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
     setWatchError("");
     setMenu(null);
     setActionError("");
-    const relativeParts = initialFilePath
+    const relativeParts = initialFilePath && isPathWithinRoot(rootPath, initialFilePath)
       ? projectRelativePath(rootPath, initialFilePath).split(/[\\/]/).filter(Boolean)
       : [];
     const parentDirectories = relativeParts.slice(0, -1).reduce<string[]>((paths, part) => {

@@ -58,7 +58,7 @@ export function TurnResourceOutputs(props: Props) {
   const { items } = props;
   const [expanded, setExpanded] = useState(false);
   const key = (path: string) => path.replace(/\\/g, "/").replace(/^\/([a-z]:)/i, "$1").replace(/\/\.\//g, "/").toLowerCase();
-  const replies = [...new Map(replyPaths(items).map((path) => [key(path), path])).values()];
+  const replies = [...new Map(replyPaths(items).filter(isImagePath).map((path) => [key(path), path])).values()];
   const seen = new Set(replies.map(key));
   const process: string[] = [];
   for (const item of items) {
@@ -71,7 +71,7 @@ export function TurnResourceOutputs(props: Props) {
   }
   if (!replies.length && !process.length) return null;
   return <>
-    {replies.length > 0 && <ResourceList {...props} title="回复中的文件" resources={replies} />}
+    {replies.length > 0 && <ResourceList {...props} title="回复中的图片" resources={replies} />}
     {process.length > 0 && <details className="turn-process-resources" onToggle={(event) => setExpanded(event.currentTarget.open)}><summary>过程资源 · {process.length} 个</summary>{expanded && <ResourceList {...props} title="查看、生成与修改的资源" resources={process} />}</details>}
   </>;
 }
@@ -97,7 +97,7 @@ function ResourceList({ resources, title, readFile, onOpenPath, onOpenInExplorer
     {files.length > 0 && <ul className="turn-resource-files">
       {files.map((path) => <li key={path}>
         {resourceKind(path) === "spreadsheet" ? <FileSpreadsheet aria-hidden="true" /> : <FileText aria-hidden="true" />}<code title={path}>{baseName(path)}</code><small title={path}>{path}</small>
-        {onOpenPath && <button type="button" onClick={() => void onOpenPath(path)} title="在文件管理器中打开" aria-label={`打开 ${path}`}><FolderOpen aria-hidden="true" /></button>}
+        {onOpenInExplorer && <button type="button" onClick={() => void onOpenInExplorer(path)} title="在资源管理器中显示" aria-label={`打开 ${path}`}><FolderOpen aria-hidden="true" /></button>}
       </li>)}
     </ul>}
   </section>;
