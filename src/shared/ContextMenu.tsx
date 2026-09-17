@@ -1,16 +1,18 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import "./ContextMenu.css";
 
-export interface ExplorerMenuAction {
+export interface ContextMenuAction {
   label: string;
   icon: ReactNode;
   run: () => void | Promise<void>;
 }
 
-export function ExplorerContextMenu({ x, y, actions, anchor, onClose, onError }: {
+export function ContextMenu({ x, y, actions, anchor, onClose, onError, label }: {
   x: number;
   y: number;
-  actions: ExplorerMenuAction[];
+  actions: ContextMenuAction[];
+  label: string;
   anchor: HTMLElement;
   onClose: () => void;
   onError: (error: unknown) => void;
@@ -35,7 +37,7 @@ export function ExplorerContextMenu({ x, y, actions, anchor, onClose, onError }:
     };
   }, [x, y, onClose]);
 
-  return createPortal(<div ref={ref} className="explorer-context-menu" role="menu" aria-label="文件操作" style={position} onContextMenu={(event) => event.preventDefault()} onKeyDown={(event) => {
+  return createPortal(<div ref={ref} className="explorer-context-menu" role="menu" aria-label={label} style={position} onContextMenu={(event) => event.preventDefault()} onKeyDown={(event) => {
     if (event.key === "Escape" || event.key === "Tab") {
       event.preventDefault();
       event.stopPropagation();

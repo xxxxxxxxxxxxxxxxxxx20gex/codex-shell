@@ -17,7 +17,7 @@ import {
   Eye,
   Paperclip,
 } from "lucide-react";
-import { ExplorerContextMenu, type ExplorerMenuAction } from "./ExplorerContextMenu";
+import { ContextMenu, type ContextMenuAction } from "../../shared/ContextMenu";
 import { writeClipboardText } from "../threads/clipboard";
 import type { FsReadDirectoryEntry } from "../../generated/app-server/v2/FsReadDirectoryEntry";
 import { errorMessage } from "../../shared/errors";
@@ -290,7 +290,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
   }
 
   const previewLines = preview?.kind === "text" ? preview.content.split("\n") : [];
-  const menuActions: ExplorerMenuAction[] = [];
+  const menuActions: ContextMenuAction[] = [];
   if (menu) {
     if (menu.directory) menuActions.push({ label: expanded.has(menu.path) ? "折叠文件夹" : "展开文件夹", icon: <FolderOpen />, run: () => toggleDirectory(menu.path) });
     else {
@@ -346,7 +346,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
           </main>
         </div>
       </section>
-      {menu && <ExplorerContextMenu x={menu.x} y={menu.y} anchor={menu.anchor} actions={menuActions} onClose={closeMenu} onError={(error) => setActionError(errorMessage(error))} />}
+      {menu && <ContextMenu label="文件操作" x={menu.x} y={menu.y} anchor={menu.anchor} actions={menuActions} onClose={closeMenu} onError={(error) => setActionError(errorMessage(error))} />}
       {annotationPath && <AttachmentPreviewDialog key={annotationPath} target={{ kind: "image", name: fileName(annotationPath), path: annotationPath }} readFile={readFile} onClose={() => setAnnotationPath(null)} />}
     </div>
   );
