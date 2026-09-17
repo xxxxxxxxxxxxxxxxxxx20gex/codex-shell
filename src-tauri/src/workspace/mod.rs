@@ -2,7 +2,6 @@ use chrono::Local;
 use serde::Serialize;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use tauri::{AppHandle, Manager};
 
 const DEFAULT_PROJECT_ROOT_NAME: &str = "Codex-Shell";
@@ -43,10 +42,6 @@ pub fn get_default_project_directory(app: AppHandle) -> Result<DefaultProjectDir
     resolve_default_project_directory(&app)
 }
 
-fn explorer_select_argument(path: &Path) -> String {
-    format!("/select,\"{}\"", path.display())
-}
-
 #[tauri::command]
 pub fn reveal_path_in_explorer(path: String) -> Result<(), String> {
     let target = PathBuf::from(path);
@@ -56,14 +51,13 @@ pub fn reveal_path_in_explorer(path: String) -> Result<(), String> {
     if !target.is_file() && !target.is_dir() {
         return Err("只能定位到已存在的文件或文件夹".to_string());
     }
-    let target = target
-        .canonicalize()
-        .map_err(|error| format!("解析文件路径失败：{error}"))?;
-    Command::new("explorer.exe")
-        .arg(if target.is_dir() { target.to_string_lossy().into_owned() } else { explorer_select_argument(&target) })
-        .spawn()
-        .map(|_| ())
-        .map_err(|error| format!("启动资源管理器失败：{error}"))
+    if target.is_dir() {
+        tauri_plugin_opener::open_path(&target, None::<&str>)
+            .map_err(|error| format!("打开文件夹失败：{error}"))
+    } else {
+        tauri_plugin_opener::reveal_item_in_dir(&target)
+            .map_err(|error| format!("定位文件失败：{error}"))
+    }
 }
 
 #[cfg(test)]
