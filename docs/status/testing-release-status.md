@@ -1,6 +1,7 @@
 # 测试与发布状态
 
 - 模块职责：维护类型检查、静态检查、前后端测试、构建、Runtime 兼容门禁和 Windows 发布证据。
+- 内置目录验证（2026-09-17）：`pnpm test:quality` 通过，66 文件 / 346 项前端测试、42 项 Rust 单测通过（1 项交互测试忽略）；TypeScript、ESLint、production build、Knip、Cargo check、Clippy 与 diff 检查通过。扩展三页面四视口布局回归及 Debug 构建通过；未重跑真实 Runtime 扩展探针或 API 会话，原有 chunk 体积警告保留。
 - 回复资源定向验证（2026-09-17）：`pnpm test:quality` 通过，66 文件 / 344 项前端测试、42 项 Rust 单测通过（1 项交互测试忽略）；新增项目外 Markdown 内部读取且不展开虚假目录、普通文档不进入回复图片预览的回归。四视口文件菜单脚本同时验证回复预览仅保留图片；未执行真实模型会话端到端。
 - 审查验证（2026-09-17）：`pnpm test:quality` 通过（TypeScript、ESLint、66 文件 / 342 项前端测试、production build、Knip、Cargo check、42 项 Rust 单测、1 项交互测试忽略、Clippy、diff 检查）；右键四视口回归和最终 Debug 构建通过。21 份入口及 docs Markdown 的本地链接目标均存在（不校验标题锚点及远端 URL）。未重跑真实 API、Runtime 兼容探针或其他模块布局，原有主 chunk 大于 500 kB 的警告保留。
 - 代码健康审查（2026-09-17）：全项目 Knip 未发现未使用文件、导出或依赖；重点复核右键/剪贴板/弹层监听释放、文件 watch 清理及 Runtime 日志/通知/Turn 上限。修复复制降级路径抛错时遗留隐藏 textarea 和焦点丢失；合并菜单复用逻辑后未保留旧组件空壳。清理项目快照中过期验证流水账，修正布局脚本数量。未执行所有业务逐行审计，保留现有协议和迁移兼容路径。

@@ -424,17 +424,6 @@ export function useAppController() {
     session.startNewTask();
   }
 
-  async function startSkillTask() {
-    startNewTask();
-    try {
-      const available = await session.listSkills(true);
-      const managementSkills = available.filter((skill) => skill.enabled && /skill[- ]?(?:installer|creator)|(?:安装|创建).*skill/i.test(`${skill.name} ${skill.description}`));
-      setSkills(managementSkills.slice(0, 2).map((skill) => ({ name: skill.name, path: skill.path })));
-    } catch (error) {
-      setUiError(errorMessage(error));
-    }
-  }
-
   function changePermissionMode(next: PermissionMode) {
     if (next === permissionMode) return;
     setPermissionMode(next);
@@ -673,7 +662,6 @@ export function useAppController() {
     editingMessage,
     cancelMessageEdit: () => { setEditingMessage(null); setDraft(""); setMentions([]); setImages([]); setSkills([]); setCommandNotice(""); },
     startNewTask,
-    startSkillTask,
     changePermissionMode,
     changeApprovalReviewer,
     changeProject,

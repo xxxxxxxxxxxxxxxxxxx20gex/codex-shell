@@ -31,10 +31,10 @@ document.body.style.cssText = "margin:0;background:var(--surface-canvas);color:v
 const root = ReactDOM.createRoot(document.getElementById("root"));
 const noop = () => {};
 const skill = {name:"example-skill",description:"这是一个用于验证长中文描述和操作区域的技能",enabled:true,scope:"user",pluginId:null,path:"C:/cs/skills/demo/SKILL.md"};
-const plugin = {id:"demo",name:"本地插件",installed:false,enabled:true,availability:"AVAILABLE",installPolicy:"AVAILABLE",authPolicy:"ON_USE",interface:null};
-const extensions = {listPlugins:async()=>({marketplaces:[{name:"local-marketplace",path:"C:/market.json",plugins:[plugin]}],marketplaceLoadErrors:[]}),installPlugin:async()=>({appsNeedingAuth:[]}),readPlugin:async()=>({plugin:{summary:plugin,skills:[],hooks:[],apps:[],mcpServers:[]}})};
+const plugin = {id:"demo",name:"本地插件",installed:true,enabled:true,availability:"AVAILABLE",installPolicy:"AVAILABLE",authPolicy:"ON_USE",interface:null};
+const extensions = {listPlugins:async()=>({marketplaces:[{name:"local-marketplace",path:"C:/market.json",plugins:[plugin,{...plugin,id:'hidden',name:'Game Studio',installed:false}]}],marketplaceLoadErrors:[]}),readPlugin:async()=>({plugin:{summary:plugin,skills:[],hooks:[],apps:[],mcpServers:[]}})};
 window.show = (kind) => {
- const content = kind === "skills" ? React.createElement(SkillManagementPage,{loadSkills:async()=>[skill],revision:0,codexHome:"C:/cs",setEnabled:async()=>false,onClose:noop,onAddSkill:noop}) :
+ const content = kind === "skills" ? React.createElement(SkillManagementPage,{loadSkills:async()=>[skill],revision:0,codexHome:"C:/cs",setEnabled:async()=>false,onClose:noop}) :
  kind === "plugins" ? React.createElement(PluginManagementPage,{extensions,revision:0,onClose:noop,onChanged:noop}) :
  React.createElement(McpStatusPanel,{loadServers:async()=>[],loginServer:async()=>"",reloadServers:async()=>{},readResource:async()=>[],onClose:noop,readConfig:async()=>({version:"v",servers:{}}),writeConfig:async()=>{}});
  root.render(React.createElement("main",{style:{marginLeft:248,marginRight:innerWidth>=1180?288:0,height:"100vh",position:"relative",display:"flex",overflow:"hidden"}},content));
@@ -49,11 +49,18 @@ try {
     for (const kind of ["skills", "plugins", "mcp"]) {
       await page.evaluate((view) => window.show(view), kind);
       await page.getByText(kind === "skills" ? /^example-skill/ : kind === "plugins" ? "本地插件" : "添加 MCP").first().waitFor();
+      if (kind === 'plugins') {
+        assert.equal(await page.getByText('Game Studio',{exact:true}).count(),0);
+        assert.equal(await page.getByText('添加来源',{exact:true}).count(),0);
+        await page.getByText('详情',{exact:true}).click();
+        await page.getByText('关闭详情',{exact:true}).click();
+      }
       await page.screenshot({ path: join(output, `${kind}-${width}.png`) });
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth);
       assert.equal(overflow, false, `${kind} ${width} horizontal overflow`);
       const badText = await page.locator("button,input,label,small,p,strong").evaluateAll((elements) => elements.filter((el) => parseFloat(getComputedStyle(el).fontSize) < 11).map((el) => el.textContent));
       assert.deepEqual(badText, [], `${kind} text minimum`);
+      await page.locator("button:enabled").first().focus();
       await page.keyboard.press("Tab");
       assert.equal(await page.evaluate(() => document.activeElement !== document.body), true);
     }

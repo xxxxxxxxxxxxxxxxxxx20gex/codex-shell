@@ -27,7 +27,7 @@
 - Runtime 二进制不进入 Git；个人发布通过本机脚本暂存同源 Runtime、运行兼容门禁并生成安装器、minisign 签名和 updater manifest，再手动上传 Release。`v0.1.4` 已完成该发布流程及干净 Windows 环境的 UAC、sandbox readiness 和 elevated 命令验证；Windows Authenticode 代码签名仍未完成。MSI 不是默认发布目标。
 - 模型路由同一时刻只能有一个 provider：并行多厂商会话需要按 provider 启动第二个 app-server 并重构前端单连接假设，尚未排期。内置的第三方模型目录需要跟随上游维护。
 - 渠道切换依赖重启共享 app-server；运行或提交中拒绝切换，切换事务期间拒绝新的执行 RPC。失败时保留已保存配置并提供重试，不实现自动故障转移或并行 Provider。
-- Skills 独立安装/启停/可恢复卸载、MCP 用户配置与安全 Token 输入、本地 Marketplace/Plugin 管理页面已接入；扩展变化刷新状态，不自动中断任务。
+- Skills 独立安装/启停/可恢复卸载、MCP 用户配置与安全 Token 输入、CS 内置目录与已安装插件管理已接入，不展示未经适配的市场候选项；扩展变化刷新状态，不自动中断任务。
 - 文件预览仍会先经 IPC 读取完整文件；超大 Diff、单个超长活动和二进制 Diff 缺少源端预算或专用视图。
 - 侧边聊天当前固定只读沙箱、`approvalPolicy: never`，不会替代主会话执行写入或审批流程；侧聊状态暂不持久化，也不会出现在历史列表；关闭时在连接可用的情况下先中断活动 Turn，再退订临时 Thread，Runtime 已停止时不触发重连；切换主 Session 或 Runtime 重置后返回右侧功能入口。
 
@@ -35,7 +35,7 @@
 
 ## 下一里程碑
 
-1. 人工验收真实第三方 MCP OAuth、Git Marketplace 下载与系统凭据写入。
+1. 人工验收真实第三方 MCP OAuth 与系统凭据写入。
 2. 维持 API Key 个人使用边界，不引入官方远程目录、OpenAI 账户或 Connector 登录。
 3. 实现 app-server 断线后当前 Session 的可控恢复，并明确进行中 Turn 的失败、重试和状态回收边界。
 4. 建立 CI 与 Windows Authenticode 代码签名基线，并持续在干净 Windows 用户环境回归 elevated Sandbox 与 sidecar。

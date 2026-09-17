@@ -129,7 +129,6 @@ function App() {
     editingMessage,
     cancelMessageEdit,
     startNewTask,
-    startSkillTask,
     changePermissionMode,
     changeApprovalReviewer,
     changeProject,
@@ -292,7 +291,7 @@ function App() {
               <PanelRight aria-hidden="true" />
             </button>
           </header>
-          {mainView === "skills" ? <SkillManagementPage loadSkills={session.listSkills} revision={session.skillsRevision} codexHome={session.codexHome} setEnabled={setSkillEnabled} onAddSkill={() => { setMainView("conversation"); void startSkillTask(); }} onChanged={session.extensionsChanged} onClose={() => setMainView("conversation")} /> : mainView === "plugins" ? <PluginManagementPage extensions={session.extensions} revision={session.skillsRevision} onChanged={session.extensionsChanged} onClose={() => setMainView("conversation")} /> : <>
+          {mainView === "skills" ? <SkillManagementPage loadSkills={session.listSkills} revision={session.skillsRevision} codexHome={session.codexHome} setEnabled={setSkillEnabled} onChanged={session.extensionsChanged} onClose={() => setMainView("conversation")} /> : mainView === "plugins" ? <PluginManagementPage extensions={session.extensions} revision={session.skillsRevision} onChanged={session.extensionsChanged} onClose={() => setMainView("conversation")} /> : <>
           {session.turns.length > 0 ? (
             <ConversationTimeline
               key={session.thread?.id ?? "new"}

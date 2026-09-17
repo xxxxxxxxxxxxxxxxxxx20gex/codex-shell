@@ -63,7 +63,7 @@ it("only offers uninstall for CS-owned user skills, and reports dialog errors", 
     { ...base, name: "other-user", path: "C:/official/skills/demo/SKILL.md" },
     { ...base, name: "bundled", path: "C:/cs/skills/bundled/SKILL.md", pluginId: "p" },
   ];
-  render(<SkillManagementPage codexHome="C:/cs" revision={0} loadSkills={async () => skills} setEnabled={vi.fn()} onClose={vi.fn()} onAddSkill={vi.fn()} />);
+  render(<SkillManagementPage codexHome="C:/cs" revision={0} loadSkills={async () => skills} setEnabled={vi.fn()} onClose={vi.fn()} />);
   expect(await screen.findAllByText("卸载")).toHaveLength(1);
   vi.mocked(open).mockRejectedValueOnce(new Error("目录选择失败"));
   fireEvent.click(screen.getByText("从目录安装"));
@@ -73,20 +73,42 @@ it("only offers uninstall for CS-owned user skills, and reports dialog errors", 
 it("installs the bundled image skill disabled by default", async () => {
   const setEnabled = vi.fn(async () => false);
   vi.mocked(invoke).mockResolvedValueOnce("C:/cs/skills/image-gen/SKILL.md");
-  render(<SkillManagementPage codexHome="C:/cs" revision={0} loadSkills={async () => []} setEnabled={setEnabled} onClose={vi.fn()} onAddSkill={vi.fn()} />);
+  render(<SkillManagementPage codexHome="C:/cs" revision={0} loadSkills={async () => []} setEnabled={setEnabled} onClose={vi.fn()} />);
   fireEvent.click(await screen.findByText("安装"));
   await waitFor(() => expect(setEnabled).toHaveBeenCalledWith("C:/cs/skills/image-gen/SKILL.md", false));
   expect(screen.queryByRole("status")).toBeNull();
 });
 
-it("shows pending Connector authentication rather than treating plugin installation as ready", async () => {
-  const plugin = { id: "demo@local", name: "demo", installed: false, enabled: true, availability: "AVAILABLE", installPolicy: "AVAILABLE", authPolicy: "ON_INSTALL", interface: null } as PluginSummary;
-  const installPlugin = vi.fn(async () => ({ authPolicy: "ON_INSTALL" as const, appsNeedingAuth: [{ id: "connector", name: "Example Connector", description: null, category: null, installUrl: null }] }));
-  const extensions = { listPlugins: async () => ({ marketplaces: [{ name: "local", path: "C:/market/marketplace.json", interface: null, plugins: [plugin] }], marketplaceLoadErrors: [], featuredPluginIds: [] }), installPlugin } as unknown as ReturnType<typeof useExtensions>;
+it("hides uninstalled marketplace entries and retains installed plugin removal", async () => {
+  const plugin = { id: "demo@local", name: "已装插件", installed: true, enabled: true, installPolicy: "AVAILABLE", interface: null } as PluginSummary;
+  const uninstallPlugin = vi.fn(async () => ({}));
+  const extensions = { listPlugins: async () => ({ marketplaces: [{ name: "local", path: "C:/market.json", interface: null, plugins: [plugin, { ...plugin, id: "hidden", name: "Game Studio", installed: false }] }], marketplaceLoadErrors: [] }), uninstallPlugin } as unknown as ReturnType<typeof useExtensions>;
   const changed = vi.fn();
   render(<PluginManagementPage extensions={extensions} revision={0} onChanged={changed} onClose={vi.fn()} />);
-  fireEvent.click(await screen.findByText("安装"));
-  await waitFor(() => expect(screen.getByRole("status").textContent).toContain("Example Connector"));
-  expect(screen.getByRole("status").textContent).toContain("仍待认证");
+  await screen.findByText("已装插件");
+  expect(screen.queryByText("Game Studio")).toBeNull();
+  expect(screen.queryByText("添加来源")).toBeNull();
+  expect(screen.queryByText("安装")).toBeNull();
+  fireEvent.click(screen.getByText("卸载"));
+  await waitFor(() => expect(uninstallPlugin).toHaveBeenCalledWith("demo@local"));
   expect(changed).toHaveBeenCalledOnce();
+});
+
+it("shows an empty curated plugin catalog without advertising upstream plugins", async () => {
+  const extensions = { listPlugins: async () => ({ marketplaces: [], marketplaceLoadErrors: [] }) } as unknown as ReturnType<typeof useExtensions>;
+  render(<PluginManagementPage extensions={extensions} revision={0} onChanged={vi.fn()} onClose={vi.fn()} />);
+  await screen.findByText("暂无已安装插件。");
+  expect(screen.getByText("暂无已适配的内置插件。")).toBeTruthy();
+  expect(screen.queryByRole("textbox")).toBeNull();
+});
+
+it("retains installed plugins and reports uninstall failure without signaling a change", async () => {
+  const plugin = { id: "demo", name: "已有插件", installed: true, enabled: true, installPolicy: "AVAILABLE" } as PluginSummary;
+  const extensions = { listPlugins: async () => ({ marketplaces: [{ name: "local", path: "C:/market.json", plugins: [plugin] }], marketplaceLoadErrors: [] }), uninstallPlugin: async () => { throw new Error("卸载失败"); } } as unknown as ReturnType<typeof useExtensions>;
+  const changed = vi.fn();
+  render(<PluginManagementPage extensions={extensions} revision={0} onChanged={changed} onClose={vi.fn()} />);
+  fireEvent.click(await screen.findByText("卸载"));
+  expect((await screen.findByRole("alert")).textContent).toBe("卸载失败");
+  expect(changed).not.toHaveBeenCalled();
+  expect(screen.getByText("已有插件")).toBeTruthy();
 });
