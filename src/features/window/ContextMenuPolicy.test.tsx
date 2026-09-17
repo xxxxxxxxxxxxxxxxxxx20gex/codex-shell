@@ -4,8 +4,48 @@ import { createPortal } from "react-dom";
 import { afterEach, expect, it, vi } from "vitest";
 import { ContextMenuPolicy } from "./ContextMenuPolicy";
 import { writeClipboardText } from "../threads/clipboard";
+import { MarkdownContent } from "../threads/MarkdownContent";
+import { TurnFileChanges } from "../threads/TurnFileChanges";
+import { TurnResourceOutputs } from "../threads/TurnResourceOutputs";
+import { ImageAttachmentPreview } from "../attachments/AttachmentGallery";
 
 vi.mock("../threads/clipboard", () => ({ writeClipboardText: vi.fn() }));
+
+it("copies resolved paths from reply links, resource thumbnails and file changes", async () => {
+  const writeText = vi.mocked(writeClipboardText).mockResolvedValue();
+  render(<><ContextMenuPolicy projectPath="C:/work" />
+    <MarkdownContent>{"[文档](docs/guide.md:12) [网络](https://example.com) [共享](file://server/share/test.pdf)"}</MarkdownContent>
+    <ImageAttachmentPreview path="D:/images/地图.png" readFile={async () => "AA=="} />
+    <TurnResourceOutputs items={[{ type: "agentMessage", id: "a", text: "[图](result.png)", phase: "final_answer", memoryCitation: null, delivery: null, questions: null }]} onOpenPath={vi.fn()} />
+    <TurnFileChanges items={[{ type: "fileChange", id: "f", status: "completed", changes: [{path: "src/main.ts", kind: {type: "update", move_path: null}, diff: ""}] }]} onOpenPath={vi.fn()} />
+  </>);
+  for (const [label, path] of [["文档", "C:/work/docs/guide.md"], ["共享", "\\\\server\\share\\test.pdf"], ["result.png", "C:/work/result.png"], ["地图.png", "D:/images/地图.png"], ["src/main.ts", "C:/work/src/main.ts"]]) {
+    fireEvent.contextMenu(screen.getByText(label));
+    expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual(["复制绝对路径"]);
+    fireEvent.click(screen.getByRole("menuitem"));
+    await waitFor(() => expect(writeText).toHaveBeenLastCalledWith(path));
+  }
+  fireEvent.contextMenu(screen.getByText("网络"));
+  expect(screen.queryByRole("menu")).toBeNull();
+});
+
+it("handles resource SVG targets, current project changes and missing project errors", async () => {
+  const writeText = vi.mocked(writeClipboardText).mockResolvedValue();
+  const view = render(<><ContextMenuPolicy projectPath="C:/first" /><button data-local-path="image.png"><svg data-testid="icon" /></button></>);
+  fireEvent.contextMenu(screen.getByTestId("icon"));
+  fireEvent.click(screen.getByRole("menuitem"));
+  await waitFor(() => expect(writeText).toHaveBeenLastCalledWith("C:/first/image.png"));
+  view.rerender(<><ContextMenuPolicy projectPath="D:/second" /><button data-local-path="image.png">资源</button></>);
+  fireEvent.contextMenu(screen.getByText("资源"));
+  fireEvent.click(screen.getByRole("menuitem"));
+  await waitFor(() => expect(writeText).toHaveBeenLastCalledWith("D:/second/image.png"));
+  view.rerender(<><ContextMenuPolicy /><button data-local-path="image.png">资源</button></>);
+  writeText.mockClear();
+  fireEvent.contextMenu(screen.getByText("资源"));
+  fireEvent.click(screen.getByRole("menuitem"));
+  expect((await screen.findByRole("alert")).textContent).toContain("无法解析文件绝对路径");
+  expect(writeText).not.toHaveBeenCalled();
+});
 
 afterEach(() => { cleanup(); window.getSelection()?.removeAllRanges(); vi.restoreAllMocks(); });
 

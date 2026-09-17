@@ -86,7 +86,10 @@ export function MarkdownContent({ children, className, onOpenPath, onOpenError }
         skipHtml
         urlTransform={safeUrlTransform}
         components={{
-          img: ({ src, alt }) => src ? <button type="button" className="markdown-image-open" onClick={() => void openLink(src)} aria-label={`打开图片 ${alt || src}`} title="打开图片"><img src={src} alt={alt ?? "图片"} /></button> : null,
+          img: ({ src, alt }) => {
+            const target = src ? markdownLinkTarget(src) : null;
+            return src ? <button type="button" data-local-path={target?.type === "localPath" ? target.value : undefined} className="markdown-image-open" onClick={() => void openLink(src)} aria-label={`打开图片 ${alt || src}`} title="打开图片"><img src={src} alt={alt ?? "图片"} /></button> : null;
+          },
           pre: ({ children: codeElement }) => {
             if (!isValidElement(codeElement)) return <pre>{codeElement}</pre>;
             return <MarkdownCodeBlock codeElement={codeElement as ReactElement<{ children?: ReactNode; className?: string }>} />;
@@ -98,6 +101,7 @@ export function MarkdownContent({ children, className, onOpenPath, onOpenError }
               <a
                 {...props}
                 href={href}
+                data-local-path={target.type === "localPath" ? target.value : undefined}
                 target={target.type === "external" ? "_blank" : undefined}
                 rel={target.type === "external" ? "noreferrer" : undefined}
                 onClick={(event) => {

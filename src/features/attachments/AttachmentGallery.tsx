@@ -77,7 +77,7 @@ export function ImageAttachmentPreview({ path, name, readFile, onOpenPath, onOpe
   const image: ImageAttachment = { path, name: name ?? path.split(/[\\/]/).pop() ?? path };
   return (
     <>
-      <button type="button" className="attachment-image-preview session-image-preview" onClick={() => setOpen(true)} title={`预览 ${image.name}`}>
+      <button type="button" data-local-path={path} className="attachment-image-preview session-image-preview" onClick={() => setOpen(true)} title={`预览 ${image.name}`}>
         <ImageThumbnail image={image} readFile={readFile} />
         <span>{image.name}</span>
       </button>
@@ -175,7 +175,7 @@ export function AttachmentGallery({
       <div className={`attachment-gallery align-${align}`} aria-label="附件">
         {images.map((image, index) => (
           <div className="attachment-image-card" key={image.path ?? image.url ?? index}>
-            <button type="button" className="attachment-image-preview" onClick={() => setPreviewTarget({ kind: "image", ...image })} title={`预览 ${image.name}`}>
+            <button type="button" className="attachment-image-preview" data-local-path={image.path} onClick={() => setPreviewTarget({ kind: "image", ...image })} title={`预览 ${image.name}`}>
               <ImageThumbnail image={image} readFile={readFile} />
               <span>{image.name}</span>
             </button>
@@ -184,7 +184,7 @@ export function AttachmentGallery({
         ))}
         {files.map((file) => (
           <div className="attachment-file-card" key={file.path}>
-            <button type="button" className="attachment-file-preview" onClick={() => setPreviewTarget({ kind: "file", ...file })} title={file.path}>
+            <button type="button" className="attachment-file-preview" data-local-path={file.path} onClick={() => setPreviewTarget({ kind: "file", ...file })} title={file.path}>
               <File className="attachment-file-icon" aria-hidden="true" />
               <span><strong>{file.name}</strong><small>{fileKind(file.name)}</small></span>
             </button>

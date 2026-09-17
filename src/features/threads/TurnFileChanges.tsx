@@ -61,7 +61,7 @@ export function TurnFileChanges({ items, onOpenPath, onOpenInExplorer }: Props) 
       </summary>
       <ul>
         {files.map((file) => (
-          <li key={file.path}>
+          <li key={file.path} data-local-path={file.path}>
             <File className="turn-file-icon" aria-label={kindLabels[file.kind] ?? file.kind} />
             {onOpenPath && file.kind !== "delete"
               ? <a href="#" title={`查看文件：${file.path}`} onClick={(event) => { event.preventDefault(); void open(file.path, onOpenPath); }}><code>{file.path}</code></a>

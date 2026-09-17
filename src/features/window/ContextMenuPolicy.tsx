@@ -5,8 +5,9 @@ import { inputContextActions } from "./inputContextActions";
 import { writeClipboardText } from "../threads/clipboard";
 import { errorMessage } from "../../shared/errors";
 import { TransientNotice } from "../../shared/TransientNotice";
+import { resolveLinkedProjectPath } from "../workspaces/workspaceState";
 
-export function ContextMenuPolicy() {
+export function ContextMenuPolicy({ projectPath }: { projectPath?: string | null }) {
   const [selectionMenu, setSelectionMenu] = useState<{ x: number; y: number; actions: ContextMenuAction[]; anchor: HTMLElement } | null>(null);
   const [error, setError] = useState("");
   const close = useCallback(() => setSelectionMenu(null), []);
@@ -17,6 +18,22 @@ export function ContextMenuPolicy() {
       setSelectionMenu(null);
       setError("");
       const target = event.target;
+      if (!(target instanceof Element)) { event.preventDefault(); return; }
+      const resource = target.closest<HTMLElement>("[data-local-path]");
+      if (resource) {
+        event.preventDefault();
+        const path = resource.dataset.localPath!;
+        const resolved = projectPath || /^(?:[a-zA-Z]:[\\/]|\\\\)/.test(path)
+          ? resolveLinkedProjectPath(projectPath ?? "", path) : null;
+        const bounds = resource.getBoundingClientRect();
+        setSelectionMenu({ x: event.clientX || bounds.left, y: event.clientY || bounds.bottom, anchor: resource.querySelector<HTMLElement>("a, button") ?? resource, actions: [{
+          label: "复制绝对路径", icon: <Copy aria-hidden="true" />, run: async () => {
+            if (!resolved) throw new Error("无法解析文件绝对路径，请确认当前会话项目与文件链接");
+            await writeClipboardText(resolved);
+          },
+        }] });
+        return;
+      }
       if (!(target instanceof HTMLElement)) { event.preventDefault(); return; }
       const input = target.closest("input, textarea");
       event.preventDefault();
@@ -43,7 +60,7 @@ export function ContextMenuPolicy() {
     }
     document.addEventListener("contextmenu", handleContextMenu);
     return () => document.removeEventListener("contextmenu", handleContextMenu);
-  }, []);
+  }, [projectPath]);
   return <>
     {selectionMenu && <ContextMenu label="文本操作" {...selectionMenu} onClose={close} onError={(cause) => setError(errorMessage(cause))} />}
     <TransientNotice message={error} onDismiss={dismissError} />

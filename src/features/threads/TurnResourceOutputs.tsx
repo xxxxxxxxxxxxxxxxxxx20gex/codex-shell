@@ -92,10 +92,10 @@ function ResourceList({ resources, title, readFile, onOpenPath, onOpenInExplorer
     {images.length > 0 && <div className="turn-resource-images">
       {images.map((path) => readFile && /^(?:[a-z]:[\\/]|\\\\|\/)/i.test(path)
         ? <ImageAttachmentPreview key={path} path={path} name={baseName(path)} readFile={readFile} onOpenPath={onOpenPath} onOpenInExplorer={onOpenInExplorer} />
-        : <button type="button" className="attachment-file-preview" key={path} onClick={() => void onOpenPath?.(path)} disabled={!onOpenPath}><ImageIcon aria-hidden="true" />{baseName(path)}</button>)}
+        : <button type="button" className="attachment-file-preview" data-local-path={path} key={path} onClick={() => void onOpenPath?.(path)} disabled={!onOpenPath}><ImageIcon aria-hidden="true" />{baseName(path)}</button>)}
     </div>}
     {files.length > 0 && <ul className="turn-resource-files">
-      {files.map((path) => <li key={path}>
+      {files.map((path) => <li key={path} data-local-path={path}>
         {resourceKind(path) === "spreadsheet" ? <FileSpreadsheet aria-hidden="true" /> : <FileText aria-hidden="true" />}<code title={path}>{baseName(path)}</code><small title={path}>{path}</small>
         {onOpenInExplorer && <button type="button" onClick={() => void onOpenInExplorer(path)} title="在资源管理器中显示" aria-label={`打开 ${path}`}><FolderOpen aria-hidden="true" /></button>}
       </li>)}

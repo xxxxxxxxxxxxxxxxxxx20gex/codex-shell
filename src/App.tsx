@@ -220,7 +220,7 @@ function App() {
     <main className="app-shell" data-theme={personalization.theme}>
       {conversationImage && <AttachmentPreviewDialog key={conversationImage} target={{ kind: "image", name: conversationImage.split(/[\\/]/).pop() || "图片", path: conversationImage }} readFile={session.readWorkspaceFile} onClose={() => setConversationImage(null)} onOpenPath={openResourceInExplorer} onOpenInExplorer={openResourceInExplorer} />}
       <WindowTitleBar />
-      <ContextMenuPolicy />
+      <ContextMenuPolicy projectPath={currentProjectPath} />
       <section
         ref={workspaceGridRef}
         className={`workspace-grid ${sidebarOpen ? "" : "sidebar-hidden"} ${inspectorOpen ? "" : "inspector-hidden"} ${resizingPanel ? "resizing" : ""} ${sideChatMaximized && (inspectorView === "chat" || inspectorView === "files") ? "inspector-maximized" : ""}`}

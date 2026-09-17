@@ -17,9 +17,13 @@ try {
     const {WorkspaceExplorer}=await import('/src/features/workspaces/WorkspaceExplorer.tsx');
     const {ContextMenuPolicy}=await import('/src/features/window/ContextMenuPolicy.tsx');
     const {TurnResourceOutputs}=await import('/src/features/threads/TurnResourceOutputs.tsx');
+    const {MarkdownContent}=await import('/src/features/threads/MarkdownContent.tsx');
+    const {TurnFileChanges}=await import('/src/features/threads/TurnFileChanges.tsx');
     function Draft(){const [value,setValue]=React.useState('hello world');return React.createElement('textarea',{id:'draft',value,onChange:e=>setValue(e.target.value),onPaste:e=>{if(e.clipboardData.files.length){e.preventDefault();window.imagePasted=true;}}});}
     ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(React.Fragment,null,
-    React.createElement(ContextMenuPolicy),React.createElement('p',{id:'selection-text'},'正文复制测试'),
+    React.createElement(ContextMenuPolicy,{projectPath:'C:/work'}),React.createElement('p',{id:'selection-text'},'正文复制测试'),
+    React.createElement(MarkdownContent,null,'[文档链接](docs/guide.md:12)'),
+    React.createElement(TurnFileChanges,{items:[{type:'fileChange',id:'f',status:'completed',changes:[{path:'src/main.ts',kind:{type:'update',move_path:null},diff:''}]}],onOpenPath:()=>{}}),
     React.createElement(TurnResourceOutputs,{items:[{type:'agentMessage',id:'reply',text:'[文档](C:/skills/SKILL.md) [图片](result.png)',phase:'final_answer'}],onOpenPath:()=>{}}),
     React.createElement(Draft),
     React.createElement('div',{id:'editable',contentEditable:true,suppressContentEditableWarning:true},'可编辑'),
@@ -65,6 +69,20 @@ try {
     assert.deepEqual(await page.getByRole('menuitem').allTextContents(),['全选','复制','粘贴']);
     await page.keyboard.press('Escape');
     await page.context().grantPermissions(['clipboard-read','clipboard-write']);
+    await page.getByText('文件变更 · 1',{exact:true}).click();
+    for (const [label,path] of [['文档链接','C:/work/docs/guide.md'],['result.png','C:/work/result.png'],['src/main.ts','C:/work/src/main.ts']]) {
+      await page.getByText(label,{exact:true}).click({button:'right'});
+      assert.deepEqual(await page.getByRole('menuitem').allTextContents(),['复制绝对路径']);
+      await page.getByRole('menuitem',{name:'复制绝对路径'}).click();
+      assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),path);
+    }
+    await page.getByText('文档链接',{exact:true}).focus();
+    await page.keyboard.press('Shift+F10');
+    await page.getByRole('menuitem',{name:'复制绝对路径'}).waitFor();
+    await page.screenshot({path:process.env.TEMP+`/cs-resource-menu-${width}.png`});
+    await page.keyboard.press('Escape');
+    assert.equal(await page.getByRole('menu').count(),0);
+    assert.equal(await page.evaluate(()=>document.activeElement.textContent),'文档链接');
     await page.evaluate(()=>navigator.clipboard.writeText('替换'));
     const draft=page.locator('#draft');
     await draft.focus();
