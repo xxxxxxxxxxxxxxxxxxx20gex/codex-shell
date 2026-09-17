@@ -209,7 +209,7 @@ Radii:
 - Dialogs use a clear title, short explanation only when necessary, and right-aligned actions.
 - Settings use a 1040px by 760px preferred surface constrained to the viewport, with a fixed navigation column and one scrolling content region. The header offers only close, with no maximize, minimize, or restore mode. Channel editing replaces the list in the content region instead of appending a nested form below it.
 - Clicking outside closes non-modal popovers; destructive confirmation remains modal.
-- Context menus are contextual: suppress browser page menus on blank space, buttons, and unselected content; preserve native editing menus in enabled text inputs, textareas, and contenteditable regions (including readonly text fields for copying). Selected body text offers a copy-only menu. Project-file and thread-history custom menus take precedence. This policy covers application DOM and portals, not embedded document viewers in separate frames.
+- Context menus are contextual: suppress browser page menus on blank space, buttons, and unselected content; offer exactly Select all, Copy, and Paste in enabled text inputs, textareas, and contenteditable regions. Disable Copy without a selection or in password fields, and Paste in readonly fields; preserve keyboard shortcuts and native undo for text insertion. Selected body text offers a copy-only menu. Project-file and thread-history custom menus take precedence. This policy covers application DOM and portals, not embedded document viewers in separate frames.
 
 ## Window Chrome
 

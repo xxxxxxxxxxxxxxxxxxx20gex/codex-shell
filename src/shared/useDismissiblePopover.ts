@@ -23,12 +23,14 @@ export function useDismissiblePopover<T extends HTMLElement>({ open, onClose, re
     lastFocusedRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     function dismissOnOutsidePointer(event: PointerEvent) {
       const target = event.target;
-      if (!(target instanceof Node) || rootRef.current?.contains(target) || isInsideRef.current?.(target)) return;
+      if (!(target instanceof Node) || rootRef.current?.contains(target) || isInsideRef.current?.(target)
+        || (target instanceof Element && target.closest(".explorer-context-menu"))) return;
       dismissalReasonRef.current = "outside";
       onCloseRef.current();
     }
     function dismissOnEscape(event: KeyboardEvent) {
       if (event.key !== "Escape") return;
+      if (event.target instanceof Element && event.target.closest(".explorer-context-menu")) return;
       event.preventDefault();
       dismissalReasonRef.current = "escape";
       onCloseRef.current();

@@ -14,6 +14,13 @@ function Fixture() {
 }
 
 describe("useDismissiblePopover", () => {
+  it("does not dismiss the parent when interacting with a portaled context menu", () => {
+    render(<><Fixture /><div className="explorer-context-menu"><button>复制</button></div></>);
+    fireEvent.click(screen.getByRole("button", { name: "触发" }));
+    fireEvent.pointerDown(screen.getByRole("button", { name: "复制" }));
+    fireEvent.keyDown(screen.getByRole("button", { name: "复制" }), { key: "Escape" });
+    expect(screen.queryByText("菜单")).not.toBeNull();
+  });
   it("closes on outside pointer without stealing focus", () => {
     render(<Fixture />);
     fireEvent.click(screen.getByRole("button", { name: "触发" }));

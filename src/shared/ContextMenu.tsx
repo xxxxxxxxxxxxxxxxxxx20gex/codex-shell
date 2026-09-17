@@ -5,6 +5,7 @@ import "./ContextMenu.css";
 export interface ContextMenuAction {
   label: string;
   icon: ReactNode;
+  disabled?: boolean;
   run: () => void | Promise<void>;
 }
 
@@ -26,7 +27,7 @@ export function ContextMenu({ x, y, actions, anchor, onClose, onError, label }: 
   }, [x, y, actions.length]);
   useLayoutEffect(() => {
     const menu = ref.current!;
-    menu.querySelector<HTMLButtonElement>("button")?.focus();
+    menu.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus();
     const outside = (event: PointerEvent) => { if (!menu.contains(event.target as Node)) onClose(); };
     const dismiss = () => onClose();
     document.addEventListener("pointerdown", outside);
@@ -45,14 +46,14 @@ export function ContextMenu({ x, y, actions, anchor, onClose, onError, label }: 
       onClose();
       return;
     }
-    const buttons = Array.from(ref.current!.querySelectorAll<HTMLButtonElement>("button"));
+    const buttons = Array.from(ref.current!.querySelectorAll<HTMLButtonElement>("button:not(:disabled)"));
     const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
     const next = event.key === "ArrowDown" ? (index + 1) % buttons.length
       : event.key === "ArrowUp" ? (index - 1 + buttons.length) % buttons.length
         : event.key === "Home" ? 0 : event.key === "End" ? buttons.length - 1 : -1;
     if (next >= 0) { event.preventDefault(); buttons[next].focus(); }
   }}>
-    {actions.map((action) => <button type="button" role="menuitem" key={action.label} onClick={async () => {
+    {actions.map((action) => <button type="button" role="menuitem" key={action.label} disabled={action.disabled} onClick={async () => {
       anchor.focus();
       onClose();
       try { await action.run(); } catch (error) { onError(error); }

@@ -9,16 +9,38 @@ vi.mock("../threads/clipboard", () => ({ writeClipboardText: vi.fn() }));
 
 afterEach(() => { cleanup(); window.getSelection()?.removeAllRanges(); vi.restoreAllMocks(); });
 
-it("blocks page menus while preserving editable and readonly text fields including portals", () => {
+it("uses exactly three editing actions in text fields including portals", () => {
   const view = render(<><ContextMenuPolicy /><button>操作</button><input aria-label="文本" /><input aria-label="密码" type="password" />
     <input aria-label="只读" readOnly /><input aria-label="禁用" disabled /><input aria-label="勾选" type="checkbox" />
     {createPortal(<textarea aria-label="弹窗输入" />, document.body)}</>);
-  for (const name of ["文本", "密码", "只读", "弹窗输入"]) expect(fireEvent.contextMenu(screen.getByLabelText(name))).toBe(true);
+  for (const name of ["文本", "密码", "只读", "弹窗输入"]) {
+    expect(fireEvent.contextMenu(screen.getByLabelText(name))).toBe(false);
+    expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual(["全选", "复制", "粘贴"]);
+  }
   for (const name of ["禁用", "勾选"]) expect(fireEvent.contextMenu(screen.getByLabelText(name))).toBe(false);
   expect(fireEvent.contextMenu(screen.getByRole("button"))).toBe(false);
   expect(fireEvent.contextMenu(document.body)).toBe(false);
   view.unmount();
   expect(fireEvent.contextMenu(document.body)).toBe(true);
+});
+
+it("selects all, copies the selection and disables unsafe actions", async () => {
+  const writeText = vi.mocked(writeClipboardText).mockResolvedValue();
+  render(<><ContextMenuPolicy /><textarea aria-label="草稿" defaultValue="hello world" /><input aria-label="只读" readOnly defaultValue="read" /><input aria-label="密码" type="password" defaultValue="secret" /></>);
+  const input = screen.getByLabelText("草稿") as HTMLTextAreaElement;
+  fireEvent.contextMenu(input);
+  expect((screen.getByRole("menuitem", { name: "复制" }) as HTMLButtonElement).disabled).toBe(true);
+  fireEvent.click(screen.getByRole("menuitem", { name: "全选" }));
+  expect([input.selectionStart, input.selectionEnd]).toEqual([0, 11]);
+  input.setSelectionRange(0, 5);
+  fireEvent.contextMenu(input);
+  fireEvent.click(screen.getByRole("menuitem", { name: "复制" }));
+  await waitFor(() => expect(writeText).toHaveBeenCalledWith("hello"));
+  fireEvent.contextMenu(screen.getByLabelText("只读"));
+  expect((screen.getByRole("menuitem", { name: "粘贴" }) as HTMLButtonElement).disabled).toBe(true);
+  const password = screen.getByLabelText("密码") as HTMLInputElement;
+  password.select(); fireEvent.contextMenu(password);
+  expect((screen.getByRole("menuitem", { name: "复制" }) as HTMLButtonElement).disabled).toBe(true);
 });
 
 it("lets existing custom menus handle their own events", () => {
@@ -27,6 +49,31 @@ it("lets existing custom menus handle their own events", () => {
   fireEvent.contextMenu(screen.getByRole("button"));
   expect(handled).toHaveBeenCalledOnce();
   expect(screen.queryByRole("menu")).toBeNull();
+});
+
+it("reports clipboard permission failure without changing the draft", async () => {
+  vi.spyOn(navigator.clipboard, "read").mockRejectedValue(new Error("denied"));
+  render(<><ContextMenuPolicy /><textarea aria-label="草稿" defaultValue="保留草稿" /></>);
+  const input = screen.getByLabelText("草稿") as HTMLTextAreaElement;
+  fireEvent.contextMenu(input);
+  fireEvent.keyDown(screen.getByRole("menu"), { key: "ArrowDown" });
+  expect(document.activeElement?.textContent).toBe("粘贴");
+  fireEvent.click(screen.getByRole("menuitem", { name: "粘贴" }));
+  expect((await screen.findByRole("alert")).textContent).toContain("Ctrl+V");
+  expect(input.value).toBe("保留草稿");
+});
+
+it("rejects an async paste if the draft changed while reading clipboard", async () => {
+  let resolve!: (items: ClipboardItem[]) => void;
+  vi.spyOn(navigator.clipboard, "read").mockImplementation(() => new Promise((done) => { resolve = done; }));
+  render(<><ContextMenuPolicy /><textarea aria-label="草稿" defaultValue="之前" /></>);
+  const input = screen.getByLabelText("草稿") as HTMLTextAreaElement;
+  fireEvent.contextMenu(input);
+  fireEvent.click(screen.getByRole("menuitem", { name: "粘贴" }));
+  fireEvent.change(input, { target: { value: "之后" } });
+  resolve([]);
+  expect((await screen.findByRole("alert")).textContent).toContain("输入状态已变化");
+  expect(input.value).toBe("之后");
 });
 
 it("copies a snapshot of selected body text and reports clipboard failure", async () => {

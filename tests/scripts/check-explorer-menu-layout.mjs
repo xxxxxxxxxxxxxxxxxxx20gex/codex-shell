@@ -16,8 +16,10 @@ try {
     await import('/src/styles/tokens.css'); await import('/src/App.css');
     const {WorkspaceExplorer}=await import('/src/features/workspaces/WorkspaceExplorer.tsx');
     const {ContextMenuPolicy}=await import('/src/features/window/ContextMenuPolicy.tsx');
+    function Draft(){const [value,setValue]=React.useState('hello world');return React.createElement('textarea',{id:'draft',value,onChange:e=>setValue(e.target.value),onPaste:e=>{if(e.clipboardData.files.length){e.preventDefault();window.imagePasted=true;}}});}
     ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(React.Fragment,null,
     React.createElement(ContextMenuPolicy),React.createElement('p',{id:'selection-text'},'正文复制测试'),
+    React.createElement(Draft),
     React.createElement('div',{id:'editable',contentEditable:true,suppressContentEditableWarning:true},'可编辑'),
     React.createElement(WorkspaceExplorer,{
       rootPath:'C:/work',maximized:false,onToggleMaximize:()=>{},onClose:()=>{window.closedExplorer=true},
@@ -54,7 +56,34 @@ try {
     assert(Number.parseFloat(await menu.locator("button").first().evaluate(el=>getComputedStyle(el).fontSize))>=11);
     await page.screenshot({path:process.env.TEMP+`/cs-explorer-menu-${width}.png`});
     await page.keyboard.press('Escape');
-    assert.equal(await page.locator('#editable').evaluate(el => el.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true}))),true);
+    assert.equal(await page.locator('#editable').evaluate(el => el.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true}))),false);
+    assert.deepEqual(await page.getByRole('menuitem').allTextContents(),['全选','复制','粘贴']);
+    await page.keyboard.press('Escape');
+    await page.context().grantPermissions(['clipboard-read','clipboard-write']);
+    await page.evaluate(()=>navigator.clipboard.writeText('替换'));
+    const draft=page.locator('#draft');
+    await draft.focus();
+    await draft.evaluate(el=>{el.setSelectionRange(6,11);el.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true}));});
+    await page.getByRole('menuitem',{name:'粘贴',exact:true}).click();
+    await page.waitForFunction(()=>document.querySelector('#draft').value==='hello 替换');
+    await page.keyboard.press('Control+z');
+    await page.waitForFunction(()=>document.querySelector('#draft').value==='hello world');
+    await draft.evaluate(el=>el.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true})));
+    await page.getByRole('menuitem',{name:'全选',exact:true}).click();
+    assert.deepEqual(await draft.evaluate(el=>[el.selectionStart,el.selectionEnd]),[0,11]);
+    await draft.evaluate(el=>el.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true})));
+    await page.getByRole('menuitem',{name:'复制',exact:true}).click();
+    assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),'hello world');
+    await page.evaluate(async()=>{
+      const canvas=document.createElement('canvas'); canvas.width=1; canvas.height=1;
+      const blob=await new Promise(resolve=>canvas.toBlob(resolve));
+      await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);
+    });
+    await draft.evaluate(el=>el.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true})));
+    await page.screenshot({path:process.env.TEMP+`/cs-input-menu-${width}.png`});
+    await page.getByRole('menuitem',{name:'粘贴',exact:true}).click();
+    await page.waitForFunction(()=>window.imagePasted===true);
+    assert.equal(await draft.inputValue(),'hello world');
     assert.equal(await page.locator('body').evaluate(el => el.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true}))),false);
     await page.locator('#selection-text').evaluate(el=>{
       const range=document.createRange(); range.selectNodeContents(el); window.getSelection().removeAllRanges(); window.getSelection().addRange(range);
