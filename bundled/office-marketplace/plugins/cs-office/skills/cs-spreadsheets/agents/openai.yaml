@@ -1,0 +1,4 @@
+interface:
+  display_name: "电子表格"
+  short_description: "创建、分析并验证本地工作簿"
+  default_prompt: "整理这些数据并生成可继续编辑的工作簿。"

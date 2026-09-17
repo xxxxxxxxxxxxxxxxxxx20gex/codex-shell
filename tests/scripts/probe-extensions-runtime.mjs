@@ -73,6 +73,26 @@ try {
   await request("plugin/uninstall", { pluginId: plugin.id });
   await request("marketplace/remove", { marketplaceName: added.marketplaceName });
   console.log("PASS Plugins: local marketplace add/list/read/install/uninstall/remove");
+
+  const officeSource = join(root, "bundled", "office-marketplace");
+  const officeAdded = await request("marketplace/add", { source: officeSource });
+  const officeCatalog = await request("plugin/list", { marketplaceKinds: ["local"] });
+  const officeMarket = officeCatalog.marketplaces.find((item) => item.name === "cs-curated");
+  assert.ok(officeMarket, JSON.stringify(officeCatalog.marketplaceLoadErrors));
+  await request("plugin/read", { marketplacePath: officeMarket.path, pluginName: "cs-office" });
+  await request("plugin/install", { marketplacePath: officeMarket.path, pluginName: "cs-office" });
+  const officeSkills = await request("skills/list", { cwds: [temporary], forceReload: true });
+  const names = officeSkills.data.flatMap((entry) => entry.skills).map((item) => item.name);
+  assert.ok(names.includes("cs-office:cs-pdf"), JSON.stringify(names));
+  assert.ok(names.includes("cs-office:cs-documents"), JSON.stringify(names));
+  assert.ok(names.includes("cs-office:cs-spreadsheets"), JSON.stringify(names));
+  const installedOffice = (await request("plugin/list", { marketplaceKinds: ["local"] }))
+    .marketplaces.find((item) => item.name === "cs-curated")
+    .plugins.find((item) => item.name === "cs-office");
+  assert.equal(installedOffice.installed, true);
+  await request("plugin/uninstall", { pluginId: installedOffice.id });
+  await request("marketplace/remove", { marketplaceName: officeAdded.marketplaceName });
+  console.log("PASS CS Office: bundled marketplace install and skill discovery");
 } finally {
   for (const waiter of pending.values()) clearTimeout(waiter.timeout);
   if (child.exitCode === null) { child.kill(); await once(child, "exit"); }

@@ -1,0 +1,20 @@
+{
+  "name": "cs-curated",
+  "interface": {
+    "displayName": "CS 内置"
+  },
+  "plugins": [
+    {
+      "name": "cs-office",
+      "source": {
+        "source": "local",
+        "path": "./plugins/cs-office"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

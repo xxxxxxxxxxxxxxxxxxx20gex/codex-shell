@@ -1,0 +1,4 @@
+interface:
+  display_name: "文档"
+  short_description: "创建、编辑并验证 Word 文档"
+  default_prompt: "创建或修改这个 Word 文档，并检查结构和最终排版。"

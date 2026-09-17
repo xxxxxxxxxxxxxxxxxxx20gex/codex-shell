@@ -1,6 +1,7 @@
 # 测试与发布状态
 
 - 模块职责：维护类型检查、静态检查、前后端测试、构建、Runtime 兼容门禁和 Windows 发布证据。
+- CS Office 验证（2026-09-17）：`pnpm test:quality` 通过，67 文件 / 353 项前端测试、43 项 Rust 单测通过（1 项交互测试忽略）；TypeScript、ESLint、production build、Knip、Cargo check、Clippy 与 diff 检查通过。插件和三个 Skill 的官方结构校验通过；真实 app-server 在隔离临时 CODEX_HOME 中完成内置市场添加、插件安装、三个命名空间 Skill 发现、卸载和来源移除。插件管理页在四个规定视口的溢出、字号、焦点和 reduced-motion 检查通过，Debug 构建产物更新。未执行真实 PDF、DOCX、XLSX 生成或干净机器依赖验收，原有 Vite 主 chunk 体积警告保留。
 - 当前文件高亮验证（2026-09-17）：`pnpm test:quality` 通过，67 文件 / 352 项前端测试、42 项 Rust 单测通过（1 项交互测试忽略）；TypeScript、ESLint、production build、Knip、Cargo check、Clippy 与 diff 检查通过。组件回归覆盖混用 Windows 路径分隔符时的父目录展开、当前项语义、高亮及首次滚动；四视口真实浏览器检查选中背景与左侧标记，最终 Debug 构建通过。未使用真实大型项目人工检查目录 watch 后的长列表滚动位置。
 - 提示跳转与路径规范化验证（2026-09-17）：`pnpm test:quality` 通过，67 文件 / 351 项前端测试、42 项 Rust 单测通过（1 项交互测试忽略）；TypeScript、ESLint、production build、Knip、Cargo check、Clippy 与 diff 检查通过。定向测试覆盖 app-server 普通提示进入诊断、Sandbox 提示进入运行环境，以及相对/绝对/UNC 路径的 `..` 规范化和越过卷根拒绝；四视口资源菜单回归及 Debug 构建通过。未执行真实 app-server 错误注入或 WebView2 人工点击验收。
 - 资源路径菜单验证（2026-09-17）：`pnpm test:quality` 通过，66 文件 / 348 项前端测试、42 项 Rust 单测通过（1 项交互测试忽略）。四视口浏览器验证文档链接、图片资源及文件变更复制出的绝对路径、键盘唤出、Escape、焦点恢复与既有菜单行为；最终 Debug 构建通过。测试使用模拟资源及 Chromium 剪贴板，未人工验收 WebView2 系统剪贴板。

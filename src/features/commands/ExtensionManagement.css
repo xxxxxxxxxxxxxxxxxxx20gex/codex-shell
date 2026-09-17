@@ -11,6 +11,9 @@
 .extension-marketplace > header, .extension-detail > header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-2); }
 .extension-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--border-subtle); }
 .extension-row > div:first-child { flex: 1; min-width: 0; }
+.extension-builtin-summary { display: flex; align-items: center; gap: var(--space-3); }
+.extension-builtin-summary > div { min-width: 0; }
+.extension-builtin-summary .skill-management-icon { flex: 0 0 var(--control-height); }
 .extension-row strong, .extension-row p, .extension-row small, .extension-page [role], .skill-management-section [role] { overflow-wrap: anywhere; }
 .extension-row p { color: var(--text-secondary); font-size: var(--text-ui); }
 .extension-row small { display: block; margin-top: var(--space-1); color: var(--text-muted); font-size: var(--text-meta); }

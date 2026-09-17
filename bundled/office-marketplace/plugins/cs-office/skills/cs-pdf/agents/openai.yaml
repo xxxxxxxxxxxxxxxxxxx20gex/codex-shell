@@ -1,0 +1,4 @@
+interface:
+  display_name: "PDF"
+  short_description: "读取、创建、填写并验证 PDF"
+  default_prompt: "处理这个 PDF，并在交付前检查内容和页面渲染。"

@@ -88,18 +88,38 @@ it("hides uninstalled marketplace entries and retains installed plugin removal",
   await screen.findByText("已装插件");
   expect(screen.queryByText("Game Studio")).toBeNull();
   expect(screen.queryByText("添加来源")).toBeNull();
-  expect(screen.queryByText("安装")).toBeNull();
+  expect(screen.getAllByText("安装")).toHaveLength(1);
   fireEvent.click(screen.getByText("卸载"));
   await waitFor(() => expect(uninstallPlugin).toHaveBeenCalledWith("demo@local"));
   expect(changed).toHaveBeenCalledOnce();
 });
 
-it("shows an empty curated plugin catalog without advertising upstream plugins", async () => {
+it("shows the curated CS Office plugin without advertising upstream plugins", async () => {
   const extensions = { listPlugins: async () => ({ marketplaces: [], marketplaceLoadErrors: [] }) } as unknown as ReturnType<typeof useExtensions>;
   render(<PluginManagementPage extensions={extensions} revision={0} onChanged={vi.fn()} onClose={vi.fn()} />);
   await screen.findByText("暂无已安装插件。");
-  expect(screen.getByText("暂无已适配的内置插件。")).toBeTruthy();
+  expect(screen.getByText("CS Office")).toBeTruthy();
+  expect(screen.getByText("安装")).toBeTruthy();
   expect(screen.queryByRole("textbox")).toBeNull();
+});
+
+it("materializes and installs CS Office through the Core plugin APIs", async () => {
+  const plugin = { id: "cs-office@cs-curated", name: "cs-office", installed: false, enabled: false, installPolicy: "AVAILABLE" } as PluginSummary;
+  const marketplace = { name: "cs-curated", path: "C:/cs/marketplace.json", interface: null, plugins: [plugin] };
+  const listPlugins = vi.fn()
+    .mockResolvedValueOnce({ marketplaces: [], marketplaceLoadErrors: [] })
+    .mockResolvedValueOnce({ marketplaces: [], marketplaceLoadErrors: [] })
+    .mockResolvedValue({ marketplaces: [marketplace], marketplaceLoadErrors: [] });
+  const addMarketplace = vi.fn(async () => ({}));
+  const installPlugin = vi.fn(async () => ({}));
+  vi.mocked(invoke).mockResolvedValueOnce("C:/cs/office-marketplace-0.1.0");
+  const extensions = { listPlugins, addMarketplace, installPlugin } as unknown as ReturnType<typeof useExtensions>;
+  render(<PluginManagementPage extensions={extensions} revision={0} onChanged={vi.fn()} onClose={vi.fn()} />);
+  fireEvent.click(await screen.findByText("安装"));
+  await waitFor(() => expect(installPlugin).toHaveBeenCalledWith({ marketplacePath: "C:/cs/marketplace.json", pluginName: "cs-office" }));
+  expect(invoke).toHaveBeenCalledWith("prepare_builtin_office_plugin");
+  expect(addMarketplace).toHaveBeenCalledWith("C:/cs/office-marketplace-0.1.0");
+  expect(await screen.findByRole("status")).toHaveProperty("textContent", "CS Office 已安装。请新建会话使用办公技能。");
 });
 
 it("retains installed plugins and reports uninstall failure without signaling a change", async () => {
