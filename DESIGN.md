@@ -187,6 +187,7 @@ Radii:
 - Lists are unframed and separated by spacing or subtle dividers, not individual cards.
 - History rows use a fixed `56px` height with a stable right-side action slot; the stacked title and timestamp stay readable without allowing row actions to cover text.
 - Selected rows use `--surface-selected` plus a 2px action-accent indicator on the left.
+- The project file tree keeps the file shown in the preview marked as the current item, including when it was opened from a conversation link; path separator and casing differences must not remove the highlight, and opening a nested file scrolls its row into view.
 - Hover actions occupy the stable right action slot and never change row height, push the title, or cover its text.
 - Primary label is `--text-ui`; metadata is `--text-meta`; both align to the same 16px icon grid.
 - Long labels fade or truncate before actions. Do not place actions on a second row.

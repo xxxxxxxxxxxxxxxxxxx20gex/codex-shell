@@ -17,6 +17,19 @@ describe("WorkspaceExplorer", () => {
     expect(readFile).toHaveBeenCalledWith("C:/skills/amap/SKILL.md");
     expect(readDirectory.mock.calls).toEqual([["C:/work"]]);
   });
+  it("highlights and reveals the current file across Windows path separator differences", async () => {
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    const readDirectory = vi.fn(async (path: string) => path === "C:\\work"
+      ? [{ fileName: "images", isDirectory: true, isFile: false }]
+      : [{ fileName: "map.png", isDirectory: false, isFile: true }]);
+    render(<WorkspaceExplorer rootPath={"C:\\work"} initialFilePath="C:/work/images/map.png" maximized={false} onToggleMaximize={() => {}} onClose={() => {}}
+      readDirectory={readDirectory} readFile={async () => "AA=="} watchPath={async () => () => {}} />);
+    const row = await screen.findByRole("button", { name: "map.png" });
+    expect(row.getAttribute("aria-current")).toBe("page");
+    expect(row.classList.contains("current-file")).toBe(true);
+    await waitFor(() => expect(scrollIntoView).toHaveBeenCalledWith({ block: "nearest" }));
+  });
   it("targets the right-clicked file and dismisses the menu without closing the explorer", async () => {
     const onClose = vi.fn();
     const onAddToConversation = vi.fn();

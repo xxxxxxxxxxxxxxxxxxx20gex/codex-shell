@@ -27,9 +27,10 @@
 .explorer-root i, .explorer-tree-row i { color: var(--text-muted); font-style: normal; }
 .explorer-root span { color: var(--accent-action); font-size: var(--text-meta); }.explorer-root strong { overflow: hidden; font-size: var(--text-label); text-overflow: ellipsis; white-space: nowrap; }
 .explorer-tree-scroll { min-height: 0; overflow: auto; padding: 5px 5px 18px; }
-.explorer-tree-row { display: grid; min-height: 32px; grid-template-columns: 12px 17px minmax(0,1fr); align-items: center; gap: 3px; padding-top: 3px; padding-right: 7px; padding-bottom: 3px; border-radius: var(--radius-sm); font-size: var(--text-ui); }
+.explorer-tree-row { position: relative; display: grid; min-height: 32px; grid-template-columns: 12px 17px minmax(0,1fr); align-items: center; gap: 3px; padding-top: 3px; padding-right: 7px; padding-bottom: 3px; border-radius: var(--radius-sm); font-size: var(--text-ui); }
 .explorer-tree-row.file { grid-template-columns: 19px minmax(0,1fr); }
-.explorer-tree-row:hover { color: var(--text-primary); background: var(--surface-raised); }.explorer-tree-row.selected { color: var(--text-primary); background: var(--surface-selected); }
+.explorer-tree-row:hover { color: var(--text-primary); background: var(--surface-raised); }.explorer-tree-row.selected, .explorer-tree-row.current-file { color: var(--text-primary); background: var(--surface-selected); }
+.explorer-tree-row.current-file::before { position: absolute; top: 4px; bottom: 4px; left: 0; width: 2px; border-radius: 2px; background: var(--accent-action); content: ""; }
 .explorer-tree-row > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tree-folder { color: var(--accent-warning); font-size: var(--text-meta); }.tree-file { color: var(--accent-info); font: var(--text-meta)/16px var(--font-mono); }
 .explorer-tree-note { margin: 6px 0; color: var(--text-muted); font-size: var(--text-meta); }.explorer-tree-error { padding: 8px 12px; color: var(--accent-danger); font-size: var(--text-meta); }

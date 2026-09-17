@@ -89,6 +89,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
   const loadingDirectoriesRef = useRef(new Set<string>());
   const previewRequestRef = useRef(0);
   const selectedPathRef = useRef<string | null>(null);
+  const revealedPathRef = useRef<string | null>(null);
   const [directories, setDirectories] = useState<Record<string, DirectoryState>>({});
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set([rootPath]));
   const [filter, setFilter] = useState("");
@@ -98,6 +99,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState("");
   const [watchError, setWatchError] = useState("");
+  const treeScrollRef = useRef<HTMLDivElement>(null);
   const [treeWidth, setTreeWidth] = useState(220);
   const treeWidthRef = useRef(220);
   const treeResizingRef = useRef(false);
@@ -152,6 +154,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
     loadingDirectoriesRef.current.clear();
     previewRequestRef.current += 1;
     selectedPathRef.current = null;
+    revealedPathRef.current = null;
     setDirectories({});
     setFilter("");
     setSelectedPath(null);
@@ -172,6 +175,16 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
     void Promise.all([rootPath, ...parentDirectories].map(loadDirectory));
     if (initialFilePath) selectFile(initialFilePath);
   }, [initialFilePath, loadDirectory, rootPath, selectFile]);
+
+  useEffect(() => {
+    if (!selectedPath) return;
+    const normalized = normalizedPath(selectedPath);
+    if (revealedPathRef.current === normalized) return;
+    const row = treeScrollRef.current?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!row) return;
+    row.scrollIntoView({ block: "nearest" });
+    revealedPathRef.current = normalized;
+  }, [directories, selectedPath]);
 
   useEffect(() => {
     function closeOnEscape(event: KeyboardEvent) {
@@ -281,8 +294,9 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
         );
       }
       if (!entry.isFile) return null;
+      const isCurrentFile = selectedPath !== null && normalizedPath(selectedPath) === normalizedPath(path);
       return (
-        <button {...contextHandlers(path, false)} key={path} className={`explorer-tree-row file ${selectedPath === path ? "selected" : ""}`} style={{ paddingLeft: 30 + depth * 16 }} onClick={() => selectFile(path)} title={path}>
+        <button {...contextHandlers(path, false)} key={path} className={`explorer-tree-row file ${isCurrentFile ? "current-file" : ""}`} aria-current={isCurrentFile ? "page" : undefined} style={{ paddingLeft: 30 + depth * 16 }} onClick={() => selectFile(path)} title={path}>
           <span className="tree-file"><File aria-hidden="true" /></span><span>{entry.fileName}</span>
         </button>
       );
@@ -324,7 +338,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
           <aside className="explorer-tree-pane">
             <div className="explorer-filter"><Search aria-hidden="true" /><input value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="筛选已展开文件…" /></div>
             <button {...contextHandlers(rootPath, true)} className="explorer-root" onClick={() => toggleDirectory(rootPath)}><i>{expanded.has(rootPath) ? <ChevronDown aria-hidden="true" /> : <ChevronRight aria-hidden="true" />}</i><span><FolderRoot aria-hidden="true" /></span><strong>{projectName(rootPath)}</strong></button>
-            <div className="explorer-tree-scroll">{expanded.has(rootPath) && renderDirectory(rootPath, 0)}</div>
+            <div ref={treeScrollRef} className="explorer-tree-scroll">{expanded.has(rootPath) && renderDirectory(rootPath, 0)}</div>
           </aside>
           <div className="explorer-resizer" role="separator" aria-label="调整文件树宽度" aria-orientation="vertical" onPointerDown={beginTreeResize} onPointerMove={resizeTree} onPointerUp={finishTreeResize} onPointerCancel={finishTreeResize} />
           <main className="explorer-preview-pane">

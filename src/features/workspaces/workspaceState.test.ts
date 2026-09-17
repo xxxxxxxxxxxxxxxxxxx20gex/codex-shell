@@ -55,6 +55,7 @@ describe("workspace paths", () => {
 
   it("renders paths relative to the selected workspace", () => {
     expect(projectRelativePath("C:\\Work", "C:\\work\\src\\App.tsx")).toBe("src\\App.tsx");
+    expect(projectRelativePath("C:\\Work", "C:/work/src/App.tsx")).toBe("src\\App.tsx");
   });
 
   it("recognizes only paths inside the managed default workspace root", () => {

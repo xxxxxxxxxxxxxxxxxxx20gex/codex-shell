@@ -79,11 +79,12 @@ export function resolveAbsoluteLinkedPath(root: string, path: string) {
 }
 
 export function projectRelativePath(root: string, path: string) {
-  const normalizedRoot = root.replace(/[\\/]+$/, "");
-  if (path.toLowerCase() === normalizedRoot.toLowerCase()) return projectName(root);
-  if (path.toLowerCase().startsWith(`${normalizedRoot.toLowerCase()}\\`)
-    || path.toLowerCase().startsWith(`${normalizedRoot.toLowerCase()}/`)) {
-    return path.slice(normalizedRoot.length + 1);
+  const normalizedRoot = root.replace(/\\/g, "/").replace(/\/+$/, "");
+  const normalizedPath = path.replace(/\\/g, "/");
+  if (normalizedPath.toLowerCase() === normalizedRoot.toLowerCase()) return projectName(root);
+  if (normalizedPath.toLowerCase().startsWith(`${normalizedRoot.toLowerCase()}/`)) {
+    const relative = normalizedPath.slice(normalizedRoot.length + 1);
+    return root.includes("\\") ? relative.replace(/\//g, "\\") : relative;
   }
   return path;
 }

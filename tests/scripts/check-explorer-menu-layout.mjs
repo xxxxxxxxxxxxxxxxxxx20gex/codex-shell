@@ -28,7 +28,7 @@ try {
     React.createElement(Draft),
     React.createElement('div',{id:'editable',contentEditable:true,suppressContentEditableWarning:true},'可编辑'),
     React.createElement(WorkspaceExplorer,{
-      rootPath:'C:/work',maximized:false,onToggleMaximize:()=>{},onClose:()=>{window.closedExplorer=true},
+      rootPath:'C:/work',initialFilePath:'C:\\\\work\\\\audio.m4s',maximized:false,onToggleMaximize:()=>{},onClose:()=>{window.closedExplorer=true},
       readDirectory:async()=>[{fileName:'audio.m4s',isFile:true,isDirectory:false}],
       readFile:async()=> 'AA==',watchPath:async()=>()=>{},
       onAddToConversation:()=>{},onRevealPath:async()=>{}
@@ -38,6 +38,10 @@ try {
     await page.setViewportSize({width,height});
     await page.goto(`http://127.0.0.1:${process.argv[4] ?? 1435}/explorer-menu-check`);
     const row = page.getByRole("button",{name:"audio.m4s"});
+    await row.waitFor();
+    assert.equal(await row.getAttribute('aria-current'),'page');
+    assert((await row.getAttribute('class')).includes('current-file'));
+    assert.notEqual(await row.evaluate(el=>getComputedStyle(el).backgroundColor),await page.locator('.explorer-tree-pane').evaluate(el=>getComputedStyle(el).backgroundColor));
     await page.getByRole('region',{name:'回复中的图片'}).waitFor();
     assert.equal(await page.getByText('SKILL.md',{exact:true}).count(),0);
     assert.equal(await page.getByText('result.png',{exact:true}).count(),1);
