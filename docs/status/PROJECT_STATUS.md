@@ -3,7 +3,7 @@
 - 当前阶段：Milestone 2 - P0 桌面编程工作台；`main` 开发版本为 `0.1.7`，公开稳定版本 `v0.1.6` 已启用 Tauri Updater
 - 总体状态：核心对话、Session、工具活动、审批、文件、Diff 和模型配置可用；已发布带 minisign 更新签名的 NSIS Windows 安装包，Windows Authenticode 代码签名、CI 与 Runtime 恢复能力尚未完成。
 - 文档边界：本文件只记录跨模块当前快照、项目级风险、下一里程碑和完整验证基线。模块行为和定向证据以 [模块状态索引](../README.md#当前状态) 为准，历史由 Git 保留。
-- 最后更新：2026-09-16
+- 最后更新：2026-09-17
 
 ## 跨模块当前快照
 
@@ -44,8 +44,4 @@
 
 - 2026-09-16 v0.1.6 发布基线：TypeScript、ESLint、Vitest（64 文件 / 330 项）、production build、Knip、Cargo check、42 项 Rust 单测、严格 Clippy、`git diff --check` 和四项四视口布局脚本通过。codex-cli 0.154.0-alpha.6.2 兼容门禁、本地模拟网关协议探针及 Debug 构建通过；剪贴板图片落盘、MCP userVerification 拒绝边界与 Inspector 视图宽度包含定向回归。NSIS 安装器已生成并通过 updater 公钥验签，三项 GitHub Release 资产已上传；尚未完成干净机器升级验收。
 
-- 2026-09-11 v0.1.5 生产打包：版本号、Cargo lock 和 Tauri 配置同步；TypeScript、ESLint、Knip、317 项前端测试、36 项 Rust 单测、Cargo check、Clippy、协议门禁及其负向回归、四视口渠道布局通过。NSIS 安装器已生成并使用沿用公钥验签；GitHub 正式 Release 已设为 Latest，三项资产 SHA-256 与本地一致，公开 latest.json 下载验证为 0.1.5；Debug 同步重建通过。尚未重复干净机器安装及升级验收。
-
-- 2026-09-11 协议审查修复：TypeScript、ESLint、Knip、Vitest（63 个文件 / 317 项）、production build、Cargo check、36 项 Rust 单测、严格 Clippy、Debug 构建与当前 Runtime 兼容门禁通过。隔离本机协议探针验证设置、队列与元数据，并确认分页和运行中设置的 Runtime 限制；未重跑远端 API 或四视口布局。详见 [测试与发布](testing-release-status.md)。
-
-- 2026-09-10：模型配置改为厂商分组 + 渠道列表，并把对话参数按渠道归属；DeepSeek 渠道接入内置官方模型目录。`pnpm typecheck`、`pnpm lint`、`pnpm test`（62 个文件 / 301 项）、`pnpm quality:knip`、`pnpm build` 和 `pnpm rust:check`（Cargo check、31 项 Rust 单测、严格 Clippy）全部通过；真实 app-server 探针确认按渠道注入 `model_catalog_json` 后 `model/list` 返回对应目录，同路由不注入则返回内置 GPT 目录；端点探针确认 `https://api.deepseek.com/models` 在无效 Key 下返回 401。未使用真实 DeepSeek 密钥完成对话，模型中转渠道设置与对话高级设置已通过 `pnpm test:channel-layout`（Playwright + 本机 Chrome，模拟回调）：1440×900、1280×780、1024×720、900×700 四档均无页面级横向溢出，模态框不越界，可见文字不小于 11px，键盘焦点可进入面板，删除二次确认、Escape 关闭和 reduced-motion 均生效；该脚本挂载真实组件但使用模拟回调，不是真实 Tauri 端到端。
+- 当前开发质量回归见 [测试与发布状态](testing-release-status.md)。旧版本的验证过程由 Git 历史保留，不再在当前快照累计重复记录。

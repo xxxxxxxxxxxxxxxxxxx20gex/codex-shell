@@ -13,8 +13,12 @@ export async function writeClipboardText(text: string) {
   textarea.style.position = "fixed";
   textarea.style.opacity = "0";
   document.body.appendChild(textarea);
-  textarea.select();
-  const copied = document.execCommand("copy");
-  textarea.remove();
-  if (!copied) throw new Error("无法写入剪贴板");
+  const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  try {
+    textarea.select();
+    if (!document.execCommand("copy")) throw new Error("无法写入剪贴板");
+  } finally {
+    textarea.remove();
+    previousFocus?.focus();
+  }
 }
