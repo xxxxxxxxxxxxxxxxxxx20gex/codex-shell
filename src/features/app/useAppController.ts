@@ -659,7 +659,6 @@ export function useAppController() {
     editQueuedTurn,
     editLastMessage,
     editingMessage,
-    cancelMessageEdit: () => { setEditingMessage(null); setDraft(""); setMentions([]); setImages([]); setSkills([]); setCommandNotice(""); },
     startNewTask,
     changePermissionMode,
     changeApprovalReviewer,

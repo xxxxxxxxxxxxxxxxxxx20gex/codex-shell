@@ -111,12 +111,9 @@ it("restores a message without overwriting an existing draft", () => {
   expect(result.current.uiError).toContain("草稿");
 });
 
-it("reverts before resending and cancels without changing history", async () => {
+it("reverts before resending the edited message", async () => {
   const { result } = renderHook(useAppController);
   const message = { type: "userMessage" as const, id: "u", clientId: null, content: [{ type: "text" as const, text: "original", text_elements: [] }] };
-  act(() => result.current.editLastMessage(message));
-  act(() => result.current.cancelMessageEdit());
-  expect(session.revertLastMessage).not.toHaveBeenCalled();
   act(() => result.current.editLastMessage(message));
   act(() => result.current.setDraft("edited"));
   await act(() => result.current.submitWithMode("queue"));
