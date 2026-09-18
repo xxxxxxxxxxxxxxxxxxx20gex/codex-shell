@@ -68,6 +68,11 @@ try {
       await page.evaluate((view) => window.show(view), kind);
       await page.getByText(kind === "skills" ? /^example-skill/ : kind === "plugins" ? "本地插件" : "添加 MCP").first().waitFor();
       if (kind === 'skills') {
+        const row = page.getByRole('switch', {name:'example-skill 启用状态'}).locator('..');
+        const toggle = await row.getByRole('switch').boundingBox();
+        const remove = await row.getByRole('button', {name:'卸载'}).boundingBox();
+        assert.ok(remove.x + remove.width <= toggle.x && Math.abs(remove.y + remove.height / 2 - toggle.y - toggle.height / 2) < 2);
+        assert.equal(await row.locator('button').last().getAttribute('role'), 'switch');
         for (const group of ['CS 内置','个人','系统']) assert.equal(await page.getByRole('region', {name:group,exact:true}).count(),1);
         assert.equal(await page.getByText('当前环境技能',{exact:true}).count(),0);
       }
@@ -81,6 +86,9 @@ try {
         await page.getByRole('button', { name: /example-skill/ }).click();
         await page.getByRole('dialog').waitFor();
         await page.getByRole('dialog').getByText('可读取和编辑文档。').first().waitFor();
+        const modalSwitch = await page.getByRole('dialog').getByRole('switch').boundingBox();
+        const closeButton = await page.getByRole('button', {name:'关闭技能详情'}).boundingBox();
+        assert.ok(closeButton.x + closeButton.width <= modalSwitch.x);
         assert.equal(await page.getByRole('dialog').getByRole('switch').isChecked(), false);
         await page.screenshot({ path: join(output, `plugin-skill-${width}.png`) });
         await page.keyboard.press('Escape');

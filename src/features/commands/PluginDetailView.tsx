@@ -71,7 +71,7 @@ export function PluginDetailView({ detail, extensions, onClose, onChanged, onIns
     {detail.hooks.length > 0 && <p>Hooks：{detail.hooks.length} 个</p>}
     {detail.apps.length > 0 && <p>Connector：{detail.apps.map((app) => app.name).join("、")}</p>}
     {selected && <dialog ref={dialog} aria-labelledby="plugin-skill-title" className="plugin-skill-dialog" onClose={() => setSelected(null)} onClick={(event) => { if (event.target === event.currentTarget) { const bounds = event.currentTarget.getBoundingClientRect(); if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) event.currentTarget.close(); } }}>
-      <header><span className="plugin-detail-icon"><FileText /></span><div>{selectedState && control(selectedState)}<button className="plugin-dialog-close" type="button" autoFocus title="关闭技能详情" aria-label="关闭技能详情" onClick={() => dialog.current?.close()}><X /></button></div></header>
+      <header><span className="plugin-detail-icon"><FileText /></span><div><button className="plugin-dialog-close" type="button" autoFocus title="关闭技能详情" aria-label="关闭技能详情" onClick={() => dialog.current?.close()}><X /></button>{selectedState && control(selectedState)}</div></header>
       <h2 id="plugin-skill-title">{title(selected)} <span className="plugin-status">Skill</span></h2>
       <p>{selected.interface?.shortDescription || selected.description}</p>
       {error && <p className="error" role="alert">{error}</p>}
