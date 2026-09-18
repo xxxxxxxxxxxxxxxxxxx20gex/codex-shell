@@ -4,6 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { errorMessage } from "../../shared/errors";
 import type { PluginMarketplaceEntry } from "../../generated/app-server/v2/PluginMarketplaceEntry";
 import type { PluginDetail } from "../../generated/app-server/v2/PluginDetail";
+import type { SkillMetadata } from "../../generated/app-server/v2/SkillMetadata";
 import type { useExtensions } from "../extensions/useExtensions";
 import "./ExtensionManagement.css";
 import { PluginDetailView } from "./PluginDetailView";
@@ -13,9 +14,10 @@ interface Props {
   revision: number;
   onClose: () => void;
   onChanged: () => void;
+  loadSkills?: () => Promise<SkillMetadata[]>;
 }
 
-export function PluginManagementPage({ extensions, revision, onClose, onChanged }: Props) {
+export function PluginManagementPage({ extensions, revision, onClose, onChanged, loadSkills }: Props) {
   const { listPlugins, readPlugin, installPlugin, uninstallPlugin, addMarketplace } = extensions;
   const [marketplaces, setMarketplaces] = useState<PluginMarketplaceEntry[]>([]);
   const [detail, setDetail] = useState<PluginDetail | null>(null);
@@ -79,7 +81,7 @@ export function PluginManagementPage({ extensions, revision, onClose, onChanged 
     ...installed.filter((entry) => entry !== office).map((entry) => ({ key: entry.plugin.id, name: entry.plugin.interface?.displayName || entry.plugin.name, description: entry.plugin.interface?.shortDescription, installed: entry })),
   ];
 
-  if (detail) return <div className="skill-management-page extension-page plugin-detail-page"><PluginDetailView key={`${detail.summary.id}:${detail.summary.installed}`} detail={detail} extensions={extensions} onClose={() => setDetail(null)} onChanged={onChanged} onInstall={detail.summary.name === "cs-office" ? () => void installBuiltinOffice(true) : undefined} installing={busy} installError={error} /></div>;
+  if (detail) return <div className="skill-management-page extension-page plugin-detail-page"><PluginDetailView key={`${detail.summary.id}:${detail.summary.installed}`} detail={detail} extensions={extensions} onClose={() => setDetail(null)} onChanged={onChanged} onInstall={detail.summary.name === "cs-office" ? () => void installBuiltinOffice(true) : undefined} installing={busy} installError={error} loadSkills={loadSkills} revision={revision} /></div>;
 
   return <div className="skill-management-page extension-page">
     <header className="skill-management-header"><h1>插件</h1><div><button type="button" disabled={busy || loading} onClick={() => { setError(""); setRefresh((value) => value + 1); }}>刷新</button><button type="button" onClick={onClose}>返回会话</button></div></header>

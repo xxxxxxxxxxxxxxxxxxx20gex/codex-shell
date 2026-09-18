@@ -3,6 +3,7 @@ import { ArrowLeft, FileStack, FileText, ChevronRight, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import type { PluginDetail } from "../../generated/app-server/v2/PluginDetail";
 import type { SkillSummary } from "../../generated/app-server/v2/SkillSummary";
+import type { SkillMetadata } from "../../generated/app-server/v2/SkillMetadata";
 import type { useExtensions } from "../extensions/useExtensions";
 import { errorMessage } from "../../shared/errors";
 
@@ -14,9 +15,15 @@ interface Props {
   onInstall?: () => void;
   installing?: boolean;
   installError?: string;
+  loadSkills?: () => Promise<SkillMetadata[]>;
+  revision?: number;
 }
 
-export function PluginDetailView({ detail, extensions, onClose, onChanged, onInstall, installing, installError }: Props) {
+function skillPath(path: string | null | undefined) {
+  return path?.replace(/\\/g, "/").toLowerCase();
+}
+
+export function PluginDetailView({ detail, extensions, onClose, onChanged, onInstall, installing, installError, loadSkills, revision = 0 }: Props) {
   const { readSkillContent } = extensions;
   const [skills, setSkills] = useState(detail.skills);
   const [selected, setSelected] = useState<SkillSummary | null>(null);
@@ -26,6 +33,20 @@ export function PluginDetailView({ detail, extensions, onClose, onChanged, onIns
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => { setSkills(detail.skills); }, [detail]);
+  useEffect(() => {
+    if (!detail.summary.installed || !loadSkills) return;
+    let active = true;
+    void loadSkills().then((available) => {
+      if (!active) return;
+      const enabledByPath = new Map(available.map((skill) => [skillPath(skill.path), skill.enabled]));
+      setSkills((items) => items.map((skill) => {
+        const enabled = enabledByPath.get(skillPath(skill.path));
+        return enabled === undefined ? skill : { ...skill, enabled };
+      }));
+    }).catch((value) => { if (active) setError(errorMessage(value)); });
+    return () => { active = false; };
+  }, [detail.summary.installed, loadSkills, revision]);
   useEffect(() => {
     if (!selected?.path) return;
     let active = true;

@@ -51,6 +51,11 @@ it("uses the Core effective state and preserves the previous state on failure", 
   expect(changed).toHaveBeenCalledTimes(2);
 });
 
+it("uses the effective Skill state in plugin details", async () => {
+  render(<PluginDetailView detail={detail} extensions={extensions({})} loadSkills={async () => [{ ...skill, enabled: false, shortDescription: undefined, interface: undefined, scope: "user", pluginId: "cs-office@cs-curated" }]} onClose={vi.fn()} onChanged={vi.fn()} />);
+  await waitFor(() => expect(screen.getByRole("switch").getAttribute("aria-checked")).toBe("false"));
+});
+
 it("reports skill file read errors without presenting empty content as success", async () => {
   render(<PluginDetailView detail={detail} extensions={extensions({ readSkillContent: async () => { throw new Error("文件不可读"); } })} onClose={vi.fn()} onChanged={vi.fn()} />);
   fireEvent.click(screen.getByRole("button", { name: /cs-pdf/ }));
