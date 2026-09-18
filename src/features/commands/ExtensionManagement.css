@@ -53,7 +53,20 @@
 .plugin-skill-dialog > h2 { overflow-wrap: anywhere; }
 .plugin-skill-dialog > p { color: var(--text-muted); }
 .plugin-detail-view .plugin-dialog-close { display: grid; place-items: center; width: var(--control-height-compact); height: var(--control-height-compact); padding: 0; border: 0; background: transparent; }
+.skill-detail-dialog { width: min(900px, calc(100vw - 48px)); height: min(760px, calc(100vh - 48px)); padding: var(--space-6); }
+.skill-detail-dialog header { align-items: flex-start; }
+.plugin-skill-dialog .skill-detail-heading { display: grid; min-width: 0; gap: var(--space-1); }
+.skill-detail-heading h2 { color: var(--text-primary); font-size: var(--text-title); line-height: var(--space-5); overflow-wrap: anywhere; }
+.skill-detail-heading p { color: var(--text-muted); font-size: var(--text-label); line-height: var(--space-5); overflow-wrap: anywhere; }
+.skill-detail-actions { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
+.skill-detail-dialog .plugin-dialog-close { display: grid; place-items: center; width: var(--control-height-compact); height: var(--control-height-compact); padding: 0; border: 0; background: transparent; color: var(--text-muted); }
+.skill-detail-dialog .plugin-dialog-close:hover { background: var(--surface-raised); color: var(--text-primary); }
 .plugin-skill-content { overflow: auto; min-height: 0; padding: var(--space-4); border-radius: var(--radius-panel); background: var(--surface-canvas); color: var(--text-secondary); overflow-wrap: anywhere; line-height: var(--space-6); }
+.skill-detail-dialog .plugin-skill-content { font-size: var(--text-ui); line-height: 1.65; }
+.skill-detail-dialog .plugin-skill-content h1, .skill-detail-dialog .plugin-skill-content h2, .skill-detail-dialog .plugin-skill-content h3 { margin: 0 0 var(--space-3); color: var(--text-primary); font-size: var(--text-title); line-height: var(--space-5); }
+.skill-detail-dialog .plugin-skill-content p, .skill-detail-dialog .plugin-skill-content ul, .skill-detail-dialog .plugin-skill-content ol { margin: 0 0 var(--space-3); }
+.skill-detail-dialog .plugin-skill-content code { font-family: var(--font-code); font-size: .92em; color: var(--accent-info); }
+.skill-detail-dialog .plugin-skill-content pre { padding: var(--space-3); border-radius: var(--radius-control); background: var(--surface-raised); }
 .plugin-detail-view .plugin-skill-content > * + * { margin-top: var(--space-3); }
 .plugin-skill-content pre { overflow: auto; }
 .plugin-skill-content h1, .plugin-skill-content h2, .plugin-skill-content h3 { font-size: var(--text-title); }

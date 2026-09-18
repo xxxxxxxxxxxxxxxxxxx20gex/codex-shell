@@ -116,8 +116,7 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
       </section>;
     })}
     {selected && <dialog ref={dialog} className="plugin-skill-dialog skill-detail-dialog" aria-labelledby="skill-detail-title" onClose={() => setSelected(null)}>
-      <header><div>{onOpenSkillPath && <button className="plugin-open-path" type="button" onClick={() => void onOpenSkillPath(selected.path)}><FolderOpen aria-hidden="true" />在资源管理器中打开</button>}</div><button className="plugin-dialog-close" type="button" autoFocus aria-label="关闭技能详情" title="关闭技能详情" onClick={() => dialog.current?.close()}><X /></button></header>
-      <h2 id="skill-detail-title">{selected.interface?.displayName || selected.name}</h2><p>{selected.interface?.shortDescription || selected.shortDescription || selected.description}</p>
+      <header><div className="skill-detail-heading"><h2 id="skill-detail-title">{selected.interface?.displayName || selected.name}</h2><p>{selected.interface?.shortDescription || selected.shortDescription || selected.description}</p></div><div className="skill-detail-actions">{onOpenSkillPath && <button className="plugin-open-path" type="button" onClick={() => void onOpenSkillPath(selected.path)}><FolderOpen aria-hidden="true" />打开文件</button>}<button className="plugin-dialog-close" type="button" autoFocus aria-label="关闭技能详情" title="关闭技能详情" onClick={() => dialog.current?.close()}><X /></button></div></header>
       <div className="plugin-skill-content">{contentLoading ? <p role="status">正在读取技能…</p> : contentError ? <p role="alert" className="error">{contentError}</p> : <ReactMarkdown skipHtml components={{ a: ({ children }) => <span>{children}</span>, img: () => null }}>{content}</ReactMarkdown>}</div>
     </dialog>}
   </div>;
