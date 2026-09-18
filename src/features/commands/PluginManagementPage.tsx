@@ -81,6 +81,11 @@ export function PluginManagementPage({ extensions, revision, onClose, onChanged,
     { key: "cs-office", name: "CS Office", description: "创建和编辑本地 PDF、Word 文档和电子表格", installed: office },
     ...installed.filter((entry) => entry !== office).map((entry) => ({ key: entry.plugin.id, name: entry.plugin.interface?.displayName || entry.plugin.name, description: entry.plugin.interface?.shortDescription, installed: entry })),
   ];
+  function openDetail(entry: typeof entries[number]) {
+    if (!entry.installed) { void previewBuiltinOffice(); return; }
+    const { marketplace, plugin } = entry.installed;
+    void action(async () => { setDetail((await readPlugin({ marketplacePath: marketplace.path, pluginName: plugin.name })).plugin); }, false);
+  }
 
   if (detail) return <div className="skill-management-page extension-page plugin-detail-page"><PluginDetailView key={`${detail.summary.id}:${detail.summary.installed}`} detail={detail} extensions={extensions} onClose={() => setDetail(null)} onChanged={onChanged} onInstall={detail.summary.name === "cs-office" ? () => void installBuiltinOffice(true) : undefined} installing={busy} installError={error} loadSkills={loadSkills} revision={revision} onOpenSkillPath={onOpenSkillPath} /></div>;
 
@@ -89,14 +94,11 @@ export function PluginManagementPage({ extensions, revision, onClose, onChanged,
     {error && <p className="error" role="alert">{error}</p>}
     <div className="extension-plugin-list" aria-busy={loading}>
       {entries.map((entry) => <article className="skill-management-card" key={entry.key}>
-        <span className="skill-management-icon"><FileStack aria-hidden="true" /></span>
-        <div><strong>{entry.name}</strong><p>{entry.description}</p></div>
+        <button className="skill-management-main" type="button" disabled={busy || loading || Boolean(entry.installed && !entry.installed.marketplace.path)} onClick={() => openDetail(entry)}>
+          <span className="skill-management-icon"><FileStack aria-hidden="true" /></span>
+          <span><strong>{entry.name}</strong><p>{entry.description}</p></span>
+        </button>
         <div className="extension-actions">
-          <button type="button" disabled={busy || loading || Boolean(entry.installed && !entry.installed.marketplace.path)} onClick={() => {
-            if (!entry.installed) { void previewBuiltinOffice(); return; }
-            const { marketplace, plugin } = entry.installed;
-            void action(async () => { setDetail((await readPlugin({ marketplacePath: marketplace.path, pluginName: plugin.name })).plugin); }, false);
-          }}>详情</button>
           {entry.installed ? <button type="button" disabled={busy || loading || entry.installed.plugin.installPolicy === "INSTALLED_BY_DEFAULT"} onClick={() => void action(() => uninstallPlugin(entry.installed!.plugin.id))}>卸载</button>
             : <button type="button" disabled={busy || loading} onClick={() => void installBuiltinOffice()}>安装</button>}
         </div>

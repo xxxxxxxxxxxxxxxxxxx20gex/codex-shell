@@ -19,7 +19,7 @@ it("previews bundled skills without registering or installing a marketplace", as
   const installPlugin = vi.fn();
   render(<PluginManagementPage extensions={extensions({ listPlugins: async () => ({ marketplaces: [], marketplaceLoadErrors: [] }), readPlugin, addMarketplace, installPlugin })} revision={0} onClose={vi.fn()} onChanged={vi.fn()} />);
   await waitFor(() => expect((screen.getByText("安装") as HTMLButtonElement).disabled).toBe(false));
-  fireEvent.click(screen.getByText("详情"));
+  fireEvent.click(screen.getByRole("button", { name: /CS Office/ }));
   await screen.findByText("cs-pdf");
   expect(invoke).toHaveBeenCalledWith("prepare_builtin_office_plugin");
   expect(readPlugin).toHaveBeenCalledWith({ marketplacePath: "C:/cs/office/.agents/plugins/marketplace.json", pluginName: "cs-office" });
@@ -82,7 +82,7 @@ it("installs from the detail page and replaces preview paths with installed skil
     readPlugin: async () => ({ plugin: installed ? installedDetail : preview }), installPlugin, setSkillEnabled,
   })} revision={0} onClose={vi.fn()} onChanged={vi.fn()} />);
   await waitFor(() => expect((screen.getByText("安装") as HTMLButtonElement).disabled).toBe(false));
-  fireEvent.click(screen.getByText("详情"));
+  fireEvent.click(screen.getByRole("button", { name: /CS Office/ }));
   fireEvent.click(await screen.findByRole("button", { name: "安装插件" }));
   await waitFor(() => expect(screen.getByRole("switch").getAttribute("aria-checked")).toBe("true"));
   fireEvent.click(screen.getByRole("switch"));
@@ -97,7 +97,7 @@ it("keeps installation failures visible in details and allows retry", async () =
     installPlugin: async () => { throw new Error("安装失败"); },
   })} revision={0} onClose={vi.fn()} onChanged={vi.fn()} />);
   await screen.findByText("卸载");
-  fireEvent.click(await screen.findByText("详情"));
+  fireEvent.click(await screen.findByRole("button", { name: /CS Office/ }));
   fireEvent.click(await screen.findByRole("button", { name: "安装插件" }));
   expect(await screen.findByText("安装失败")).toBeTruthy();
   expect((screen.getByRole("button", { name: "安装插件" }) as HTMLButtonElement).disabled).toBe(false);

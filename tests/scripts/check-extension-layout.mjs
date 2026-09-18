@@ -87,7 +87,7 @@ try {
         assert.equal(await page.getByRole('heading',{level:2}).count(),0);
         assert.equal(await page.getByText('Game Studio',{exact:true}).count(),0);
         assert.equal(await page.getByText('添加来源',{exact:true}).count(),0);
-        await page.getByText('详情',{exact:true}).last().click();
+        await page.getByRole('button', {name:/本地插件/}).click();
         await page.screenshot({ path: join(output, `plugin-detail-${width}.png`) });
         await page.getByRole('switch').click();
         await page.getByRole('button', { name: /example-skill/ }).click();
