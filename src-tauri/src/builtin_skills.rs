@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager};
 
 pub const SKILL_NAME: &str = "image-gen";
+pub const CS_DOCS_SKILL_NAME: &str = "cs-docs";
 
 fn copy_directory(source: &Path, destination: &Path) -> Result<(), String> {
     fs::create_dir_all(destination).map_err(|error| format!("创建内置 Skill 目录失败：{error}"))?;
@@ -26,13 +27,13 @@ fn copy_directory(source: &Path, destination: &Path) -> Result<(), String> {
     Ok(())
 }
 
-fn source(app: &AppHandle) -> Result<PathBuf, String> {
+fn source(app: &AppHandle, skill_name: &str) -> Result<PathBuf, String> {
     let bundled = app
         .path()
         .resource_dir()
         .map_err(|error| format!("无法解析内置 Skill 资源目录：{error}"))?
         .join("skills")
-        .join(SKILL_NAME);
+        .join(skill_name);
     let source = if bundled.is_dir() {
         bundled
     } else {
@@ -40,7 +41,7 @@ fn source(app: &AppHandle) -> Result<PathBuf, String> {
             .join("..")
             .join("bundled")
             .join("skills")
-            .join(SKILL_NAME)
+            .join(skill_name)
     };
     if !source.is_dir() {
         return Err(format!("找不到内置 Skill：{}", source.display()));
@@ -49,17 +50,27 @@ fn source(app: &AppHandle) -> Result<PathBuf, String> {
 }
 
 #[tauri::command]
-pub fn install_builtin_skill(app: AppHandle) -> Result<String, String> {
-    let source = source(&app)?;
+fn install(app: AppHandle, skill_name: &str, label: &str) -> Result<String, String> {
+    let source = source(&app, skill_name)?;
     let codex_home = crate::codex_home::resolve_codex_home(&app)?;
     let root = codex_home.join("skills");
     fs::create_dir_all(&root).map_err(|error| format!("创建 Skill 目录失败：{error}"))?;
-    let destination = root.join(SKILL_NAME);
+    let destination = root.join(skill_name);
     if destination.exists() {
-        return Err("image-gen Skill 已安装".into());
+        return Err(format!("{label} Skill 已安装"));
     }
-    let staging = root.join(format!(".install-{SKILL_NAME}-{}", chrono::Utc::now().timestamp_nanos_opt().ok_or("无法生成安装标识")?));
+    let staging = root.join(format!(".install-{skill_name}-{}", chrono::Utc::now().timestamp_nanos_opt().ok_or("无法生成安装标识")?));
     copy_directory(&source, &staging)?;
     fs::rename(&staging, &destination).map_err(|error| format!("完成 Skill 安装失败：{error}"))?;
     Ok(destination.join("SKILL.md").to_string_lossy().into_owned())
+}
+
+#[tauri::command]
+pub fn install_builtin_skill(app: AppHandle) -> Result<String, String> {
+    install(app, SKILL_NAME, "image-gen")
+}
+
+#[tauri::command]
+pub fn install_builtin_cs_docs(app: AppHandle) -> Result<String, String> {
+    install(app, CS_DOCS_SKILL_NAME, "cs-docs")
 }

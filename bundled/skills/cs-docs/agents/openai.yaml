@@ -1,0 +1,4 @@
+interface:
+  display_name: "CS Docs"
+  short_description: "Codex Shell implementation and development guidance"
+  default_prompt: "Use $cs-docs to explain the current Codex Shell implementation, configuration, or development workflow."

@@ -74,7 +74,8 @@ it("installs the bundled image skill disabled by default", async () => {
   const setEnabled = vi.fn(async () => false);
   vi.mocked(invoke).mockResolvedValueOnce("C:/cs/skills/image-gen/SKILL.md");
   render(<SkillManagementPage codexHome="C:/cs" revision={0} loadSkills={async () => []} setEnabled={setEnabled} onClose={vi.fn()} />);
-  fireEvent.click(await screen.findByText("安装"));
+  const imageCard = screen.getByText("兔子生图").closest("article")!;
+  fireEvent.click(within(imageCard).getByText("安装"));
   await waitFor(() => expect(setEnabled).toHaveBeenCalledWith("C:/cs/skills/image-gen/SKILL.md", false));
   expect(screen.queryByRole("status")).toBeNull();
 });
@@ -139,7 +140,7 @@ it("keeps the built-in skill in its original group through install and uninstall
   vi.mocked(invoke).mockImplementation(async (command) => { installed = command === "install_builtin_skill"; return image.path; });
   render(<SkillManagementPage codexHome="C:/cs" revision={0} loadSkills={async () => installed ? [image] : []} setEnabled={async () => false} onClose={vi.fn()} />);
   const group = screen.getByRole("region", { name: "CS 内置" });
-  fireEvent.click(within(group).getByText("安装"));
+  fireEvent.click(within(group).getByText("兔子生图").closest("article")!.querySelector("button")!);
   await within(group).findByText("卸载");
   expect(within(group).getByText("兔子生图")).toBeTruthy();
   expect(screen.queryByRole("region", { name: "个人" })).toBeNull();
@@ -151,19 +152,34 @@ it("keeps the built-in skill in its original group through install and uninstall
   expect(within(group).getByText("兔子生图")).toBeTruthy();
 });
 
+it("offers CS Docs as a separate built-in skill", async () => {
+  let installed = false;
+  const docs = { name: "cs-docs", description: "CS 文档", path: "C:\\CS\\skills\\cs-docs\\SKILL.md", enabled: false, scope: "user", pluginId: null } as SkillMetadata;
+  vi.mocked(invoke).mockImplementation(async (command) => { installed = command === "install_builtin_cs_docs"; return docs.path; });
+  render(<SkillManagementPage codexHome="C:/cs" revision={0} loadSkills={async () => installed ? [docs] : []} setEnabled={async () => false} onClose={vi.fn()} />);
+  const group = screen.getByRole("region", { name: "CS 内置" });
+  fireEvent.click(within(group).getByText("CS Docs").parentElement!.parentElement!.querySelector("button")!);
+  await within(group).findByText("卸载");
+  expect(invoke).toHaveBeenCalledWith("install_builtin_cs_docs");
+  expect(within(group).getByText("卸载")).toBeTruthy();
+});
+
 it("groups same-named personal, system, and CS plugin skills by provenance", async () => {
   const base = { description: "测试", enabled: true, scope: "user", pluginId: null } as const;
   const skills: SkillMetadata[] = [
     { ...base, name: "image-gen", path: "C:/other/skills/image-gen/SKILL.md" },
     { ...base, name: "system-skill", scope: "system", path: "C:/cs/skills/.system/demo/SKILL.md" },
+    { ...base, name: "openai-docs", scope: "system", path: "C:/cs/skills/.system/openai-docs/SKILL.md" },
     { ...base, name: "cs-office:cs-pdf", pluginId: "cs-office@cs-curated", path: "C:/cs/plugins/pdf/SKILL.md" },
   ];
   render(<SkillManagementPage codexHome="C:/cs" revision={0} loadSkills={async () => skills} setEnabled={vi.fn()} onClose={vi.fn()} />);
   await screen.findByText("system-skill");
   expect(within(screen.getByRole("region", { name: "CS 内置" })).getByText("cs-office:cs-pdf")).toBeTruthy();
-  expect(within(screen.getByRole("region", { name: "CS 内置" })).getByText("安装")).toBeTruthy();
+  expect(within(screen.getByRole("region", { name: "CS 内置" })).getByText("CS Docs")).toBeTruthy();
   expect(within(screen.getByRole("region", { name: "个人" })).getByText("image-gen")).toBeTruthy();
   expect(within(screen.getByRole("region", { name: "系统" })).getByText("system-skill")).toBeTruthy();
+  expect(within(screen.getByRole("region", { name: "系统" })).getByText("OpenAI 官方文档")).toBeTruthy();
+  expect(within(screen.getByRole("region", { name: "系统" })).getByText(/不代表 CS 当前实现/)).toBeTruthy();
 });
 
 it("keeps Office first in a single plugin list when installation changes", async () => {
