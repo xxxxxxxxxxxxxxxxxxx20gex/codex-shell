@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
@@ -97,7 +97,7 @@ it("hides uninstalled marketplace entries and retains installed plugin removal",
 it("shows the curated CS Office plugin without advertising upstream plugins", async () => {
   const extensions = { listPlugins: async () => ({ marketplaces: [], marketplaceLoadErrors: [] }) } as unknown as ReturnType<typeof useExtensions>;
   render(<PluginManagementPage extensions={extensions} revision={0} onChanged={vi.fn()} onClose={vi.fn()} />);
-  await screen.findByText("暂无已安装插件。");
+  await waitFor(() => expect((screen.getByText("安装") as HTMLButtonElement).disabled).toBe(false));
   expect(screen.getByText("CS Office")).toBeTruthy();
   expect(screen.getByText("安装")).toBeTruthy();
   expect(screen.queryByRole("textbox")).toBeNull();
@@ -119,7 +119,7 @@ it("materializes and installs CS Office through the Core plugin APIs", async () 
   await waitFor(() => expect(installPlugin).toHaveBeenCalledWith({ marketplacePath: "C:/cs/marketplace.json", pluginName: "cs-office" }));
   expect(invoke).toHaveBeenCalledWith("prepare_builtin_office_plugin");
   expect(addMarketplace).toHaveBeenCalledWith("C:/cs/office-marketplace-0.1.0");
-  expect(await screen.findByRole("status")).toHaveProperty("textContent", "CS Office 已安装。请新建会话使用办公技能。");
+  expect(screen.queryByRole("status")).toBeNull();
 });
 
 it("retains installed plugins and reports uninstall failure without signaling a change", async () => {
@@ -131,4 +131,58 @@ it("retains installed plugins and reports uninstall failure without signaling a 
   expect((await screen.findByRole("alert")).textContent).toBe("卸载失败");
   expect(changed).not.toHaveBeenCalled();
   expect(screen.getByText("已有插件")).toBeTruthy();
+});
+
+it("keeps the built-in skill in its original group through install and uninstall", async () => {
+  let installed = false;
+  const image = { name: "image-gen", description: "生图", path: "C:\\CS\\skills\\image-gen\\SKILL.md", enabled: false, scope: "user", pluginId: null } as SkillMetadata;
+  vi.mocked(invoke).mockImplementation(async (command) => { installed = command === "install_builtin_skill"; return image.path; });
+  render(<SkillManagementPage codexHome="C:/cs" revision={0} loadSkills={async () => installed ? [image] : []} setEnabled={async () => false} onClose={vi.fn()} />);
+  const group = screen.getByRole("region", { name: "CS 内置" });
+  fireEvent.click(within(group).getByText("安装"));
+  await within(group).findByText("卸载");
+  expect(within(group).getByText("兔子生图")).toBeTruthy();
+  expect(screen.queryByRole("region", { name: "个人" })).toBeNull();
+  fireEvent.change(screen.getByPlaceholderText("搜索技能"), { target: { value: "兔子" } });
+  expect(within(group).getByText("卸载")).toBeTruthy();
+  expect(screen.queryByRole("status")).toBeNull();
+  fireEvent.click(within(group).getByText("卸载"));
+  await within(group).findByText("安装");
+  expect(within(group).getByText("兔子生图")).toBeTruthy();
+});
+
+it("groups same-named personal, system, and CS plugin skills by provenance", async () => {
+  const base = { description: "测试", enabled: true, scope: "user", pluginId: null } as const;
+  const skills: SkillMetadata[] = [
+    { ...base, name: "image-gen", path: "C:/other/skills/image-gen/SKILL.md" },
+    { ...base, name: "system-skill", scope: "system", path: "C:/cs/skills/.system/demo/SKILL.md" },
+    { ...base, name: "cs-office:cs-pdf", pluginId: "cs-office@cs-curated", path: "C:/cs/plugins/pdf/SKILL.md" },
+  ];
+  render(<SkillManagementPage codexHome="C:/cs" revision={0} loadSkills={async () => skills} setEnabled={vi.fn()} onClose={vi.fn()} />);
+  await screen.findByText("system-skill");
+  expect(within(screen.getByRole("region", { name: "CS 内置" })).getByText("cs-office:cs-pdf")).toBeTruthy();
+  expect(within(screen.getByRole("region", { name: "CS 内置" })).getByText("安装")).toBeTruthy();
+  expect(within(screen.getByRole("region", { name: "个人" })).getByText("image-gen")).toBeTruthy();
+  expect(within(screen.getByRole("region", { name: "系统" })).getByText("system-skill")).toBeTruthy();
+});
+
+it("keeps Office first in a single plugin list when installation changes", async () => {
+  let installed = false;
+  const office = { id: "cs-office@cs-curated", name: "cs-office", installed: false } as PluginSummary;
+  const other = { id: "other", name: "个人插件", installed: true } as PluginSummary;
+  const extensions = {
+    listPlugins: async () => ({ marketplaces: [{ name: "cs-curated", path: "C:/cs/market.json", plugins: [{ ...office, installed }, other] }], marketplaceLoadErrors: [] }),
+    installPlugin: async () => { installed = true; }, uninstallPlugin: async () => { installed = false; },
+  } as unknown as ReturnType<typeof useExtensions>;
+  render(<PluginManagementPage extensions={extensions} revision={0} onClose={vi.fn()} onChanged={vi.fn()} />);
+  await screen.findByText("个人插件");
+  const row = screen.getByText("CS Office").closest("article")!;
+  fireEvent.click(within(row).getByText("安装"));
+  await within(row).findByText("卸载");
+  expect(screen.getAllByRole("article")[0]).toBe(row);
+  expect(screen.queryByRole("heading", { level: 2 })).toBeNull();
+  expect(screen.queryByRole("status")).toBeNull();
+  fireEvent.click(within(row).getByText("卸载"));
+  await within(row).findByText("安装");
+  expect(screen.getAllByRole("article")[0]).toBe(row);
 });

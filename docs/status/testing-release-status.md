@@ -1,6 +1,7 @@
 # 测试与发布状态
 
 - 模块职责：维护类型检查、静态检查、前后端测试、构建、Runtime 兼容门禁和 Windows 发布证据。
+- 扩展列表简化（2026-09-18）：`pnpm test:quality` 通过，68 文件 / 361 项前端测试、43 项 Rust 单测通过（1 项交互测试忽略），类型、ESLint、production build、Knip、Cargo check、Clippy 和 diff 门禁通过。新增内置 Skill 安装／卸载保持原组、同名个人技能来源区分、中文搜索，以及插件安装前后固定首项的测试。完整 App 样式下四尺寸列表分组、详情、弹窗与键盘回归通过，Debug 已重建。未重跑真实 API 或 WebView2 人工验收；原有 Vite chunk 警告保留。
 - 插件详情修正（2026-09-18）：质量门禁通过，68 文件 / 358 项前端测试、43 项 Rust 单测通过（1 项交互测试忽略）。新增详情内安装成功后重新读取缓存路径、安装失败留页重试，以及未安装不显示开关的回归。浏览器脚本加载完整 App 样式后验证四尺寸预览、正文弹窗、已安装开关、标题字号、关闭、焦点恢复和 reduced-motion；真实 Runtime 扩展探针及最终 Debug 构建通过。未进行 WebView2 人工点击验收，Vite 主 chunk 体积警告保留。
 - 插件详情验证（2026-09-17 至 2026-09-18）：`pnpm test:quality` 通过，68 文件 / 356 项前端测试、43 项 Rust 单测通过（1 项交互测试忽略），TypeScript、ESLint、production build、Knip、Cargo check、Clippy 与 diff 检查通过。真实 Runtime 扩展探针验证安装前 Skill 详情/正文以及安装后启停持久化；四尺寸浏览器验证详情布局、内容弹窗、Escape、外部点击和焦点恢复，Debug 构建完成。未进行真实 WebView2 人工验收，既有 Vite chunk 体积警告保留。
 - CS Office 验证（2026-09-17）：`pnpm test:quality` 通过，67 文件 / 353 项前端测试、43 项 Rust 单测通过（1 项交互测试忽略）；TypeScript、ESLint、production build、Knip、Cargo check、Clippy 与 diff 检查通过。插件和三个 Skill 的官方结构校验通过；真实 app-server 在隔离临时 CODEX_HOME 中完成内置市场添加、插件安装、三个命名空间 Skill 发现、卸载和来源移除。插件管理页在四个规定视口的溢出、字号、焦点和 reduced-motion 检查通过，Debug 构建产物更新。未执行真实 PDF、DOCX、XLSX 生成或干净机器依赖验收，原有 Vite 主 chunk 体积警告保留。

@@ -1,6 +1,8 @@
 .extension-page, .skill-management-page { box-sizing: border-box; width: 100%; padding: var(--space-6); gap: var(--space-4); }
 .skill-management-header { flex-wrap: wrap; gap: var(--space-3); }
-.skill-management-header h1 { font-size: var(--text-title); }
+.extension-page .skill-management-header h1, .extension-catalog .skill-management-header h1 { font-size: var(--text-title); }
+.extension-page .skill-management-header button, .extension-catalog .skill-management-header button { min-height: var(--control-height-compact); padding: var(--space-1) var(--space-2); border: 1px solid var(--border-default); color: var(--text-secondary); background: transparent; }
+.extension-page .skill-management-header button:hover, .extension-catalog .skill-management-header button:hover { border-color: var(--border-default); background: var(--surface-raised); }
 .extension-page > h2 { margin: var(--space-2) 0; font-size: var(--text-title); font-weight: 600; }
 .skill-management-header > div:last-child, .extension-actions, .skill-management-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .extension-page button, .skill-management-remove, .mcp-config-panel button { min-height: var(--control-height-compact); padding: var(--space-1) var(--space-2); border: 1px solid var(--border-default); border-radius: var(--radius-control); color: var(--text-secondary); background: var(--surface-panel); font-size: var(--text-label); cursor: pointer; }
@@ -8,15 +10,7 @@
 .extension-page button:hover:enabled, .mcp-config-panel button:hover:enabled { background: var(--surface-raised); }
 .extension-page input, .mcp-config-form input, .mcp-config-form select { box-sizing: border-box; width: 100%; min-width: 0; min-height: var(--control-height); padding: var(--space-1) var(--space-2); border: 1px solid var(--border-default); border-radius: var(--radius-control); color: var(--text-primary); background: var(--surface-canvas); font: inherit; }
 .mcp-config-form label { display: grid; gap: var(--space-2); font-size: var(--text-ui); }
-.extension-marketplace > header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-2); }
-.extension-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--border-subtle); }
-.extension-row > div:first-child { flex: 1; min-width: 0; }
-.extension-builtin-summary { display: flex; align-items: center; gap: var(--space-3); }
-.extension-builtin-summary > div { min-width: 0; }
-.extension-builtin-summary .skill-management-icon { flex: 0 0 var(--control-height); }
-.extension-row strong, .extension-row p, .extension-row small, .extension-page [role], .skill-management-section [role] { overflow-wrap: anywhere; }
-.extension-row p { color: var(--text-secondary); font-size: var(--text-ui); }
-.extension-row small { display: block; margin-top: var(--space-1); color: var(--text-muted); font-size: var(--text-meta); }
+.extension-page [role], .skill-management-section [role] { overflow-wrap: anywhere; }
 .extension-page.plugin-detail-page { width: 100%; padding: var(--space-6); }
 .plugin-detail-view { width: 100%; max-width: 820px; margin: 0 auto; min-width: 0; font: var(--text-ui)/var(--space-5) var(--font-ui); }
 .plugin-detail-view h1, .plugin-detail-view h2 { margin: 0; font-size: var(--text-title); line-height: var(--space-5); font-weight: 600; }

@@ -18,7 +18,7 @@ it("previews bundled skills without registering or installing a marketplace", as
   const addMarketplace = vi.fn();
   const installPlugin = vi.fn();
   render(<PluginManagementPage extensions={extensions({ listPlugins: async () => ({ marketplaces: [], marketplaceLoadErrors: [] }), readPlugin, addMarketplace, installPlugin })} revision={0} onClose={vi.fn()} onChanged={vi.fn()} />);
-  await screen.findByText("暂无已安装插件。");
+  await waitFor(() => expect((screen.getByText("安装") as HTMLButtonElement).disabled).toBe(false));
   fireEvent.click(screen.getByText("详情"));
   await screen.findByText("cs-pdf");
   expect(invoke).toHaveBeenCalledWith("prepare_builtin_office_plugin");
@@ -66,7 +66,7 @@ it("installs from the detail page and replaces preview paths with installed skil
     listPlugins: async () => ({ marketplaces: [{ name: "cs-curated", path: "C:/cs/market.json", plugins: [installed ? detail.summary : preview.summary] }], marketplaceLoadErrors: [] }),
     readPlugin: async () => ({ plugin: installed ? installedDetail : preview }), installPlugin, setSkillEnabled,
   })} revision={0} onClose={vi.fn()} onChanged={vi.fn()} />);
-  await screen.findByText("暂无已安装插件。");
+  await waitFor(() => expect((screen.getByText("安装") as HTMLButtonElement).disabled).toBe(false));
   fireEvent.click(screen.getByText("详情"));
   fireEvent.click(await screen.findByRole("button", { name: "安装插件" }));
   await waitFor(() => expect(screen.getByRole("switch").getAttribute("aria-checked")).toBe("true"));
@@ -81,7 +81,7 @@ it("keeps installation failures visible in details and allows retry", async () =
     readPlugin: async () => ({ plugin: { ...detail, summary: { ...detail.summary, installed: false } } }),
     installPlugin: async () => { throw new Error("安装失败"); },
   })} revision={0} onClose={vi.fn()} onChanged={vi.fn()} />);
-  await screen.findByText("CS Office 已安装，可在下方查看详情或卸载。");
+  await screen.findByText("卸载");
   fireEvent.click(await screen.findByText("详情"));
   fireEvent.click(await screen.findByRole("button", { name: "安装插件" }));
   expect(await screen.findByText("安装失败")).toBeTruthy();

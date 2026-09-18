@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, Search, Sparkles } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
@@ -20,7 +20,6 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
   const [skills, setSkills] = useState<SkillMetadata[]>([]);
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [refresh, setRefresh] = useState(0);
   useEffect(() => {
@@ -45,7 +44,6 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
       const selected = await open({ directory: true, multiple: false, title: "选择包含 SKILL.md 的 Skill 目录" });
       if (typeof selected !== "string") return;
       await invoke("install_local_skill", { source: selected });
-      setNotice("已安装。请新建会话使用该技能。");
       onChanged?.(); setRefresh((value) => value + 1);
     }
     catch (value) { setError(errorMessage(value)); }
@@ -56,7 +54,6 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
     try {
       const path = await invoke<string>("install_builtin_skill");
       await setEnabled(path, false);
-      setNotice("");
       onChanged?.(); setRefresh((value) => value + 1);
     } catch (value) { setError(errorMessage(value)); }
     finally { setBusy(false); }
@@ -66,29 +63,36 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
     setBusy(true); setError("");
     try {
       await invoke<string>("uninstall_local_skill", { path: skill.path });
-      setNotice("已卸载。");
       onChanged?.(); setRefresh((value) => value + 1);
     }
     catch (value) { setError(errorMessage(value)); }
     finally { setBusy(false); }
   }
-  const filtered = useMemo(() => {
-    const normalized = query.trim().toLocaleLowerCase();
-    return normalized ? skills.filter((skill) => `${skill.name} ${skill.description}`.toLocaleLowerCase().includes(normalized)) : skills;
-  }, [query, skills]);
-  return <div className="skill-management-page">
+  const root = `${codexHome.split("\\").join("/").replace(/\/$/, "").toLowerCase()}/skills/`;
+  const builtinImage = (skill: SkillMetadata) => Boolean(codexHome) && !skill.pluginId && skill.scope === "user" && skill.path.split("\\").join("/").toLowerCase() === root + "image-gen/skill.md";
+  const groupOf = (skill: SkillMetadata) => builtinImage(skill) || skill.pluginId === "cs-office@cs-curated" ? "CS 内置" : skill.scope === "user" || skill.pluginId ? "个人" : "系统";
+  const normalized = query.trim().toLocaleLowerCase();
+  const filtered = normalized ? skills.filter((skill) => `${builtinImage(skill) ? "兔子生图" : ""} ${skill.name} ${skill.interface?.displayName || ""} ${skill.interface?.shortDescription || ""} ${skill.description}`.toLocaleLowerCase().includes(normalized)) : skills;
+  const showBuiltinImage = !skills.some(builtinImage) && (!query.trim() || "兔子生图 image-gen 通过兔子渠道生成商品图、海报和场景图片。".toLowerCase().includes(query.trim().toLowerCase()));
+  return <div className="skill-management-page extension-catalog">
     <header className="skill-management-header"><div><h1>技能</h1></div><div><button type="button" disabled={busy} onClick={() => void install()}>从目录安装</button><button type="button" disabled={busy} onClick={() => setRefresh((value) => value + 1)}>刷新</button><button type="button" onClick={onClose}>返回会话</button></div></header>
     <div className="skill-management-search"><Search aria-hidden="true" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索技能" /></div>
-    <div className="skill-management-section"><h2>CS 内置</h2>{!skills.some((skill) => skill.name === "image-gen") && <article className="skill-management-card"><span className="skill-management-icon"><Sparkles aria-hidden="true" /></span><div><strong>兔子生图<em className="skill-scope-badge">随应用提供</em></strong><p>通过兔子渠道生成商品图、海报和场景图片。</p></div><span className="skill-management-actions"><button type="button" className="skill-management-toggle" disabled={busy} onClick={() => void installBuiltin()}>安装</button></span></article>}<h2>当前环境技能</h2>{notice && <p role="status">{notice}</p>}{error && <p className="error" role="alert">{error}</p>}{filtered.map((skill) => {
-      const disabled = !skill.enabled;
-      const scopeLabel = skill.pluginId ? `插件 · ${skill.pluginId}` : ({ user: "个人", system: "系统", admin: "管理员", repo: "项目" })[skill.scope];
-      const root = `${codexHome.split("\\").join("/").replace(/\/$/, "").toLowerCase()}/skills/`;
-      const relative = skill.path.split("\\").join("/").toLowerCase();
-      const owned = codexHome && relative.startsWith(root) && /^[^/.][^/]*\/skill\.md$/.test(relative.slice(root.length));
-      return <article className={`skill-management-card ${disabled ? "disabled" : ""}`} key={skill.path}>
-        <span className="skill-management-icon"><Sparkles aria-hidden="true" /></span><div><strong>{skill.interface?.displayName || skill.name}<em className="skill-scope-badge">{scopeLabel}</em></strong><p>{skill.interface?.shortDescription || skill.shortDescription || skill.description}</p></div>
-        <span className="skill-management-actions"><button type="button" className="skill-management-toggle" role="switch" aria-label={`${skill.name} 启用状态`} aria-checked={skill.enabled} disabled={busy} onClick={() => void toggle(skill)}>{disabled ? "启用" : <><Check aria-hidden="true" />已启用</>}</button>{owned && skill.scope === "user" && !skill.pluginId && <button type="button" className="skill-management-remove" title="移到 CS 的 uninstalled-skills 目录，可恢复" disabled={busy} onClick={() => void uninstall(skill)}>卸载</button>}</span>
-      </article>;
-    })}</div>
+    {error && <p className="error" role="alert">{error}</p>}
+    {["CS 内置", "个人", "系统"].map((group) => {
+      const items = filtered.filter((skill) => groupOf(skill) === group).sort((a, b) => Number(builtinImage(b)) - Number(builtinImage(a)));
+      if (!items.length && !(group === "CS 内置" && showBuiltinImage)) return null;
+      return <section className="skill-management-section" aria-label={group} key={group}><h2>{group}</h2>
+        {group === "CS 内置" && showBuiltinImage && <article className="skill-management-card"><span className="skill-management-icon"><Sparkles aria-hidden="true" /></span><div><strong>兔子生图</strong><p>通过兔子渠道生成商品图、海报和场景图片。</p></div><span className="skill-management-actions"><button type="button" className="skill-management-toggle" disabled={busy} onClick={() => void installBuiltin()}>安装</button></span></article>}
+        {items.map((skill) => {
+          const relative = skill.path.split("\\").join("/").toLowerCase();
+          const owned = codexHome && relative.startsWith(root) && /^[^/.][^/]*\/skill\.md$/.test(relative.slice(root.length));
+          const scopeLabel = skill.scope === "repo" ? "项目" : skill.scope === "admin" ? "管理员" : null;
+          return <article className={`skill-management-card ${!skill.enabled ? "disabled" : ""}`} key={skill.path}>
+            <span className="skill-management-icon"><Sparkles aria-hidden="true" /></span><div><strong>{builtinImage(skill) ? "兔子生图" : skill.interface?.displayName || skill.name}{scopeLabel && <em className="skill-scope-badge">{scopeLabel}</em>}</strong><p>{builtinImage(skill) ? "通过兔子渠道生成商品图、海报和场景图片。" : skill.interface?.shortDescription || skill.shortDescription || skill.description}</p></div>
+            <span className="skill-management-actions"><button type="button" className="skill-management-toggle" role="switch" aria-label={`${skill.name} 启用状态`} aria-checked={skill.enabled} disabled={busy} onClick={() => void toggle(skill)}>{!skill.enabled ? "启用" : <><Check aria-hidden="true" />已启用</>}</button>{owned && skill.scope === "user" && !skill.pluginId && <button type="button" className="skill-management-remove" title="移到 CS 的 uninstalled-skills 目录，可恢复" disabled={busy} onClick={() => void uninstall(skill)}>卸载</button>}</span>
+          </article>;
+        })}
+      </section>;
+    })}
   </div>;
 }
