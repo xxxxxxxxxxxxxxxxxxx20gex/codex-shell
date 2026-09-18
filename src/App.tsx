@@ -200,7 +200,7 @@ function App() {
   async function openResourceInExplorer(path: string) {
     const resolvedPath = currentProjectPath
       ? resolveLinkedProjectPath(currentProjectPath, path)
-      : null;
+      : /^(?:[a-zA-Z]:[\\/]|\\\\)/.test(path) && !path.split(/[\\/]/).some((part) => part === "..") ? path : null;
     if (!resolvedPath) throw new Error("相对文件路径需要先选择项目");
     await invoke("reveal_path_in_explorer", { path: resolvedPath });
   }
@@ -289,7 +289,7 @@ function App() {
               <PanelRight aria-hidden="true" />
             </button>
           </header>
-          {mainView === "skills" ? <SkillManagementPage loadSkills={session.listSkills} revision={session.skillsRevision} codexHome={session.codexHome} setEnabled={setSkillEnabled} onChanged={session.extensionsChanged} onClose={() => setMainView("conversation")} /> : mainView === "plugins" ? <PluginManagementPage extensions={session.extensions} revision={session.skillsRevision} loadSkills={session.listSkills} onChanged={session.extensionsChanged} onClose={() => setMainView("conversation")} /> : <>
+          {mainView === "skills" ? <SkillManagementPage loadSkills={session.listSkills} revision={session.skillsRevision} codexHome={session.codexHome} setEnabled={setSkillEnabled} onChanged={session.extensionsChanged} onClose={() => setMainView("conversation")} /> : mainView === "plugins" ? <PluginManagementPage extensions={session.extensions} revision={session.skillsRevision} loadSkills={session.listSkills} onOpenSkillPath={openResourceInExplorer} onChanged={session.extensionsChanged} onClose={() => setMainView("conversation")} /> : <>
           {session.turns.length > 0 ? (
             <ConversationTimeline
               key={session.thread?.id ?? "new"}

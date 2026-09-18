@@ -2,7 +2,7 @@
 
 - 模块职责：把 app-server 的 Skill、MCP、上下文压缩、目标、计划和 Review 映射为 Composer `+` 菜单与 `/` 快捷命令体验。
 - 当前状态：内置目录只收录 CS 适配内容。Skill 目录提供兔子生图 `image-gen` 和只说明 Codex Shell 当前实现的 `cs-docs`；插件目录提供可选的 `CS Office`，安装后通过 Core 原生插件机制加载 `cs-office:cs-pdf`、`cs-office:cs-documents` 和 `cs-office:cs-spreadsheets`。用户本地 Skill 安装、Core 启停和可恢复卸载、MCP 配置与 OAuth 保留。插件页不展示官方远程候选项，已安装项保留详情及卸载。
-- 插件详情：插件详情使用独立紧凑样式，避免旧标题与首按钮样式覆盖；优先展示插件中文 interface 简介与长说明。CS Office 未安装时显示安装入口，不再展示绿色不可操作的开关；安装完成后保留详情并重新读取已安装 Skill 路径及状态，安装错误留在详情页供重试。已安装项使用蓝色圆形开关，通过 `skills/config/write` 写入并采用 `effectiveEnabled`；详情页打开和扩展变更后会重新读取 `skills/list` 的有效状态，与技能管理页保持一致。点击 Skill 打开独立正文滚动弹窗，通过 `fs/readFile` 读取（不执行 HTML、不加载图片或跳转链接），支持关闭、Escape、外部点击与焦点恢复。
+- 插件详情：插件详情使用独立紧凑样式，避免旧标题与首按钮样式覆盖；优先展示插件中文 interface 简介与长说明。CS Office 未安装时显示安装入口，不再展示绿色不可操作的开关；安装完成后保留详情并重新读取已安装 Skill 路径及状态，安装错误留在详情页供重试。已安装项使用蓝色圆形开关，通过 `skills/config/write` 写入并采用 `effectiveEnabled`；详情页打开和扩展变更后会重新读取 `skills/list` 的有效状态，与技能管理页保持一致。点击 Skill 打开独立正文滚动弹窗，通过 `fs/readFile` 读取（不执行 HTML、不加载图片或跳转链接），支持关闭、Escape、外部点击与焦点恢复；弹窗提供“在资源管理器中打开”，直接定位当前 Skill 的 `SKILL.md`。
 - 最近变更：插件页收敛为单一固定列表，仅保留名称、简述、详情和安装／卸载动作；CS Office 安装前后保持首项，移除重复分类、认证摘要和成功提示。Skill 按 CS 内置、个人、系统分组；兔子生图和 CS Docs 按隔离 CODEX_HOME 下的实际路径识别，安装前后固定在内置组，CS Office Skill 按 pluginId 归入内置组。系统 `openai-docs` 在列表中标注为“OpenAI 官方文档”，并明确不代表 CS 当前实现。其他用户／插件技能归个人，系统、项目和管理员技能归系统并保留项目／管理员标签；搜索使用名称、展示名和描述。错误反馈与可恢复卸载不变。
 - 草稿行为：选择草稿末尾的 `/skills` 等无参数快捷命令时只移除命令片段，保留正文、图片批注文字和附件；Escape 仅关闭斜杠菜单，不清空草稿。`+` 菜单继续保留全部输入。扩展变更刷新与失效 Skill 选择清理行为不变。
 - 当前接口：`ComposerAddMenu`、`ComposerIntentControl`、`SlashCommandMenu`、`SkillPicker`、`McpStatusPanel`、`ReviewPanel`、`useAgentCommands` 及固定协议 RPC 包装。

@@ -62,6 +62,14 @@ it("reports skill file read errors without presenting empty content as success",
   expect(await screen.findByText("文件不可读")).toBeTruthy();
 });
 
+it("offers the selected Skill path in the system file explorer", async () => {
+  const onOpenSkillPath = vi.fn(async () => {});
+  render(<PluginDetailView detail={detail} extensions={extensions({})} onOpenSkillPath={onOpenSkillPath} onClose={vi.fn()} onChanged={vi.fn()} />);
+  fireEvent.click(screen.getByRole("button", { name: /cs-pdf/ }));
+  fireEvent.click(await screen.findByRole("button", { name: "在资源管理器中打开" }));
+  expect(onOpenSkillPath).toHaveBeenCalledWith(skill.path);
+});
+
 it("installs from the detail page and replaces preview paths with installed skills", async () => {
   let installed = false;
   const preview = { ...detail, summary: { ...detail.summary, installed: false } };
