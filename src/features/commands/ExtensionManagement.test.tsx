@@ -170,7 +170,8 @@ it("opens an installed Skill row to read its detail and reveal its file", async 
   render(<SkillManagementPage codexHome="C:/cs" revision={0} loadSkills={async () => [skill]} readSkillContent={async () => "---\nname: demo\n---\n# 技能正文"} onOpenSkillPath={onOpenSkillPath} setEnabled={vi.fn()} onClose={vi.fn()} />);
   fireEvent.click(await screen.findByRole("button", { name: /demo/ }));
   expect(await screen.findByText("技能正文")).toBeTruthy();
-  fireEvent.click(screen.getByRole("button", { name: "打开文件" }));
+  fireEvent.click(screen.getByRole("button", { name: "更多操作" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "在资源管理器中显示" }));
   expect(onOpenSkillPath).toHaveBeenCalledWith(skill.path);
 });
 

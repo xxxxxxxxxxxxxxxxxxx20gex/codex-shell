@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, FolderOpen, Search, Sparkles, X } from "lucide-react";
+import { BookOpen, FolderOpen, MoreHorizontal, Search, Sparkles, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
@@ -29,7 +29,9 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
   const [content, setContent] = useState("");
   const [contentError, setContentError] = useState("");
   const [contentLoading, setContentLoading] = useState(false);
+  const [detailMenuOpen, setDetailMenuOpen] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
+  const detailMenu = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     let active = true;
     void loadSkills(true).then((items) => { if (active) { setSkills(items); setError(""); } }).catch((value) => { if (active) setError(errorMessage(value)); });
@@ -44,6 +46,14 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
       .finally(() => { if (active) setContentLoading(false); });
     return () => { active = false; };
   }, [readSkillContent, selected]);
+  useEffect(() => {
+    if (!detailMenuOpen) return;
+    const dismiss = (event: PointerEvent) => { if (!detailMenu.current?.contains(event.target as Node)) setDetailMenuOpen(false); };
+    const escape = (event: KeyboardEvent) => { if (event.key === "Escape") { event.stopPropagation(); setDetailMenuOpen(false); } };
+    document.addEventListener("pointerdown", dismiss);
+    document.addEventListener("keydown", escape, true);
+    return () => { document.removeEventListener("pointerdown", dismiss); document.removeEventListener("keydown", escape, true); };
+  }, [detailMenuOpen]);
   async function toggle(skill: SkillMetadata) {
     setBusy(true);
     setError("");
@@ -115,8 +125,9 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
         })}
       </section>;
     })}
-    {selected && <dialog ref={dialog} className="plugin-skill-dialog skill-detail-dialog" aria-labelledby="skill-detail-title" onClose={() => setSelected(null)}>
-      <header><div className="skill-detail-heading"><h2 id="skill-detail-title">{selected.interface?.displayName || selected.name}</h2><p>{selected.interface?.shortDescription || selected.shortDescription || selected.description}</p></div><div className="skill-detail-actions">{onOpenSkillPath && <button className="plugin-open-path" type="button" onClick={() => void onOpenSkillPath(selected.path)}><FolderOpen aria-hidden="true" />打开文件</button>}<button className="plugin-dialog-close" type="button" autoFocus aria-label="关闭技能详情" title="关闭技能详情" onClick={() => dialog.current?.close()}><X /></button></div></header>
+    {selected && <dialog ref={dialog} className="plugin-skill-dialog skill-detail-dialog" aria-labelledby="skill-detail-title" onClose={() => { setDetailMenuOpen(false); setSelected(null); }}>
+      <header className="skill-detail-toolbar"><span className="skill-detail-icon">{builtinDocs(selected) || officialDocs(selected) ? <BookOpen aria-hidden="true" /> : <Sparkles aria-hidden="true" />}</span><div className="skill-detail-actions">{onOpenSkillPath && <span ref={detailMenu} className="skill-detail-menu-anchor"><button className="skill-detail-icon-button" type="button" aria-label="更多操作" title="更多操作" aria-haspopup="menu" aria-expanded={detailMenuOpen} onClick={() => setDetailMenuOpen((open) => !open)}><MoreHorizontal /></button>{detailMenuOpen && <span className="skill-detail-menu" role="menu"><button type="button" role="menuitem" onClick={() => { setDetailMenuOpen(false); void onOpenSkillPath(selected.path); }}><FolderOpen aria-hidden="true" />在资源管理器中显示</button></span>}</span>}<button className="plugin-dialog-close skill-detail-icon-button" type="button" autoFocus aria-label="关闭技能详情" title="关闭技能详情" onClick={() => dialog.current?.close()}><X /></button></div></header>
+      <div className="skill-detail-heading"><h2 id="skill-detail-title">{selected.interface?.displayName || selected.name} <span>Skill</span></h2><p>{selected.interface?.shortDescription || selected.shortDescription || selected.description}</p></div>
       <div className="plugin-skill-content">{contentLoading ? <p role="status">正在读取技能…</p> : contentError ? <p role="alert" className="error">{contentError}</p> : <ReactMarkdown skipHtml components={{ a: ({ children }) => <span>{children}</span>, img: () => null }}>{content}</ReactMarkdown>}</div>
     </dialog>}
   </div>;

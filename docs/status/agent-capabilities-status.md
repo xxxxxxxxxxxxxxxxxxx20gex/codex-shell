@@ -12,7 +12,7 @@
 - 验证证据：2026-09-09；隔离 Runtime 扩展探针通过；四尺寸三页面浏览器布局、文字下限、焦点、reduced-motion 检查通过。前端和 Debug 构建验证见 testing-release-status.md。
 - 定向验证：2026-09-14 控制器回归覆盖鼠标和 Enter 选择 `/skills` 后正文、批注、图片和文件保留，勾选 Skill 不改正文，Escape 保留输入，独立命令及 `+` 菜单行为；完整检查结果见测试与发布状态。本次未进行真实 API 对话验收。
 - 最后更新：2026-09-18
-- Skill 开关：Skills 三类列表、插件详情与内容弹窗共用滑动样式，仍由 Core 有效状态驱动。技能列表的内容区域可进入 Skill 正文详情并定位到资源管理器中的 `SKILL.md`；操作区仍独立处理安装、卸载和启停。未安装插件的 Skill 固定显示关闭且禁用的灰色开关，并提示先安装，不把预览元数据中的 enabled 当成已启用。开关保留键盘语义、忙碌禁用和 reduced-motion 支持。
+- Skill 开关：Skills 三类列表、插件详情与内容弹窗共用滑动样式，仍由 Core 有效状态驱动。技能列表的内容区域可进入 Skill 正文详情；详情顶部使用图标、轻量三点菜单和关闭按钮，资源管理器定位收纳在三点菜单中。操作区仍独立处理安装、卸载和启停。未安装插件的 Skill 固定显示关闭且禁用的灰色开关，并提示先安装，不把预览元数据中的 enabled 当成已启用。开关保留键盘语义、忙碌禁用和 reduced-motion 支持。
 - 内置办公插件定向验证（2026-09-17）：插件及三个 Skill 结构校验通过；真实 codex-cli 0.154.0-alpha.6.2 app-server 在隔离临时 CODEX_HOME 中完成 `cs-curated` 添加、`cs-office` 安装、三个命名空间 Skill 发现、卸载和来源移除。未执行真实办公文件生成或干净机器依赖验收。
 - 插件详情定向验证（2026-09-17 至 2026-09-18）：真实 Runtime 探针验证未注册市场的安装前详情、三个 Skill 路径与内容读取，以及安装后的禁用、重新读取和启用。组件测试覆盖预览无安装副作用、正文读取、有效开关状态、插件详情从 `skills/list` 同步关闭状态和读写失败；四视口浏览器验证详情、内容滚动、开关、关闭与焦点恢复。未进行真实 WebView2 人工点击验收。
 - Skill 定向验证（2026-09-14）：`python -B tests/scripts/test_tuzi_skill.py` 的 5 项测试通过，覆盖变量配对、旧凭据不回读、URL 边界、缺配置不请求、默认及自选模型路由、CDN 不带密钥和输出不含测试 Key；请求使用 httpx MockTransport，未调用真实生图 API。`quick_validate.py` 用 Python UTF-8 模式通过；TypeScript、production build、Cargo check、39 项 Rust 测试、严格 Clippy 和 Debug 构建通过。

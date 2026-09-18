@@ -54,13 +54,23 @@
 .plugin-skill-dialog > p { color: var(--text-muted); }
 .plugin-detail-view .plugin-dialog-close { display: grid; place-items: center; width: var(--control-height-compact); height: var(--control-height-compact); padding: 0; border: 0; background: transparent; }
 .skill-detail-dialog { width: min(900px, calc(100vw - 48px)); height: min(760px, calc(100vh - 48px)); padding: var(--space-6); }
-.skill-detail-dialog header { align-items: flex-start; }
+.skill-detail-dialog header { align-items: center; }
+.skill-detail-toolbar { min-height: var(--control-height-large); }
+.skill-detail-icon { display: grid; place-items: center; width: var(--control-height-large); height: var(--control-height-large); border: 1px solid var(--border-default); border-radius: var(--radius-panel); background: var(--surface-raised); color: var(--accent-info); }
+.skill-detail-icon svg { width: 18px; height: 18px; }
 .plugin-skill-dialog .skill-detail-heading { display: grid; min-width: 0; gap: var(--space-1); }
 .skill-detail-heading h2 { color: var(--text-primary); font-size: var(--text-title); line-height: var(--space-5); overflow-wrap: anywhere; }
+.skill-detail-heading h2 span { color: var(--text-muted); font-weight: 400; }
 .skill-detail-heading p { color: var(--text-muted); font-size: var(--text-label); line-height: var(--space-5); overflow-wrap: anywhere; }
 .skill-detail-actions { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
-.skill-detail-dialog .plugin-dialog-close { display: grid; place-items: center; width: var(--control-height-compact); height: var(--control-height-compact); padding: 0; border: 0; background: transparent; color: var(--text-muted); }
-.skill-detail-dialog .plugin-dialog-close:hover { background: var(--surface-raised); color: var(--text-primary); }
+.skill-detail-dialog .skill-detail-icon-button { display: grid; place-items: center; width: var(--control-height-compact); height: var(--control-height-compact); min-height: 0; padding: 0; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--text-muted); }
+.skill-detail-dialog .skill-detail-icon-button:hover { background: var(--surface-raised); color: var(--text-primary); }
+.skill-detail-icon-button svg { width: 16px; height: 16px; }
+.skill-detail-menu-anchor { position: relative; display: flex; }
+.skill-detail-menu { position: absolute; z-index: 1; top: calc(100% + var(--space-1)); right: 0; min-width: 190px; padding: var(--space-1); border: 1px solid var(--border-default); border-radius: var(--radius-control); background: var(--surface-panel); box-shadow: var(--shadow-popover); }
+.skill-detail-menu button { display: flex; align-items: center; width: 100%; gap: var(--space-2); min-height: var(--control-height); padding: var(--space-1) var(--space-2); border: 0; background: transparent; color: var(--text-secondary); text-align: left; }
+.skill-detail-menu button:hover { background: var(--surface-raised); color: var(--text-primary); }
+.skill-detail-menu svg { width: 16px; height: 16px; }
 .plugin-skill-content { overflow: auto; min-height: 0; padding: var(--space-4); border-radius: var(--radius-panel); background: var(--surface-canvas); color: var(--text-secondary); overflow-wrap: anywhere; line-height: var(--space-6); }
 .skill-detail-dialog .plugin-skill-content { font-size: var(--text-ui); line-height: 1.65; }
 .skill-detail-dialog .plugin-skill-content h1, .skill-detail-dialog .plugin-skill-content h2, .skill-detail-dialog .plugin-skill-content h3 { margin: 0 0 var(--space-3); color: var(--text-primary); font-size: var(--text-title); line-height: var(--space-5); }
