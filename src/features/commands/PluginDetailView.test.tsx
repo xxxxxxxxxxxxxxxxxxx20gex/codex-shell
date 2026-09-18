@@ -23,7 +23,8 @@ it("previews bundled skills without registering or installing a marketplace", as
   await screen.findByText("cs-pdf");
   expect(invoke).toHaveBeenCalledWith("prepare_builtin_office_plugin");
   expect(readPlugin).toHaveBeenCalledWith({ marketplacePath: "C:/cs/office/.agents/plugins/marketplace.json", pluginName: "cs-office" });
-  expect(screen.queryByRole("switch")).toBeNull();
+  expect((screen.getByRole("switch") as HTMLButtonElement).disabled).toBe(true);
+  expect(screen.getByRole("switch").getAttribute("aria-checked")).toBe("false");
   expect(screen.getByRole("button", { name: "安装插件" })).toBeTruthy();
   expect(addMarketplace).not.toHaveBeenCalled();
   expect(installPlugin).not.toHaveBeenCalled();

@@ -35,11 +35,13 @@
 .plugin-information { display: grid; grid-template-columns: auto 1fr; gap: var(--space-3) var(--space-6); }
 .plugin-information dt { color: var(--text-muted); }
 .plugin-information dd { margin: 0; overflow-wrap: anywhere; }
-.plugin-detail-view .plugin-skill-switch { display: flex; align-items: center; width: var(--control-height); height: var(--space-5); min-height: 0; padding: 2px; border: 0; border-radius: var(--space-5); background: var(--surface-selected); flex: 0 0 var(--control-height); }
-.plugin-skill-switch > span { width: var(--space-4); height: var(--space-4); border-radius: 50%; background: var(--text-secondary); }
-.plugin-detail-view .plugin-skill-switch[aria-checked="true"] { background: var(--accent-info); }
-.plugin-skill-switch[aria-checked="true"] > span { margin-left: auto; background: var(--text-primary); }
-.plugin-detail-view .plugin-skill-switch:disabled { opacity: .5; }
+.skill-management-page .skill-enable-switch { display: flex; align-items: center; box-sizing: border-box; width: var(--control-height); height: var(--space-5); min-height: 0; padding: 2px; border: 0; border-radius: var(--space-5); background: var(--surface-selected); flex: 0 0 auto; cursor: pointer; }
+.skill-enable-switch > span { width: var(--space-4); height: var(--space-4); border-radius: 50%; background: var(--text-secondary); transition: transform var(--motion-fast); }
+.skill-management-page .skill-enable-switch[aria-checked="true"] { background: var(--accent-info); }
+.skill-enable-switch[aria-checked="true"] > span { transform: translateX(var(--space-3)); background: var(--text-primary); }
+.skill-management-page .skill-enable-switch:disabled { opacity: .5; cursor: default; }
+.skill-management-actions { align-items: center; }
+@media (prefers-reduced-motion: reduce) { .skill-enable-switch > span { transition: none; } }
 .plugin-skill-dialog { box-sizing: border-box; width: min(760px, calc(100vw - 48px)); max-height: calc(100vh - 48px); padding: var(--space-6); border: 1px solid var(--border-default); border-radius: var(--radius-panel); background: var(--surface-panel); color: var(--text-primary); box-shadow: var(--shadow-popover); }
 .plugin-skill-dialog[open] { display: flex; flex-direction: column; gap: var(--space-3); }
 .plugin-skill-dialog::backdrop { background: color-mix(in srgb, var(--surface-canvas) 75%, transparent); }

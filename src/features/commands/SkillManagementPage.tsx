@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, Search, Sparkles } from "lucide-react";
+import { Search, Sparkles } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import type { SkillMetadata } from "../../generated/app-server/v2/SkillMetadata";
@@ -89,7 +89,7 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
           const scopeLabel = skill.scope === "repo" ? "项目" : skill.scope === "admin" ? "管理员" : null;
           return <article className={`skill-management-card ${!skill.enabled ? "disabled" : ""}`} key={skill.path}>
             <span className="skill-management-icon"><Sparkles aria-hidden="true" /></span><div><strong>{builtinImage(skill) ? "兔子生图" : skill.interface?.displayName || skill.name}{scopeLabel && <em className="skill-scope-badge">{scopeLabel}</em>}</strong><p>{builtinImage(skill) ? "通过兔子渠道生成商品图、海报和场景图片。" : skill.interface?.shortDescription || skill.shortDescription || skill.description}</p></div>
-            <span className="skill-management-actions"><button type="button" className="skill-management-toggle" role="switch" aria-label={`${skill.name} 启用状态`} aria-checked={skill.enabled} disabled={busy} onClick={() => void toggle(skill)}>{!skill.enabled ? "启用" : <><Check aria-hidden="true" />已启用</>}</button>{owned && skill.scope === "user" && !skill.pluginId && <button type="button" className="skill-management-remove" title="移到 CS 的 uninstalled-skills 目录，可恢复" disabled={busy} onClick={() => void uninstall(skill)}>卸载</button>}</span>
+            <span className="skill-management-actions"><button type="button" className="skill-enable-switch" role="switch" aria-label={`${skill.name} 启用状态`} title={skill.enabled ? "关闭技能" : "启用技能"} aria-checked={skill.enabled} disabled={busy} onClick={() => void toggle(skill)}><span /></button>{owned && skill.scope === "user" && !skill.pluginId && <button type="button" className="skill-management-remove" title="移到 CS 的 uninstalled-skills 目录，可恢复" disabled={busy} onClick={() => void uninstall(skill)}>卸载</button>}</span>
           </article>;
         })}
       </section>;

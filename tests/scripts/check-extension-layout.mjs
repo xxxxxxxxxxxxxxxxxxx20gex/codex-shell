@@ -51,7 +51,11 @@ try {
     await page.setViewportSize({ width, height });
     await page.evaluate(() => window.show('preview'));
     await page.getByRole('button', {name:'安装插件'}).waitFor();
-    assert.equal(await page.getByRole('switch').count(), 0);
+    assert.equal(await page.getByRole('switch').count(), 3);
+    for (const control of await page.getByRole('switch').all()) {
+      assert.equal(await control.isDisabled(), true);
+      assert.equal(await control.isChecked(), false);
+    }
     assert.equal(await page.locator('.plugin-detail-heading h1').evaluate(el=>getComputedStyle(el).fontSize),'14px');
     await page.screenshot({path:join(output, `office-preview-${width}.png`)});
     await page.getByRole('button', {name:/PDF/}).click();

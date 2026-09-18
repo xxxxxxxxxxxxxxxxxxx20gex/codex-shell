@@ -51,9 +51,7 @@ export function PluginDetailView({ detail, extensions, onClose, onChanged, onIns
   }
   const title = (skill: SkillSummary) => skill.interface?.displayName || skill.name;
   const selectedState = skills.find((skill) => skill.path === selected?.path);
-  const control = (skill: SkillSummary) => detail.summary.installed
-    ? <button type="button" className="plugin-skill-switch" role="switch" aria-label={title(skill) + " 启用状态"} aria-checked={skill.enabled} disabled={busy || !skill.path} onClick={() => void toggle(skill)}><span /></button>
-    : null;
+  const control = (skill: SkillSummary) => <button type="button" className="skill-enable-switch" role="switch" aria-label={title(skill) + " 启用状态"} title={!detail.summary.installed ? "安装插件后可启用" : skill.enabled ? "关闭技能" : "启用技能"} aria-checked={detail.summary.installed && skill.enabled} disabled={busy || !detail.summary.installed || !skill.path} onClick={() => void toggle(skill)}><span /></button>;
   return <section className="plugin-detail-view">
     <nav><button className="plugin-back" type="button" title="返回插件" aria-label="关闭详情" disabled={installing} onClick={onClose}><ArrowLeft />插件</button></nav>
     <header className="plugin-detail-heading"><span className="plugin-detail-icon"><FileStack /></span><div><h1>{detail.summary.interface?.displayName || detail.summary.name}</h1><p>{detail.summary.interface?.shortDescription || detail.description}</p></div>{!detail.summary.installed && onInstall ? <button className="plugin-install" type="button" disabled={installing} onClick={onInstall}>{installing ? "正在安装…" : "安装插件"}</button> : <span className="plugin-status">{detail.summary.installed ? "已安装" : "未安装"}</span>}</header>
