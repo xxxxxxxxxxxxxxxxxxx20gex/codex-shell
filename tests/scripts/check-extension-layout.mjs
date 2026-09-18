@@ -35,10 +35,12 @@ const noop = () => {};
 const skill = {name:"example-skill",description:"这是一个用于验证长中文描述和操作区域的技能",enabled:true,scope:"user",pluginId:null,path:"C:/cs/skills/demo/SKILL.md"};
 const plugin = {id:"demo",name:"本地插件",installed:true,enabled:true,availability:"AVAILABLE",installPolicy:"AVAILABLE",authPolicy:"ON_USE",interface:null};
 const office = {summary:{...plugin,name:'cs-office',installed:false,version:'0.1.0',interface:{displayName:'CS Office',shortDescription:'创建和编辑本地办公文件',longDescription:'在 Codex Shell 中创建、编辑并验证 PDF、Word 文档和电子表格。所有处理均在本机完成。',developerName:'Codex Shell Contributors'}},skills:['文档','PDF','电子表格'].map((name,i)=>({...skill,name,path:'C:/cs/'+i+'/SKILL.md',description:'创建、编辑并验证本地办公文件'})),apps:[],hooks:[],mcpServers:[]};
-const extensions = {listPlugins:async()=>({marketplaces:[{name:"local-marketplace",path:"C:/market.json",plugins:[plugin,{...plugin,id:'hidden',name:'Game Studio',installed:false}]}],marketplaceLoadErrors:[]}),readPlugin:async()=>({plugin:{summary:plugin,description:'本地办公插件',skills:[skill],hooks:[],apps:[],mcpServers:[]}}),readSkillContent:async()=>('# 技能内容\\n\\n可读取和编辑文档。\\n\\n'.repeat(40)),setSkillEnabled:async(path,enabled)=>enabled};
+const installedSkill = {...skill, pluginId:plugin.id, path:"C:/cs/plugins/cache/demo/SKILL.md"};
+const extensions = {listPlugins:async()=>({marketplaces:[{name:"local-marketplace",path:"C:/market.json",plugins:[plugin,{...plugin,id:'hidden',name:'Game Studio',installed:false}]}],marketplaceLoadErrors:[]}),readPlugin:async()=>({plugin:{summary:plugin,description:'本地办公插件',skills:[skill],hooks:[],apps:[],mcpServers:[]}}),readSkillContent:async()=>('# 技能内容\\n\\n可读取和编辑文档。\\n\\n'.repeat(40)),setSkillEnabled:async(path,enabled)=>{if(path!==installedSkill.path)throw new Error('Wrong installed path');installedSkill.enabled=enabled;return enabled;}};
 window.show = (kind) => {
+ if(kind === 'plugins') installedSkill.enabled = true;
  const content = kind === 'preview' ? React.createElement('div',{className:'skill-management-page extension-page plugin-detail-page'},React.createElement(PluginDetailView,{detail:office,extensions,onClose:noop,onChanged:noop,onInstall:noop})) : kind === "skills" ? React.createElement(SkillManagementPage,{loadSkills:async()=>[skill,{...skill,name:"system-example",scope:"system",path:"C:/cs/skills/.system/example/SKILL.md"},{...skill,name:"cs-office:cs-pdf",pluginId:"cs-office@cs-curated",path:"C:/cs/plugins/pdf/SKILL.md"}],revision:0,codexHome:"C:/cs",setEnabled:async()=>false,readSkillContent:extensions.readSkillContent,onOpenSkillPath:async()=>{},onClose:noop}) :
- kind === "plugins" ? React.createElement(PluginManagementPage,{extensions,revision:0,onClose:noop,onChanged:noop}) :
+ kind === "plugins" ? React.createElement(PluginManagementPage,{extensions,loadSkills:async()=>[installedSkill],revision:0,onClose:noop,onChanged:noop}) :
  React.createElement(McpStatusPanel,{loadServers:async()=>[],loginServer:async()=>"",reloadServers:async()=>{},readResource:async()=>[],onClose:noop,readConfig:async()=>({version:"v",servers:{}}),writeConfig:async()=>{}});
  root.render(React.createElement("main",{style:{marginLeft:248,marginRight:innerWidth>=1180?288:0,height:"100vh",position:"relative",display:"flex",overflow:"hidden"}},content));
 };
@@ -68,6 +70,7 @@ try {
       await page.evaluate((view) => window.show(view), kind);
       await page.getByText(kind === "skills" ? /^example-skill/ : kind === "plugins" ? "本地插件" : "添加 MCP").first().waitFor();
       if (kind === 'skills') {
+        assert.equal(await page.getByText('cs-office:cs-pdf', {exact:true}).count(), 0);
         const row = page.getByRole('switch', {name:'example-skill 启用状态'}).locator('..');
         const toggle = await row.getByRole('switch').boundingBox();
         const remove = await row.getByRole('button', {name:'卸载'}).boundingBox();

@@ -88,7 +88,7 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
   const builtinImage = (skill: SkillMetadata) => Boolean(codexHome) && !skill.pluginId && skill.scope === "user" && skill.path.split("\\").join("/").toLowerCase() === root + "image-gen/skill.md";
   const builtinDocs = (skill: SkillMetadata) => Boolean(codexHome) && !skill.pluginId && skill.scope === "user" && skill.path.split("\\").join("/").toLowerCase() === root + "cs-docs/skill.md";
   const officialDocs = (skill: SkillMetadata) => skill.name === "openai-docs";
-  const groupOf = (skill: SkillMetadata) => builtinImage(skill) || builtinDocs(skill) || skill.pluginId === "cs-office@cs-curated" ? "CS 内置" : skill.scope === "user" || skill.pluginId ? "个人" : "系统";
+  const groupOf = (skill: SkillMetadata) => builtinImage(skill) || builtinDocs(skill) ? "CS 内置" : skill.scope === "user" ? "个人" : "系统";
   const normalized = query.trim().toLocaleLowerCase();
   const filtered = normalized ? skills.filter((skill) => `${builtinImage(skill) ? "兔子生图" : ""} ${builtinDocs(skill) ? "CS Docs Codex Shell 文档" : ""} ${officialDocs(skill) ? "OpenAI 官方文档" : ""} ${skill.name} ${skill.interface?.displayName || ""} ${skill.interface?.shortDescription || ""} ${skill.description}`.toLocaleLowerCase().includes(normalized)) : skills;
   const showBuiltinImage = !skills.some(builtinImage) && (!query.trim() || "兔子生图 image-gen 通过兔子渠道生成商品图、海报和场景图片。".toLowerCase().includes(query.trim().toLowerCase()));
@@ -99,7 +99,7 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
     <div className="skill-management-search"><Search aria-hidden="true" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索技能" /></div>
     {error && <p className="error" role="alert">{error}</p>}
     {["CS 内置", "个人", "系统"].map((group) => {
-      const items = filtered.filter((skill) => groupOf(skill) === group).sort((a, b) => Number(builtinImage(b)) - Number(builtinImage(a)) || Number(builtinDocs(b)) - Number(builtinDocs(a)));
+      const items = filtered.filter((skill) => !skill.pluginId && groupOf(skill) === group).sort((a, b) => Number(builtinImage(b)) - Number(builtinImage(a)) || Number(builtinDocs(b)) - Number(builtinDocs(a)));
       if (!items.length && !(group === "CS 内置" && (showBuiltinImage || showBuiltinDocs))) return null;
       return <section className="skill-management-section" aria-label={group} key={group}><h2>{group}</h2>
         {group === "CS 内置" && showBuiltinImage && <article className="skill-management-card"><span className="skill-management-icon"><Sparkles aria-hidden="true" /></span><div><strong>兔子生图</strong><p>通过兔子渠道生成商品图、海报和场景图片。</p></div><span className="skill-management-actions"><button type="button" className="skill-management-toggle" disabled={busy} onClick={() => void installBuiltin("install_builtin_skill")}>安装</button></span></article>}

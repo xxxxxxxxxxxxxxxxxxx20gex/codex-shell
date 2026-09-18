@@ -41,7 +41,7 @@ export function SkillPicker({ selected, revision, loadSkills, onToggle, onClose 
       {filtered.map((skill) => {
         const active = selected.some((item) => item.path === skill.path);
         return <button key={skill.path} className={active ? "active" : ""} onClick={() => onToggle({ name: skill.name, path: skill.path })}>
-          <i><Sparkles aria-hidden="true" /></i><span><strong>{skill.interface?.displayName || skill.name}</strong><small>{skill.interface?.shortDescription || skill.shortDescription || skill.description}</small></span><em>{active ? <Check aria-label="已选择" /> : "可用"}</em>
+          <i><Sparkles aria-hidden="true" /></i><span><strong>{skill.interface?.displayName || skill.name}</strong><small>{skill.pluginId ? `${skill.pluginId.split("@")[0]} · ` : ""}{skill.interface?.shortDescription || skill.shortDescription || skill.description}</small></span><em>{active ? <Check aria-label="已选择" /> : "可用"}</em>
         </button>;
       })}
     </div>

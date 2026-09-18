@@ -5,6 +5,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { McpConfigPanel } from "./McpConfigPanel";
 import { SkillManagementPage } from "./SkillManagementPage";
+import { SkillPicker } from "./SkillPicker";
 import { PluginManagementPage } from "./PluginManagementPage";
 import { McpStatusPanel } from "./McpStatusPanel";
 import type { SkillMetadata } from "../../generated/app-server/v2/SkillMetadata";
@@ -175,22 +176,45 @@ it("opens an installed Skill row to read its detail and reveal its file", async 
   expect(onOpenSkillPath).toHaveBeenCalledWith(skill.path);
 });
 
-it("groups same-named personal, system, and CS plugin skills by provenance", async () => {
+it("groups independent skills and excludes plugin skills by provenance, not name", async () => {
   const base = { description: "测试", enabled: true, scope: "user", pluginId: null } as const;
   const skills: SkillMetadata[] = [
     { ...base, name: "image-gen", path: "C:/other/skills/image-gen/SKILL.md" },
     { ...base, name: "system-skill", scope: "system", path: "C:/cs/skills/.system/demo/SKILL.md" },
     { ...base, name: "openai-docs", scope: "system", path: "C:/cs/skills/.system/openai-docs/SKILL.md" },
     { ...base, name: "cs-office:cs-pdf", pluginId: "cs-office@cs-curated", path: "C:/cs/plugins/pdf/SKILL.md" },
+    { ...base, name: "personal-plugin", pluginId: "custom@local", path: "C:/cs/plugins/custom/SKILL.md" },
+    { ...base, name: "cs-office:cs-pdf", path: "C:/cs/skills/pdf/SKILL.md" },
   ];
   render(<SkillManagementPage codexHome="C:/cs" revision={0} loadSkills={async () => skills} setEnabled={vi.fn()} onClose={vi.fn()} />);
   await screen.findByText("system-skill");
-  expect(within(screen.getByRole("region", { name: "CS 内置" })).getByText("cs-office:cs-pdf")).toBeTruthy();
+  expect(within(screen.getByRole("region", { name: "CS 内置" })).queryByText("cs-office:cs-pdf")).toBeNull();
+  expect(screen.queryByText("personal-plugin")).toBeNull();
+  expect(screen.getAllByText("cs-office:cs-pdf")).toHaveLength(1);
+  expect(within(screen.getByRole("region", { name: "个人" })).getByText("cs-office:cs-pdf")).toBeTruthy();
   expect(within(screen.getByRole("region", { name: "CS 内置" })).getByText("CS Docs")).toBeTruthy();
   expect(within(screen.getByRole("region", { name: "个人" })).getByText("image-gen")).toBeTruthy();
   expect(within(screen.getByRole("region", { name: "系统" })).getByText("system-skill")).toBeTruthy();
   expect(within(screen.getByRole("region", { name: "系统" })).getByText("OpenAI 官方文档")).toBeTruthy();
   expect(within(screen.getByRole("region", { name: "系统" })).getByText(/不代表 CS 当前实现/)).toBeTruthy();
+});
+
+it("keeps enabled plugin skills selectable and removes disabled or uninstalled skills on revision", async () => {
+  let skills: SkillMetadata[] = [{ name: "cs-office:cs-pdf", description: "PDF", enabled: true, scope: "user", pluginId: "cs-office@cs-curated", path: "C:/cache/pdf/SKILL.md" }];
+  const loadSkills = vi.fn(async () => skills);
+  const onToggle = vi.fn();
+  const props = { selected: [], loadSkills, onToggle, onClose: vi.fn() };
+  const view = render(<SkillPicker {...props} revision={0} />);
+  fireEvent.click(await screen.findByRole("button", { name: /cs-office:cs-pdf/ }));
+  expect(onToggle).toHaveBeenCalledWith({ name: skills[0].name, path: skills[0].path });
+  expect(screen.getByText("cs-office · PDF")).toBeTruthy();
+  skills = [{ ...skills[0], enabled: false }];
+  view.rerender(<SkillPicker {...props} revision={1} />);
+  await waitFor(() => expect(screen.queryByRole("button", { name: /cs-office:cs-pdf/ })).toBeNull());
+  skills = [];
+  view.rerender(<SkillPicker {...props} revision={2} />);
+  await waitFor(() => expect(loadSkills).toHaveBeenCalledTimes(3));
+  expect(screen.queryByRole("button", { name: /cs-office:cs-pdf/ })).toBeNull();
 });
 
 it("keeps Office first in a single plugin list when installation changes", async () => {

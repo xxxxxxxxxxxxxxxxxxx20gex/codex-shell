@@ -28,4 +28,4 @@
 - 验证证据：2026-09-16；`pnpm test:quality` 通过：TypeScript、ESLint、Vitest（64 文件 / 330 项）、production build、Knip、Cargo check、42 项 Rust 单测、严格 Clippy 和 `git diff --check` 均通过；协议表面门禁、codex-cli 0.154.0-alpha.6.2 兼容门禁、本地模拟网关协议探针和 Debug 构建通过。扩展、渠道、图片批注和终端交互四项布局脚本均在 1440×900、1280×780、1024×720、900×700 通过。生产 NSIS 安装器、`.sig` 和 `latest.json` 已生成，manifest 版本与 URL 正确，安装器通过配置公钥验签并上传 GitHub Release。当前证据不代表真实模型、第三方 MCP 或干净机器安装升级已验收。
 - 最后更新：2026-09-18
 
-- 插件 Skill 状态同步修复（2026-09-18）：插件详情打开、扩展变更和开关写入后强制刷新 Core skills/list，避免插件详情与外部 Skill 管理页读取不同缓存。PluginDetailView 与扩展管理定向测试通过，typecheck、lint、production build、cargo check 和 diff check 通过；Debug 构建已重新执行。未进行真实 WebView2 人工点击验收，Vite 主 chunk 体积警告保留。
+- 插件 Skill 归属与路径修复（2026-09-18）：独立 Skill 管理页按 pluginId 排除插件技能，/skills 仍展示已启用插件技能并标记来源。插件详情使用 skills/list 的安装路径，避免写入 plugin/read 的市场源路径。真实隔离 Runtime 探针通过禁用、重新打开、重启保持关闭、启用和卸载移除验证；前端全量 68 文件 / 368 项通过，最终定向 24 项通过。TypeScript、ESLint、Knip、Cargo check、production build、Debug 构建及 diff 检查通过；四尺寸浏览器验证列表分离和实际安装路径开关、详情、焦点及关闭行为。未执行真实模型对话或 WebView2 人工验收，保留 Vite chunk 体积警告。

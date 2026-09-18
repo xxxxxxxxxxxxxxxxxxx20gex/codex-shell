@@ -59,20 +59,41 @@ it("uses the effective Skill state in plugin details", async () => {
   expect(loadSkills).toHaveBeenCalledWith(true);
 });
 
-it("refreshes the Core state after changing a plugin Skill", async () => {
-  const setSkillEnabled = vi.fn(async () => true);
-  const loadSkills = vi.fn<() => Promise<SkillMetadata[]>>()
-    .mockResolvedValueOnce([{ ...skill, enabled: true, shortDescription: undefined, interface: undefined, scope: "user", pluginId: "cs-office@cs-curated" }])
-    .mockResolvedValueOnce([{ ...skill, enabled: false, shortDescription: undefined, interface: undefined, scope: "user", pluginId: "cs-office@cs-curated" }]);
+it("uses installed paths for toggles, content and reopening instead of marketplace preview paths", async () => {
+  let enabled = true;
+  const installedPath = "C:/cs/plugins/cache/cs-office/pdf/SKILL.md";
+  const setSkillEnabled = vi.fn(async (_path: string, next: boolean) => { enabled = next; return next; });
+  const loadSkills = vi.fn(async (): Promise<SkillMetadata[]> => [
+    { ...skill, path: installedPath, enabled, shortDescription: undefined, interface: undefined, scope: "user", pluginId: detail.summary.id },
+    { ...skill, path: "C:/other/SKILL.md", shortDescription: undefined, interface: undefined, scope: "user", pluginId: "other@local" },
+  ]);
   const changed = vi.fn();
-  render(<PluginDetailView detail={detail} extensions={extensions({ setSkillEnabled })} loadSkills={loadSkills} onClose={vi.fn()} onChanged={changed} />);
-  await waitFor(() => expect(loadSkills).toHaveBeenCalledWith(true));
+  const readSkillContent = vi.fn(async () => "# 已安装正文");
+  const props = { detail, extensions: extensions({ setSkillEnabled, readSkillContent }), loadSkills, onClose: vi.fn(), onChanged: changed };
+  const view = render(<PluginDetailView {...props} />);
+  await waitFor(() => expect((screen.getByRole("switch") as HTMLButtonElement).disabled).toBe(false));
   fireEvent.click(screen.getByRole("switch"));
+  await waitFor(() => expect(loadSkills).toHaveBeenCalledTimes(2));
   await waitFor(() => expect(screen.getByRole("switch").getAttribute("aria-checked")).toBe("false"));
-  expect(setSkillEnabled).toHaveBeenCalledWith(skill.path, false);
-  expect(loadSkills).toHaveBeenCalledTimes(2);
+  expect(setSkillEnabled).toHaveBeenCalledWith(installedPath, false);
   expect(loadSkills).toHaveBeenLastCalledWith(true);
   expect(changed).toHaveBeenCalledOnce();
+  fireEvent.click(screen.getByRole("button", { name: /cs-pdf/ }));
+  await screen.findByText("已安装正文");
+  expect(readSkillContent).toHaveBeenCalledWith(installedPath);
+  view.unmount();
+  render(<PluginDetailView {...props} />);
+  await waitFor(() => expect((screen.getByRole("switch") as HTMLButtonElement).disabled).toBe(false));
+  expect(screen.getByRole("switch").getAttribute("aria-checked")).toBe("false");
+});
+
+it("blocks source-path writes when installed skill discovery fails", async () => {
+  const setSkillEnabled = vi.fn();
+  render(<PluginDetailView detail={detail} extensions={extensions({ setSkillEnabled })} loadSkills={async () => { throw new Error("读取失败"); }} onClose={vi.fn()} onChanged={vi.fn()} />);
+  await screen.findByRole("alert");
+  expect((screen.getByRole("switch") as HTMLButtonElement).disabled).toBe(true);
+  fireEvent.click(screen.getByRole("switch"));
+  expect(setSkillEnabled).not.toHaveBeenCalled();
 });
 
 it("reports skill file read errors without presenting empty content as success", async () => {

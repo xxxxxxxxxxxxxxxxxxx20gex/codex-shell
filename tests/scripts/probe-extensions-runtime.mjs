@@ -17,21 +17,25 @@ await mkdir(join(repo, ".git"));
 await mkdir(join(repo, "plugins", "demo", ".codex-plugin"), { recursive: true });
 await writeFile(join(repo, ".agents", "plugins", "marketplace.json"), JSON.stringify({ name: "cs-probe", plugins: [{ name: "demo", source: { source: "local", path: "./plugins/demo" } }] }));
 await writeFile(join(repo, "plugins", "demo", ".codex-plugin", "plugin.json"), JSON.stringify({ name: "demo", description: "Local probe" }));
-const child = spawn(join(root, "src-tauri/binaries/codex-x86_64-pc-windows-msvc.exe"), ["app-server", "--stdio"], {
-  cwd: temporary, env: { ...process.env, CODEX_HOME: home, OPENAI_API_KEY: "" }, stdio: ["pipe", "pipe", "pipe"],
-});
-child.stderr.resume();
 const pending = new Map();
 let nextId = 1;
-createInterface({ input: child.stdout }).on("line", (line) => {
-  const message = JSON.parse(line);
-  const waiter = pending.get(message.id);
-  if (!waiter) return;
-  pending.delete(message.id);
-  clearTimeout(waiter.timeout);
-  if (message.error) waiter.reject(new Error(JSON.stringify(message.error)));
-  else waiter.resolve(message.result);
-});
+function startServer() {
+  const child = spawn(join(root, "src-tauri/binaries/codex-x86_64-pc-windows-msvc.exe"), ["app-server", "--stdio"], {
+    cwd: temporary, env: { ...process.env, CODEX_HOME: home, OPENAI_API_KEY: "" }, stdio: ["pipe", "pipe", "pipe"],
+  });
+  child.stderr.resume();
+  createInterface({ input: child.stdout }).on("line", (line) => {
+    const message = JSON.parse(line);
+    const waiter = pending.get(message.id);
+    if (!waiter) return;
+    pending.delete(message.id);
+    clearTimeout(waiter.timeout);
+    if (message.error) waiter.reject(new Error(JSON.stringify(message.error)));
+    else waiter.resolve(message.result);
+  });
+  return child;
+}
+let child = startServer();
 function request(method, params = {}) {
   return new Promise((resolveRequest, reject) => {
     const id = nextId++;
@@ -97,14 +101,25 @@ try {
     .plugins.find((item) => item.name === "cs-office");
   assert.equal(installedOffice.installed, true);
   const officeDetail = (await request("plugin/read", { marketplacePath: officeMarket.path, pluginName: "cs-office" })).plugin;
-  const officeSkill = officeDetail.skills[0];
+  const officeSkill = officeSkills.data.flatMap((entry) => entry.skills).find((item) => item.pluginId === installedOffice.id && item.name === officeDetail.skills[0].name);
+  assert.ok(officeSkill);
+  assert.notEqual(officeSkill.path, officeDetail.skills[0].path, 'market preview and installed execution paths differ');
   assert.equal((await request("skills/config/write", { path: officeSkill.path, enabled: false })).effectiveEnabled, false);
-  const disabledOffice = (await request("plugin/read", { marketplacePath: officeMarket.path, pluginName: "cs-office" })).plugin;
-  assert.equal(disabledOffice.skills.find((skill) => skill.path === officeSkill.path).enabled, false);
+  const readOfficeSkills = async () => (await request('skills/list', { cwds: [temporary], forceReload: true })).data.flatMap((entry) => entry.skills).filter((item) => item.pluginId === installedOffice.id);
+  await request('plugin/read', { marketplacePath: officeMarket.path, pluginName: 'cs-office' });
+  assert.equal((await readOfficeSkills()).find((skill) => skill.path === officeSkill.path).enabled, false);
+  child.kill();
+  await once(child, 'exit');
+  child = startServer();
+  await request('initialize', { clientInfo: { name: 'cs-extensions-probe', version: '0.1.7' }, capabilities: { experimentalApi: false } });
+  child.stdin.write('{"method":"initialized"}\n');
+  assert.equal((await readOfficeSkills()).find((skill) => skill.path === officeSkill.path).enabled, false, 'installed Skill stays disabled after restart');
   await request("skills/config/write", { path: officeSkill.path, enabled: true });
+  assert.equal((await readOfficeSkills()).find((skill) => skill.path === officeSkill.path).enabled, true);
   await request("plugin/uninstall", { pluginId: installedOffice.id });
+  assert.equal((await readOfficeSkills()).length, 0);
   await request("marketplace/remove", { marketplaceName: officeAdded.marketplaceName });
-  console.log("PASS CS Office: bundled marketplace install and skill discovery");
+  console.log("PASS CS Office: installed paths, disable/reopen/restart/re-enable, uninstall removes skills");
 } finally {
   for (const waiter of pending.values()) clearTimeout(waiter.timeout);
   if (child.exitCode === null) { child.kill(); await once(child, "exit"); }
