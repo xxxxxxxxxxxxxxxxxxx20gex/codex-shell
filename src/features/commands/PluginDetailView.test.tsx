@@ -66,7 +66,8 @@ it("offers the selected Skill path in the system file explorer", async () => {
   const onOpenSkillPath = vi.fn(async () => {});
   render(<PluginDetailView detail={detail} extensions={extensions({})} onOpenSkillPath={onOpenSkillPath} onClose={vi.fn()} onChanged={vi.fn()} />);
   fireEvent.click(screen.getByRole("button", { name: /cs-pdf/ }));
-  fireEvent.click(await screen.findByRole("button", { name: "在资源管理器中打开" }));
+  fireEvent.click(await screen.findByRole("button", { name: "更多操作" }));
+  fireEvent.click(await screen.findByRole("menuitem", { name: "在资源管理器中显示" }));
   expect(onOpenSkillPath).toHaveBeenCalledWith(skill.path);
 });
 

@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ChevronRight, FileStack, FileText, FolderOpen, X } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import { useEffect, useState } from "react";
+import { ArrowLeft, ChevronRight, FileStack, FileText } from "lucide-react";
 import type { PluginDetail } from "../../generated/app-server/v2/PluginDetail";
 import type { SkillSummary } from "../../generated/app-server/v2/SkillSummary";
 import type { SkillMetadata } from "../../generated/app-server/v2/SkillMetadata";
 import type { useExtensions } from "../extensions/useExtensions";
 import { errorMessage } from "../../shared/errors";
+import { SkillDetailDialog } from "./SkillDetailDialog";
 
 interface Props {
   detail: PluginDetail;
@@ -33,7 +33,6 @@ export function PluginDetailView({ detail, extensions, onClose, onChanged, onIns
   const [contentError, setContentError] = useState("");
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
-  const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => { setSkills(detail.skills); }, [detail]);
   useEffect(() => {
     if (!detail.summary.installed || !loadSkills) return;
@@ -52,7 +51,6 @@ export function PluginDetailView({ detail, extensions, onClose, onChanged, onIns
     if (!selected?.path) return;
     let active = true;
     setContent(""); setContentError(""); setLoading(true);
-    dialog.current?.showModal();
     void readSkillContent(selected.path).then((text) => {
       if (active) setContent(text.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, ""));
     }).catch((value) => { if (active) setContentError(errorMessage(value)); })
@@ -92,12 +90,6 @@ export function PluginDetailView({ detail, extensions, onClose, onChanged, onIns
     {detail.mcpServers.length > 0 && <p>MCP：{detail.mcpServers.join("、")}</p>}
     {detail.hooks.length > 0 && <p>Hooks：{detail.hooks.length} 个</p>}
     {detail.apps.length > 0 && <p>Connector：{detail.apps.map((app) => app.name).join("、")}</p>}
-    {selected && <dialog ref={dialog} aria-labelledby="plugin-skill-title" className="plugin-skill-dialog" onClose={() => setSelected(null)} onClick={(event) => { if (event.target === event.currentTarget) { const bounds = event.currentTarget.getBoundingClientRect(); if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) event.currentTarget.close(); } }}>
-      <header><div>{onOpenSkillPath && selected.path && <button className="plugin-open-path" type="button" onClick={() => void onOpenSkillPath(selected.path!)}><FolderOpen aria-hidden="true" />在资源管理器中打开</button>}</div><div><button className="plugin-dialog-close" type="button" autoFocus title="关闭技能详情" aria-label="关闭技能详情" onClick={() => dialog.current?.close()}><X /></button>{selectedState && control(selectedState)}</div></header>
-      <h2 id="plugin-skill-title">{title(selected)} <span className="plugin-status">Skill</span></h2>
-      <p>{selected.interface?.shortDescription || selected.description}</p>
-      {error && <p className="error" role="alert">{error}</p>}
-      <div className="plugin-skill-content">{loading ? <p role="status">正在读取技能…</p> : contentError ? <p role="alert" className="error">{contentError}</p> : <ReactMarkdown skipHtml components={{ a: ({ children }) => <span>{children}</span>, img: () => null }}>{content}</ReactMarkdown>}</div>
-    </dialog>}
+    {selected && <SkillDetailDialog title={title(selected)} description={selected.interface?.shortDescription || selected.shortDescription || selected.description} path={selected.path} icon={<FileText />} toolbarAction={selectedState && control(selectedState)} content={content} loading={loading} contentError={contentError} error={error} onOpenPath={onOpenSkillPath} onClose={() => setSelected(null)} />}
   </section>;
 }

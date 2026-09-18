@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState } from "react";
-import { BookOpen, FolderOpen, MoreHorizontal, Search, Sparkles, X } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import { useEffect, useState } from "react";
+import { BookOpen, Search, Sparkles } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import type { SkillMetadata } from "../../generated/app-server/v2/SkillMetadata";
 import { errorMessage } from "../../shared/errors";
 import "./CommandPanels.css";
 import "./ExtensionManagement.css";
+import { SkillDetailDialog } from "./SkillDetailDialog";
 
 interface Props {
   loadSkills: (forceReload?: boolean) => Promise<SkillMetadata[]>;
@@ -29,9 +29,6 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
   const [content, setContent] = useState("");
   const [contentError, setContentError] = useState("");
   const [contentLoading, setContentLoading] = useState(false);
-  const [detailMenuOpen, setDetailMenuOpen] = useState(false);
-  const dialog = useRef<HTMLDialogElement>(null);
-  const detailMenu = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     let active = true;
     void loadSkills(true).then((items) => { if (active) { setSkills(items); setError(""); } }).catch((value) => { if (active) setError(errorMessage(value)); });
@@ -40,20 +37,12 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
   useEffect(() => {
     if (!selected?.path || !readSkillContent) return;
     let active = true;
-    setContent(""); setContentError(""); setContentLoading(true); dialog.current?.showModal();
+    setContent(""); setContentError(""); setContentLoading(true);
     void readSkillContent(selected.path).then((text) => { if (active) setContent(text.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, "")); })
       .catch((value) => { if (active) setContentError(errorMessage(value)); })
       .finally(() => { if (active) setContentLoading(false); });
     return () => { active = false; };
   }, [readSkillContent, selected]);
-  useEffect(() => {
-    if (!detailMenuOpen) return;
-    const dismiss = (event: PointerEvent) => { if (!detailMenu.current?.contains(event.target as Node)) setDetailMenuOpen(false); };
-    const escape = (event: KeyboardEvent) => { if (event.key === "Escape") { event.stopPropagation(); setDetailMenuOpen(false); } };
-    document.addEventListener("pointerdown", dismiss);
-    document.addEventListener("keydown", escape, true);
-    return () => { document.removeEventListener("pointerdown", dismiss); document.removeEventListener("keydown", escape, true); };
-  }, [detailMenuOpen]);
   async function toggle(skill: SkillMetadata) {
     setBusy(true);
     setError("");
@@ -104,6 +93,7 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
   const filtered = normalized ? skills.filter((skill) => `${builtinImage(skill) ? "兔子生图" : ""} ${builtinDocs(skill) ? "CS Docs Codex Shell 文档" : ""} ${officialDocs(skill) ? "OpenAI 官方文档" : ""} ${skill.name} ${skill.interface?.displayName || ""} ${skill.interface?.shortDescription || ""} ${skill.description}`.toLocaleLowerCase().includes(normalized)) : skills;
   const showBuiltinImage = !skills.some(builtinImage) && (!query.trim() || "兔子生图 image-gen 通过兔子渠道生成商品图、海报和场景图片。".toLowerCase().includes(query.trim().toLowerCase()));
   const showBuiltinDocs = !skills.some(builtinDocs) && (!query.trim() || "CS Docs cs-docs Codex Shell 文档 实现 开发".toLowerCase().includes(query.trim().toLowerCase()));
+  const selectedState = skills.find((skill) => skill.path === selected?.path) || selected;
   return <div className="skill-management-page extension-catalog">
     <header className="skill-management-header"><div><h1>技能</h1></div><div><button type="button" disabled={busy} onClick={() => void install()}>从目录安装</button><button type="button" disabled={busy} onClick={() => setRefresh((value) => value + 1)}>刷新</button><button type="button" onClick={onClose}>返回会话</button></div></header>
     <div className="skill-management-search"><Search aria-hidden="true" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索技能" /></div>
@@ -125,10 +115,6 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
         })}
       </section>;
     })}
-    {selected && <dialog ref={dialog} className="plugin-skill-dialog skill-detail-dialog" aria-labelledby="skill-detail-title" onClose={() => { setDetailMenuOpen(false); setSelected(null); }}>
-      <header className="skill-detail-toolbar"><span className="skill-detail-icon">{builtinDocs(selected) || officialDocs(selected) ? <BookOpen aria-hidden="true" /> : <Sparkles aria-hidden="true" />}</span><div className="skill-detail-actions">{onOpenSkillPath && <span ref={detailMenu} className="skill-detail-menu-anchor"><button className="skill-detail-icon-button" type="button" aria-label="更多操作" title="更多操作" aria-haspopup="menu" aria-expanded={detailMenuOpen} onClick={() => setDetailMenuOpen((open) => !open)}><MoreHorizontal /></button>{detailMenuOpen && <span className="skill-detail-menu" role="menu"><button type="button" role="menuitem" onClick={() => { setDetailMenuOpen(false); void onOpenSkillPath(selected.path); }}><FolderOpen aria-hidden="true" />在资源管理器中显示</button></span>}</span>}<button className="plugin-dialog-close skill-detail-icon-button" type="button" autoFocus aria-label="关闭技能详情" title="关闭技能详情" onClick={() => dialog.current?.close()}><X /></button></div></header>
-      <div className="skill-detail-heading"><h2 id="skill-detail-title">{selected.interface?.displayName || selected.name} <span>Skill</span></h2><p>{selected.interface?.shortDescription || selected.shortDescription || selected.description}</p></div>
-      <div className="plugin-skill-content">{contentLoading ? <p role="status">正在读取技能…</p> : contentError ? <p role="alert" className="error">{contentError}</p> : <ReactMarkdown skipHtml components={{ a: ({ children }) => <span>{children}</span>, img: () => null }}>{content}</ReactMarkdown>}</div>
-    </dialog>}
+    {selectedState && <SkillDetailDialog title={selectedState.interface?.displayName || selectedState.name} description={selectedState.interface?.shortDescription || selectedState.shortDescription || selectedState.description} path={selectedState.path} icon={builtinDocs(selectedState) || officialDocs(selectedState) ? <BookOpen /> : <Sparkles />} toolbarAction={<button type="button" className="skill-enable-switch" role="switch" aria-label={`${selectedState.name} 启用状态`} title={selectedState.enabled ? "关闭技能" : "启用技能"} aria-checked={selectedState.enabled} disabled={busy} onClick={() => void toggle(selectedState)}><span /></button>} content={content} loading={contentLoading} contentError={contentError} onOpenPath={onOpenSkillPath} onClose={() => setSelected(null)} />}
   </div>;
 }
