@@ -6,6 +6,7 @@ import type { PluginMarketplaceEntry } from "../../generated/app-server/v2/Plugi
 import type { PluginDetail } from "../../generated/app-server/v2/PluginDetail";
 import type { useExtensions } from "../extensions/useExtensions";
 import "./ExtensionManagement.css";
+import { PluginDetailView } from "./PluginDetailView";
 
 interface Props {
   extensions: ReturnType<typeof useExtensions>;
@@ -61,11 +62,20 @@ export function PluginManagementPage({ extensions, revision, onClose, onChanged 
     });
   }
 
-  const officeInstalled = marketplaces.some((marketplace) => marketplace.plugins.some((plugin) => plugin.name === "cs-office"));
+  async function previewBuiltinOffice() {
+    await action(async () => {
+      const source = await invoke<string>("prepare_builtin_office_plugin");
+      setDetail((await readPlugin({ marketplacePath: `${source}/.agents/plugins/marketplace.json`, pluginName: "cs-office" })).plugin);
+    }, false);
+  }
+
+  const officeInstalled = marketplaces.some((marketplace) => marketplace.name === "cs-curated" && marketplace.plugins.some((plugin) => plugin.name === "cs-office"));
+
+  if (detail) return <div className="skill-management-page extension-page"><PluginDetailView key={detail.summary.id} detail={detail} extensions={extensions} onClose={() => setDetail(null)} onChanged={onChanged} /></div>;
 
   return <div className="skill-management-page extension-page">
     <header className="skill-management-header"><h1>插件</h1><div><button type="button" disabled={busy || loading} onClick={() => { setError(""); setRefresh((value) => value + 1); }}>刷新</button><button type="button" onClick={onClose}>返回会话</button></div></header>
-    <section className="skill-management-section"><h2>CS 内置</h2>{officeInstalled ? <p>CS Office 已安装，可在下方查看详情或卸载。</p> : <article className="extension-row"><div className="extension-builtin-summary"><span className="skill-management-icon"><FileStack aria-hidden="true" /></span><div><strong>CS Office</strong><p>本地创建和编辑 PDF、Word 与电子表格，不依赖 ChatGPT 账户。</p><small>包含 PDF、文档、电子表格 3 个 Skill</small></div></div><div className="extension-actions"><button type="button" disabled={busy || loading} onClick={() => void installBuiltinOffice()}>安装</button></div></article>}</section>
+    <section className="skill-management-section"><h2>CS 内置</h2>{officeInstalled ? <p>CS Office 已安装，可在下方查看详情或卸载。</p> : <article className="extension-row"><div className="extension-builtin-summary"><span className="skill-management-icon"><FileStack aria-hidden="true" /></span><div><strong>CS Office</strong><p>本地创建和编辑 PDF、Word 与电子表格，不依赖 ChatGPT 账户。</p><small>包含 PDF、文档、电子表格 3 个 Skill</small></div></div><div className="extension-actions"><button type="button" disabled={busy || loading} onClick={() => void previewBuiltinOffice()}>详情</button><button type="button" disabled={busy || loading} onClick={() => void installBuiltinOffice()}>安装</button></div></article>}</section>
     <h2>已安装</h2>
     {notice && <p role="status">{notice}</p>}
     {error && <p className="error" role="alert">{error}</p>}
@@ -79,6 +89,5 @@ export function PluginManagementPage({ extensions, revision, onClose, onChanged 
         </div>
       </article>)}
     </section>)}
-    {detail && <section className="extension-detail"><header><strong>{detail.summary.name}</strong><button type="button" onClick={() => setDetail(null)}>关闭详情</button></header><p>{detail.description}</p><p>Skills：{detail.skills.map((skill) => skill.name).join("、") || "无"}</p><p>MCP：{detail.mcpServers.join("、") || "无"}</p><p>Hooks：{detail.hooks.length} 个</p><p>Connector：{detail.apps.map((app) => app.name).join("、") || "无"}</p></section>}
   </div>;
 }

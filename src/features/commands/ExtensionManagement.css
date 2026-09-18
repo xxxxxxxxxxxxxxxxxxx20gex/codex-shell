@@ -8,7 +8,7 @@
 .extension-page button:hover:enabled, .mcp-config-panel button:hover:enabled { background: var(--surface-raised); }
 .extension-page input, .mcp-config-form input, .mcp-config-form select { box-sizing: border-box; width: 100%; min-width: 0; min-height: var(--control-height); padding: var(--space-1) var(--space-2); border: 1px solid var(--border-default); border-radius: var(--radius-control); color: var(--text-primary); background: var(--surface-canvas); font: inherit; }
 .mcp-config-form label { display: grid; gap: var(--space-2); font-size: var(--text-ui); }
-.extension-marketplace > header, .extension-detail > header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-2); }
+.extension-marketplace > header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-2); }
 .extension-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--border-subtle); }
 .extension-row > div:first-child { flex: 1; min-width: 0; }
 .extension-builtin-summary { display: flex; align-items: center; gap: var(--space-3); }
@@ -17,7 +17,31 @@
 .extension-row strong, .extension-row p, .extension-row small, .extension-page [role], .skill-management-section [role] { overflow-wrap: anywhere; }
 .extension-row p { color: var(--text-secondary); font-size: var(--text-ui); }
 .extension-row small { display: block; margin-top: var(--space-1); color: var(--text-muted); font-size: var(--text-meta); }
-.extension-detail { padding: var(--space-3) 0; border-top: 1px solid var(--border-subtle); font-size: var(--text-ui); }
+.plugin-detail-view { width: 100%; min-width: 0; font-size: var(--text-ui); }
+.plugin-detail-view h2 { margin-top: var(--space-6); font-size: var(--text-title); }
+.plugin-detail-view .skill-management-header { justify-content: flex-start; }
+.plugin-detail-view svg { width: 16px; height: 16px; stroke-width: 1.75; flex-shrink: 0; }
+.plugin-detail-view .plugin-skill-link { display: flex; align-items: center; gap: var(--space-3); flex: 1; min-width: 0; text-align: left; border: 0; background: transparent; }
+.plugin-skill-link span { min-width: 0; }
+.plugin-information { display: grid; grid-template-columns: auto 1fr; gap: var(--space-3) var(--space-6); }
+.plugin-information dt, .plugin-detail-view > p { color: var(--text-secondary); }
+.plugin-information dd { margin: 0; overflow-wrap: anywhere; }
+.plugin-detail-view input[role="switch"] { appearance: none; width: var(--control-height-large); height: var(--space-6); min-height: 0; padding: var(--space-1); border-radius: var(--radius-panel); background: var(--surface-selected); flex: 0 0 var(--control-height-large); cursor: pointer; }
+.plugin-detail-view input[role="switch"]::before { content: ""; display: block; width: var(--space-3); height: var(--space-3); border-radius: var(--radius-sm); background: var(--text-secondary); }
+.plugin-detail-view input[role="switch"]:checked { background: var(--accent-action); }
+.plugin-detail-view input[role="switch"]:checked::before { margin-left: auto; background: var(--surface-canvas); }
+.plugin-detail-view input[role="switch"]:disabled { opacity: .5; cursor: default; }
+.plugin-skill-dialog { box-sizing: border-box; width: min(760px, calc(100vw - 48px)); max-height: calc(100vh - 48px); padding: var(--space-6); border: 1px solid var(--border-default); border-radius: var(--radius-panel); background: var(--surface-panel); color: var(--text-primary); box-shadow: var(--shadow-popover); }
+.plugin-skill-dialog[open] { display: flex; flex-direction: column; gap: var(--space-3); }
+.plugin-skill-dialog::backdrop { background: color-mix(in srgb, var(--surface-canvas) 75%, transparent); }
+.plugin-skill-dialog header, .plugin-skill-dialog header > div { display: flex; align-items: center; gap: var(--space-3); }
+.plugin-skill-dialog header { justify-content: space-between; }
+.plugin-skill-dialog h2, .plugin-skill-dialog p { margin: 0; }
+.plugin-skill-dialog header h2 { overflow-wrap: anywhere; }
+.plugin-skill-content { overflow: auto; min-height: 0; overflow-wrap: anywhere; line-height: var(--space-6); }
+.plugin-skill-content > * + * { margin-top: var(--space-3); }
+.plugin-skill-content pre { overflow: auto; }
+.plugin-skill-content h1, .plugin-skill-content h2, .plugin-skill-content h3 { font-size: var(--text-title); }
 .extension-page .error, .mcp-config-panel .error, .skill-management-page .error { color: var(--accent-danger); }
 .mcp-config-form fieldset { display: grid; min-width: 0; border: 0; padding: 0; gap: var(--space-2); }
 .mcp-config-panel { padding: var(--space-3); font-size: var(--text-ui); }

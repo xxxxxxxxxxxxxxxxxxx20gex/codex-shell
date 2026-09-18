@@ -18,5 +18,11 @@ export function useExtensions(ensureConnected: () => Promise<AppServerClient>) {
   const installPlugin = useCallback(async (params: PluginInstallParams) => (await ensureConnected()).extensions.installPlugin(params), [ensureConnected]);
   const uninstallPlugin = useCallback(async (id: string) => (await ensureConnected()).extensions.uninstallPlugin(id), [ensureConnected]);
   const addMarketplace = useCallback(async (source: string) => (await ensureConnected()).extensions.addMarketplace(source), [ensureConnected]);
-  return { readMcpConfig, writeMcpConfig, listPlugins, readPlugin, installPlugin, uninstallPlugin, addMarketplace };
+  const readSkillContent = useCallback(async (path: string) => {
+    const response = await (await ensureConnected()).readFile({ path });
+    return new TextDecoder().decode(Uint8Array.from(atob(response.dataBase64), (character) => character.charCodeAt(0)));
+  }, [ensureConnected]);
+  const setSkillEnabled = useCallback(async (path: string, enabled: boolean) =>
+    (await (await ensureConnected()).writeSkillConfig({ path, enabled })).effectiveEnabled, [ensureConnected]);
+  return { readMcpConfig, writeMcpConfig, listPlugins, readPlugin, installPlugin, uninstallPlugin, addMarketplace, readSkillContent, setSkillEnabled };
 }

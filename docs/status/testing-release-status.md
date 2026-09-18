@@ -1,6 +1,7 @@
 # 测试与发布状态
 
 - 模块职责：维护类型检查、静态检查、前后端测试、构建、Runtime 兼容门禁和 Windows 发布证据。
+- 插件详情验证（2026-09-17 至 2026-09-18）：`pnpm test:quality` 通过，68 文件 / 356 项前端测试、43 项 Rust 单测通过（1 项交互测试忽略），TypeScript、ESLint、production build、Knip、Cargo check、Clippy 与 diff 检查通过。真实 Runtime 扩展探针验证安装前 Skill 详情/正文以及安装后启停持久化；四尺寸浏览器验证详情布局、内容弹窗、Escape、外部点击和焦点恢复，Debug 构建完成。未进行真实 WebView2 人工验收，既有 Vite chunk 体积警告保留。
 - CS Office 验证（2026-09-17）：`pnpm test:quality` 通过，67 文件 / 353 项前端测试、43 项 Rust 单测通过（1 项交互测试忽略）；TypeScript、ESLint、production build、Knip、Cargo check、Clippy 与 diff 检查通过。插件和三个 Skill 的官方结构校验通过；真实 app-server 在隔离临时 CODEX_HOME 中完成内置市场添加、插件安装、三个命名空间 Skill 发现、卸载和来源移除。插件管理页在四个规定视口的溢出、字号、焦点和 reduced-motion 检查通过，Debug 构建产物更新。未执行真实 PDF、DOCX、XLSX 生成或干净机器依赖验收，原有 Vite 主 chunk 体积警告保留。
 - 当前文件高亮验证（2026-09-17）：`pnpm test:quality` 通过，67 文件 / 352 项前端测试、42 项 Rust 单测通过（1 项交互测试忽略）；TypeScript、ESLint、production build、Knip、Cargo check、Clippy 与 diff 检查通过。组件回归覆盖混用 Windows 路径分隔符时的父目录展开、当前项语义、高亮及首次滚动；四视口真实浏览器检查选中背景与左侧标记，最终 Debug 构建通过。未使用真实大型项目人工检查目录 watch 后的长列表滚动位置。
 - 提示跳转与路径规范化验证（2026-09-17）：`pnpm test:quality` 通过，67 文件 / 351 项前端测试、42 项 Rust 单测通过（1 项交互测试忽略）；TypeScript、ESLint、production build、Knip、Cargo check、Clippy 与 diff 检查通过。定向测试覆盖 app-server 普通提示进入诊断、Sandbox 提示进入运行环境，以及相对/绝对/UNC 路径的 `..` 规范化和越过卷根拒绝；四视口资源菜单回归及 Debug 构建通过。未执行真实 app-server 错误注入或 WebView2 人工点击验收。
@@ -18,4 +19,4 @@
 - 已知问题：真实 Windows Credential Manager、多渠道 API 对话、第三方 MCP OAuth 和干净机器升级未在本轮自动测试；仍缺 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖。Vite 主 chunk 超过 500 kB。`cargo fmt --check` 尚未纳入质量门禁，现有 Rust 文件仍有格式差异。
 - 下一步：在干净 Windows 用户环境抽查安装与从 v0.1.5 更新；继续补真实系统凭据、多渠道 API 对话和第三方 MCP OAuth 人工验收。
 - 验证证据：2026-09-16；`pnpm test:quality` 通过：TypeScript、ESLint、Vitest（64 文件 / 330 项）、production build、Knip、Cargo check、42 项 Rust 单测、严格 Clippy 和 `git diff --check` 均通过；协议表面门禁、codex-cli 0.154.0-alpha.6.2 兼容门禁、本地模拟网关协议探针和 Debug 构建通过。扩展、渠道、图片批注和终端交互四项布局脚本均在 1440×900、1280×780、1024×720、900×700 通过。生产 NSIS 安装器、`.sig` 和 `latest.json` 已生成，manifest 版本与 URL 正确，安装器通过配置公钥验签并上传 GitHub Release。当前证据不代表真实模型、第三方 MCP 或干净机器安装升级已验收。
-- 最后更新：2026-09-17
+- 最后更新：2026-09-18

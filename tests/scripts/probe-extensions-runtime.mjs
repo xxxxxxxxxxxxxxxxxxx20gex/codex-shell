@@ -75,6 +75,12 @@ try {
   console.log("PASS Plugins: local marketplace add/list/read/install/uninstall/remove");
 
   const officeSource = join(root, "bundled", "office-marketplace");
+  const preview = (await request("plugin/read", { marketplacePath: join(officeSource, ".agents/plugins/marketplace.json"), pluginName: "cs-office" })).plugin;
+  assert.equal(preview.skills.length, 3);
+  assert.equal(preview.summary.installed, false);
+  assert.ok(preview.skills.every((skill) => skill.path));
+  const content = await request("fs/readFile", { path: preview.skills[0].path });
+  assert.ok(Buffer.from(content.dataBase64, "base64").toString("utf8").includes("---"));
   const officeAdded = await request("marketplace/add", { source: officeSource });
   const officeCatalog = await request("plugin/list", { marketplaceKinds: ["local"] });
   const officeMarket = officeCatalog.marketplaces.find((item) => item.name === "cs-curated");
@@ -90,6 +96,12 @@ try {
     .marketplaces.find((item) => item.name === "cs-curated")
     .plugins.find((item) => item.name === "cs-office");
   assert.equal(installedOffice.installed, true);
+  const officeDetail = (await request("plugin/read", { marketplacePath: officeMarket.path, pluginName: "cs-office" })).plugin;
+  const officeSkill = officeDetail.skills[0];
+  assert.equal((await request("skills/config/write", { path: officeSkill.path, enabled: false })).effectiveEnabled, false);
+  const disabledOffice = (await request("plugin/read", { marketplacePath: officeMarket.path, pluginName: "cs-office" })).plugin;
+  assert.equal(disabledOffice.skills.find((skill) => skill.path === officeSkill.path).enabled, false);
+  await request("skills/config/write", { path: officeSkill.path, enabled: true });
   await request("plugin/uninstall", { pluginId: installedOffice.id });
   await request("marketplace/remove", { marketplaceName: officeAdded.marketplaceName });
   console.log("PASS CS Office: bundled marketplace install and skill discovery");

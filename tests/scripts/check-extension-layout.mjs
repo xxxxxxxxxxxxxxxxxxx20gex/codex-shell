@@ -32,7 +32,7 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 const noop = () => {};
 const skill = {name:"example-skill",description:"这是一个用于验证长中文描述和操作区域的技能",enabled:true,scope:"user",pluginId:null,path:"C:/cs/skills/demo/SKILL.md"};
 const plugin = {id:"demo",name:"本地插件",installed:true,enabled:true,availability:"AVAILABLE",installPolicy:"AVAILABLE",authPolicy:"ON_USE",interface:null};
-const extensions = {listPlugins:async()=>({marketplaces:[{name:"local-marketplace",path:"C:/market.json",plugins:[plugin,{...plugin,id:'hidden',name:'Game Studio',installed:false}]}],marketplaceLoadErrors:[]}),readPlugin:async()=>({plugin:{summary:plugin,skills:[],hooks:[],apps:[],mcpServers:[]}})};
+const extensions = {listPlugins:async()=>({marketplaces:[{name:"local-marketplace",path:"C:/market.json",plugins:[plugin,{...plugin,id:'hidden',name:'Game Studio',installed:false}]}],marketplaceLoadErrors:[]}),readPlugin:async()=>({plugin:{summary:plugin,description:'本地办公插件',skills:[skill],hooks:[],apps:[],mcpServers:[]}}),readSkillContent:async()=>('# 技能内容\\n\\n可读取和编辑文档。\\n\\n'.repeat(40)),setSkillEnabled:async(path,enabled)=>enabled};
 window.show = (kind) => {
  const content = kind === "skills" ? React.createElement(SkillManagementPage,{loadSkills:async()=>[skill],revision:0,codexHome:"C:/cs",setEnabled:async()=>false,onClose:noop}) :
  kind === "plugins" ? React.createElement(PluginManagementPage,{extensions,revision:0,onClose:noop,onChanged:noop}) :
@@ -52,8 +52,22 @@ try {
       if (kind === 'plugins') {
         assert.equal(await page.getByText('Game Studio',{exact:true}).count(),0);
         assert.equal(await page.getByText('添加来源',{exact:true}).count(),0);
-        await page.getByText('详情',{exact:true}).click();
-        await page.getByText('关闭详情',{exact:true}).click();
+        await page.getByText('详情',{exact:true}).last().click();
+        await page.screenshot({ path: join(output, `plugin-detail-${width}.png`) });
+        await page.getByRole('switch').uncheck();
+        await page.getByRole('button', { name: /example-skill/ }).click();
+        await page.getByRole('dialog').waitFor();
+        await page.getByRole('dialog').getByText('可读取和编辑文档。').first().waitFor();
+        assert.equal(await page.getByRole('dialog').getByRole('switch').isChecked(), false);
+        await page.screenshot({ path: join(output, `plugin-skill-${width}.png`) });
+        await page.keyboard.press('Escape');
+        await page.getByRole('dialog').waitFor({state:'detached'});
+        assert.equal(await page.getByRole('button', {name:/example-skill/}).evaluate(el=>el===document.activeElement),true);
+        await page.getByRole('button', { name: /example-skill/ }).click();
+        await page.getByRole('dialog').waitFor();
+        await page.mouse.click(5,5);
+        await page.getByRole('dialog').waitFor({state:'detached'});
+        await page.getByRole('button',{name:'关闭详情',exact:true}).click();
       }
       await page.screenshot({ path: join(output, `${kind}-${width}.png`) });
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth);
