@@ -46,7 +46,7 @@ export function PluginManagementPage({ extensions, revision, onClose, onChanged 
     }
   }
 
-  async function installBuiltinOffice() {
+  async function installBuiltinOffice(keepDetail = false) {
     await action(async () => {
       const source = await invoke<string>("prepare_builtin_office_plugin");
       let result = await listPlugins();
@@ -58,8 +58,13 @@ export function PluginManagementPage({ extensions, revision, onClose, onChanged 
       }
       if (!marketplace?.path) throw new Error("Core 未返回 CS Office 的本地市场路径。");
       await installPlugin({ marketplacePath: marketplace.path, pluginName: "cs-office" });
+      if (keepDetail) {
+        onChanged();
+        setRefresh((value) => value + 1);
+        setDetail((await readPlugin({ marketplacePath: marketplace.path, pluginName: "cs-office" })).plugin);
+      }
       setNotice("CS Office 已安装。请新建会话使用办公技能。");
-    });
+    }, !keepDetail);
   }
 
   async function previewBuiltinOffice() {
@@ -71,7 +76,7 @@ export function PluginManagementPage({ extensions, revision, onClose, onChanged 
 
   const officeInstalled = marketplaces.some((marketplace) => marketplace.name === "cs-curated" && marketplace.plugins.some((plugin) => plugin.name === "cs-office"));
 
-  if (detail) return <div className="skill-management-page extension-page"><PluginDetailView key={detail.summary.id} detail={detail} extensions={extensions} onClose={() => setDetail(null)} onChanged={onChanged} /></div>;
+  if (detail) return <div className="skill-management-page extension-page plugin-detail-page"><PluginDetailView key={`${detail.summary.id}:${detail.summary.installed}`} detail={detail} extensions={extensions} onClose={() => setDetail(null)} onChanged={onChanged} onInstall={detail.summary.name === "cs-office" ? () => void installBuiltinOffice(true) : undefined} installing={busy} installError={error} /></div>;
 
   return <div className="skill-management-page extension-page">
     <header className="skill-management-header"><h1>插件</h1><div><button type="button" disabled={busy || loading} onClick={() => { setError(""); setRefresh((value) => value + 1); }}>刷新</button><button type="button" onClick={onClose}>返回会话</button></div></header>

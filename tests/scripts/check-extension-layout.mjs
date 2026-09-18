@@ -22,19 +22,22 @@ await import("/@vite/client");
 const {default: React} = await import("/node_modules/.vite/deps/react.js");
 const {default: ReactDOM} = await import("/node_modules/.vite/deps/react-dom_client.js");
 await import("/src/styles/tokens.css");
+await import("/src/App.css");
 await import("/src/features/commands/CommandPanels.css");
 await import("/src/features/commands/ExtensionManagement.css");
 const {SkillManagementPage} = await import("/src/features/commands/SkillManagementPage.tsx");
 const {PluginManagementPage} = await import("/src/features/commands/PluginManagementPage.tsx");
+const {PluginDetailView} = await import("/src/features/commands/PluginDetailView.tsx");
 const {McpStatusPanel} = await import("/src/features/commands/McpStatusPanel.tsx");
 document.body.style.cssText = "margin:0;background:var(--surface-canvas);color:var(--text-primary);font:13px Segoe UI";
 const root = ReactDOM.createRoot(document.getElementById("root"));
 const noop = () => {};
 const skill = {name:"example-skill",description:"这是一个用于验证长中文描述和操作区域的技能",enabled:true,scope:"user",pluginId:null,path:"C:/cs/skills/demo/SKILL.md"};
 const plugin = {id:"demo",name:"本地插件",installed:true,enabled:true,availability:"AVAILABLE",installPolicy:"AVAILABLE",authPolicy:"ON_USE",interface:null};
+const office = {summary:{...plugin,name:'cs-office',installed:false,version:'0.1.0',interface:{displayName:'CS Office',shortDescription:'创建和编辑本地办公文件',longDescription:'在 Codex Shell 中创建、编辑并验证 PDF、Word 文档和电子表格。所有处理均在本机完成。',developerName:'Codex Shell Contributors'}},skills:['文档','PDF','电子表格'].map((name,i)=>({...skill,name,path:'C:/cs/'+i+'/SKILL.md',description:'创建、编辑并验证本地办公文件'})),apps:[],hooks:[],mcpServers:[]};
 const extensions = {listPlugins:async()=>({marketplaces:[{name:"local-marketplace",path:"C:/market.json",plugins:[plugin,{...plugin,id:'hidden',name:'Game Studio',installed:false}]}],marketplaceLoadErrors:[]}),readPlugin:async()=>({plugin:{summary:plugin,description:'本地办公插件',skills:[skill],hooks:[],apps:[],mcpServers:[]}}),readSkillContent:async()=>('# 技能内容\\n\\n可读取和编辑文档。\\n\\n'.repeat(40)),setSkillEnabled:async(path,enabled)=>enabled};
 window.show = (kind) => {
- const content = kind === "skills" ? React.createElement(SkillManagementPage,{loadSkills:async()=>[skill],revision:0,codexHome:"C:/cs",setEnabled:async()=>false,onClose:noop}) :
+ const content = kind === 'preview' ? React.createElement('div',{className:'skill-management-page extension-page plugin-detail-page'},React.createElement(PluginDetailView,{detail:office,extensions,onClose:noop,onChanged:noop,onInstall:noop})) : kind === "skills" ? React.createElement(SkillManagementPage,{loadSkills:async()=>[skill],revision:0,codexHome:"C:/cs",setEnabled:async()=>false,onClose:noop}) :
  kind === "plugins" ? React.createElement(PluginManagementPage,{extensions,revision:0,onClose:noop,onChanged:noop}) :
  React.createElement(McpStatusPanel,{loadServers:async()=>[],loginServer:async()=>"",reloadServers:async()=>{},readResource:async()=>[],onClose:noop,readConfig:async()=>({version:"v",servers:{}}),writeConfig:async()=>{}});
  root.render(React.createElement("main",{style:{marginLeft:248,marginRight:innerWidth>=1180?288:0,height:"100vh",position:"relative",display:"flex",overflow:"hidden"}},content));
@@ -46,6 +49,17 @@ try {
   await page.waitForFunction(() => typeof window.show === "function");
   for (const [width, height] of [[1440, 900], [1280, 780], [1024, 720], [900, 700]]) {
     await page.setViewportSize({ width, height });
+    await page.evaluate(() => window.show('preview'));
+    await page.getByRole('button', {name:'安装插件'}).waitFor();
+    assert.equal(await page.getByRole('switch').count(), 0);
+    assert.equal(await page.locator('.plugin-detail-heading h1').evaluate(el=>getComputedStyle(el).fontSize),'14px');
+    await page.screenshot({path:join(output, `office-preview-${width}.png`)});
+    await page.getByRole('button', {name:/PDF/}).click();
+    await page.getByRole('dialog').waitFor();
+    await page.getByRole('dialog').getByText('可读取和编辑文档。').first().waitFor();
+    await page.screenshot({path:join(output, `office-content-${width}.png`)});
+    await page.getByRole('button', {name:'关闭技能详情'}).click();
+    await page.getByRole('dialog').waitFor({state:'detached'});
     for (const kind of ["skills", "plugins", "mcp"]) {
       await page.evaluate((view) => window.show(view), kind);
       await page.getByText(kind === "skills" ? /^example-skill/ : kind === "plugins" ? "本地插件" : "添加 MCP").first().waitFor();
@@ -54,7 +68,7 @@ try {
         assert.equal(await page.getByText('添加来源',{exact:true}).count(),0);
         await page.getByText('详情',{exact:true}).last().click();
         await page.screenshot({ path: join(output, `plugin-detail-${width}.png`) });
-        await page.getByRole('switch').uncheck();
+        await page.getByRole('switch').click();
         await page.getByRole('button', { name: /example-skill/ }).click();
         await page.getByRole('dialog').waitFor();
         await page.getByRole('dialog').getByText('可读取和编辑文档。').first().waitFor();
@@ -83,7 +97,7 @@ try {
   await page.evaluate(() => window.show("skills"));
   await page.getByText("从目录安装").waitFor();
   const transition = await page.getByText("从目录安装").evaluate((element) => getComputedStyle(element).transitionDuration);
-  assert.equal(transition, "0s");
+  assert.ok(parseFloat(transition) <= 0.001, `reduced-motion transition: ${transition}`);
   assert.deepEqual(errors, []);
   console.log(JSON.stringify({ result: "PASS", viewports: 4, views: 3, output }));
 } catch (error) {

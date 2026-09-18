@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, FileText, X } from "lucide-react";
+import { ArrowLeft, FileStack, FileText, ChevronRight, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import type { PluginDetail } from "../../generated/app-server/v2/PluginDetail";
 import type { SkillSummary } from "../../generated/app-server/v2/SkillSummary";
@@ -11,9 +11,12 @@ interface Props {
   extensions: ReturnType<typeof useExtensions>;
   onClose: () => void;
   onChanged: () => void;
+  onInstall?: () => void;
+  installing?: boolean;
+  installError?: string;
 }
 
-export function PluginDetailView({ detail, extensions, onClose, onChanged }: Props) {
+export function PluginDetailView({ detail, extensions, onClose, onChanged, onInstall, installing, installError }: Props) {
   const { readSkillContent } = extensions;
   const [skills, setSkills] = useState(detail.skills);
   const [selected, setSelected] = useState<SkillSummary | null>(null);
@@ -48,24 +51,30 @@ export function PluginDetailView({ detail, extensions, onClose, onChanged }: Pro
   }
   const title = (skill: SkillSummary) => skill.interface?.displayName || skill.name;
   const selectedState = skills.find((skill) => skill.path === selected?.path);
-  const control = (skill: SkillSummary) => <input type="checkbox" role="switch" aria-label={title(skill) + " 启用状态"} checked={skill.enabled} disabled={busy || !detail.summary.installed || !skill.path} onChange={() => void toggle(skill)} />;
+  const control = (skill: SkillSummary) => detail.summary.installed
+    ? <button type="button" className="plugin-skill-switch" role="switch" aria-label={title(skill) + " 启用状态"} aria-checked={skill.enabled} disabled={busy || !skill.path} onClick={() => void toggle(skill)}><span /></button>
+    : null;
   return <section className="plugin-detail-view">
-    <header className="skill-management-header"><button type="button" title="返回插件" aria-label="关闭详情" onClick={onClose}><ArrowLeft /></button><h1>{detail.summary.interface?.displayName || detail.summary.name}</h1></header>
-    <p>{detail.description || detail.summary.interface?.shortDescription}</p>
+    <nav><button className="plugin-back" type="button" title="返回插件" aria-label="关闭详情" disabled={installing} onClick={onClose}><ArrowLeft />插件</button></nav>
+    <header className="plugin-detail-heading"><span className="plugin-detail-icon"><FileStack /></span><div><h1>{detail.summary.interface?.displayName || detail.summary.name}</h1><p>{detail.summary.interface?.shortDescription || detail.description}</p></div>{!detail.summary.installed && onInstall ? <button className="plugin-install" type="button" disabled={installing} onClick={onInstall}>{installing ? "正在安装…" : "安装插件"}</button> : <span className="plugin-status">{detail.summary.installed ? "已安装" : "未安装"}</span>}</header>
+    <p>{detail.summary.interface?.longDescription || detail.description}</p>
+    {installError && <p role="alert" className="error">{installError}</p>}
     {error && <p role="alert" className="error">{error}</p>}
-    <h2>技能 {skills.length}</h2>
-    {skills.map((skill) => <div className="extension-row" key={skill.path || skill.name}>
+    <h2 className="plugin-section-title">技能 <span>{skills.length}</span></h2>
+    {!detail.summary.installed && <p className="plugin-install-hint">可查看技能内容，安装插件后可独立启停。</p>}
+    {skills.map((skill) => <div className="plugin-skill-row" key={skill.path || skill.name}>
       <button className="plugin-skill-link" type="button" disabled={!skill.path} onClick={() => setSelected(skill)}>
-        <FileText /><span><strong>{title(skill)}</strong><small>{skill.interface?.shortDescription || skill.shortDescription || skill.description}</small></span>
+        <FileText /><span><strong>{title(skill)}</strong><small title={skill.interface?.shortDescription || skill.shortDescription || skill.description}>{skill.interface?.shortDescription || skill.shortDescription || skill.description}</small></span><ChevronRight className="plugin-skill-chevron" />
       </button>{control(skill)}
     </div>)}
-    <h2>信息</h2>
+    <h2 className="plugin-section-title">信息</h2>
     <dl className="plugin-information"><dt>开发者</dt><dd>{detail.summary.interface?.developerName || "未提供"}</dd><dt>版本</dt><dd>{detail.summary.localVersion || detail.summary.version || "未提供"}</dd><dt>状态</dt><dd>{detail.summary.installed ? "已安装" : "未安装"}</dd></dl>
     {detail.mcpServers.length > 0 && <p>MCP：{detail.mcpServers.join("、")}</p>}
     {detail.hooks.length > 0 && <p>Hooks：{detail.hooks.length} 个</p>}
     {detail.apps.length > 0 && <p>Connector：{detail.apps.map((app) => app.name).join("、")}</p>}
     {selected && <dialog ref={dialog} aria-labelledby="plugin-skill-title" className="plugin-skill-dialog" onClose={() => setSelected(null)} onClick={(event) => { if (event.target === event.currentTarget) { const bounds = event.currentTarget.getBoundingClientRect(); if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) event.currentTarget.close(); } }}>
-      <header><h2 id="plugin-skill-title">{title(selected)}</h2><div>{selectedState && control(selectedState)}<button type="button" autoFocus title="关闭技能详情" aria-label="关闭技能详情" onClick={() => dialog.current?.close()}><X /></button></div></header>
+      <header><span className="plugin-detail-icon"><FileText /></span><div>{selectedState && control(selectedState)}<button className="plugin-dialog-close" type="button" autoFocus title="关闭技能详情" aria-label="关闭技能详情" onClick={() => dialog.current?.close()}><X /></button></div></header>
+      <h2 id="plugin-skill-title">{title(selected)} <span className="plugin-status">Skill</span></h2>
       <p>{selected.interface?.shortDescription || selected.description}</p>
       {error && <p className="error" role="alert">{error}</p>}
       <div className="plugin-skill-content">{loading ? <p role="status">正在读取技能…</p> : contentError ? <p role="alert" className="error">{contentError}</p> : <ReactMarkdown skipHtml components={{ a: ({ children }) => <span>{children}</span>, img: () => null }}>{content}</ReactMarkdown>}</div>

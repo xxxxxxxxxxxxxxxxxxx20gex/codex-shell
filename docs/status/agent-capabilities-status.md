@@ -2,7 +2,7 @@
 
 - 模块职责：把 app-server 的 Skill、MCP、上下文压缩、目标、计划和 Review 映射为 Composer `+` 菜单与 `/` 快捷命令体验。
 - 当前状态：内置目录只收录 CS 适配内容。Skill 目录提供兔子生图 `image-gen`；插件目录提供可选的 `CS Office`，安装后通过 Core 原生插件机制加载 `cs-office:cs-pdf`、`cs-office:cs-documents` 和 `cs-office:cs-spreadsheets`。用户本地 Skill 安装、Core 启停和可恢复卸载、MCP 配置与 OAuth 保留。插件页不展示官方远程候选项，已安装项保留详情及卸载。
-- 最近变更：插件详情改为独立页面，展示 Skill 名称、简介、开发者和版本；CS Office 安装前可通过 `plugin/read` 查看，无需注册市场。Skill 内容通过 `fs/readFile` 读取并渲染 Markdown 正文（不执行 HTML、不加载图片或跳转链接），原生模态弹窗支持独立关闭、Escape、外部点击与焦点恢复。已安装 Skill 使用 `skills/config/write` 独立启停，界面采用 `effectiveEnabled`，未安装项禁用开关。
+- 最近变更：插件详情使用独立紧凑样式，避免旧标题与首按钮样式覆盖；优先展示插件中文 interface 简介与长说明。CS Office 未安装时显示安装入口，不再展示绿色不可操作的开关；安装完成后保留详情并重新读取已安装 Skill 路径及状态，安装错误留在详情页供重试。已安装项使用蓝色圆形开关，通过 `skills/config/write` 写入并采用 `effectiveEnabled`。点击 Skill 打开独立正文滚动弹窗，通过 `fs/readFile` 读取（不执行 HTML、不加载图片或跳转链接），支持关闭、Escape、外部点击与焦点恢复。
 - 草稿行为：选择草稿末尾的 `/skills` 等无参数快捷命令时只移除命令片段，保留正文、图片批注文字和附件；Escape 仅关闭斜杠菜单，不清空草稿。`+` 菜单继续保留全部输入。扩展变更刷新与失效 Skill 选择清理行为不变。
 - 当前接口：`ComposerAddMenu`、`ComposerIntentControl`、`SlashCommandMenu`、`SkillPicker`、`McpStatusPanel`、`ReviewPanel`、`useAgentCommands` 及固定协议 RPC 包装。
 - 能力边界：Plan 是当前唯一启用的实验字段，只在 initialize 能力声明和 `turn/start` 客户端封装中最小扩展，不生成或暴露整套 experimental schema。Codex Core 从模型元数据动态决定自动压缩阈值：缺省为原始上下文窗口的 90%，模型或配置提供的更低值优先且不会超过 90%；Codex Shell 不设置、不复制也不触发该阈值，只展示 app-server 上报的实际用量。独立 CODEX_HOME 只会列出安装到 Codex Shell 环境的 Skills 和 MCP 配置，不自动读取官方 Codex 用户目录。

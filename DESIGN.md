@@ -173,6 +173,7 @@ Radii:
 - `danger`: neutral by default, danger color on hover and in confirmation.
 - All variants share the same typography, icon geometry, focus ring, and disabled behavior.
 - Text buttons use sentence-case action labels. Icon buttons use familiar symbols without redundant visible text.
+- Binary switches use a compact 32px by 20px rounded track and a 16px circular thumb; blue (`--accent-info`) denotes enabled, neutral denotes disabled. An unavailable feature must not show an enabled-looking switch; provide its prerequisite action or explain its availability instead.
 
 ### Focus And Motion
 
