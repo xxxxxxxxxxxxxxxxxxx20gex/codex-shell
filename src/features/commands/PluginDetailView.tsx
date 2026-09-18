@@ -15,7 +15,7 @@ interface Props {
   onInstall?: () => void;
   installing?: boolean;
   installError?: string;
-  loadSkills?: () => Promise<SkillMetadata[]>;
+  loadSkills?: (forceReload?: boolean) => Promise<SkillMetadata[]>;
   revision?: number;
   onOpenSkillPath?: (path: string) => Promise<void>;
 }
@@ -37,7 +37,7 @@ export function PluginDetailView({ detail, extensions, onClose, onChanged, onIns
   useEffect(() => {
     if (!detail.summary.installed || !loadSkills) return;
     let active = true;
-    void loadSkills().then((available) => {
+    void loadSkills(true).then((available) => {
       if (!active) return;
       const enabledByPath = new Map(available.map((skill) => [skillPath(skill.path), skill.enabled]));
       setSkills((items) => items.map((skill) => {
@@ -64,8 +64,20 @@ export function PluginDetailView({ detail, extensions, onClose, onChanged, onIns
     try {
       const enabled = await extensions.setSkillEnabled(skill.path, !skill.enabled);
       setSkills((items) => items.map((item) => item.path === skill.path ? { ...item, enabled } : item));
-      if (enabled === skill.enabled) setError("有效状态受上层配置限制。");
+      if (loadSkills) {
+        try {
+          const available = await loadSkills(true);
+          const enabledByPath = new Map(available.map((item) => [skillPath(item.path), item.enabled]));
+          setSkills((items) => items.map((item) => {
+            const current = enabledByPath.get(skillPath(item.path));
+            return current === undefined ? item : { ...item, enabled: current };
+          }));
+        } catch (value) {
+          setError(`技能已写入，但状态刷新失败：${errorMessage(value)}`);
+        }
+      }
       onChanged();
+      if (enabled === skill.enabled) setError("有效状态受上层配置限制。");
     } catch (value) { setError(errorMessage(value)); }
     finally { setBusy(false); }
   }

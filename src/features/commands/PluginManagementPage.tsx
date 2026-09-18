@@ -14,7 +14,7 @@ interface Props {
   revision: number;
   onClose: () => void;
   onChanged: () => void;
-  loadSkills?: () => Promise<SkillMetadata[]>;
+  loadSkills?: (forceReload?: boolean) => Promise<SkillMetadata[]>;
   onOpenSkillPath?: (path: string) => Promise<void>;
 }
 

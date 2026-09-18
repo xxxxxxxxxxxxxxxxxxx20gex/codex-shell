@@ -5,6 +5,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { PluginManagementPage } from "./PluginManagementPage";
 import { PluginDetailView } from "./PluginDetailView";
 import type { PluginDetail } from "../../generated/app-server/v2/PluginDetail";
+import type { SkillMetadata } from "../../generated/app-server/v2/SkillMetadata";
 import type { useExtensions } from "../extensions/useExtensions";
 
 vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn(async () => "C:/cs/office") }));
@@ -52,8 +53,26 @@ it("uses the Core effective state and preserves the previous state on failure", 
 });
 
 it("uses the effective Skill state in plugin details", async () => {
-  render(<PluginDetailView detail={detail} extensions={extensions({})} loadSkills={async () => [{ ...skill, enabled: false, shortDescription: undefined, interface: undefined, scope: "user", pluginId: "cs-office@cs-curated" }]} onClose={vi.fn()} onChanged={vi.fn()} />);
+  const loadSkills = vi.fn(async (): Promise<SkillMetadata[]> => [{ ...skill, enabled: false, shortDescription: undefined, interface: undefined, scope: "user", pluginId: "cs-office@cs-curated" }]);
+  render(<PluginDetailView detail={detail} extensions={extensions({})} loadSkills={loadSkills} onClose={vi.fn()} onChanged={vi.fn()} />);
   await waitFor(() => expect(screen.getByRole("switch").getAttribute("aria-checked")).toBe("false"));
+  expect(loadSkills).toHaveBeenCalledWith(true);
+});
+
+it("refreshes the Core state after changing a plugin Skill", async () => {
+  const setSkillEnabled = vi.fn(async () => true);
+  const loadSkills = vi.fn<() => Promise<SkillMetadata[]>>()
+    .mockResolvedValueOnce([{ ...skill, enabled: true, shortDescription: undefined, interface: undefined, scope: "user", pluginId: "cs-office@cs-curated" }])
+    .mockResolvedValueOnce([{ ...skill, enabled: false, shortDescription: undefined, interface: undefined, scope: "user", pluginId: "cs-office@cs-curated" }]);
+  const changed = vi.fn();
+  render(<PluginDetailView detail={detail} extensions={extensions({ setSkillEnabled })} loadSkills={loadSkills} onClose={vi.fn()} onChanged={changed} />);
+  await waitFor(() => expect(loadSkills).toHaveBeenCalledWith(true));
+  fireEvent.click(screen.getByRole("switch"));
+  await waitFor(() => expect(screen.getByRole("switch").getAttribute("aria-checked")).toBe("false"));
+  expect(setSkillEnabled).toHaveBeenCalledWith(skill.path, false);
+  expect(loadSkills).toHaveBeenCalledTimes(2);
+  expect(loadSkills).toHaveBeenLastCalledWith(true);
+  expect(changed).toHaveBeenCalledOnce();
 });
 
 it("reports skill file read errors without presenting empty content as success", async () => {
