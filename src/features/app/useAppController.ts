@@ -601,7 +601,6 @@ export function useAppController() {
     setMentions(message.files);
     setImages(message.images);
     setSkills(item.content.flatMap((content) => content.type === "skill" ? [{ name: content.name, path: content.path }] : []));
-    setCommandNotice("正在编辑最后一条消息：发送将替换该回合历史，不撤销文件变更。");
     composerRef.current?.querySelector("textarea")?.focus();
   }
 

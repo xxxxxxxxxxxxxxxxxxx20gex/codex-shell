@@ -104,6 +104,7 @@ it("restores a message without overwriting an existing draft", () => {
   const message = { type: "userMessage" as const, id: "u", clientId: null, content: [{ type: "text" as const, text: "original", text_elements: [] }] };
   act(() => result.current.editLastMessage(message));
   expect(result.current.draft).toBe("original");
+  expect(result.current.commandNotice).toBe("");
   act(() => result.current.setDraft("new draft"));
   act(() => result.current.editLastMessage(message));
   expect(result.current.draft).toBe("new draft");
