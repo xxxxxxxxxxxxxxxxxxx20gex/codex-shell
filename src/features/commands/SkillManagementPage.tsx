@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { BookOpen, Search, Sparkles } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { BookOpen, FolderOpen, Search, Sparkles, X } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import type { SkillMetadata } from "../../generated/app-server/v2/SkillMetadata";
@@ -14,19 +15,35 @@ interface Props {
   setEnabled: (path: string, enabled: boolean) => Promise<boolean>;
   onClose: () => void;
   onChanged?: () => void;
+  readSkillContent?: (path: string) => Promise<string>;
+  onOpenSkillPath?: (path: string) => Promise<void>;
 }
 
-export function SkillManagementPage({ loadSkills, revision, codexHome, setEnabled, onClose, onChanged }: Props) {
+export function SkillManagementPage({ loadSkills, revision, codexHome, setEnabled, onClose, onChanged, readSkillContent, onOpenSkillPath }: Props) {
   const [skills, setSkills] = useState<SkillMetadata[]>([]);
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [refresh, setRefresh] = useState(0);
+  const [selected, setSelected] = useState<SkillMetadata | null>(null);
+  const [content, setContent] = useState("");
+  const [contentError, setContentError] = useState("");
+  const [contentLoading, setContentLoading] = useState(false);
+  const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     let active = true;
     void loadSkills(true).then((items) => { if (active) { setSkills(items); setError(""); } }).catch((value) => { if (active) setError(errorMessage(value)); });
     return () => { active = false; };
   }, [loadSkills, revision, refresh]);
+  useEffect(() => {
+    if (!selected?.path || !readSkillContent) return;
+    let active = true;
+    setContent(""); setContentError(""); setContentLoading(true); dialog.current?.showModal();
+    void readSkillContent(selected.path).then((text) => { if (active) setContent(text.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, "")); })
+      .catch((value) => { if (active) setContentError(errorMessage(value)); })
+      .finally(() => { if (active) setContentLoading(false); });
+    return () => { active = false; };
+  }, [readSkillContent, selected]);
   async function toggle(skill: SkillMetadata) {
     setBusy(true);
     setError("");
@@ -92,11 +109,16 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
           const owned = codexHome && relative.startsWith(root) && /^[^/.][^/]*\/skill\.md$/.test(relative.slice(root.length));
           const scopeLabel = skill.scope === "repo" ? "项目" : skill.scope === "admin" ? "管理员" : null;
           return <article className={`skill-management-card ${!skill.enabled ? "disabled" : ""}`} key={skill.path}>
-            <span className="skill-management-icon">{builtinDocs(skill) || officialDocs(skill) ? <BookOpen aria-hidden="true" /> : <Sparkles aria-hidden="true" />}</span><div><strong>{builtinImage(skill) ? "兔子生图" : builtinDocs(skill) ? "CS Docs" : officialDocs(skill) ? "OpenAI 官方文档" : skill.interface?.displayName || skill.name}{scopeLabel && <em className="skill-scope-badge">{scopeLabel}</em>}</strong><p>{builtinImage(skill) ? "通过兔子渠道生成商品图、海报和场景图片。" : builtinDocs(skill) ? "说明 Codex Shell 当前实现、配置、开发流程和能力边界。" : officialDocs(skill) ? "查询官方 OpenAI、Codex 和 API 文档，不代表 CS 当前实现。" : skill.interface?.shortDescription || skill.shortDescription || skill.description}</p></div>
+            <button type="button" className="skill-management-main" disabled={!readSkillContent} onClick={() => setSelected(skill)}><span className="skill-management-icon">{builtinDocs(skill) || officialDocs(skill) ? <BookOpen aria-hidden="true" /> : <Sparkles aria-hidden="true" />}</span><span><strong>{builtinImage(skill) ? "兔子生图" : builtinDocs(skill) ? "CS Docs" : officialDocs(skill) ? "OpenAI 官方文档" : skill.interface?.displayName || skill.name}{scopeLabel && <em className="skill-scope-badge">{scopeLabel}</em>}</strong><p>{builtinImage(skill) ? "通过兔子渠道生成商品图、海报和场景图片。" : builtinDocs(skill) ? "说明 Codex Shell 当前实现、配置、开发流程和能力边界。" : officialDocs(skill) ? "查询官方 OpenAI、Codex 和 API 文档，不代表 CS 当前实现。" : skill.interface?.shortDescription || skill.shortDescription || skill.description}</p></span></button>
             <span className="skill-management-actions">{owned && skill.scope === "user" && !skill.pluginId && <button type="button" className="skill-management-remove" title="移到 CS 的 uninstalled-skills 目录，可恢复" disabled={busy} onClick={() => void uninstall(skill)}>卸载</button>}<button type="button" className="skill-enable-switch" role="switch" aria-label={`${skill.name} 启用状态`} title={skill.enabled ? "关闭技能" : "启用技能"} aria-checked={skill.enabled} disabled={busy} onClick={() => void toggle(skill)}><span /></button></span>
           </article>;
         })}
       </section>;
     })}
+    {selected && <dialog ref={dialog} className="plugin-skill-dialog skill-detail-dialog" aria-labelledby="skill-detail-title" onClose={() => setSelected(null)}>
+      <header><div>{onOpenSkillPath && <button className="plugin-open-path" type="button" onClick={() => void onOpenSkillPath(selected.path)}><FolderOpen aria-hidden="true" />在资源管理器中打开</button>}</div><button className="plugin-dialog-close" type="button" autoFocus aria-label="关闭技能详情" title="关闭技能详情" onClick={() => dialog.current?.close()}><X /></button></header>
+      <h2 id="skill-detail-title">{selected.interface?.displayName || selected.name}</h2><p>{selected.interface?.shortDescription || selected.shortDescription || selected.description}</p>
+      <div className="plugin-skill-content">{contentLoading ? <p role="status">正在读取技能…</p> : contentError ? <p role="alert" className="error">{contentError}</p> : <ReactMarkdown skipHtml components={{ a: ({ children }) => <span>{children}</span>, img: () => null }}>{content}</ReactMarkdown>}</div>
+    </dialog>}
   </div>;
 }

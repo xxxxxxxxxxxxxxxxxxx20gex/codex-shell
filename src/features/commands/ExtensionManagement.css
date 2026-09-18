@@ -75,6 +75,10 @@
 .skill-management-search { border-radius: var(--radius-control); }
 .skill-management-search input { min-width: 0; }
 .skill-management-card { grid-template-columns: var(--control-height) minmax(0, 1fr) auto; }
+.skill-management-main { display: grid; grid-template-columns: var(--control-height) minmax(0, 1fr); align-items: center; gap: var(--space-4); min-width: 0; padding: 0; border: 0; background: transparent; color: inherit; text-align: left; }
+.skill-management-main:not(:disabled) { cursor: pointer; }
+.skill-management-main:focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; border-radius: var(--radius-control); }
+.skill-management-main > span:last-child { min-width: 0; }
 .skill-management-card strong { flex-wrap: wrap; overflow-wrap: anywhere; }
 .skill-management-icon, .skill-management-toggle svg, .skill-management-search svg { width: 16px; height: 16px; stroke-width: 1.75; }
 .skill-management-card .skill-management-icon { width: var(--control-height); height: var(--control-height); border-radius: var(--radius-control); }

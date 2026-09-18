@@ -164,6 +164,16 @@ it("offers CS Docs as a separate built-in skill", async () => {
   expect(within(group).getByText("卸载")).toBeTruthy();
 });
 
+it("opens an installed Skill row to read its detail and reveal its file", async () => {
+  const skill = { name: "demo", description: "演示技能", path: "C:/cs/skills/demo/SKILL.md", enabled: true, scope: "user", pluginId: null } as SkillMetadata;
+  const onOpenSkillPath = vi.fn(async () => {});
+  render(<SkillManagementPage codexHome="C:/cs" revision={0} loadSkills={async () => [skill]} readSkillContent={async () => "---\nname: demo\n---\n# 技能正文"} onOpenSkillPath={onOpenSkillPath} setEnabled={vi.fn()} onClose={vi.fn()} />);
+  fireEvent.click(await screen.findByRole("button", { name: /demo/ }));
+  expect(await screen.findByText("技能正文")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "在资源管理器中打开" }));
+  expect(onOpenSkillPath).toHaveBeenCalledWith(skill.path);
+});
+
 it("groups same-named personal, system, and CS plugin skills by provenance", async () => {
   const base = { description: "测试", enabled: true, scope: "user", pluginId: null } as const;
   const skills: SkillMetadata[] = [

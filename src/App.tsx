@@ -289,7 +289,7 @@ function App() {
               <PanelRight aria-hidden="true" />
             </button>
           </header>
-          {mainView === "skills" ? <SkillManagementPage loadSkills={session.listSkills} revision={session.skillsRevision} codexHome={session.codexHome} setEnabled={setSkillEnabled} onChanged={session.extensionsChanged} onClose={() => setMainView("conversation")} /> : mainView === "plugins" ? <PluginManagementPage extensions={session.extensions} revision={session.skillsRevision} loadSkills={session.listSkills} onOpenSkillPath={openResourceInExplorer} onChanged={session.extensionsChanged} onClose={() => setMainView("conversation")} /> : <>
+          {mainView === "skills" ? <SkillManagementPage loadSkills={session.listSkills} revision={session.skillsRevision} codexHome={session.codexHome} setEnabled={setSkillEnabled} readSkillContent={session.extensions.readSkillContent} onOpenSkillPath={openResourceInExplorer} onChanged={session.extensionsChanged} onClose={() => setMainView("conversation")} /> : mainView === "plugins" ? <PluginManagementPage extensions={session.extensions} revision={session.skillsRevision} loadSkills={session.listSkills} onOpenSkillPath={openResourceInExplorer} onChanged={session.extensionsChanged} onClose={() => setMainView("conversation")} /> : <>
           {session.turns.length > 0 ? (
             <ConversationTimeline
               key={session.thread?.id ?? "new"}
