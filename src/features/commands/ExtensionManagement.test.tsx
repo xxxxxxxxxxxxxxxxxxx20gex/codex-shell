@@ -153,16 +153,20 @@ it("keeps the built-in skill in its original group through install and uninstall
   expect(within(group).getByText("兔子生图")).toBeTruthy();
 });
 
-it("offers CS Docs as a separate built-in skill", async () => {
+it("keeps CS documentation in the system group through install and uninstall", async () => {
   let installed = false;
   const docs = { name: "cs-docs", description: "CS 文档", path: "C:\\CS\\skills\\cs-docs\\SKILL.md", enabled: false, scope: "user", pluginId: null } as SkillMetadata;
   vi.mocked(invoke).mockImplementation(async (command) => { installed = command === "install_builtin_cs_docs"; return docs.path; });
   render(<SkillManagementPage codexHome="C:/cs" revision={0} loadSkills={async () => installed ? [docs] : []} setEnabled={async () => false} onClose={vi.fn()} />);
-  const group = screen.getByRole("region", { name: "CS 内置" });
-  fireEvent.click(within(group).getByText("CS Docs").parentElement!.parentElement!.querySelector("button")!);
+  const group = screen.getByRole("region", { name: "系统" });
+  fireEvent.click(within(group).getByText("CS 文档").parentElement!.parentElement!.querySelector("button")!);
   await within(group).findByText("卸载");
   expect(invoke).toHaveBeenCalledWith("install_builtin_cs_docs");
   expect(within(group).getByText("卸载")).toBeTruthy();
+  expect(within(group).getByText("CS 文档")).toBeTruthy();
+  fireEvent.click(within(group).getByText("卸载"));
+  await within(group).findByText("安装");
+  expect(within(group).getByText("CS 文档")).toBeTruthy();
 });
 
 it("opens an installed Skill row to read its detail and reveal its file", async () => {
@@ -192,7 +196,7 @@ it("groups independent skills and excludes plugin skills by provenance, not name
   expect(screen.queryByText("personal-plugin")).toBeNull();
   expect(screen.getAllByText("cs-office:cs-pdf")).toHaveLength(1);
   expect(within(screen.getByRole("region", { name: "个人" })).getByText("cs-office:cs-pdf")).toBeTruthy();
-  expect(within(screen.getByRole("region", { name: "CS 内置" })).getByText("CS Docs")).toBeTruthy();
+  expect(within(screen.getByRole("region", { name: "系统" })).getByText("CS 文档")).toBeTruthy();
   expect(within(screen.getByRole("region", { name: "个人" })).getByText("image-gen")).toBeTruthy();
   expect(within(screen.getByRole("region", { name: "系统" })).getByText("system-skill")).toBeTruthy();
   expect(within(screen.getByRole("region", { name: "系统" })).getByText("OpenAI 官方文档")).toBeTruthy();

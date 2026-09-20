@@ -1,4 +1,4 @@
 interface:
-  display_name: "CS Docs"
-  short_description: "Codex Shell implementation and development guidance"
-  default_prompt: "Use $cs-docs to explain the current Codex Shell implementation, configuration, or development workflow."
+  display_name: "CS 文档"
+  short_description: "说明 Codex Shell 当前实现、配置、开发流程和能力边界。"
+  default_prompt: "使用 $cs-docs 解释 Codex Shell 当前的实现、配置或开发流程。"

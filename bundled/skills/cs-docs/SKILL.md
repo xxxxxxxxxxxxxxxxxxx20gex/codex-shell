@@ -1,8 +1,8 @@
 ---
 name: "cs-docs"
-description: "Explain and troubleshoot the current Codex Shell implementation using its repository documents and source. Use for CS-specific behavior, configuration, development, and support questions; do not use as a substitute for official OpenAI or Codex product documentation."
+description: "依据仓库文档和源码，说明与排查 Codex Shell 当前实现。适用于 CS 功能、配置、开发和使用问题；不替代 OpenAI 或 Codex 官方产品文档。"
 metadata:
-  short-description: "Codex Shell implementation and development guidance"
+  short-description: "说明 Codex Shell 当前实现、配置、开发流程和能力边界。"
 ---
 
 # Codex Shell Docs
