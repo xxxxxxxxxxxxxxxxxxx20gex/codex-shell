@@ -199,6 +199,8 @@ CS 采用“代码实现 + 仓库文档 Wiki”协同的开发方式。文档不
 
 环境要求：Windows、Node.js、pnpm、Rust、Visual Studio C++ Build Tools，以及可用的 `codex.exe` Runtime。
 
+完整质量门禁还需要 Bun，用于内置高德地图 Skill 的离线脚本测试；CS 本身的构建不依赖 Bun。使用高德地图 Skill 的机器也需要单独安装 Bun。
+
 ### 换电脑继续开发
 
 源码、脚本、协议类型和 UI 资源都在 Git 仓库中，换机时先克隆 `main`，再安装同样的
@@ -256,6 +258,7 @@ Tauri 开发和构建入口会自动准备并校验该工具，首次需要下�
 pnpm typecheck
 pnpm lint
 pnpm test
+pnpm test:amap
 pnpm test:quality
 pnpm build
 pnpm rust:check

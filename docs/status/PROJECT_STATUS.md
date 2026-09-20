@@ -3,7 +3,7 @@
 - 当前阶段：Milestone 2 - P0 桌面编程工作台；`main` 开发版本为 `0.1.7`，公开稳定版本 `v0.1.6` 已启用 Tauri Updater
 - 总体状态：核心对话、Session、工具活动、审批、文件、Diff 和模型配置可用；已发布带 minisign 更新签名的 NSIS Windows 安装包，Windows Authenticode 代码签名、CI 与 Runtime 恢复能力尚未完成。
 - 文档边界：本文件只记录跨模块当前快照、项目级风险、下一里程碑和完整验证基线。模块行为和定向证据以 [模块状态索引](../README.md#当前状态) 为准，历史由 Git 保留。
-- 最后更新：2026-09-18
+- 最后更新：2026-09-20
 
 ## 跨模块当前快照
 
@@ -45,4 +45,4 @@
 
 - 2026-09-16 v0.1.6 发布基线：TypeScript、ESLint、Vitest（64 文件 / 330 项）、production build、Knip、Cargo check、42 项 Rust 单测、严格 Clippy、`git diff --check` 和四项四视口布局脚本通过。codex-cli 0.154.0-alpha.6.2 兼容门禁、本地模拟网关协议探针及 Debug 构建通过；剪贴板图片落盘、MCP userVerification 拒绝边界与 Inspector 视图宽度包含定向回归。NSIS 安装器已生成并通过 updater 公钥验签，三项 GitHub Release 资产已上传；尚未完成干净机器升级验收。
 
-- 当前开发质量回归见 [测试与发布状态](testing-release-status.md)。旧版本的验证过程由 Git 历史保留，不再在当前快照累计重复记录。
+- 2026-09-20 开发质量基线：`pnpm test:quality` 通过，含 TypeScript、ESLint、68 文件 / 372 项前端测试、14 项高德 Bun 测试、production build、Knip、Cargo check、43 项 Rust 单测（1 项交互测试忽略）、Clippy 和 diff 检查。四尺寸扩展布局通过；未执行真实模型、高德 API 或 WebView2 人工验收，Vite chunk 体积警告保留。详细边界见 [测试与发布状态](testing-release-status.md)。旧版本的验证过程由 Git 历史保留，不再在当前快照累计重复记录。

@@ -1,5 +1,7 @@
 # 测试与发布状态
 
+- 当前开发完整验证（2026-09-20）：`pnpm test:quality` 通过：TypeScript、ESLint、68 文件 / 372 项前端测试、14 项高德 Bun 测试、production build、Knip、Cargo check、43 项 Rust 单测（1 项交互测试忽略）、严格 Clippy 和 diff 检查。高德离线测试已接入完整门禁，运行门禁需安装 Bun；新增覆盖安装完成但默认禁用失败、有效状态仍启用、响应正文超时、403 不重试、503 重试及网络错误脱敏和计时器释放。前三类缺陷测试在修复前复现失败、修复后通过。四尺寸扩展布局通过，未执行真实高德 API 或 WebView2 人工验收，保留 Vite chunk 体积警告。
+
 - 高德地图内置 Skill（2026-09-20）：TypeScript、ESLint、前端 68 文件 / 370 项测试、Skill 校验、Cargo check、43 项 Rust 单测（1 项交互测试忽略）、严格 Clippy、production build 和 Debug 构建通过。`pnpm test:amap` 对应 Bun 离线测试 10 项通过，覆盖缺密钥、非法输入、业务及网络错误和错误信息不含测试密钥；真实隔离 Runtime 验证高德 Skill 发现、中文元数据及禁用生效，四尺寸扩展布局通过。未调用真实高德 API、未验收 WebView2 安装点击或干净机器 Bun 环境。
 
 - CS 文档中文展示与系统分组（2026-09-20）：TypeScript、ESLint、扩展管理 15 项测试、Skill 结构校验、Cargo check、production build 和 Debug 构建通过；四尺寸扩展布局检查通过。首次布局检查因预览服务未启动超时，启动后重跑通过；Python 命令别名不可用，改用本机 Conda Python 校验通过。未执行 WebView2 人工验收。

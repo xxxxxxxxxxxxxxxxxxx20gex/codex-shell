@@ -11,6 +11,9 @@ try {
     & pnpm test
     if ($LASTEXITCODE -ne 0) { throw "Vitest 测试失败，退出码：$LASTEXITCODE" }
 
+    & pnpm test:amap
+    if ($LASTEXITCODE -ne 0) { throw "高德 Skill 离线测试失败，退出码：$LASTEXITCODE" }
+
     & pnpm build
     if ($LASTEXITCODE -ne 0) { throw "生产构建失败，退出码：$LASTEXITCODE" }
 

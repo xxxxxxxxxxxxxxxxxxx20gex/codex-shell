@@ -182,6 +182,24 @@ it("preserves personal AMap skills and reports built-in installation failure", a
   expect(within(screen.getByText("高德地图").closest("article")!).getByText("安装")).toBeTruthy();
 });
 
+it("shows an installed skill when its initial disable fails", async () => {
+  let installed = false;
+  const amap: SkillMetadata = { name: "amap", description: "地图", path: "C:/cs/skills/amap/SKILL.md", enabled: true, scope: "user", pluginId: null };
+  vi.mocked(invoke).mockImplementation(async () => { installed = true; return amap.path; });
+  render(<SkillManagementPage codexHome="C:/cs" revision={0} loadSkills={async () => installed ? [amap] : []} setEnabled={async () => { throw new Error("Core 断开"); }} onClose={vi.fn()} />);
+  fireEvent.click(within(screen.getByText("高德地图").closest("article")!).getByText("安装"));
+  await screen.findByText("卸载");
+  expect((screen.getByRole("alert")).textContent).toContain("已安装");
+  expect((screen.getByRole("alert")).textContent).toContain("Core 断开");
+});
+
+it("reports when policy prevents disabling a newly installed skill", async () => {
+  vi.mocked(invoke).mockResolvedValue("C:/cs/skills/amap/SKILL.md");
+  render(<SkillManagementPage codexHome="C:/cs" revision={0} loadSkills={async () => []} setEnabled={async () => true} onClose={vi.fn()} />);
+  fireEvent.click(within(screen.getByText("高德地图").closest("article")!).getByText("安装"));
+  expect((await screen.findByRole("alert")).textContent).toContain("仍为启用");
+});
+
 it("keeps CS documentation in the system group through install and uninstall", async () => {
   let installed = false;
   const docs = { name: "cs-docs", description: "CS 文档", path: "C:\\CS\\skills\\cs-docs\\SKILL.md", enabled: false, scope: "user", pluginId: null } as SkillMetadata;

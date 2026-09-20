@@ -4,7 +4,6 @@ import {
   DEFAULT_RETRY_COUNT,
   DEFAULT_TIMEOUT_MS,
   ExitCode,
-  toErrorMessage,
 } from "./config.ts";
 
 export interface HttpGetRequest {
@@ -44,11 +43,11 @@ export async function getJsonWithRetry(request: HttpGetRequest): Promise<unknown
 
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     const isLastAttempt = attempt === retries;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    let retryable = true;
 
     try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), timeoutMs);
-
       const response = await fetch(urlWithParams, {
         method: "GET",
         signal: controller.signal,
@@ -57,14 +56,8 @@ export async function getJsonWithRetry(request: HttpGetRequest): Promise<unknown
         },
       });
 
-      clearTimeout(timer);
-
       if (!response.ok) {
-        if (!isLastAttempt && (response.status >= 500 || response.status === 429)) {
-          await sleep(DEFAULT_BACKOFF_MS * 2 ** attempt);
-          continue;
-        }
-
+        retryable = response.status >= 500 || response.status === 429;
         throw new CliError(
           `HTTP request failed with status ${response.status} for ${request.url}`,
           ExitCode.NETWORK,
@@ -75,7 +68,7 @@ export async function getJsonWithRetry(request: HttpGetRequest): Promise<unknown
         return await response.json();
       } catch (jsonError) {
         throw new CliError(
-          `Failed to parse JSON response from ${request.url}: ${toErrorMessage(jsonError)}`,
+          `Failed to read JSON response from ${request.url}`,
           ExitCode.NETWORK,
           { cause: jsonError },
         );
@@ -83,15 +76,13 @@ export async function getJsonWithRetry(request: HttpGetRequest): Promise<unknown
     } catch (error) {
       lastError = error;
 
-      if (error instanceof CliError && error.exitCode !== ExitCode.NETWORK) {
+      if (!retryable || (error instanceof CliError && error.exitCode !== ExitCode.NETWORK)) {
         throw error;
       }
-
-      if (!isLastAttempt) {
-        await sleep(DEFAULT_BACKOFF_MS * 2 ** attempt);
-        continue;
-      }
+    } finally {
+      clearTimeout(timer);
     }
+    if (!isLastAttempt) await sleep(DEFAULT_BACKOFF_MS * 2 ** attempt);
   }
 
   if (lastError instanceof CliError) {
@@ -99,7 +90,7 @@ export async function getJsonWithRetry(request: HttpGetRequest): Promise<unknown
   }
 
   throw new CliError(
-    `Network request failed after retries: ${toErrorMessage(lastError)}`,
+    `Network request failed after retries for ${request.url}`,
     ExitCode.NETWORK,
     { cause: lastError },
   );

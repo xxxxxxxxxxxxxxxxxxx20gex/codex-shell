@@ -23,6 +23,7 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
   const [skills, setSkills] = useState<SkillMetadata[]>([]);
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [busy, setBusy] = useState(false);
   const [refresh, setRefresh] = useState(0);
   const [selected, setSelected] = useState<SkillMetadata | null>(null);
@@ -31,7 +32,7 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
   const [contentLoading, setContentLoading] = useState(false);
   useEffect(() => {
     let active = true;
-    void loadSkills(true).then((items) => { if (active) { setSkills(items); setError(""); } }).catch((value) => { if (active) setError(errorMessage(value)); });
+    void loadSkills(true).then((items) => { if (active) { setSkills(items); setLoadError(""); } }).catch((value) => { if (active) setLoadError(errorMessage(value)); });
     return () => { active = false; };
   }, [loadSkills, revision, refresh]);
   useEffect(() => {
@@ -69,7 +70,11 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
     setBusy(true); setError("");
     try {
       const path = await invoke<string>(command);
-      await setEnabled(path, false);
+      try {
+        if (await setEnabled(path, false)) setError("技能已安装，但有效状态仍为启用，请检查上层配置。");
+      } catch (value) {
+        setError(`技能已安装，但默认关闭失败，请检查开关状态：${errorMessage(value)}`);
+      }
       onChanged?.(); setRefresh((value) => value + 1);
     } catch (value) { setError(errorMessage(value)); }
     finally { setBusy(false); }
@@ -100,6 +105,7 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
     <header className="skill-management-header"><div><h1>技能</h1></div><div><button type="button" disabled={busy} onClick={() => void install()}>从目录安装</button><button type="button" disabled={busy} onClick={() => setRefresh((value) => value + 1)}>刷新</button><button type="button" onClick={onClose}>返回会话</button></div></header>
     <div className="skill-management-search"><Search aria-hidden="true" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索技能" /></div>
     {error && <p className="error" role="alert">{error}</p>}
+    {loadError && <p className="error" role="alert">{loadError}</p>}
     {["CS 内置", "个人", "系统"].map((group) => {
       const items = filtered.filter((skill) => !skill.pluginId && groupOf(skill) === group).sort((a, b) => Number(builtinImage(b)) - Number(builtinImage(a)) || Number(builtinDocs(b)) - Number(builtinDocs(a)));
       if (!items.length && !(group === "CS 内置" && (showBuiltinImage || showBuiltinAmap)) && !(group === "系统" && showBuiltinDocs)) return null;
