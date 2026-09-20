@@ -7,17 +7,12 @@
 - 当前接口：`resolve_codex_executable`、`resolve_codex_home`、`set_codex_home`、`resolve_default_project_directory`、按激活渠道生成启动参数的 `app_server_arguments`、`catalog::materialize_catalog`、返回进程身份的 `app_server_start`、`app_server_stop`。
 - 路径边界：应用配置仍由 Tauri `app_config_dir` 计算；CODEX_HOME 默认由用户目录动态拼接为 `.codex-shell`；默认项目目录由系统文档已知目录动态拼接为 `Codex-Shell/YYYY-MM-DD`；Thread 的执行目录仍由 `thread/start.cwd` 决定，源码不包含开发机仓库绝对路径。
 - 认证边界：app-server 使用独立 `codex_shell_gateway` provider，`env_key=OPENAI_API_KEY` 且 `requires_openai_auth=false`，密钥来自当前激活渠道的凭据，只从当前进程注入的环境变量读取，不继承宿主 Codex 登录状态；同一时刻只有一个 provider，切换渠道等于重启进程。
-- 协议校正（2026-09-11）：兼容门禁统一使用实验导出并从源码检查调用面；生成基线与当前 Runtime 对齐。真实探针的分页及运行中换模限制见 [协议状态](protocol-status.md)，不修改历史发布资产或 Runtime 二进制。
+- 协议校正：兼容门禁统一使用实验导出并从源码检查调用面；生成基线与当前 Runtime 对齐。真实探针的分页及运行中换模限制见 [协议状态](protocol-status.md)，不修改历史发布资产或 Runtime 二进制。
 - 发布选源：2026-09-20 自动发现的更新 Runtime 移除了 CS 依赖的 `thread/rollback`，被兼容门禁拒绝。本版继续使用哈希匹配的 0.154.0-alpha.6.2 同源文件组，打包时通过 `CODEX_SHELL_RUNTIME` 显式选择；发布后不得直接用本机新版替换，需先适配协议并通过门禁。
 - 已知问题：Runtime 二进制被 Git 忽略，跨机器发布需要安全复制同版本 Runtime 与无密码 signing key；兼容门禁覆盖现有生成文件、方法、通知和反向请求保留，但不替代真实 smoke；旧 CODEX_HOME 迁移仍依赖同卷 `rename`，跨卷用户目录需要单独的可恢复复制方案；进程崩溃后的自动恢复尚未实现。实时 stderr 仅保存在当前窗口的有界内存中，应用退出后仍以 Core 的 SQLite 日志为长期诊断来源。
 - 发布状态：2026-09-20，v0.1.7 携带 codex-cli 0.154.0-alpha.6.2 与三个同源 helper；Updater 公钥未更换。主程序和 helper 哈希、协议兼容门禁、真实隔离协议及扩展探针通过；签名安装器、`.sig` 和 `latest.json` 发布到 GitHub。签名验证与人工检查边界见 [测试与发布状态](testing-release-status.md)。
 - 交互校正：Windows Sandbox 未配置或需要更新时，运行时提示会明确引导到“设置 → 运行环境 → 使用管理员权限配置”，不再指向不存在的右侧状态页。
 - 提示跳转：运行提示携带明确目标；Windows Sandbox 配置与结果进入“运行环境”，其他 app-server、配置、Guardian、模型与 MCP 提示进入“诊断”，不再统一跳到无关的运行环境页面。
-- 验证证据（2026-09-08）：Sandbox 提示文案定向 Vitest、TypeScript、ESLint、production build 和 `cargo check --manifest-path src-tauri/Cargo.toml` 均通过。
-- 验证证据：2026-09-04，`codex-cli 0.153.0-alpha.5` 与同目录 helper 通过协议兼容门禁；真实第三方网关探针在低推理模式下产生两次 `commandExecution` 并完成 Turn，独立 Cargo target 中 `cargo check`、14 项 Rust 单元测试和严格 Clippy 均通过。2026-09-07，`v0.1.4` manifest 更新为 `codex-cli 0.153.4` 并记录主 Runtime 与三个同源 helper 的 SHA-256，正式 Release 上传安装器、`.sig` 和 `latest.json`。
-- 验证证据（2026-09-10）：使用与 `app_server_arguments` 相同的 `-c` 组合启动 `codex-cli 0.153.4`，DeepSeek 渠道注入 CODEX_HOME 内的目录后 `model/list` 只返回 `deepseek-flash`、`deepseek-v4-pro`；同一路由去掉 `model_catalog_json`、以及不注入目录的 OpenAI 渠道，均返回内置 6 个 GPT 模型；探针不发送 Turn，未使用真实上游密钥。
 - 相关决策：[ADR-001：使用原版 Codex app-server](../decisions/ADR-001-unmodified-codex-app-server.md)、[ADR-002：隔离运行数据与凭据](../decisions/ADR-002-isolated-runtime-data.md)、[ADR-004：以厂商分组的渠道承载模型路由](../decisions/ADR-004-model-provider-channels.md)。
-- 工具验证（2026-09-14）：官方压缩包与 exe 哈希校验、重复 staging、错误来源拒绝通过；Cargo check、39 项 Rust 单测、严格 Clippy、TypeScript、ESLint、328 项 Vitest 与 Debug 构建通过。`pnpm runtime:probe-tools` 使用独立临时 CODEX_HOME 和不含宿主工具目录的 PATH，真实 app-server → PowerShell → 内置 rg 完成版本检查与源码搜索，不发送模型请求。未验收 elevated Windows Sandbox 或干净机器安装；用户自行覆写命令环境或 Shell profile 仍可能覆盖 PATH。
-- v0.1.6 历史验证（2026-09-16）：codex-cli 0.154.0-alpha.6.2 及三个同目录 helper 通过协议兼容门禁、真实本地协议探针、Debug 构建和生产打包；该版本安装器哈希由 GitHub Release 资产保存。当前 v0.1.7 资产与哈希以本文件的发布状态和 [测试与发布状态](testing-release-status.md) 为准。
-- 提示跳转验证（2026-09-17）：通知横幅定向测试验证诊断与运行环境目标分流；完整质量检查和 Debug 构建通过。未执行真实 app-server 错误注入，完整结果见测试与发布状态。
+- 验证证据：2026-09-20 发布检查通过 Runtime 哈希、协议兼容门禁及隔离协议／扩展探针。2026-09-14 内置 rg 探针在排除宿主工具目录的 PATH 下通过真实 app-server → PowerShell 调用；未覆盖 elevated Sandbox 或干净机器。完整基线见 [测试与发布](testing-release-status.md)。
 - 最后更新：2026-09-20
