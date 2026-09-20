@@ -7,7 +7,7 @@
 ## 背景
 
 - 单一 provider 配置只能表达「一个地址 + 一个密钥 + 一份参数」，既无法表达同一厂商的多条路由（官方直连、中转站、备用 Key），也无法接入 DeepSeek 这类非 OpenAI 官方模型。
-- 「只支持几个 GPT 模型」的原因不是协议限制：CS 从不设置 `model_catalog_json`，所以 `model/list` 始终返回 Codex Core 的内置目录。该结论已用真实 app-server 实测确认（`design-plans/model-channels-v1.md` §2.2）。
+- 「只支持几个 GPT 模型」的原因不是协议限制：CS 从不设置 `model_catalog_json`，所以 `model/list` 始终返回 Codex Core 的内置目录。该结论已用真实 app-server 实测确认（[当时的设计记录 §2.2](https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/blob/b17da6b2439ac81f59d46d128fa9f7abbc3d091c/design-plans/model-channels-v1.md)，引用固定历史版本）。
 - 用户在高级设置里反复输入 Base URL 与 API Key；切换目标后，之前的参数还会被覆盖。
 - 安全边界不变：密钥只能进 Windows 凭据管理器、前端不可回读；`codex app-server` 是唯一执行核心，provider 是进程级属性。
 

@@ -28,7 +28,7 @@ CS 将模型回答、执行过程、文件变更、回复文件和折叠过程�
 
 ### 管理扩展
 
-- 左侧 **Skills** 只管理独立技能，按 **CS 内置、个人、系统** 分组。兔子生图 `image-gen` 安装前后留在 CS 内置组；CS 文档 `cs-docs` 安装前后固定在系统组，两者安装后默认关闭。CS 文档 只说明 Codex Shell 当前实现，不替代官方 OpenAI/Codex 文档。个人组包含独立用户技能；系统组汇总系统、项目和管理员技能，后两者保留来源标签。支持从本地目录安装个人技能；项目和管理员技能不提供卸载入口；CS 文档仍支持安装、启停和卸载，底层使用 CS 隔离用户目录。插件附带的技能只在对应插件详情中管理；对话 `/skills` 仍汇总所有已启用的独立及插件技能，并标注插件来源。
+- 左侧 **Skills** 只管理独立技能，按 **CS 内置、个人、系统** 分组。兔子生图 `image-gen` 和高德地图 `amap` 安装前后留在 CS 内置组；CS 文档 `cs-docs` 安装前后固定在系统组。内置技能安装后会请求 Core 默认关闭，失败或有效状态仍启用时明确提示。CS 文档 只说明 Codex Shell 当前实现，不替代官方 OpenAI/Codex 文档。个人组包含独立用户技能；系统组汇总系统、项目和管理员技能，后两者保留来源标签。支持从本地目录安装个人技能；项目和管理员技能不提供卸载入口；CS 文档仍支持安装、启停和卸载，底层使用 CS 隔离用户目录。插件附带的技能只在对应插件详情中管理；对话 `/skills` 仍汇总所有已启用的独立及插件技能，并标注插件来源。
 - 在 Composer 的 **MCP** 面板添加、编辑、启停或删除用户级服务器，支持 stdio 命令、JSON 参数数组、环境变量引用及 HTTP。原配置中未编辑的工具策略等字段会保留；项目和 Plugin 配置不会被此表单删除。
 - HTTP Bearer Token 输入后保存到 Windows Credential Manager，普通配置只写环境变量名。新增或更换 Token 后，等待任务结束，在“设置 → 运行环境”重启使其生效；不会自动中断当前任务。stdio 服务的密钥可通过系统环境变量引用。
 - 左侧 **插件** 使用单一列表，不展示市场分类和官方或第三方市场候选项，也不提供市场来源添加入口。随应用提供的 `CS Office` 固定在首项，安装前后不移动，只切换安装／卸载按钮；每项保留简短说明和详情。安装、状态读取和卸载均使用 Core 原生插件接口。已有其他插件继续提供详情和卸载，不删除已有来源、配置或文件。插件与 Skill 安装、卸载成功后直接更新列表，不额外显示成功提示；失败保留错误反馈。
@@ -295,24 +295,26 @@ Runtime 不要求与上一次 manifest 的完整版本号相同。暂存时会�
 个人开发者推荐使用本机打包并手动上传 Release。当前项目使用无密码的 Tauri signing key，发布时只需保管私钥文件；私钥本身仍不能提交仓库：
 
 ```powershell
-pnpm release:package -Repository "OWNER/REPOSITORY" -Tag "v0.1.6"
+pnpm release:package -Repository "OWNER/REPOSITORY"
 ```
 
 私钥位于默认路径 `%USERPROFILE%\\.tauri\\codex-shell.key` 时无需额外参数；也可以显式指定：
 
 ```powershell
-pnpm release:package -SigningKeyPath "C:\\secure\\codex-shell.key" -Repository "OWNER/REPOSITORY" -Tag "v0.1.6"
+pnpm release:package -SigningKeyPath "C:\\secure\\codex-shell.key" -Repository "OWNER/REPOSITORY"
 ```
 
+未传 `-Tag` 时，脚本从 `src-tauri/tauri.conf.json` 读取版本并生成 `vX.Y.Z`；显式传入的 Tag 必须与配置版本一致。发布前同步 package.json、Cargo.toml 与 Tauri 配置版本。
+
 命令会暂存本机 Runtime、运行协议兼容门禁、构建签名 NSIS 安装包，并在
-`release-artifacts/v0.1.6/` 生成三个必须上传到同一个 GitHub Release 的文件：安装器、`.sig` 和
-`latest.json`。在 GitHub 创建同名 Tag/Release（例如 `v0.1.6`）并上传这三个文件后，已安装的旧版本
+`release-artifacts/vX.Y.Z/` 生成三个必须上传到同一个 GitHub Release 的文件：安装器、`.sig` 和
+`latest.json`。在 GitHub 创建与本次构建版本一致的 Tag/Release 并上传这三个文件后，已安装的旧版本
 即可通过“检查并更新”自动发现、验签和安装新版本。换电脑时只需准备同版本 Runtime 和签名私钥、
 Rust/Node 构建环境并重新执行该命令；用户端不需要任何额外配置。
 这里的签名是 Tauri Updater 的 minisign 签名，不是 Windows Authenticode 代码签名；
 安装器仍可能显示未知发布者，不能据此承诺消除 SmartScreen 提示。
 
-脚本会校验四个 companion binaries 和 `codex-cli` 版本。Runtime 不应放入仓库；公开分发前还必须
+脚本会校验主 Runtime、三个同源 companion binaries 和 `codex-cli` 版本。Runtime 不应放入仓库；公开分发前还必须
 确认其许可证和再分发授权。签名私钥不提交 Git，换电脑时通过安全方式复制到新机器。
 
 独立测试脚本统一放在 [tests/scripts](tests/scripts)；源码旁的 `*.test.*` 和 Rust 测试保持就地维护，方便复用模块夹具和类型。
