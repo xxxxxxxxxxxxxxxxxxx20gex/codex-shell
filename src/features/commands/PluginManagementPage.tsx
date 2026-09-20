@@ -90,7 +90,7 @@ export function PluginManagementPage({ extensions, revision, onClose, onChanged,
   if (detail) return <div className="skill-management-page extension-page plugin-detail-page"><PluginDetailView key={`${detail.summary.id}:${detail.summary.installed}`} detail={detail} extensions={extensions} onClose={() => setDetail(null)} onChanged={onChanged} onInstall={detail.summary.name === "cs-office" ? () => void installBuiltinOffice(true) : undefined} installing={busy} installError={error} loadSkills={loadSkills} revision={revision} onOpenSkillPath={onOpenSkillPath} /></div>;
 
   return <div className="skill-management-page extension-page">
-    <header className="skill-management-header"><h1>插件</h1><div><button type="button" disabled={busy || loading} onClick={() => { setError(""); setRefresh((value) => value + 1); }}>刷新</button><button type="button" onClick={onClose}>返回会话</button></div></header>
+    <header className="skill-management-header"><h1>插件</h1><div><button type="button" onClick={onClose}>返回会话</button></div></header>
     {error && <p className="error" role="alert">{error}</p>}
     <div className="extension-plugin-list" aria-busy={loading}>
       {entries.map((entry) => <article className="skill-management-card" key={entry.key}>

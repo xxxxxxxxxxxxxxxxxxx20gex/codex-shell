@@ -1,6 +1,7 @@
 # 智能体命令与扩展能力状态
 
 - 模块职责：把 app-server 的 Skill、MCP、上下文压缩、目标、计划和 Review 映射为 Composer `+` 菜单与 `/` 快捷命令体验。
+- 列表更新：Skills 和插件列表顶部不提供手动刷新按钮；进入页面、扩展 revision 变化及安装／卸载后仍自动读取列表，Skill 启停后重新读取有效状态。读取失败保留错误，可退出后重新进入页面重试。
 - 当前状态：内置目录只收录 CS 适配内容。Skill 目录提供兔子生图 `image-gen`、高德地图 `amap` 和只说明 Codex Shell 当前实现的 `cs-docs`；插件目录提供可选的 `CS Office`，安装后通过 Core 原生插件机制加载 `cs-office:cs-pdf`、`cs-office:cs-documents` 和 `cs-office:cs-spreadsheets`。用户本地 Skill 安装、Core 启停和可恢复卸载、MCP 配置与 OAuth 保留。插件页不展示官方远程候选项，已安装项保留详情及卸载。
 - 插件详情：插件列表整行点击进入详情，右侧保留安装／卸载。未安装时用 `plugin/read` 提供源目录预览；已安装时强制读取 `skills/list` 并按 `pluginId` 筛选，正文读取、资源管理器定位和 `skills/config/write` 全部使用实际安装路径，不使用市场源目录路径。初次加载或刷新失败时禁用开关，避免误写预览配置。写入采用 `effectiveEnabled` 并重新读取有效状态。内容弹窗支持关闭、Escape、外部点击与焦点恢复。
 - 内置高德地图：`amap` 复用现有安装及可恢复卸载，按隔离 CODEX_HOME 的实际路径识别，安装前后固定在 CS 内置组，保留同名个人技能。包内使用 Bun 脚本、中文元数据和 Windows 示例；依赖外部 Bun 与 AMAP_MAPS_API_KEY，不包含用户密钥、不覆盖已有安装。CS 文档仍固定在系统组，实际 Core scope 不变。

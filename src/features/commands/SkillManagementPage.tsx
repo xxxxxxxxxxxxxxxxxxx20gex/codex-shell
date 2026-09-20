@@ -102,7 +102,7 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
   const showBuiltinAmap = !skills.some(builtinAmap) && (!normalized || "高德地图 amap 查询地点 规划路线 测量距离 天气".toLowerCase().includes(normalized));
   const selectedState = skills.find((skill) => skill.path === selected?.path) || selected;
   return <div className="skill-management-page extension-catalog">
-    <header className="skill-management-header"><div><h1>技能</h1></div><div><button type="button" disabled={busy} onClick={() => void install()}>从目录安装</button><button type="button" disabled={busy} onClick={() => setRefresh((value) => value + 1)}>刷新</button><button type="button" onClick={onClose}>返回会话</button></div></header>
+    <header className="skill-management-header"><div><h1>技能</h1></div><div><button type="button" disabled={busy} onClick={() => void install()}>从目录安装</button><button type="button" onClick={onClose}>返回会话</button></div></header>
     <div className="skill-management-search"><Search aria-hidden="true" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索技能" /></div>
     {error && <p className="error" role="alert">{error}</p>}
     {loadError && <p className="error" role="alert">{loadError}</p>}
