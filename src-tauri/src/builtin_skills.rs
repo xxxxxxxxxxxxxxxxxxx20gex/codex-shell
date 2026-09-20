@@ -49,7 +49,6 @@ fn source(app: &AppHandle, skill_name: &str) -> Result<PathBuf, String> {
     Ok(source)
 }
 
-#[tauri::command]
 fn install(app: AppHandle, skill_name: &str, label: &str) -> Result<String, String> {
     let source = source(&app, skill_name)?;
     let codex_home = crate::codex_home::resolve_codex_home(&app)?;
