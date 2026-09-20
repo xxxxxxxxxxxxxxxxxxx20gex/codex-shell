@@ -74,3 +74,8 @@ pub fn install_builtin_skill(app: AppHandle) -> Result<String, String> {
 pub fn install_builtin_cs_docs(app: AppHandle) -> Result<String, String> {
     install(app, CS_DOCS_SKILL_NAME, "cs-docs")
 }
+
+#[tauri::command]
+pub fn install_builtin_amap(app: AppHandle) -> Result<String, String> {
+    install(app, "amap", "高德地图")
+}

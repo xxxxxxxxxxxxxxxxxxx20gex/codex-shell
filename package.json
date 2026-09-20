@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
     "test": "vitest run",
+    "test:amap": "bun test ./bundled/skills/amap/tests/cli.bun.ts ./bundled/skills/amap/tests/commands.bun.ts ./bundled/skills/amap/tests/http.bun.ts",
     "quality:knip": "knip --files --exports --dependencies --reporter compact",
     "runtime:stage": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stage-runtime.ps1",
     "tools:stage": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stage-ripgrep.ps1",

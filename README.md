@@ -39,6 +39,7 @@ CS 将模型回答、执行过程、文件变更、回复文件和折叠过程�
 MCP 的 reload、OAuth 和已启用插件的服务可能主动连接各自服务端；这些通信独立于模型请求。
 
 CS 内置目录的兔子 `image-gen` Skill 使用独立生图配置，首次使用见 [配置说明](bundled/skills/image-gen/references/cli.md#首次配置)。
+CS 内置目录也提供“高德地图” `amap`，支持地点、路线、距离和天气查询，安装后默认关闭，安装和卸载前后都留在内置组。它依赖系统 PATH 中的 Bun，以及 Windows 用户环境变量 `AMAP_MAPS_API_KEY` 中的高德 Web 服务 API Key；设置后重启 CS。CS 不内置 Bun、不复用对话渠道密钥。已有安装不会被覆盖；更新内置 Skill 请先备份自定义内容，再卸载重装。命令示例见 [高德地图](bundled/skills/amap/references/examples.md)。
 `CS Office` 第一版只处理本地 PDF、DOCX、XLSX、XLSM、CSV 和 TSV，不包含 Google Workspace、ChatGPT Excel Add-in 或实时 Excel 控制。它会检测系统可用的 Python 3 与格式处理包；LibreOffice 和 Poppler 可用于页面渲染检查。缺少依赖时 Skill 会报告具体缺项，不会自动安装软件或把结构检查描述成视觉验收。
 更新应用不会覆盖已安装的用户 Skill；已有安装请备份自定义修改后，在 CS 内置目录卸载并重新安装新版，再按需启用。
 

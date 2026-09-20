@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
+import { mkdtemp, mkdir, writeFile, rm, cp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawn } from "node:child_process";
@@ -10,6 +10,7 @@ const root = resolve(import.meta.dirname, "../..");
 const temporary = await mkdtemp(join(tmpdir(), "cs-extensions-probe-"));
 const home = join(temporary, "home");
 const repo = join(temporary, "market");
+await cp(join(root, "bundled/skills/amap"), join(home, "skills/amap"), { recursive: true });
 await mkdir(join(home, "skills", "probe"), { recursive: true });
 await writeFile(join(home, "skills", "probe", "SKILL.md"), "---\nname: probe\ndescription: Local verification fixture\n---\nVerify extensions.\n");
 await mkdir(join(repo, ".agents", "plugins"), { recursive: true });
@@ -50,6 +51,13 @@ try {
   const skills = await request("skills/list", { cwds: [temporary], forceReload: true });
   const skill = skills.data.flatMap((entry) => entry.skills).find((item) => item.name === "probe");
   assert.ok(skill, "CS user skill discovered");
+  const amap = skills.data.flatMap((entry) => entry.skills).find((item) => item.name === "amap");
+  assert.ok(amap, "bundled AMap discovered");
+  assert.equal(amap.interface.displayName, "高德地图");
+  assert.equal((await request("skills/config/write", { path: amap.path, enabled: false })).effectiveEnabled, false);
+  const amapDisabled = await request("skills/list", { cwds: [temporary], forceReload: true });
+  assert.equal(amapDisabled.data.flatMap((entry) => entry.skills).find((item) => item.name === "amap").enabled, false);
+  console.log("PASS AMap: bundled discovery, Chinese metadata and disabled state");
   assert.equal((await request("skills/config/write", { path: skill.path, enabled: false })).effectiveEnabled, false);
   const disabled = await request("skills/list", { cwds: [temporary], forceReload: true });
   assert.equal(disabled.data.flatMap((entry) => entry.skills).find((item) => item.name === "probe").enabled, false);

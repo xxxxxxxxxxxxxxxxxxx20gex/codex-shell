@@ -153,6 +153,35 @@ it("keeps the built-in skill in its original group through install and uninstall
   expect(within(group).getByText("兔子生图")).toBeTruthy();
 });
 
+it("installs AMap disabled and keeps it in the built-in group through uninstall", async () => {
+  let installed = false;
+  const amap: SkillMetadata = { name: "amap", description: "Map", path: "C:\\CS\\skills\\amap\\SKILL.md", enabled: false, scope: "user", pluginId: null };
+  const setEnabled = vi.fn(async () => false);
+  vi.mocked(invoke).mockImplementation(async (command) => { installed = command === "install_builtin_amap"; return amap.path; });
+  render(<SkillManagementPage codexHome="C:/cs" revision={0} loadSkills={async () => installed ? [amap] : []} setEnabled={setEnabled} onClose={vi.fn()} />);
+  const group = screen.getByRole("region", { name: "CS 内置" });
+  fireEvent.click(within(within(group).getByText("高德地图").closest("article")!).getByText("安装"));
+  await within(group).findByText("卸载");
+  expect(invoke).toHaveBeenCalledWith("install_builtin_amap");
+  expect(setEnabled).toHaveBeenCalledWith(amap.path, false);
+  expect(screen.queryByRole("region", { name: "个人" })).toBeNull();
+  fireEvent.change(screen.getByPlaceholderText("搜索技能"), { target: { value: "高德" } });
+  expect(within(group).getByText("高德地图")).toBeTruthy();
+  fireEvent.click(within(group).getByText("卸载"));
+  await within(group).findByText("安装");
+  expect(within(group).getByText("高德地图")).toBeTruthy();
+});
+
+it("preserves personal AMap skills and reports built-in installation failure", async () => {
+  vi.mocked(invoke).mockRejectedValueOnce(new Error("复制失败"));
+  render(<SkillManagementPage codexHome="C:/cs" revision={0} loadSkills={async () => [{ name: "amap", description: "个人地图", path: "C:/other/amap/SKILL.md", enabled: true, scope: "user", pluginId: null }]} setEnabled={vi.fn()} onClose={vi.fn()} />);
+  await screen.findByText("个人地图");
+  fireEvent.click(within(screen.getByText("高德地图").closest("article")!).getByText("安装"));
+  expect((await screen.findByRole("alert")).textContent).toBe("复制失败");
+  expect(within(screen.getByRole("region", { name: "个人" })).getByText("amap")).toBeTruthy();
+  expect(within(screen.getByText("高德地图").closest("article")!).getByText("安装")).toBeTruthy();
+});
+
 it("keeps CS documentation in the system group through install and uninstall", async () => {
   let installed = false;
   const docs = { name: "cs-docs", description: "CS 文档", path: "C:\\CS\\skills\\cs-docs\\SKILL.md", enabled: false, scope: "user", pluginId: null } as SkillMetadata;

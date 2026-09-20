@@ -1,5 +1,7 @@
 # 测试与发布状态
 
+- 高德地图内置 Skill（2026-09-20）：TypeScript、ESLint、前端 68 文件 / 370 项测试、Skill 校验、Cargo check、43 项 Rust 单测（1 项交互测试忽略）、严格 Clippy、production build 和 Debug 构建通过。`pnpm test:amap` 对应 Bun 离线测试 10 项通过，覆盖缺密钥、非法输入、业务及网络错误和错误信息不含测试密钥；真实隔离 Runtime 验证高德 Skill 发现、中文元数据及禁用生效，四尺寸扩展布局通过。未调用真实高德 API、未验收 WebView2 安装点击或干净机器 Bun 环境。
+
 - CS 文档中文展示与系统分组（2026-09-20）：TypeScript、ESLint、扩展管理 15 项测试、Skill 结构校验、Cargo check、production build 和 Debug 构建通过；四尺寸扩展布局检查通过。首次布局检查因预览服务未启动超时，启动后重跑通过；Python 命令别名不可用，改用本机 Conda Python 校验通过。未执行 WebView2 人工验收。
 
 - 模块职责：维护类型检查、静态检查、前后端测试、构建、Runtime 兼容门禁和 Windows 发布证据。
