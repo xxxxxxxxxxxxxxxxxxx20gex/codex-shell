@@ -18,6 +18,6 @@
 - 验证证据（2026-09-10）：使用与 `app_server_arguments` 相同的 `-c` 组合启动 `codex-cli 0.153.4`，DeepSeek 渠道注入 CODEX_HOME 内的目录后 `model/list` 只返回 `deepseek-flash`、`deepseek-v4-pro`；同一路由去掉 `model_catalog_json`、以及不注入目录的 OpenAI 渠道，均返回内置 6 个 GPT 模型；探针不发送 Turn，未使用真实上游密钥。
 - 相关决策：[ADR-001：使用原版 Codex app-server](../decisions/ADR-001-unmodified-codex-app-server.md)、[ADR-002：隔离运行数据与凭据](../decisions/ADR-002-isolated-runtime-data.md)、[ADR-004：以厂商分组的渠道承载模型路由](../decisions/ADR-004-model-provider-channels.md)。
 - 工具验证（2026-09-14）：官方压缩包与 exe 哈希校验、重复 staging、错误来源拒绝通过；Cargo check、39 项 Rust 单测、严格 Clippy、TypeScript、ESLint、328 项 Vitest 与 Debug 构建通过。`pnpm runtime:probe-tools` 使用独立临时 CODEX_HOME 和不含宿主工具目录的 PATH，真实 app-server → PowerShell → 内置 rg 完成版本检查与源码搜索，不发送模型请求。未验收 elevated Windows Sandbox 或干净机器安装；用户自行覆写命令环境或 Shell profile 仍可能覆盖 PATH。
-- 验证证据（2026-09-16）：codex-cli 0.154.0-alpha.6.2 及三个同目录 helper 已重新暂存，主 Runtime SHA-256 为 `081e4de4be8e38fac6ed4d95e3b1a0b9f6d31c090ddc36e1696b349fe406f575`；协议兼容门禁、真实本地协议探针、Debug 构建和生产打包通过。最终安装器 SHA-256 为 `4542c20c49e49854bb3aabb9ef724cbe635ccd2b782a633b6491a34388ce83b9`。
+- v0.1.6 历史验证（2026-09-16）：codex-cli 0.154.0-alpha.6.2 及三个同目录 helper 通过协议兼容门禁、真实本地协议探针、Debug 构建和生产打包；该版本安装器哈希由 GitHub Release 资产保存。当前 v0.1.7 资产与哈希以本文件的发布状态和 [测试与发布状态](testing-release-status.md) 为准。
 - 提示跳转验证（2026-09-17）：通知横幅定向测试验证诊断与运行环境目标分流；完整质量检查和 Debug 构建通过。未执行真实 app-server 错误注入，完整结果见测试与发布状态。
 - 最后更新：2026-09-20
