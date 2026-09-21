@@ -290,6 +290,7 @@ describe("useThreadController", () => {
       approvalPolicy: "on-request",
       approvalsReviewer: "user",
       sandbox: "read-only",
+      developerInstructions: expect.stringContaining("你当前运行于 Codex Shell"),
     }));
     expect(client.startTurn).toHaveBeenCalledWith(expect.objectContaining({
       approvalPolicy: "on-request",
@@ -312,7 +313,7 @@ describe("useThreadController", () => {
     });
 
     expect(client.startThread).toHaveBeenCalledWith(expect.objectContaining({
-      developerInstructions: "Answer with the conclusion first.",
+      developerInstructions: expect.stringContaining("</cs_host_context>\n\nAnswer with the conclusion first."),
     }));
     expect(client.startTurn).toHaveBeenCalledWith(expect.not.objectContaining({
       developerInstructions: expect.anything(),

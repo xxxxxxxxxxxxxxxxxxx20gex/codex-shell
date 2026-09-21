@@ -15,6 +15,7 @@ import {
 import type { ModelSettings, PersonalizationSettings } from "../models/types";
 import type { AppServerClient } from "./appServerClient";
 import { buildUserInput, type FileMention, type ImageAttachment, type SkillMention } from "./sessionInput";
+import { buildHostInstructions } from "./hostInstructions";
 import type { AgentSessionAction } from "./sessionState";
 import type { QueuedTurnInput } from "./useQueuedTurns";
 import { canSteerRunningTurn, type RunningTurn, type RunningTurnKind } from "./useRunningTurns";
@@ -116,7 +117,7 @@ export function useTurnExecution(props: Props) {
           approvalPolicy: permissions.approvalPolicy,
           approvalsReviewer: getApprovalsReviewer(props.permissionMode, props.approvalReviewer),
           sandbox: permissions.sandbox,
-          developerInstructions: props.personalization?.customInstructions || null,
+          developerInstructions: buildHostInstructions(props.personalization?.customInstructions),
           ephemeral: false,
         });
         threadId = response.thread.id;

@@ -91,6 +91,36 @@ function setup() {
 }
 
 describe("useSideChat", () => {
+  it("provides host context when creating a side chat without personalization", async () => {
+    const { client, result } = setup();
+    await act(async () => { await result.current.openChat(); });
+    expect(client.startThread).toHaveBeenCalledWith(expect.objectContaining({
+      developerInstructions: expect.stringContaining("你当前运行于 Codex Shell"),
+    }));
+  });
+
+  it("includes host context and personalization when forking a side chat", async () => {
+    const client = {
+      forkThread: vi.fn(async () => ({ thread: fakeThread() })),
+    } as unknown as AppServerClient;
+    const { result } = renderHook(() => useSideChat({
+      clientRef: { current: client },
+      ensureConnected: async () => client,
+      mainThread: fakeThread(),
+      mainTurns: [fakeTurn("completed")],
+      settings,
+      personalization: { customInstructions: "先给结论", theme: "dark" },
+      markThreadRunning: vi.fn(),
+      markThreadStopped: vi.fn(),
+    }));
+    await act(async () => { expect(await result.current.openChat()).toBe(true); });
+    expect(client.forkThread).toHaveBeenCalledWith(expect.objectContaining({
+      developerInstructions: expect.stringContaining("</cs_host_context>\n\n先给结论"),
+      ephemeral: true,
+      sandbox: "read-only",
+    }));
+  });
+
   it("interrupts an active turn before unsubscribing on close", async () => {
     const { interruptTurn, unsubscribeThread, result } = setup();
     await act(async () => {

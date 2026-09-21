@@ -10,6 +10,7 @@ import { buildUserInput, type FileMention, type ImageAttachment, type SkillMenti
 import type { AppServerClient } from "./appServerClient";
 import { agentSessionReducer, initialAgentSessionState } from "./sessionState";
 import { errorMessage } from "../../shared/errors";
+import { buildHostInstructions } from "./hostInstructions";
 
 interface Props {
   clientRef: MutableRefObject<AppServerClient | null>;
@@ -130,7 +131,7 @@ export function useSideChat({
             serviceTier: settings.serviceTier,
             cwd: String(mainThread.cwd),
             ...permissions,
-            developerInstructions: personalization?.customInstructions || null,
+            developerInstructions: buildHostInstructions(personalization?.customInstructions),
             ephemeral: true,
             threadSource: "codex-shell-side-chat",
           })
@@ -139,7 +140,7 @@ export function useSideChat({
             serviceTier: settings.serviceTier,
             cwd: mainThread ? String(mainThread.cwd) : null,
             ...permissions,
-            developerInstructions: personalization?.customInstructions || null,
+            developerInstructions: buildHostInstructions(personalization?.customInstructions),
             ephemeral: true,
             threadSource: "codex-shell-side-chat",
           });

@@ -2,11 +2,11 @@
 
 - 模块职责：维护质量门禁、Runtime 兼容验证、Windows 发布证据及未覆盖边界。模块行为由对应状态文档维护，历史测试流水账由 Git 保留。
 - 当前状态：v0.1.7 已正式发布，`release/v0.1.7` 和 `v0.1.7` Tag 指向发布提交，`main` 从该提交继续开发；NSIS 安装器、Updater 签名和 `latest.json` 已上传 GitHub。后续功能从 `main` 开发，下一版本号尚未确定。未配置 Windows Authenticode，SmartScreen 仍可能提示未知发布者。
-- 最近变更：高德 Skill 的 Bun 离线测试已接入完整质量门禁。内置 Skill 安装后默认禁用失败、有效状态仍启用、响应正文超时、永久 HTTP 错误不重试、暂时错误重试、网络错误脱敏和计时器释放均有回归覆盖。
+- 最近变更：新增 CS 宿主说明及侧聊注入回归，覆盖未配置个性化、保留用户指令和侧聊分叉；历史恢复保持原有指令。定向行为及未验证边界见 [项目与线程](workspace-thread-status.md)。高德 Skill 的 Bun 离线测试继续包含在完整质量门禁中。
 - 当前接口：`pnpm test:quality` 依次执行 TypeScript、ESLint、Vitest、`pnpm test:amap`、production build、Knip、`pnpm rust:check` 和 diff 检查。完整门禁需要 Bun；Rust 入口包含 Cargo check、单元测试和严格 Clippy。协议、真实 Runtime 及五项四视口布局检查独立运行，入口见 [测试脚本说明](../../tests/scripts/README.md) 和 `package.json`。
 - 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；Vite 主 chunk 超过 500 kB；`cargo fmt --check` 尚未纳入门禁，现有 Rust 文件有格式差异。
 - 下一步：补真实系统凭据、多渠道对话、第三方 MCP OAuth，以及干净 Windows 用户环境安装和升级验收。
-- 最后更新：2026-09-20
+- 最后更新：2026-09-21
 
 ## 当前开发验证基线
 
