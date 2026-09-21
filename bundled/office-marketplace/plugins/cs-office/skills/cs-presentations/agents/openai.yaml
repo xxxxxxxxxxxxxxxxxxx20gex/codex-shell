@@ -1,0 +1,4 @@
+interface:
+  display_name: "演示文稿"
+  short_description: "读取、创建和编辑本地 PPTX 演示文稿，保留模板、可编辑图表和表格并检查幻灯片排版"
+  default_prompt: "使用 $cs-presentations 处理提供的文件，保留原件并检查结果。"

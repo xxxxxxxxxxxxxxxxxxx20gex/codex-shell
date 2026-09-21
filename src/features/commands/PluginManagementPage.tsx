@@ -78,7 +78,7 @@ export function PluginManagementPage({ extensions, revision, onClose, onChanged,
   const installed = marketplaces.flatMap((marketplace) => marketplace.plugins.map((plugin) => ({ marketplace, plugin })));
   const office = installed.find(({ marketplace, plugin }) => marketplace.name === "cs-curated" && plugin.name === "cs-office");
   const entries = [
-    { key: "cs-office", name: "CS Office", description: "创建和编辑本地 PDF、Word 文档和电子表格", installed: office },
+    { key: "cs-office", name: "CS Office", description: "PDF、Word、表格、演示文稿与办公模板", installed: office },
     ...installed.filter((entry) => entry !== office).map((entry) => ({ key: entry.plugin.id, name: entry.plugin.interface?.displayName || entry.plugin.name, description: entry.plugin.interface?.shortDescription, installed: entry })),
   ];
   function openDetail(entry: typeof entries[number]) {

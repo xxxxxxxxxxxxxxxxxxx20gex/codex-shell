@@ -8,12 +8,16 @@ REQUIRED_MODULES = {
     "pdf": ("pypdf", "pdfplumber", "reportlab"),
     "documents": ("docx", "lxml"),
     "spreadsheets": ("openpyxl",),
+    "presentations": ("pptx",),
+    "templates": (),
 }
 
 OPTIONAL_TOOLS = {
     "pdf": ("pdftoppm", "pdfinfo"),
     "documents": ("soffice", "pdftoppm"),
     "spreadsheets": ("soffice",),
+    "presentations": ("soffice",),
+    "templates": ("soffice",),
 }
 
 
@@ -29,7 +33,8 @@ def main() -> int:
     tools = {name: shutil.which(name) for name in OPTIONAL_TOOLS[args.mode]}
     print(
         json.dumps(
-            {"mode": args.mode, "requiredModules": modules, "optionalTools": tools},
+            {"mode": args.mode, "requiredModules": modules, "optionalTools": tools,
+             "renderModules": {"pymupdf": importlib.util.find_spec("pymupdf") is not None}},
             ensure_ascii=True,
         )
     )

@@ -1,23 +1,22 @@
 ---
 name: cs-documents
-description: Create, edit, and verify local DOCX Word documents. Use when the requested input or deliverable is DOCX; do not use for PDF or spreadsheet work.
+description: "创建、编辑、批注和检查本地 DOCX 文档，保留模板结构并验证排版。适用于 Word 文件，不用于 PDF、电子表格或在线 Google Docs。"
 ---
 
-# Documents
+# Word 文档
 
-Create and edit local `.docx` files while preserving readable structure and existing document intent. Preserve the source file unless the user explicitly asks to replace it.
+处理本地 DOCX；仅询问文档内容时只读。修改时先写副本，保留用户未要求更改的样式、节、页眉页脚、编号和关系。已有模板优先于默认排版。
 
-## Dependencies
+## 工具与检查
 
-Before file work, resolve this Skill directory and run `../../scripts/check_dependencies.py documents` with an available Python 3 interpreter. Use `python-docx` for normal authoring and `lxml` only when a requested OOXML feature is not exposed by `python-docx`. LibreOffice and Poppler enable visual verification. Do not install missing software without the user's authorization; report the exact missing dependency.
+先按 [本地运行与渲染](../../references/local-runtime.md) 检查 documents 依赖。使用 python-docx；批注需要支持 add_comment 的版本。复杂修订先读 [批注与修订](references/revisions.md)，不可把直接替换正文称为修订模式。
 
-## Workflow
+## 工作流程
 
-- Inspect an existing document before editing. Preserve sections, styles, tables, headers, footers, relationships, and numbering that are outside the requested change.
-- Use semantic Word styles for titles and headings. Keep typography, spacing, margins, tables, and page breaks consistent with the document's audience and any supplied reference.
-- Prefer `python-docx` for creation and ordinary edits. Use direct OOXML changes only for a concrete unsupported feature, and keep the affected XML scope narrow.
-- Do not claim support for macros, signatures, tracked changes, comments, fields, or content controls unless the requested feature was explicitly implemented and verified. Preserve unsupported structures where possible.
-- Reopen the final DOCX with `python-docx`, verify the ZIP package, expected paragraphs, tables, sections, and non-empty media relationships.
-- When LibreOffice and Poppler are available, convert a copy to PDF, render every page to PNG, and inspect for clipping, overlap, missing glyphs, broken tables, and unintended blank pages.
-- If rendering dependencies are unavailable, report that only structural validation was completed. Never describe the document as visually verified.
-- Keep QA files temporary and return only the requested DOCX unless the user asks for other formats.
+1. 检查正文、表格、节、图片、链接和已有批注/修订；识别模板与仅供摘录的资料。
+2. 根据受众确定结构，开头说明主题、目的和结论。使用 Word 的 Title、Heading 等语义样式，正文避免空泛口号；事实、假设和建议分开。
+3. 表格用于重复记录、对比或数据，长篇解释使用段落。设置列宽、单元格留白、可扩展行高及重复表头；防止中文缺字、标题孤行和跨页表格断裂。
+4. 模板任务保留纸张、边距、字体、标题层级、编号、页眉页脚及图片比例。不要把整个段落赋值为 text 而抹掉其中的超链接和运行格式。
+5. 保存后重新打开，检查 ZIP、段落、表格、节及图片关系；批注/修订还要按专项规则核对。
+6. 通过共享渲染脚本生成页面 PNG，逐页查看并修正截断、重叠、空白页、缺字。没有渲染依赖时说明只做了结构验证。
+7. 返回最终 DOCX 的绝对路径链接；不默认交付 QA 临时文件。Google Docs 请求需另有可用连接器，不能把本地 DOCX 宣称为在线文档。

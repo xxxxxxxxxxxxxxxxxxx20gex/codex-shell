@@ -1,4 +1,4 @@
 interface:
   display_name: "电子表格"
-  short_description: "创建、分析并验证本地工作簿"
-  default_prompt: "整理这些数据并生成可继续编辑的工作簿。"
+  short_description: "创建、编辑和分析本地 XLSX、XLSM、CSV、TSV，核对公式、数据类型与排版"
+  default_prompt: "使用 $cs-spreadsheets 处理提供的文件，保留原件并检查结果。"

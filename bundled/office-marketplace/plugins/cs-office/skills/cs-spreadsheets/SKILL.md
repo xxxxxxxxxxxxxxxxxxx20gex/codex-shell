@@ -1,24 +1,26 @@
 ---
 name: cs-spreadsheets
-description: Create, edit, analyze, and verify local XLSX, XLSM, CSV, and TSV files. Use for standalone spreadsheet files; do not use for live control of an open Excel application.
+description: "创建、编辑和分析本地 XLSX、XLSM、CSV、TSV，核对公式、数据类型与排版。不控制已打开的 Excel，不连接 ChatGPT 加载项或 Google Sheets。"
 ---
 
-# Spreadsheets
+# 电子表格
 
-Work on standalone local spreadsheet files. This Skill does not connect to the ChatGPT Excel add-in or control a live Excel session.
+只处理本地独立文件；先按 [本地运行与渲染](../../references/local-runtime.md) 检查 spreadsheets 依赖。CSV/TSV 的读取写入可用 Python 标准库，不必为此安装工作簿依赖。
 
-## Dependencies
+## 保留与计算
 
-Before workbook work, resolve this Skill directory and run `../../scripts/check_dependencies.py spreadsheets` with an available Python 3 interpreter. Use `openpyxl` for XLSX/XLSM and the Python standard library for CSV/TSV. LibreOffice enables rendered verification. Do not install missing software without the user's authorization; report the exact missing dependency.
+- 修改前检查所有工作表、使用范围、公式、合并单元格、隐藏状态、表格、图表、验证规则及打印设置；按任务范围改动。
+- 使用 openpyxl 处理工作簿。数字、日期、百分比使用对应类型；编号、邮编和账户标识保留为文字，防止前导零丢失。
+- 派生值尽量保留公式；固定参数放在清楚标识的输入单元格。公式应可追踪，引用与填充方向正确，跨表名称加引号。
+- 不用笼统 IFERROR 或零值掩盖异常。核对单位、期间、分母、舍入和关键汇总与来源一致。
+- openpyxl 不计算公式。只有实际经过 Excel/LibreOffice 计算并检查缓存值，才可声称已重算；渲染导出不会自动更新原始 XLSX。
+- XLSM 用 keep_vba=True 保存；不得默认执行宏。复杂绘图、外部链接和不支持的 OOXML 结构可能在保存时丢失，先评估并用副本验证。
+- 外部文字若以 = 开头，确认是公式还是原始文字，避免将不可信文本变成可执行公式。
 
-## Workflow
+## 验证与交付
 
-- Inspect existing sheet names, dimensions, formulas, styles, merged cells, tables, charts, validations, hidden state, freeze panes, and print settings before editing.
-- Preserve formulas as formulas and keep calculations auditable. `openpyxl` does not calculate formulas, so do not claim recalculated values unless a spreadsheet engine actually recalculated the workbook.
-- Use formulas for derived values when users are expected to continue editing the workbook. Keep raw inputs separate from derived summaries when the task benefits from that distinction.
-- Use stable headers, appropriate number formats, readable column widths, filters, and freeze panes. Avoid decorative dashboards unless requested.
-- Preserve VBA in `.xlsm` by loading and saving with `keep_vba=True`; do not create, edit, or execute macros unless explicitly requested and separately authorized.
-- Reopen the written workbook with `data_only=False` and verify expected sheets, formulas, cell types, tables, charts, and validations. For CSV/TSV, verify encoding, delimiter, row widths, and round-trip parsing.
-- When LibreOffice is available, recalculate a temporary copy when appropriate, export relevant sheets to PDF, and inspect the rendered pages for truncation, overflow, unreadable scaling, and blank output.
-- If rendering or recalculation is unavailable, state that limitation and distinguish structural checks from visual checks.
-- Return only the requested workbook or delimited file; do not include temporary exports unless requested.
+重新打开工作簿，核对工作表、类型、公式、图表和验证规则。对新增及受影响公式检查代表性输入和汇总；检查 #REF!、#DIV/0!、#VALUE! 等错误时区分原有问题。
+
+列宽、换行、冻结窗格、筛选、数字格式服务于阅读。通过共享渲染脚本检查打印范围；大表需合理分页，不能把整个工作簿挤成一页。局部改动检查受影响工作表并对照其他表无意外变化。CSV/TSV 核对编码、分隔符、引号及往返解析。
+
+只交付用户请求的文件；渲染或重算不可用时明确说明。不把导出文件称为在线 Google Sheets 或实时 Excel 控制。

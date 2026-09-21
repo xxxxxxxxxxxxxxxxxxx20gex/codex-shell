@@ -3,7 +3,7 @@
 - 当前阶段：Milestone 2 - P0 桌面编程工作台；公开稳定版本 `v0.1.7` 已启用 Tauri Updater，`main` 从 `v0.1.7` 发布提交继续开发。下一版版本号待下一次版本规划确定。
 - 总体状态：核心对话、Session、工具活动、审批、文件、Diff 和模型配置可用；已发布带 minisign 更新签名的 NSIS Windows 安装包，Windows Authenticode 代码签名、CI 与 Runtime 恢复能力尚未完成。
 - 文档边界：本文件只记录跨模块当前快照、项目级风险、下一里程碑和完整验证基线。模块行为和定向证据以 [模块状态索引](../README.md#当前状态) 为准，历史由 Git 保留。
-- 最后更新：2026-09-20
+- 最后更新：2026-09-22
 
 ## 跨模块当前快照
 
@@ -43,6 +43,7 @@
 
 ## 完整验证基线
 
+- 当前开发基线（2026-09-22）：类型、ESLint、376 项前端测试、14 项高德测试、production build、Knip、Cargo check、44 项 Rust 单测（1 项忽略）及 Clippy 通过；Skill 末尾空行修正后 diff 检查通过。办公脚本 7 项测试、五项 Skill 的真实隔离扩展探针和四尺寸扩展布局通过，Debug 已重建。Office 转 PDF 尚未经过独立 LibreOffice 实测，完整边界见 [测试与发布](testing-release-status.md)。
 - 2026-09-20 v0.1.7 发布基线：完整质量门禁通过，含 TypeScript、ESLint、68 文件 / 372 项前端测试、14 项高德离线测试、production build、Knip、Cargo check、43 项 Rust 单测（1 项交互测试忽略）、Clippy 与 diff 检查。codex-cli 0.154.0-alpha.6.2 的哈希、协议兼容门禁、协议表面测试、隔离协议及扩展探针通过；签名 NSIS 安装器、`.sig` 与 `latest.json` 完成生成和校验。
 - 用户已完成部分真实 CS 桌面检查且未报告问题；具体场景未枚举，不视为全量桌面、真实外部 API 或干净机器升级验收。四尺寸扩展布局及 Debug 构建沿用同日已通过记录。
 - 本机自动发现的更新 Runtime 缺少 `thread/rollback`，被兼容门禁拒绝；本版继续绑定上述已验证 Runtime，不修改 Core 或绕过门禁。

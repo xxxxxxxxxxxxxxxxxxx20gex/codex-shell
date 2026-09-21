@@ -47,7 +47,11 @@ MCP 的 reload、OAuth 和已启用插件的服务可能主动连接各自服务
 
 CS 内置目录的兔子 `image-gen` Skill 使用独立生图配置，首次使用见 [配置说明](bundled/skills/image-gen/references/cli.md#首次配置)。
 CS 内置目录也提供“高德地图” `amap`，支持地点、路线、距离和天气查询，安装后默认关闭，安装和卸载前后都留在内置组。它依赖系统 PATH 中的 Bun，以及 Windows 用户环境变量 `AMAP_MAPS_API_KEY` 中的高德 Web 服务 API Key；设置后重启 CS。CS 不内置 Bun、不复用对话渠道密钥。已有安装不会被覆盖；更新内置 Skill 请先备份自定义内容，再卸载重装。命令示例见 [高德地图](bundled/skills/amap/references/examples.md)。
-`CS Office` 第一版只处理本地 PDF、DOCX、XLSX、XLSM、CSV 和 TSV，不包含 Google Workspace、ChatGPT Excel Add-in 或实时 Excel 控制。它会检测系统可用的 Python 3 与格式处理包；LibreOffice 和 Poppler 可用于页面渲染检查。缺少依赖时 Skill 会报告具体缺项，不会自动安装软件或把结构检查描述成视觉验收。
+`CS Office` 提供五类中文技能：PDF、Word 文档、电子表格、演示文稿和办公模板。支持本地 PDF、DOCX、XLSX、XLSM、CSV、TSV、PPTX；模板可保留参考原件和预览，生成 CS 个人 Skill。它参考官方办公插件的文件检查、模板保留与渲染验收流程，使用本地 Python 开源格式库，不依赖官方私有运行库。不包含 Google Workspace、ChatGPT Excel Add-in、实时 Excel 控制或官方模板图库。
+
+办公依赖需在本机另行准备：使用可用的 Python 3（含 Conda），格式包见 [依赖清单](bundled/office-marketplace/plugins/cs-office/scripts/requirements.txt)。PDF 渲染使用 PyMuPDF；Word、PPT 和表格的页面渲染还需 LibreOffice，可通过 PATH 或脚本 `--soffice` 指定。缺项会明确报告，不将结构检查描述成视觉验收。详见 [本地运行与渲染](bundled/office-marketplace/plugins/cs-office/references/local-runtime.md)。
+
+已安装旧版 CS Office 时，先备份个人改动，再在插件页卸载并重新安装，新建对话使用新版技能。应用会在预览或安装时刷新内置市场源目录并保留旧目录备份；不会直接覆盖已安装插件缓存。
 更新应用不会覆盖已安装的用户 Skill；已有安装请备份自定义修改后，在 CS 内置目录卸载并重新安装新版，再按需启用。
 
 ```text

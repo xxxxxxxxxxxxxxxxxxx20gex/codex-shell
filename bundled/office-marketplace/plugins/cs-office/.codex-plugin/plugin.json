@@ -1,24 +1,18 @@
 {
   "name": "cs-office",
-  "version": "0.1.0",
-  "description": "Create and edit local PDF, DOCX, XLSX, CSV, and TSV files in Codex Shell.",
-  "author": {
-    "name": "Codex Shell Contributors"
-  },
+  "version": "0.1.0+codex.20260921162848",
+  "description": "在 CS 中处理本地 PDF、Word、电子表格、演示文稿，并保存可复用办公模板。",
+  "author": { "name": "Codex Shell Contributors" },
   "license": "MIT",
-  "keywords": ["office", "pdf", "docx", "xlsx", "csv"],
+  "keywords": ["office", "pdf", "docx", "xlsx", "csv", "pptx", "templates"],
   "skills": "./skills/",
   "interface": {
     "displayName": "CS Office",
-    "shortDescription": "创建和编辑本地办公文件",
-    "longDescription": "在 Codex Shell 中创建、编辑并验证 PDF、DOCX、XLSX、CSV 和 TSV 文件。所有处理均在本机完成，不依赖 ChatGPT 账户或云端 Connector。",
+    "shortDescription": "本地文档、表格、演示文稿与模板",
+    "longDescription": "提供 PDF、Word 文档、电子表格、演示文稿和办公模板五类中文技能。本地处理依赖 Python 格式库和可选 LibreOffice，不依赖官方私有运行库、ChatGPT 账户或云端 Connector；不提供在线文档和实时 Excel 控制。",
     "developerName": "Codex Shell Contributors",
     "category": "Productivity",
     "capabilities": ["Interactive", "Write"],
-    "defaultPrompt": [
-      "创建一份排版清晰的 Word 文档",
-      "整理这些数据并生成 Excel 工作簿",
-      "读取并检查这个 PDF 文件"
-    ]
+    "defaultPrompt": ["创建一份排版清晰的 Word 文档", "整理数据并生成 Excel 工作簿", "根据这份资料制作演示文稿"]
   }
 }

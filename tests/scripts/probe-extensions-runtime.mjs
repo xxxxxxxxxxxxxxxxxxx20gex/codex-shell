@@ -88,7 +88,7 @@ try {
 
   const officeSource = join(root, "bundled", "office-marketplace");
   const preview = (await request("plugin/read", { marketplacePath: join(officeSource, ".agents/plugins/marketplace.json"), pluginName: "cs-office" })).plugin;
-  assert.equal(preview.skills.length, 3);
+  assert.equal(preview.skills.length, 5);
   assert.equal(preview.summary.installed, false);
   assert.ok(preview.skills.every((skill) => skill.path));
   const content = await request("fs/readFile", { path: preview.skills[0].path });
@@ -104,6 +104,12 @@ try {
   assert.ok(names.includes("cs-office:cs-pdf"), JSON.stringify(names));
   assert.ok(names.includes("cs-office:cs-documents"), JSON.stringify(names));
   assert.ok(names.includes("cs-office:cs-spreadsheets"), JSON.stringify(names));
+  assert.ok(names.includes("cs-office:cs-presentations"), JSON.stringify(names));
+  assert.ok(names.includes("cs-office:cs-template-creator"), JSON.stringify(names));
+  const localized = officeSkills.data.flatMap((entry) => entry.skills).filter((skill) => skill.name.startsWith("cs-office:"));
+  assert.equal(localized.length, 5);
+  assert.ok(localized.every((skill) => /[\u4e00-\u9fff]/u.test(skill.description)));
+  assert.ok(localized.every((skill) => skill.interface?.displayName));
   const installedOffice = (await request("plugin/list", { marketplaceKinds: ["local"] }))
     .marketplaces.find((item) => item.name === "cs-curated")
     .plugins.find((item) => item.name === "cs-office");

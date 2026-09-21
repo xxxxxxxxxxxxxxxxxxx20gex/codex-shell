@@ -41,6 +41,10 @@ fn validate_marketplace(root: &Path) -> Result<(), String> {
         "plugins/cs-office/skills/cs-pdf/SKILL.md",
         "plugins/cs-office/skills/cs-documents/SKILL.md",
         "plugins/cs-office/skills/cs-spreadsheets/SKILL.md",
+        "plugins/cs-office/skills/cs-presentations/SKILL.md",
+        "plugins/cs-office/skills/cs-template-creator/SKILL.md",
+        "plugins/cs-office/scripts/render_office.py",
+        "plugins/cs-office/scripts/create_template.py",
     ];
     for relative in required {
         if !root.join(relative).is_file() {
@@ -75,27 +79,70 @@ pub fn prepare_builtin_office_plugin(app: AppHandle) -> Result<String, String> {
     let parent = codex_home.join("codex-shell");
     fs::create_dir_all(&parent).map_err(|error| format!("创建内置插件数据目录失败：{error}"))?;
     let destination = parent.join(MARKETPLACE_DIRECTORY);
-    if destination.exists() {
-        validate_marketplace(&destination)?;
-        return Ok(destination.to_string_lossy().into_owned());
-    }
+    prepare_marketplace(&source, &destination)?;
+    Ok(destination.to_string_lossy().into_owned())
+}
 
+fn prepare_marketplace(source: &Path, destination: &Path) -> Result<(), String> {
+    validate_marketplace(source)?;
+    let manifest = Path::new("plugins/cs-office/.codex-plugin/plugin.json");
+    if destination.exists() {
+        let current = fs::read(destination.join(manifest))
+            .map_err(|error| format!("读取现有办公目录版本失败：{error}"))?;
+        let bundled = fs::read(source.join(manifest))
+            .map_err(|error| format!("读取内置办公目录版本失败：{error}"))?;
+        if current == bundled {
+            validate_marketplace(destination)?;
+            return Ok(());
+        }
+    }
+    let parent = destination.parent().ok_or("办公目录缺少父目录")?;
     let staging = parent.join(format!(
         ".install-{MARKETPLACE_DIRECTORY}-{}",
         chrono::Utc::now()
             .timestamp_nanos_opt()
             .ok_or("无法生成安装标识")?
     ));
-    copy_directory(&source, &staging)?;
+    copy_directory(source, &staging)?;
     validate_marketplace(&staging)?;
-    fs::rename(&staging, &destination)
-        .map_err(|error| format!("完成内置办公插件准备失败：{error}"))?;
-    Ok(destination.to_string_lossy().into_owned())
+    // Core persists the source location; installed plugin caches remain separate.
+    let backup = parent.join(format!("{}.previous", staging.file_name().unwrap().to_string_lossy()));
+    let had_previous = destination.exists();
+    if had_previous {
+        fs::rename(destination, &backup)
+            .map_err(|error| format!("备份旧办公目录失败：{error}"))?;
+    }
+    if let Err(error) = fs::rename(&staging, destination) {
+        if had_previous {
+            fs::rename(&backup, destination)
+                .map_err(|restore| format!("更新办公目录失败：{error}；恢复失败：{restore}；旧目录保留于 {}", backup.display()))?;
+        }
+        return Err(format!("完成内置办公插件准备失败：{error}"));
+    }
+    Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn refreshes_catalog_in_place_and_preserves_old_source() {
+        let temporary = tempfile::tempdir().unwrap();
+        let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../bundled/office-marketplace");
+        let destination = temporary.path().join(MARKETPLACE_DIRECTORY);
+        copy_directory(&source, &destination).unwrap();
+        let manifest = destination.join("plugins/cs-office/.codex-plugin/plugin.json");
+        fs::write(&manifest, "{\"name\":\"cs-office\",\"version\":\"old\"}").unwrap();
+        fs::remove_file(destination.join("plugins/cs-office/skills/cs-presentations/SKILL.md")).unwrap();
+        prepare_marketplace(&source, &destination).unwrap();
+        validate_marketplace(&destination).unwrap();
+        assert_eq!(fs::read(&manifest).unwrap(), fs::read(source.join("plugins/cs-office/.codex-plugin/plugin.json")).unwrap());
+        assert_eq!(fs::read_dir(temporary.path()).unwrap().count(), 2);
+        prepare_marketplace(&source, &destination).unwrap();
+        assert_eq!(fs::read_dir(temporary.path()).unwrap().count(), 2);
+    }
 
     #[test]
     fn bundled_office_marketplace_has_required_layout() {

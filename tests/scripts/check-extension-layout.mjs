@@ -34,7 +34,7 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 const noop = () => {};
 const skill = {name:"example-skill",description:"这是一个用于验证长中文描述和操作区域的技能",enabled:true,scope:"user",pluginId:null,path:"C:/cs/skills/demo/SKILL.md"};
 const plugin = {id:"demo",name:"本地插件",installed:true,enabled:true,availability:"AVAILABLE",installPolicy:"AVAILABLE",authPolicy:"ON_USE",interface:null};
-const office = {summary:{...plugin,name:'cs-office',installed:false,version:'0.1.0',interface:{displayName:'CS Office',shortDescription:'创建和编辑本地办公文件',longDescription:'在 Codex Shell 中创建、编辑并验证 PDF、Word 文档和电子表格。所有处理均在本机完成。',developerName:'Codex Shell Contributors'}},skills:['文档','PDF','电子表格'].map((name,i)=>({...skill,name,path:'C:/cs/'+i+'/SKILL.md',description:'创建、编辑并验证本地办公文件'})),apps:[],hooks:[],mcpServers:[]};
+const office = {summary:{...plugin,name:'cs-office',installed:false,version:'0.1.0',interface:{displayName:'CS Office',shortDescription:'本地文档、表格、演示文稿与模板',longDescription:'提供 PDF、Word 文档、电子表格、演示文稿和办公模板五类中文技能。本地处理依赖 Python 格式库和可选 LibreOffice，不依赖官方私有运行库、ChatGPT 账户或云端 Connector；不提供在线文档和实时 Excel 控制。',developerName:'Codex Shell Contributors'}},skills:['Word 文档','PDF','电子表格','演示文稿','办公模板'].map((name,i)=>({...skill,name,path:'C:/cs/'+i+'/SKILL.md',description:'创建、编辑并验证本地办公文件'})),apps:[],hooks:[],mcpServers:[]};
 const installedSkill = {...skill, pluginId:plugin.id, path:"C:/cs/plugins/cache/demo/SKILL.md"};
 const extensions = {listPlugins:async()=>({marketplaces:[{name:"local-marketplace",path:"C:/market.json",plugins:[plugin,{...plugin,id:'hidden',name:'Game Studio',installed:false}]}],marketplaceLoadErrors:[]}),readPlugin:async()=>({plugin:{summary:plugin,description:'本地办公插件',skills:[skill],hooks:[],apps:[],mcpServers:[]}}),readSkillContent:async()=>('# 技能内容\\n\\n可读取和编辑文档。\\n\\n'.repeat(40)),setSkillEnabled:async(path,enabled)=>{if(path!==installedSkill.path)throw new Error('Wrong installed path');installedSkill.enabled=enabled;return enabled;}};
 window.show = (kind) => {
@@ -53,7 +53,7 @@ try {
     await page.setViewportSize({ width, height });
     await page.evaluate(() => window.show('preview'));
     await page.getByRole('button', {name:'安装插件'}).waitFor();
-    assert.equal(await page.getByRole('switch').count(), 3);
+    assert.equal(await page.getByRole('switch').count(), 5);
     for (const control of await page.getByRole('switch').all()) {
       assert.equal(await control.isDisabled(), true);
       assert.equal(await control.isChecked(), false);

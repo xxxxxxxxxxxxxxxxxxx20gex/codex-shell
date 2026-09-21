@@ -1,21 +1,24 @@
 ---
 name: cs-pdf
-description: Read, create, edit, fill, and visually verify local PDF files. Use for PDF deliverables or PDF-specific inspection; do not use for Word documents or spreadsheets.
+description: "读取、生成、合并、拆分和填写本地 PDF，检查交互表单及页面渲染。适用于 PDF 文件内容与版式，不用于 Word 或表格制作。"
 ---
 
 # PDF
 
-Work only on local PDF artifacts. Preserve the source file unless the user explicitly asks to replace it.
+处理本地 PDF，默认保留源文件。仅提取内容时不修改文件。先按 [本地运行与渲染](../../references/local-runtime.md) 检查 pdf 依赖。
 
-## Dependencies
+## 内容与页面
 
-Before file work, resolve this Skill directory and run `../../scripts/check_dependencies.py pdf` with an available Python 3 interpreter. Required Python packages are `pypdf`, `pdfplumber`, and `reportlab`. Poppler's `pdftoppm` and `pdfinfo` are required for visual verification but not for text-only inspection. Do not install missing software without the user's authorization; report the exact missing dependency.
+- pdfplumber 用于文字、位置和表格；pypdf 用于元数据、页面、合并拆分和表单；reportlab 用于创建 PDF。
+- 扫描件提取不到文字不代表空白；先看页面，再决定是否需要可用的 OCR。未执行 OCR 时不声称已识别扫描文字。
+- 中文文档使用可嵌入且覆盖所需字形的字体，检查字体授权；确认分页、行距、边距和图像清晰度。
+- 修改后重新打开文件，核对页数、页面尺寸、旋转方向、预期文字及链接。删除可见文字或盖色块不等于安全脱敏；脱敏需实际移除内容并验证。
 
-## Workflow
+## 交互表单
 
-- Use `pdfplumber` for layout-aware text and table extraction, `pypdf` for document structure, metadata, page operations, and AcroForms, and `reportlab` for new PDFs.
-- For edits, write to a new output path first. Reopen the result with `pypdf` and verify page count, expected text or fields, and non-empty output.
-- Preserve interactive form fields by default. Flatten forms only when explicitly requested. After filling, verify field values after reopening the written file.
-- Render the final PDF to PNG with `pdftoppm` and inspect every page when Poppler is available. Check clipping, overlap, missing glyphs, blank pages, and image quality.
-- If Poppler is unavailable, distinguish structural validation from visual validation in the response. Never claim the layout was visually verified.
-- Keep temporary renders outside the final output directory and remove them after inspection. Return only the requested deliverable unless the user asks for intermediates.
+1. 同时检查 get_fields() 的规范字段树和各页 Widget 注释，沿 Parent/Kids 确认所属关系；外观可见不等于字段已正确保存。
+2. 默认保留交互字段。重名但无父子关系的对象应先查清，不盲目 reattach_fields()，也不擅自转为静态表单。
+3. 确认值及选项合法后填写所有相关页；重开结果核对字段值和页面外观。
+4. 仅在用户要求静态结果时扁平化，验证外观已绘制且 Widget/字段树已按预期移除；不要默默破坏数字签名。
+
+使用共享渲染脚本逐页生成 PNG，检查缺字、遮挡和表单外观。结构验证与视觉验证分开记录；缺少依赖时报告限制。最终只交付所需 PDF 的绝对路径链接。
