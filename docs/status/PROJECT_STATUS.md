@@ -43,7 +43,7 @@
 
 ## 完整验证基线
 
-- 当前开发基线（2026-09-22）：类型、ESLint、376 项前端测试、14 项高德测试、production build、Knip、Cargo check、44 项 Rust 单测（1 项忽略）及 Clippy 通过；Skill 末尾空行修正后 diff 检查通过。办公脚本 7 项测试、五项 Skill 的真实隔离扩展探针和四尺寸扩展布局通过，Debug 已重建。Office 转 PDF 尚未经过独立 LibreOffice 实测，完整边界见 [测试与发布](testing-release-status.md)。
+- 当前开发基线（2026-09-22）：高德增强后类型、ESLint、376 项前端测试、34 项高德离线测试、production build、Knip、Cargo check、44 项 Rust 单测（1 项忽略）、Clippy、Skill 格式和 diff 检查通过，Debug 已重建并核对高德资源哈希。同日较早的办公脚本 7 项测试、五项 Skill 的真实隔离扩展探针和四尺寸扩展布局通过，本次未重跑这些专项。Office 转 PDF 尚未经过独立 LibreOffice 实测，高德未调用真实 API，完整边界见 [测试与发布](testing-release-status.md)。
 - 2026-09-20 v0.1.7 发布基线：完整质量门禁通过，含 TypeScript、ESLint、68 文件 / 372 项前端测试、14 项高德离线测试、production build、Knip、Cargo check、43 项 Rust 单测（1 项交互测试忽略）、Clippy 与 diff 检查。codex-cli 0.154.0-alpha.6.2 的哈希、协议兼容门禁、协议表面测试、隔离协议及扩展探针通过；签名 NSIS 安装器、`.sig` 与 `latest.json` 完成生成和校验。
 - 用户已完成部分真实 CS 桌面检查且未报告问题；具体场景未枚举，不视为全量桌面、真实外部 API 或干净机器升级验收。四尺寸扩展布局及 Debug 构建沿用同日已通过记录。
 - 本机自动发现的更新 Runtime 缺少 `thread/rollback`，被兼容门禁拒绝；本版继续绑定上述已验证 Runtime，不修改 Core 或绕过门禁。

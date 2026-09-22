@@ -6,7 +6,7 @@ import {
   isBusinessSuccess,
 } from "./endpoints.ts";
 import { getJsonWithRetry, type HttpGetRequest } from "./http.ts";
-import type { CommandName } from "./validators.ts";
+import { isValidCoordinate, type CommandName } from "./validators.ts";
 
 export interface ExecuteCommandDependencies {
   requestJson?: (request: HttpGetRequest) => Promise<unknown>;
@@ -69,6 +69,7 @@ async function geocodeAddressToLocation(
   address: string,
   city: string | undefined,
   context: RuntimeContext,
+  endpoint: "origin" | "destination",
 ): Promise<string> {
   const geocodeResponse = await runDirectCommand(
     "geocode",
@@ -85,8 +86,16 @@ async function geocodeAddressToLocation(
     });
   }
 
+  if (geocodeResponse.geocodes.length > 1) {
+    throw new CliError(
+      `Ambiguous ${endpoint} address: multiple geocodes returned. Confirm the candidate using formatted_address, city, district and location; then use the coordinates route command or refine the address/city. Do not select the first result automatically.`,
+      ExitCode.AMBIGUOUS_LOCATION,
+      { rawResponse: geocodeResponse },
+    );
+  }
+
   const firstGeocode = geocodeResponse.geocodes[0];
-  if (!isRecord(firstGeocode) || typeof firstGeocode.location !== "string" || firstGeocode.location.length === 0) {
+  if (!isRecord(firstGeocode) || typeof firstGeocode.location !== "string" || !isValidCoordinate(firstGeocode.location)) {
     throw new CliError("Geocode returned no location result.", ExitCode.API_BUSINESS, {
       rawResponse: geocodeResponse,
     });
@@ -166,6 +175,8 @@ export async function executeCommand(
         {
           origin: getRequiredString(flags, "origin"),
           destination: getRequiredString(flags, "destination"),
+          strategy: getOptionalString(flags, "strategy"),
+          waypoints: getOptionalString(flags, "waypoints"),
         },
         context,
       );
@@ -197,6 +208,8 @@ export async function executeCommand(
           keywords: getRequiredString(flags, "keywords"),
           city: getOptionalString(flags, "city"),
           citylimit: getRequiredString(flags, "citylimit"),
+          page: getOptionalString(flags, "page"),
+          offset: getOptionalString(flags, "offset"),
         },
         context,
       );
@@ -207,6 +220,8 @@ export async function executeCommand(
           location: getRequiredString(flags, "location"),
           radius: getRequiredString(flags, "radius"),
           keywords: getOptionalString(flags, "keywords"),
+          page: getOptionalString(flags, "page"),
+          offset: getOptionalString(flags, "offset"),
         },
         context,
       );
@@ -223,11 +238,13 @@ export async function executeCommand(
         getRequiredString(flags, "origin-address"),
         getOptionalString(flags, "origin-city"),
         context,
+        "origin",
       );
       const destination = await geocodeAddressToLocation(
         getRequiredString(flags, "destination-address"),
         getOptionalString(flags, "destination-city"),
         context,
+        "destination",
       );
       return runDirectCommand(
         "bike-route-coords",
@@ -243,11 +260,13 @@ export async function executeCommand(
         getRequiredString(flags, "origin-address"),
         getOptionalString(flags, "origin-city"),
         context,
+        "origin",
       );
       const destination = await geocodeAddressToLocation(
         getRequiredString(flags, "destination-address"),
         getOptionalString(flags, "destination-city"),
         context,
+        "destination",
       );
       return runDirectCommand(
         "walk-route-coords",
@@ -263,17 +282,21 @@ export async function executeCommand(
         getRequiredString(flags, "origin-address"),
         getOptionalString(flags, "origin-city"),
         context,
+        "origin",
       );
       const destination = await geocodeAddressToLocation(
         getRequiredString(flags, "destination-address"),
         getOptionalString(flags, "destination-city"),
         context,
+        "destination",
       );
       return runDirectCommand(
         "drive-route-coords",
         {
           origin,
           destination,
+          strategy: getOptionalString(flags, "strategy"),
+          waypoints: getOptionalString(flags, "waypoints"),
         },
         context,
       );
@@ -283,11 +306,13 @@ export async function executeCommand(
         getRequiredString(flags, "origin-address"),
         getRequiredString(flags, "origin-city"),
         context,
+        "origin",
       );
       const destination = await geocodeAddressToLocation(
         getRequiredString(flags, "destination-address"),
         getRequiredString(flags, "destination-city"),
         context,
+        "destination",
       );
       return runDirectCommand(
         "transit-route-coords",

@@ -2,7 +2,7 @@
 
 - 模块职责：维护质量门禁、Runtime 兼容验证、Windows 发布证据及未覆盖边界。模块行为由对应状态文档维护，历史测试流水账由 Git 保留。
 - 当前状态：v0.1.7 已正式发布，`release/v0.1.7` 和 `v0.1.7` Tag 指向发布提交，`main` 从该提交继续开发；NSIS 安装器、Updater 签名和 `latest.json` 已上传 GitHub。后续功能从 `main` 开发，下一版本号尚未确定。未配置 Windows Authenticode，SmartScreen 仍可能提示未知发布者。
-- 最近变更：CS Office 隔离探针扩展至五项中文 Skill；新增市场源目录刷新回归，以及独立 Python 辅助脚本测试。办公结构、渲染与模型任务验收的边界见 [扩展能力](agent-capabilities-status.md)。Python 专项测试不在通用质量门禁中，命令与依赖见 [测试脚本说明](../../tests/scripts/README.md)。
+- 最近变更：高德离线测试扩展至 34 项，补地址歧义阻断、确认坐标继续、驾车策略与途经点、分页窗口及 CLI 行为。新 CLI 测试直接使用当前 Bun 可执行文件，避免 Windows npm 包装器拒绝脚本参数。CS Office 隔离探针保持五项中文 Skill 覆盖；Python 专项测试不在通用质量门禁中，命令与依赖见 [测试脚本说明](../../tests/scripts/README.md)。
 - 当前接口：`pnpm test:quality` 依次执行 TypeScript、ESLint、Vitest、`pnpm test:amap`、production build、Knip、`pnpm rust:check` 和 diff 检查。完整门禁需要 Bun；Rust 入口包含 Cargo check、单元测试和严格 Clippy。协议、真实 Runtime 及五项四视口布局检查独立运行，入口见 [测试脚本说明](../../tests/scripts/README.md) 和 `package.json`。
 - 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；Vite 主 chunk 超过 500 kB；`cargo fmt --check` 尚未纳入门禁，现有 Rust 文件有格式差异。
 - 下一步：补真实系统凭据、多渠道对话、第三方 MCP OAuth，以及干净 Windows 用户环境安装和升级验收。
@@ -10,9 +10,9 @@
 
 ## 当前开发验证基线
 
-2026-09-22，质量门禁中的 TypeScript、ESLint、69 个文件 / 376 项前端测试、14 项高德 Bun 测试、production build、Knip、Cargo check、44 项 Rust 单测（1 项交互测试忽略）与严格 Clippy 通过。首次门禁仅在最后的 diff 检查发现 Skill 文件末尾多余空行；修正后单独复跑 `git diff --check` 通过。`pnpm desktop:build` 成功生成 0.1.7 Debug，未生成新 Release。
+2026-09-22，高德增强后的代码基线上分别执行 TypeScript、ESLint、69 个文件 / 376 项前端测试、34 项高德 Bun 测试、production build、Knip、Cargo check、44 项 Rust 单测（1 项交互测试忽略）与严格 Clippy，均通过；diff 检查和高德 Skill 格式校验通过。新增 CLI 测试首次因 Windows Bun npm 包装器拒绝脚本参数而未启动子进程，改用当前可执行文件后复跑 34 项全部通过。`pnpm desktop:build` 成功生成 0.1.7 Debug，19 个高德资源文件与源码哈希一致，未生成新 Release。Vite 仍有既有主 chunk 大小提示，Debug 链接器输出创建库的信息警告，不影响构建成功。
 
-同日四尺寸扩展布局通过，覆盖 1440×900、1280×780、1024×720 和 900×700；办公辅助脚本 7 项测试、插件及五项 Skill 校验、真实隔离扩展探针通过。Knip 未发现未使用文件、导出或依赖。LibreOffice 调用使用模拟，未验证真实 Office 转换及模型驱动的办公产物；此基线不代表全量桌面或外部服务验收。
+同日较早的四尺寸扩展布局通过，覆盖 1440×900、1280×780、1024×720 和 900×700；办公辅助脚本 7 项测试、插件及五项 Skill 校验、真实隔离扩展探针通过，本次高德脚本改动未重跑这些专项。Knip 未发现未使用文件、导出或依赖。LibreOffice 调用使用模拟，未验证真实 Office 转换及模型驱动的办公产物；高德使用模拟 API 响应，未验证真实权限、配额和路线；此基线不代表全量桌面或外部服务验收。
 
 ## 专项验证与未覆盖范围
 

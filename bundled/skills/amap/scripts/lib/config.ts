@@ -11,6 +11,7 @@ export enum ExitCode {
   NETWORK = 3,
   API_BUSINESS = 4,
   INTERNAL = 5,
+  AMBIGUOUS_LOCATION = 6,
 }
 
 export interface CliErrorOptions {

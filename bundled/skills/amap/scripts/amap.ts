@@ -2,12 +2,8 @@
 
 import { executeCommand } from "./lib/commands.ts";
 import { CliError, ExitCode, toErrorMessage } from "./lib/config.ts";
-import {
-  COMMAND_HELP_MAP,
-  COMMAND_ORDER,
-  isCommandName,
-  validateCommandFlags,
-} from "./lib/validators.ts";
+import { COMMAND_HELP_MAP, COMMAND_ORDER } from "./lib/command-help.ts";
+import { isCommandName, validateCommandFlags } from "./lib/validators.ts";
 
 function printJson(payload: unknown): void {
   process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
@@ -119,6 +115,9 @@ void main().catch((error: unknown) => {
   if (error instanceof CliError) {
     if (error.rawResponse !== undefined) {
       printJson(error.rawResponse);
+      if (error.exitCode === ExitCode.AMBIGUOUS_LOCATION) {
+        process.stderr.write(`${error.message}\n`);
+      }
     } else {
       process.stderr.write(`${error.message}\n`);
     }

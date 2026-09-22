@@ -1,4 +1,16 @@
 import { CliError, ExitCode } from "./config.ts";
+import { COMMAND_ORDER } from "./command-help.ts";
+export { COMMAND_HELP_MAP, COMMAND_ORDER, type CommandHelp } from "./command-help.ts";
+
+interface DrivingOptions {
+  strategy?: string;
+  waypoints?: string;
+}
+
+interface PaginationOptions {
+  page?: string;
+  offset?: string;
+}
 
 export type CommandName =
   | "reverse-geocode"
@@ -53,11 +65,11 @@ interface CommandFlagMap {
     "origin-city"?: string;
     "destination-city"?: string;
   };
-  "drive-route-coords": {
+  "drive-route-coords": DrivingOptions & {
     origin: string;
     destination: string;
   };
-  "drive-route-address": {
+  "drive-route-address": DrivingOptions & {
     "origin-address": string;
     "destination-address": string;
     "origin-city"?: string;
@@ -80,12 +92,12 @@ interface CommandFlagMap {
     destination: string;
     type: "0" | "1" | "3";
   };
-  "poi-text": {
+  "poi-text": PaginationOptions & {
     keywords: string;
     city?: string;
     citylimit: "true" | "false";
   };
-  "poi-around": {
+  "poi-around": PaginationOptions & {
     location: string;
     radius: string;
     keywords?: string;
@@ -96,101 +108,6 @@ interface CommandFlagMap {
 }
 
 export type ValidatedFlags<K extends CommandName> = CommandFlagMap[K];
-
-export interface CommandHelp {
-  usage: string;
-  description: string;
-}
-
-export const COMMAND_HELP_MAP: Record<CommandName, CommandHelp> = {
-  "reverse-geocode": {
-    usage: "reverse-geocode --location <lon,lat>",
-    description: "Convert coordinates to administrative address fields.",
-  },
-  geocode: {
-    usage: "geocode --address <text> [--city <text>]",
-    description: "Convert structured address to coordinates.",
-  },
-  "ip-location": {
-    usage: "ip-location --ip <ipv4>",
-    description: "Resolve an IPv4 address to location info.",
-  },
-  weather: {
-    usage: "weather --city <name|adcode> [--extensions <base|all>]",
-    description: "Query weather by city name or adcode.",
-  },
-  "bike-route-coords": {
-    usage: "bike-route-coords --origin <lon,lat> --destination <lon,lat>",
-    description: "Plan bicycle route by coordinates.",
-  },
-  "bike-route-address": {
-    usage:
-      "bike-route-address --origin-address <text> --destination-address <text> [--origin-city <text>] [--destination-city <text>]",
-    description: "Plan bicycle route by addresses (internally geocode first).",
-  },
-  "walk-route-coords": {
-    usage: "walk-route-coords --origin <lon,lat> --destination <lon,lat>",
-    description: "Plan walking route by coordinates.",
-  },
-  "walk-route-address": {
-    usage:
-      "walk-route-address --origin-address <text> --destination-address <text> [--origin-city <text>] [--destination-city <text>]",
-    description: "Plan walking route by addresses (internally geocode first).",
-  },
-  "drive-route-coords": {
-    usage: "drive-route-coords --origin <lon,lat> --destination <lon,lat>",
-    description: "Plan driving route by coordinates.",
-  },
-  "drive-route-address": {
-    usage:
-      "drive-route-address --origin-address <text> --destination-address <text> [--origin-city <text>] [--destination-city <text>]",
-    description: "Plan driving route by addresses (internally geocode first).",
-  },
-  "transit-route-coords": {
-    usage: "transit-route-coords --origin <lon,lat> --destination <lon,lat> --city <text> --cityd <text>",
-    description: "Plan integrated transit route by coordinates.",
-  },
-  "transit-route-address": {
-    usage:
-      "transit-route-address --origin-address <text> --destination-address <text> --origin-city <text> --destination-city <text>",
-    description: "Plan integrated transit route by addresses (internally geocode first).",
-  },
-  distance: {
-    usage: "distance --origins <lon,lat|lon,lat...> --destination <lon,lat> [--type <0|1|3>]",
-    description: "Measure distance between origins and destination.",
-  },
-  "poi-text": {
-    usage: "poi-text --keywords <text> [--city <text>] [--citylimit <true|false>]",
-    description: "Search POI by keyword.",
-  },
-  "poi-around": {
-    usage: "poi-around --location <lon,lat> [--radius <int>] [--keywords <text>]",
-    description: "Search POI around a center point.",
-  },
-  "poi-detail": {
-    usage: "poi-detail --id <poi-id>",
-    description: "Query POI details by id.",
-  },
-};
-
-export const COMMAND_ORDER: CommandName[] = [
-  "reverse-geocode",
-  "geocode",
-  "ip-location",
-  "weather",
-  "bike-route-coords",
-  "bike-route-address",
-  "walk-route-coords",
-  "walk-route-address",
-  "drive-route-coords",
-  "drive-route-address",
-  "transit-route-coords",
-  "transit-route-address",
-  "distance",
-  "poi-text",
-  "poi-around",
-  "poi-detail",
-];
 
 const COMMAND_NAME_SET = new Set<string>(COMMAND_ORDER);
 
@@ -203,13 +120,13 @@ const ALLOWED_FLAG_NAMES: Record<CommandName, readonly string[]> = {
   "bike-route-address": ["origin-address", "destination-address", "origin-city", "destination-city"],
   "walk-route-coords": ["origin", "destination"],
   "walk-route-address": ["origin-address", "destination-address", "origin-city", "destination-city"],
-  "drive-route-coords": ["origin", "destination"],
-  "drive-route-address": ["origin-address", "destination-address", "origin-city", "destination-city"],
+  "drive-route-coords": ["origin", "destination", "strategy", "waypoints"],
+  "drive-route-address": ["origin-address", "destination-address", "origin-city", "destination-city", "strategy", "waypoints"],
   "transit-route-coords": ["origin", "destination", "city", "cityd"],
   "transit-route-address": ["origin-address", "destination-address", "origin-city", "destination-city"],
   distance: ["origins", "destination", "type"],
-  "poi-text": ["keywords", "city", "citylimit"],
-  "poi-around": ["location", "radius", "keywords"],
+  "poi-text": ["keywords", "city", "citylimit", "page", "offset"],
+  "poi-around": ["location", "radius", "keywords", "page", "offset"],
   "poi-detail": ["id"],
 };
 
@@ -254,9 +171,9 @@ function normalizeRequiredString(command: CommandName, rawFlags: Record<string, 
   return normalized;
 }
 
-function isValidCoordinate(value: string): boolean {
+export function isValidCoordinate(value: string): boolean {
   const parts = value.split(",");
-  if (parts.length !== 2) {
+  if (parts.length !== 2 || parts.some((part) => !/^-?\d+(?:\.\d+)?$/.test(part.trim()))) {
     return false;
   }
 
@@ -339,6 +256,47 @@ function validateRadius(command: CommandName, key: string, value: string): strin
   return value;
 }
 
+function validateInteger(command: CommandName, key: string, value: string, min: number, max: number): string {
+  const number = Number(value);
+  if (!/^\d+$/.test(value) || !Number.isSafeInteger(number) || number < min || number > max) {
+    throwInvalidFlags(command, `${key}: must be an integer between ${min} and ${max}`);
+  }
+  return String(number);
+}
+
+function validateDrivingOptions(command: CommandName, rawFlags: Record<string, string>): DrivingOptions {
+  const strategy = normalizeOptionalString(command, rawFlags, "strategy");
+  const waypoints = normalizeOptionalString(command, rawFlags, "waypoints");
+  let normalizedWaypoints: string | undefined;
+  if (waypoints !== undefined) {
+    const points = waypoints.split(";").map((point) => point.trim());
+    if (points.length > 16 || points.some((point) =>
+      !isValidCoordinate(point) || point.split(",").some((part) => !/^-?\d+(?:\.\d{1,6})?$/.test(part.trim()))
+    )) {
+      throwInvalidFlags(command, "waypoints: provide 1..16 lon,lat points separated by ; with at most 6 decimal places");
+    }
+    normalizedWaypoints = points.map((point) => point.split(",").map((part) => part.trim()).join(",")).join(";");
+  }
+  return {
+    strategy: strategy === undefined ? undefined : validateInteger(command, "strategy", strategy, 0, 20),
+    waypoints: normalizedWaypoints,
+  };
+}
+
+function validatePagination(command: CommandName, rawFlags: Record<string, string>): PaginationOptions {
+  const page = normalizeOptionalString(command, rawFlags, "page");
+  const offset = normalizeOptionalString(command, rawFlags, "offset");
+  const result = {
+    page: page === undefined ? undefined : validateInteger(command, "page", page, 1, 200),
+    offset: offset === undefined ? undefined : validateInteger(command, "offset", offset, 1, 25),
+  };
+  // AMap exposes at most 200 results for the same query. Permit a partial last page.
+  if ((Number(result.page ?? "1") - 1) * Number(result.offset ?? "20") >= 200) {
+    throwInvalidFlags(command, "page: starts beyond AMap's 200-result query limit");
+  }
+  return result;
+}
+
 function validateCoordsRoute<K extends "bike-route-coords" | "walk-route-coords" | "drive-route-coords">(
   command: K,
   rawFlags: Record<string, string>,
@@ -406,14 +364,18 @@ export function validateCommandFlags<K extends CommandName>(
       } as ValidatedFlags<K>;
     }
     case "bike-route-coords":
-    case "walk-route-coords":
-    case "drive-route-coords": {
+    case "walk-route-coords": {
       return validateCoordsRoute(command, rawFlags) as ValidatedFlags<K>;
     }
     case "bike-route-address":
-    case "walk-route-address":
-    case "drive-route-address": {
+    case "walk-route-address": {
       return validateAddressRoute(command, rawFlags) as ValidatedFlags<K>;
+    }
+    case "drive-route-coords": {
+      return { ...validateCoordsRoute(command, rawFlags), ...validateDrivingOptions(command, rawFlags) } as ValidatedFlags<K>;
+    }
+    case "drive-route-address": {
+      return { ...validateAddressRoute(command, rawFlags), ...validateDrivingOptions(command, rawFlags) } as ValidatedFlags<K>;
     }
     case "transit-route-coords": {
       return {
@@ -459,6 +421,7 @@ export function validateCommandFlags<K extends CommandName>(
         keywords: normalizeRequiredString(command, rawFlags, "keywords"),
         city: normalizeOptionalString(command, rawFlags, "city"),
         citylimit,
+        ...validatePagination(command, rawFlags),
       } as ValidatedFlags<K>;
     }
     case "poi-around": {
@@ -474,6 +437,7 @@ export function validateCommandFlags<K extends CommandName>(
         location,
         radius,
         keywords: normalizeOptionalString(command, rawFlags, "keywords"),
+        ...validatePagination(command, rawFlags),
       } as ValidatedFlags<K>;
     }
     case "poi-detail": {
