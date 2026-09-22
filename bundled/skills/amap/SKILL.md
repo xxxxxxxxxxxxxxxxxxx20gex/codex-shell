@@ -1,6 +1,6 @@
 ---
 name: amap
-description: 通过脚本直连高德 Web Service API 完成地理编码、逆地理编码、IP 定位、天气、路径规划、距离测量和 POI 查询。用户要求“高德/AMap 查询”“路线规划”“地理编码”“POI 搜索”或需要用命令行脚本调用高德 API 时使用。
+description: 通过高德 Web Service API 查询地点、路线、距离和天气，并根据真实地图与路线数据绘制旅游路线规划图。用于高德/AMap 查询、地理编码、POI 搜索、出行路线及真实底图旅游行程图。
 ---
 
 # 高德地图
@@ -20,6 +20,12 @@ description: 通过脚本直连高德 Web Service API 完成地理编码、逆�
 ## Commands
 - Full command mapping: `references/command-map.md`
 - Ready-to-run examples: `references/examples.md`
+
+## 旅游路线规划图
+
+需要真实底图行程图时，阅读 [出图模板](references/travel-map.md)，使用 `scripts/travel_map.py` 与 `assets/travel-map/hangzhou-example.json`。绘图另需 Python 3 和 Pillow；普通查询仍只需 Bun。
+
+先核实点位、路线及运营状态，再填模板；保留地图署名与审图号。地图标签以编号和地点为主，时间集中在时间表。密集区域另做详情页，总览保留跨区关系。交付前查看预览，检查地标对齐、标签引线和图文一致性；未核实班次、费用与示意段须明确标注。不使用生图替代真实底图。
 
 ## Notes
 - This skill is script-first and does not run an MCP server.

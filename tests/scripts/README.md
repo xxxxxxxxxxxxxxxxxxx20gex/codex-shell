@@ -29,6 +29,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tests/scripts/run-quality-ga
 模块级测试仍与源码放在一起（例如 `src/**/*.test.tsx` 和 `src-tauri/src/**/*_tests.rs`），这样可以保持测试与被测模块的导入、夹具和职责边界清晰；它们不是独立运行脚本，不移动到这里。
 ## 扩展管理检查
 
+- `python -B -X utf8 tests/scripts/test-amap-travel-map.py`：需要 Pillow 和中文字体；离线验证高德底图缓存参数、旧缓存拒绝、错误脱敏、公交与其他路线线型、示例四类产物及拒绝覆盖。合成底图测试不代表真实地图对齐验收；此专项不在通用 `test:quality` 中。
+
 - `python -X utf8 tests/scripts/test-office-helpers.py`：使用具备 PyMuPDF、python-docx、python-pptx、openpyxl 和 PyYAML 的 Python 环境验证办公渲染与模板边界。PDF 渲染为真实调用，LibreOffice 分支使用模拟转换；此独立检查不在通用 `test:quality` 中。
 - `pnpm runtime:probe-extensions`：使用临时 CODEX_HOME 验证 Skills、MCP 配置和本地 Plugin 安装/卸载，不读取个人凭据或官方目录。
 - `pnpm test:extension-layout <playwright/index.mjs绝对路径> <浏览器可执行文件绝对路径>`：先启动 `pnpm dev --host 127.0.0.1 --port 1435`；脚本在浏览器中挂载真实组件及模拟回调，检查四尺寸布局、字号、焦点和 reduced-motion，截图保存到系统临时目录。

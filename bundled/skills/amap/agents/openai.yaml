@@ -1,4 +1,4 @@
 interface:
   display_name: "高德地图"
-  short_description: "通过高德地图查询地点、规划出行路线、测量距离并获取天气信息。"
-  default_prompt: "使用 $amap 查询地点、天气或规划路线，并依据 API 结果回答。"
+  short_description: "通过高德地图查询地点、路线与天气，并绘制带时间表的真实地图旅游路线图。"
+  default_prompt: "使用 $amap 查询地点或规划行程，需要路线图时根据真实底图和路线数据绘制。"
