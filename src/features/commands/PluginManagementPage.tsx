@@ -75,7 +75,8 @@ export function PluginManagementPage({ extensions, revision, onClose, onChanged,
     }, false);
   }
 
-  const installed = marketplaces.flatMap((marketplace) => marketplace.plugins.map((plugin) => ({ marketplace, plugin })));
+  const installed = marketplaces.flatMap((marketplace) => marketplace.plugins.map((plugin) => ({ marketplace, plugin })))
+    .sort((a, b) => a.plugin.name.localeCompare(b.plugin.name, "zh-CN") || a.plugin.id.localeCompare(b.plugin.id, "en"));
   const office = installed.find(({ marketplace, plugin }) => marketplace.name === "cs-curated" && plugin.name === "cs-office");
   const entries = [
     { key: "cs-office", name: "CS Office", description: "PDF、Word、表格、演示文稿与办公模板", installed: office },

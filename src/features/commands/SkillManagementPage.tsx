@@ -109,13 +109,18 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
     {error && <p className="error" role="alert">{error}</p>}
     {loadError && <p className="error" role="alert">{loadError}</p>}
     {["CS 内置", "个人", "系统"].map((group) => {
-      const items = filtered.filter((skill) => !skill.pluginId && groupOf(skill) === group).sort((a, b) => Number(builtinImage(b)) - Number(builtinImage(a)) || Number(builtinDocs(b)) - Number(builtinDocs(a)));
+      const items = filtered.filter((skill) => !skill.pluginId && groupOf(skill) === group).sort((a, b) => a.name.localeCompare(b.name, "zh-CN") || a.path.localeCompare(b.path, "en"));
+      const rows: (SkillMetadata | "image-gen" | "amap" | "cs-docs")[] = group === "CS 内置"
+        ? [items.find(builtinImage) ?? (showBuiltinImage ? "image-gen" : null), items.find(builtinAmap) ?? (showBuiltinAmap ? "amap" : null)].filter((item): item is SkillMetadata | "image-gen" | "amap" => item !== null)
+        : group === "系统"
+          ? [...(items.find(builtinDocs) ? [items.find(builtinDocs)!] : showBuiltinDocs ? ["cs-docs" as const] : []), ...items.filter((skill) => !builtinDocs(skill))]
+          : items;
       if (!items.length && !(group === "CS 内置" && (showBuiltinImage || showBuiltinAmap)) && !(group === "系统" && showBuiltinDocs)) return null;
       return <section className="skill-management-section" aria-label={group} key={group}><h2>{group}</h2>
-        {group === "CS 内置" && showBuiltinImage && <article className="skill-management-card"><span className="skill-management-icon"><Sparkles aria-hidden="true" /></span><div><strong>兔子生图</strong><p>通过兔子渠道生成商品图、海报和场景图片。</p></div><span className="skill-management-actions"><button type="button" className="skill-management-toggle" disabled={busy} onClick={() => void installBuiltin("install_builtin_skill")}>安装</button></span></article>}
-        {group === "CS 内置" && showBuiltinAmap && <article className="skill-management-card"><span className="skill-management-icon"><MapPin aria-hidden="true" /></span><div><strong>高德地图</strong><p>{AMAP_DESCRIPTION}</p></div><span className="skill-management-actions"><button type="button" className="skill-management-toggle" disabled={busy} onClick={() => void installBuiltin("install_builtin_amap")}>安装</button></span></article>}
-        {group === "系统" && showBuiltinDocs && <article className="skill-management-card"><span className="skill-management-icon"><BookOpen aria-hidden="true" /></span><div><strong>CS 文档</strong><p>说明 Codex Shell 当前实现、配置、开发流程和能力边界。</p></div><span className="skill-management-actions"><button type="button" className="skill-management-toggle" disabled={busy} onClick={() => void installBuiltin("install_builtin_cs_docs")}>安装</button></span></article>}
-        {items.map((skill) => {
+        {rows.map((skill) => {
+          if (skill === "image-gen") return <article key="image-gen" className="skill-management-card"><span className="skill-management-icon"><Sparkles aria-hidden="true" /></span><div><strong>兔子生图</strong><p>通过兔子渠道生成商品图、海报和场景图片。</p></div><span className="skill-management-actions"><button type="button" className="skill-management-toggle" disabled={busy} onClick={() => void installBuiltin("install_builtin_skill")}>安装</button></span></article>;
+          if (skill === "amap") return <article key="amap" className="skill-management-card"><span className="skill-management-icon"><MapPin aria-hidden="true" /></span><div><strong>高德地图</strong><p>{AMAP_DESCRIPTION}</p></div><span className="skill-management-actions"><button type="button" className="skill-management-toggle" disabled={busy} onClick={() => void installBuiltin("install_builtin_amap")}>安装</button></span></article>;
+          if (skill === "cs-docs") return <article key="cs-docs" className="skill-management-card"><span className="skill-management-icon"><BookOpen aria-hidden="true" /></span><div><strong>CS 文档</strong><p>说明 Codex Shell 当前实现、配置、开发流程和能力边界。</p></div><span className="skill-management-actions"><button type="button" className="skill-management-toggle" disabled={busy} onClick={() => void installBuiltin("install_builtin_cs_docs")}>安装</button></span></article>;
           const relative = skill.path.split("\\").join("/").toLowerCase();
           const owned = codexHome && relative.startsWith(root) && /^[^/.][^/]*\/skill\.md$/.test(relative.slice(root.length));
           const scopeLabel = skill.scope === "repo" ? "项目" : skill.scope === "admin" ? "管理员" : null;

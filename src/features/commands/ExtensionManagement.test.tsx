@@ -17,6 +17,57 @@ vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn(async () => undefined) })
 vi.mock("@tauri-apps/plugin-dialog", () => ({ open: vi.fn() }));
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
 
+it("keeps built-in slots fixed across mixed installation states and uninstall", async () => {
+  const image: SkillMetadata = { name: "image-gen", description: "image", path: "C:/cs/skills/image-gen/SKILL.md", enabled: true, scope: "user", pluginId: null };
+  const amap = { ...image, name: "amap", path: "C:/cs/skills/amap/SKILL.md" };
+  let installed = [image];
+  const loadSkills = async () => [...installed].reverse();
+  vi.mocked(invoke).mockImplementation(async (command) => {
+    if (command === "install_builtin_amap") { installed = [image, amap]; return amap.path; }
+    if (command === "uninstall_local_skill") installed = [amap];
+    return undefined;
+  });
+  render(<SkillManagementPage codexHome="C:/cs" revision={0} loadSkills={loadSkills} setEnabled={async () => false} onClose={vi.fn()} />);
+  const names = () => Array.from(screen.getByRole("region", { name: "CS 内置" }).querySelectorAll("article strong")).map((el) => el.textContent);
+  await screen.findByRole("switch", { name: "image-gen 启用状态" });
+  expect(names()).toEqual(["兔子生图", "高德地图"]);
+  fireEvent.click(within(screen.getByText("高德地图").closest("article")!).getByText("安装"));
+  await screen.findByRole("switch", { name: "amap 启用状态" });
+  expect(names()).toEqual(["兔子生图", "高德地图"]);
+  fireEvent.click(within(screen.getByText("兔子生图").closest("article")!).getByText("卸载"));
+  await waitFor(() => expect(screen.queryByRole("switch", { name: "image-gen 启用状态" })).toBeNull());
+  expect(names()).toEqual(["兔子生图", "高德地图"]);
+});
+
+it("keeps personal skill order when enabling changes server ordering", async () => {
+  const a: SkillMetadata = { name: "alpha", description: "first", path: "C:/cs/skills/alpha/SKILL.md", enabled: false, scope: "user", pluginId: null };
+  const b = { ...a, name: "beta", path: "C:/cs/skills/beta/SKILL.md" };
+  let items = [b, a];
+  render(<SkillManagementPage codexHome="C:/cs" revision={0} loadSkills={async () => items} setEnabled={async () => { items = [{ ...a, enabled: true }, b]; return true; }} onClose={vi.fn()} />);
+  const names = () => Array.from(screen.getByRole("region", { name: "个人" }).querySelectorAll("article strong")).map((el) => el.textContent);
+  const toggle = await screen.findByRole("switch", { name: "alpha 启用状态" });
+  expect(names()).toEqual(["alpha", "beta"]);
+  fireEvent.click(toggle);
+  await waitFor(() => expect(toggle.getAttribute("aria-checked")).toBe("true"));
+  expect(names()).toEqual(["alpha", "beta"]);
+});
+
+it("keeps plugin order stable across reordered reloads", async () => {
+  const a = { id: "alpha@local", name: "alpha", installed: true, enabled: true, installPolicy: "AVAILABLE", interface: null } as PluginSummary;
+  const b = { ...a, id: "beta@local", name: "beta" };
+  let plugins = [b, a];
+  const extensions = { listPlugins: async () => ({ marketplaces: [{ name: "local", path: "C:/market.json", plugins }], marketplaceLoadErrors: [] }) } as unknown as ReturnType<typeof useExtensions>;
+  const props = { extensions, onChanged: vi.fn(), onClose: vi.fn() };
+  const view = render(<PluginManagementPage {...props} revision={0} />);
+  await screen.findByText("alpha");
+  const names = () => Array.from(view.container.querySelectorAll("article strong")).map((el) => el.textContent);
+  expect(names()).toEqual(["CS Office", "alpha", "beta"]);
+  plugins = [a, b];
+  view.rerender(<PluginManagementPage {...props} revision={1} />);
+  await waitFor(() => expect(view.container.querySelector('[aria-busy="false"]')).toBeTruthy());
+  expect(names()).toEqual(["CS Office", "alpha", "beta"]);
+});
+
 it("closes MCP on Escape or outside pointer input and releases listeners", () => {
   const close = vi.fn();
   const view = render(<McpStatusPanel loadServers={async () => []} loginServer={vi.fn()} reloadServers={vi.fn()} readResource={vi.fn()} onClose={close} />);

@@ -79,7 +79,7 @@ export function PluginDetailView({ detail, extensions, onClose, onChanged, onIns
     {error && <p role="alert" className="error">{error}</p>}
     <h2 className="plugin-section-title">技能 <span>{skills.length}</span></h2>
     {!detail.summary.installed && <p className="plugin-install-hint">可查看技能内容，安装插件后可独立启停。</p>}
-    {skills.map((skill) => <div className="plugin-skill-row" key={skill.path || skill.name}>
+    {[...skills].sort((a, b) => a.name.localeCompare(b.name, "zh-CN") || (a.path || "").localeCompare(b.path || "", "en")).map((skill) => <div className="plugin-skill-row" key={skill.path || skill.name}>
       <button className="plugin-skill-link" type="button" disabled={syncing || !skill.path} onClick={() => setSelected(skill)}>
         <FileText /><span><strong>{title(skill)}</strong><small title={skill.interface?.shortDescription || skill.shortDescription || skill.description}>{skill.interface?.shortDescription || skill.shortDescription || skill.description}</small></span><ChevronRight className="plugin-skill-chevron" />
       </button>{control(skill)}

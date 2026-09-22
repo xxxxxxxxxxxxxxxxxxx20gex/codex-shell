@@ -16,6 +16,8 @@
 
 ## 专项验证与未覆盖范围
 
+2026-09-22，扩展固定排序改动通过 31 项扩展管理／插件详情测试、TypeScript、ESLint、四尺寸扩展布局及 Cargo check；覆盖内置项混合安装状态与卸载、启停引起的 Core 返回乱序、插件刷新乱序。`pnpm desktop:build` 的 production build 与 Debug 构建成功，保留既有 chunk 大小和链接器信息警告。未重新执行真实 app-server 扩展探针。
+
 2026-09-22，内置 Skill 资源路径与简介修复后，TypeScript、ESLint、19 项扩展组件测试、四尺寸扩展布局、Cargo check、46 项 Rust 单测（1 项忽略）及严格 Clippy 通过。`pnpm desktop:build` 包含的 production build 与 Debug 构建成功，仍有既有 chunk 大小和链接器信息警告。资源解析使用临时目录模拟 Tauri 实际打包结构，未运行干净机器 NSIS 安装；不代表生产安装端到端验收。
 
 2026-09-22，高德出图模板更新后，6 项 Python 专项、34 项 Bun 查询测试、Skill 格式校验、TypeScript、production build 和 Cargo check 通过；真实高德静态底图的杭州示例已生成并查看预览，旧缓存错配探针被新实现正确拒绝。Debug 重建成功，包内 23 个高德资源文件与源码哈希一致。路线数据沿用历史示例，未验证当前客运、景区或价格。此次未改桌面 UI 和 Rust 行为，未重跑完整前端、Clippy 或四视口专项；上方完整门禁记录属于同日较早基线。
