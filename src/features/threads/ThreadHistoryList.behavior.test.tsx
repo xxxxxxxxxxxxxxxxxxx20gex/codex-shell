@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Thread } from "../../generated/app-server/v2/Thread";
 import { ThreadHistoryList } from "./ThreadHistoryList";
 
-afterEach(cleanup);
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 function thread(id: string): Thread {
   return {
@@ -45,6 +45,20 @@ function props(overrides: Partial<ComponentProps<typeof ThreadHistoryList>> = {}
 }
 
 describe("ThreadHistoryList behavior", () => {
+  it("keeps full long names in the tooltip and rename input", () => {
+    const name = "完整名称".repeat(30);
+    const values = props({ threads: [{ ...thread("long"), name }] });
+    const prompt = vi.fn(() => name);
+    vi.stubGlobal("prompt", prompt);
+    const view = render(<ThreadHistoryList {...values} />);
+    const main = view.container.querySelector<HTMLButtonElement>(".thread-main")!;
+    expect(main.title).toContain(name);
+    expect(main.querySelector(".thread-title")?.textContent).toBe(name.slice(0, 59) + "…");
+    fireEvent.contextMenu(main.closest(".thread-row")!);
+    fireEvent.click(screen.getByRole("button", { name: "重命名" }));
+    expect(prompt).toHaveBeenCalledWith("重命名会话", name);
+    expect(values.onRename).not.toHaveBeenCalled();
+  });
   it("switches to archived history without exposing fork actions in history", () => {
     const values = props();
     render(<ThreadHistoryList {...values} />);

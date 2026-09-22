@@ -16,6 +16,7 @@ import {
   threadReference,
   threadReferenceKind,
   threadTitle,
+  threadFullTitle,
   orderThreadsByBranch,
   threadBranchDepth,
 } from "./threadPresentation";
@@ -89,8 +90,8 @@ export function ThreadHistoryList(props: Props) {
   }, [openActionThreadId]);
 
   function rename(thread: Thread) {
-    const name = window.prompt("重命名会话", threadTitle(thread));
-    if (name?.trim() && name.trim() !== threadTitle(thread)) props.onRename(thread.id, name);
+    const name = window.prompt("重命名会话", threadFullTitle(thread));
+    if (name?.trim() && name.trim() !== threadFullTitle(thread)) props.onRename(thread.id, name);
   }
 
   function confirmPendingDelete() {
@@ -133,8 +134,8 @@ export function ThreadHistoryList(props: Props) {
                 disabled={busy || props.archived}
                 onClick={() => props.onOpen(thread.id)}
                 title={props.archived
-                  ? `${threadTitle(thread)}\n恢复 Session 后可打开`
-                  : `${threadTitle(thread)}\n${thread.cwd}`}
+                  ? `${threadFullTitle(thread)}\n恢复 Session 后可打开`
+                  : `${threadFullTitle(thread)}\n${thread.cwd}`}
               >
                 <span className="thread-copy">
                   <span className="thread-title">{isThreadPinned(thread) && <Pin className="thread-pin-indicator" aria-hidden="true" fill="currentColor" />}{threadTitle(thread)}</span>

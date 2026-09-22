@@ -7,6 +7,7 @@ import {
   threadReference,
   threadReferenceKind,
   threadTitle,
+  threadFullTitle,
   normalizeThreadPath,
 } from "./threadPresentation";
 
@@ -21,6 +22,20 @@ function thread(id: string, overrides: Partial<Thread> = {}) {
 }
 
 describe("thread presentation", () => {
+  it("cleans Markdown previews without removing code names or link labels", () => {
+    const value = thread("markdown", { preview: "# 修复 **登录**\n\n- 检查 `foo_bar()` 与 [文档](https://example.com)\n- ![界面截图](test.png)" });
+    expect(threadFullTitle(value)).toBe("修复 登录 检查 foo_bar() 与 文档 界面截图");
+    expect(threadFullTitle(thread("empty", { preview: "---\n\n<!-- empty -->" }))).toBe("未命名会话");
+  });
+
+  it("keeps the full name intact and truncates only display text at grapheme boundaries", () => {
+    const name = "👨‍👩‍👧‍👦".repeat(61);
+    const value = thread("long", { name });
+    expect(threadTitle(value)).toBe("👨‍👩‍👧‍👦".repeat(59) + "…");
+    expect(threadFullTitle(value)).toBe(name);
+    expect(value.name).toBe(name);
+    expect(threadTitle(thread("explicit", { name: "**literal**\n foo_bar", preview: "ignored" }))).toBe("**literal** foo_bar");
+  });
   it("uses the rollout path as the AI-readable reference and falls back to the id", () => {
     const withPath = thread("thread-path", { path: "C:\\sessions\\rollout.jsonl" });
     const withoutPath = thread("thread-id");

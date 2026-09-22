@@ -36,6 +36,7 @@ function retainBranchAncestors(listedThreads: Thread[], currentThreads: Thread[]
 export function useThreadHistory({ ensureConnected, dispatch, currentThreadId, enabled = true }: Props) {
   const initialLoadStartedRef = useRef(false);
   const requestSequenceRef = useRef(0);
+  const pendingNameUpdatesRef = useRef(new Set<Map<string, string | null>>());
   const nextCursorRef = useRef<string | null>(null);
   const archivedRef = useRef(false);
   const [threads, setThreads] = useState<Thread[]>([]);
@@ -46,6 +47,8 @@ export function useThreadHistory({ ensureConnected, dispatch, currentThreadId, e
 
   const load = useCallback(async (append: boolean, archivedView: boolean) => {
     const requestId = ++requestSequenceRef.current;
+    const nameUpdates = new Map<string, string | null>();
+    pendingNameUpdatesRef.current.add(nameUpdates);
     setLoading(true);
     setError("");
     try {
@@ -58,7 +61,8 @@ export function useThreadHistory({ ensureConnected, dispatch, currentThreadId, e
         archived: archivedView,
       });
       if (requestId !== requestSequenceRef.current) return;
-      const listedThreads = response.data.filter((thread) => !thread.ephemeral);
+      const listedThreads = response.data.filter((thread) => !thread.ephemeral)
+        .map((thread) => nameUpdates.has(thread.id) ? { ...thread, name: nameUpdates.get(thread.id)! } : thread);
       const active = listedThreads.find((thread) => thread.id === currentThreadId());
       if (active) dispatch({ type: "updateThread", thread: active });
       setThreads((current) => {
@@ -81,6 +85,7 @@ export function useThreadHistory({ ensureConnected, dispatch, currentThreadId, e
       if (requestId === requestSequenceRef.current) setError(errorMessage(loadError));
       return false;
     } finally {
+      pendingNameUpdatesRef.current.delete(nameUpdates);
       if (requestId === requestSequenceRef.current) setLoading(false);
     }
   }, [currentThreadId, dispatch, ensureConnected]);
@@ -117,6 +122,7 @@ export function useThreadHistory({ ensureConnected, dispatch, currentThreadId, e
   }, []);
 
   const rename = useCallback((threadId: string, name: string | null) => {
+    for (const updates of pendingNameUpdatesRef.current) updates.set(threadId, name);
     setThreads((current) => current.map((thread) => thread.id === threadId
       ? { ...thread, name }
       : thread));

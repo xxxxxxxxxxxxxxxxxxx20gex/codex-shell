@@ -44,7 +44,7 @@ import { ServerInteractionDialog } from "./features/interactions/ServerInteracti
 import { ConversationTimeline } from "./features/threads/ConversationTimeline";
 import { ContextHeatBar } from "./features/threads/ContextHeatBar";
 import { ThreadHistoryList } from "./features/threads/ThreadHistoryList";
-import { threadTitle } from "./features/threads/threadPresentation";
+import { threadTitle, threadFullTitle } from "./features/threads/threadPresentation";
 import { FileMentionMenu } from "./features/workspaces/FileMentionMenu";
 import { WorkspaceExplorer } from "./features/workspaces/WorkspaceExplorer";
 import { SideChatPanel } from "./features/runtime/SideChatPanel";
@@ -283,7 +283,7 @@ function App() {
             <button type="button" className="drawer-toggle drawer-toggle-left" onClick={() => setSidebarOpen((open) => !open)} aria-label={sidebarOpen ? "隐藏左侧会话区" : "显示左侧会话区"} title={sidebarOpen ? "隐藏左侧会话区" : "显示左侧会话区"}>
               <PanelLeft aria-hidden="true" />
             </button>
-            <strong>{session.thread ? threadTitle(session.thread) : "新对话"}</strong>
+            <strong title={session.thread ? threadFullTitle(session.thread) : undefined}>{session.thread ? threadTitle(session.thread) : "新对话"}</strong>
             {session.thread && <span>{session.thread.id.slice(0, 8)}…{session.thread.id.slice(-4)}</span>}
             <button type="button" className="drawer-toggle drawer-toggle-right" onClick={() => setInspectorOpen((open) => !open)} aria-label={inspectorOpen ? "隐藏右侧功能区" : "显示右侧功能区"} title={inspectorOpen ? "隐藏右侧功能区" : "显示右侧功能区"}>
               <PanelRight aria-hidden="true" />

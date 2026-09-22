@@ -1,4 +1,24 @@
+/// <reference lib="es2022.intl" />
 import type { Thread } from "../../generated/app-server/v2/Thread";
+import { unified } from "unified";
+import remarkParse from "remark-parse";
+import remarkGfm from "remark-gfm";
+
+const titleParser = unified().use(remarkParse).use(remarkGfm);
+
+export function threadFullTitle(thread: Thread) {
+  if (thread.name?.trim()) return thread.name.trim();
+  const tree = titleParser.parse(thread.preview);
+  function plain(node: { type: string; value?: string; alt?: string | null; children?: readonly Parameters<typeof plain>[0][] }): string {
+    if (node.type === "html" || node.type === "definition") return "";
+    if (node.type === "image" || node.type === "imageReference") return node.alt || "";
+    if (node.type === "break") return " ";
+    if (node.value !== undefined) return node.value;
+    const separator = ["root", "list", "listItem", "blockquote", "table", "tableRow", "footnoteDefinition"].includes(node.type) ? " " : "";
+    return node.children?.map(plain).join(separator) || "";
+  }
+  return plain(tree).replace(/\s+/g, " ").trim() || "未命名会话";
+}
 
 export const PINNED_THREAD_SECTION_ID = "01984de2-8f74-7c91-a3b2-5c5e937cf318";
 
@@ -7,7 +27,9 @@ export function isThreadPinned(thread: Thread) {
 }
 
 export function threadTitle(thread: Thread) {
-  return thread.name?.trim() || thread.preview.trim() || "未命名会话";
+  const title = threadFullTitle(thread).replace(/\s+/g, " ");
+  const characters = Array.from(new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(title), (part) => part.segment);
+  return characters.length <= 60 ? title : `${characters.slice(0, 59).join("").trimEnd()}…`;
 }
 
 /** Put pinned sessions first, then keep the remaining fork branches in server recency order. */
