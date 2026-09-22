@@ -27,26 +27,33 @@ fn copy_directory(source: &Path, destination: &Path) -> Result<(), String> {
     Ok(())
 }
 
-fn source(app: &AppHandle, skill_name: &str) -> Result<PathBuf, String> {
-    let bundled = app
-        .path()
-        .resource_dir()
-        .map_err(|error| format!("无法解析内置 Skill 资源目录：{error}"))?
+fn resolve_source(resource_root: &Path, skill_name: &str, development_root: Option<&Path>) -> Result<PathBuf, String> {
+    // Tauri preserves parent resource paths under _up_ (../bundled/skills).
+    let bundled = resource_root
+        .join("_up_")
+        .join("bundled")
         .join("skills")
         .join(skill_name);
-    let source = if bundled.is_dir() {
-        bundled
-    } else {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("..")
-            .join("bundled")
-            .join("skills")
-            .join(skill_name)
-    };
-    if !source.is_dir() {
-        return Err(format!("找不到内置 Skill：{}", source.display()));
+    if bundled.join("SKILL.md").is_file() {
+        return Ok(bundled);
     }
-    Ok(source)
+    if let Some(root) = development_root {
+        let candidate = root.join(skill_name);
+        if candidate.join("SKILL.md").is_file() {
+            return Ok(candidate);
+        }
+    }
+    Err(format!("找不到内置 Skill：{}，请重新构建或安装应用", bundled.display()))
+}
+
+fn source(app: &AppHandle, skill_name: &str) -> Result<PathBuf, String> {
+    let resource_root = app.path().resource_dir()
+        .map_err(|error| format!("无法解析内置 Skill 资源目录：{error}"))?;
+    #[cfg(debug_assertions)]
+    let development_root = Some(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../bundled/skills"));
+    #[cfg(not(debug_assertions))]
+    let development_root: Option<PathBuf> = None;
+    resolve_source(&resource_root, skill_name, development_root.as_deref())
 }
 
 fn install(app: AppHandle, skill_name: &str, label: &str) -> Result<String, String> {
@@ -77,4 +84,39 @@ pub fn install_builtin_cs_docs(app: AppHandle) -> Result<String, String> {
 #[tauri::command]
 pub fn install_builtin_amap(app: AppHandle) -> Result<String, String> {
     install(app, "amap", "高德地图")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn packaged_skills_install_without_development_source() {
+        let root = tempfile::tempdir().unwrap();
+        for name in ["amap", "image-gen", "cs-docs"] {
+            let packaged = root.path().join("_up_/bundled/skills").join(name);
+            fs::create_dir_all(packaged.join("scripts")).unwrap();
+            fs::write(packaged.join("SKILL.md"), "packaged skill").unwrap();
+            fs::write(packaged.join("scripts/helper.py"), "helper").unwrap();
+            let source = resolve_source(root.path(), name, None).unwrap();
+            assert_eq!(source, packaged);
+            let installed = root.path().join("installed").join(name);
+            copy_directory(&source, &installed).unwrap();
+            assert_eq!(fs::read_to_string(installed.join("scripts/helper.py")).unwrap(), "helper");
+        }
+    }
+
+    #[test]
+    fn development_fallback_is_explicit_and_packaged_source_wins() {
+        let root = tempfile::tempdir().unwrap();
+        let dev = root.path().join("development");
+        fs::create_dir_all(dev.join("amap")).unwrap();
+        fs::write(dev.join("amap/SKILL.md"), "development").unwrap();
+        assert!(resolve_source(root.path(), "amap", None).is_err());
+        assert_eq!(resolve_source(root.path(), "amap", Some(&dev)).unwrap(), dev.join("amap"));
+        let packaged = root.path().join("_up_/bundled/skills/amap");
+        fs::create_dir_all(&packaged).unwrap();
+        fs::write(packaged.join("SKILL.md"), "packaged").unwrap();
+        assert_eq!(resolve_source(root.path(), "amap", Some(&dev)).unwrap(), packaged);
+    }
 }

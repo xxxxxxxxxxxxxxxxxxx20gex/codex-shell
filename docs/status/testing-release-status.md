@@ -2,7 +2,7 @@
 
 - 模块职责：维护质量门禁、Runtime 兼容验证、Windows 发布证据及未覆盖边界。模块行为由对应状态文档维护，历史测试流水账由 Git 保留。
 - 当前状态：v0.1.7 已正式发布，`release/v0.1.7` 和 `v0.1.7` Tag 指向发布提交，`main` 从该提交继续开发；NSIS 安装器、Updater 签名和 `latest.json` 已上传 GitHub。后续功能从 `main` 开发，下一版本号尚未确定。未配置 Windows Authenticode，SmartScreen 仍可能提示未知发布者。
-- 最近变更：新增高德出图 Python 专项 6 项，覆盖缓存身份、错误脱敏、线型、导出及拒绝覆盖；34 项 Bun 查询测试保持通过。Python 专项需要 Pillow 和中文字体，不在通用质量门禁中，命令与依赖见 [测试脚本说明](../../tests/scripts/README.md)。
+- 最近变更：新增内置 Skill 资源解析与复制测试，覆盖无源码环境、包内资源优先及显式开发回退；扩展组件回归覆盖高德出图关键词搜索。高德 Python 出图专项仍独立于通用质量门禁，命令与依赖见 [测试脚本说明](../../tests/scripts/README.md)。
 - 当前接口：`pnpm test:quality` 依次执行 TypeScript、ESLint、Vitest、`pnpm test:amap`、production build、Knip、`pnpm rust:check` 和 diff 检查。完整门禁需要 Bun；Rust 入口包含 Cargo check、单元测试和严格 Clippy。协议、真实 Runtime 及五项四视口布局检查独立运行，入口见 [测试脚本说明](../../tests/scripts/README.md) 和 `package.json`。
 - 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；Vite 主 chunk 超过 500 kB；`cargo fmt --check` 尚未纳入门禁，现有 Rust 文件有格式差异。
 - 下一步：补真实系统凭据、多渠道对话、第三方 MCP OAuth，以及干净 Windows 用户环境安装和升级验收。
@@ -15,6 +15,8 @@
 同日较早的四尺寸扩展布局通过，覆盖 1440×900、1280×780、1024×720 和 900×700；办公辅助脚本 7 项测试、插件及五项 Skill 校验、真实隔离扩展探针通过，本次高德脚本改动未重跑这些专项。Knip 未发现未使用文件、导出或依赖。LibreOffice 调用使用模拟，未验证真实 Office 转换及模型驱动的办公产物；高德使用模拟 API 响应，未验证真实权限、配额和路线；此基线不代表全量桌面或外部服务验收。
 
 ## 专项验证与未覆盖范围
+
+2026-09-22，内置 Skill 资源路径与简介修复后，TypeScript、ESLint、19 项扩展组件测试、四尺寸扩展布局、Cargo check、46 项 Rust 单测（1 项忽略）及严格 Clippy 通过。`pnpm desktop:build` 包含的 production build 与 Debug 构建成功，仍有既有 chunk 大小和链接器信息警告。资源解析使用临时目录模拟 Tauri 实际打包结构，未运行干净机器 NSIS 安装；不代表生产安装端到端验收。
 
 2026-09-22，高德出图模板更新后，6 项 Python 专项、34 项 Bun 查询测试、Skill 格式校验、TypeScript、production build 和 Cargo check 通过；真实高德静态底图的杭州示例已生成并查看预览，旧缓存错配探针被新实现正确拒绝。Debug 重建成功，包内 23 个高德资源文件与源码哈希一致。路线数据沿用历史示例，未验证当前客运、景区或价格。此次未改桌面 UI 和 Rust 行为，未重跑完整前端、Clippy 或四视口专项；上方完整门禁记录属于同日较早基线。
 

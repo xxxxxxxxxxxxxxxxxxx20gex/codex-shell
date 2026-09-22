@@ -165,7 +165,7 @@ it("installs AMap disabled and keeps it in the built-in group through uninstall"
   expect(invoke).toHaveBeenCalledWith("install_builtin_amap");
   expect(setEnabled).toHaveBeenCalledWith(amap.path, false);
   expect(screen.queryByRole("region", { name: "个人" })).toBeNull();
-  fireEvent.change(screen.getByPlaceholderText("搜索技能"), { target: { value: "高德" } });
+  fireEvent.change(screen.getByPlaceholderText("搜索技能"), { target: { value: "时间表" } });
   expect(within(group).getByText("高德地图")).toBeTruthy();
   fireEvent.click(within(group).getByText("卸载"));
   await within(group).findByText("安装");
