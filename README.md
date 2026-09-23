@@ -48,7 +48,7 @@ CS 将模型回答、执行过程、文件变更、回复文件和折叠过程�
 
 MCP 的 reload、OAuth 和已启用插件的服务可能主动连接各自服务端；这些通信独立于模型请求。
 
-CS 内置目录的兔子 `image-gen` Skill 使用独立生图配置，首次使用见 [配置说明](bundled/skills/image-gen/references/cli.md#首次配置)。
+CS 内置目录的兔子 `image-gen` Skill 使用独立生图配置：`TUZI_API_KEY` 支持进程、Windows 用户和系统环境变量（按此优先级读取），地址默认 `https://api.tu-zi.com/v1`，可通过 `TUZI_BASE_URL` 覆盖。首次使用见 [配置说明](bundled/skills/image-gen/references/cli.md#首次配置)。
 CS 内置目录也提供“高德地图” `amap`，支持地点、路线、距离和天气查询；驾车可设置有序途经点及避收费等路线偏好，地点搜索可分页（同一查询最多 200 条）。地址路线遇到多个候选时会停止并要求确认，不默认选第一个。安装后默认关闭，安装和卸载前后都留在内置组。它依赖系统 PATH 中的 Bun，以及 Windows 用户环境变量 `AMAP_MAPS_API_KEY` 中的高德 Web 服务 API Key；设置后重启 CS。CS 不内置 Bun、不复用对话渠道密钥。已有安装不会被覆盖；更新内置 Skill 请先备份自定义内容，再卸载重装。命令示例见 [高德地图](bundled/skills/amap/references/examples.md)。
 
 高德 Skill 还提供[真实地图行程图模板](bundled/skills/amap/references/travel-map.md)，可生成带时间表的 PNG、图片型 PDF、预览和数据记录；出图另需 Python 3、Pillow 和中文字体，CS 不捆绑这些依赖。支持地铁、公交、步行、骑行与明确标注的示意段；底图缓存校验中心和缩放等参数。旧地图缓存没有参数记录时需要换新缓存路径重新下载。模板不自动核实班次、门票或住宿，不使用生图替代真实地图。

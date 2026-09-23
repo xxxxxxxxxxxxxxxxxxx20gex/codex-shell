@@ -37,11 +37,37 @@ def image_item(result, api):
     return items[0]
 
 
+def read_environment(name):
+    value = os.environ.get(name, "").strip()
+    if value or sys.platform != "win32":
+        return value
+    import winreg
+
+    # Existing desktop processes may not inherit subsequently configured values.
+    for hive, path in (
+        (winreg.HKEY_CURRENT_USER, r"Environment"),
+        (winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment"),
+    ):
+        try:
+            with winreg.OpenKey(hive, path) as registry_key:
+                value, kind = winreg.QueryValueEx(registry_key, name)
+        except FileNotFoundError:
+            continue
+        except OSError:
+            raise ValueError(f"无法读取 Windows 环境变量 {name}；请检查注册表读取权限。") from None
+        if kind in (winreg.REG_SZ, winreg.REG_EXPAND_SZ) and isinstance(value, str):
+            if kind == winreg.REG_EXPAND_SZ:
+                value = winreg.ExpandEnvironmentStrings(value)
+            if value.strip():
+                return value.strip()
+    return ""
+
+
 def load_connection():
-    key = os.environ.get("TUZI_API_KEY", "").strip()
-    base_url = os.environ.get("TUZI_BASE_URL", "").strip().rstrip("/")
-    if not key or not base_url:
-        raise ValueError("请在本机配置 TUZI_API_KEY 和 TUZI_BASE_URL（兔子 API 根地址通常为 https://api.tu-zi.com/v1），然后重启 CS。不要在对话中发送密钥。")
+    key = read_environment("TUZI_API_KEY")
+    base_url = (read_environment("TUZI_BASE_URL") or "https://api.tu-zi.com/v1").rstrip("/")
+    if not key:
+        raise ValueError("未找到 TUZI_API_KEY：已检查进程及 Windows 用户、系统环境变量。请在本机配置兔子密钥，不要在对话中发送密钥。TUZI_BASE_URL 可不设置，默认 https://api.tu-zi.com/v1。")
     try:
         url = httpx.URL(base_url)
     except httpx.InvalidURL:
@@ -55,6 +81,8 @@ def check_response(response, key):
     if response.is_error:
         # Provider error bodies can echo request data; redact before displaying.
         detail = response.text.replace(key, "[REDACTED]")[:1200]
+        if "wrong_endpoint_for_model" in response.text:
+            detail += " 当前模型或令牌路由不支持所用接口；这不是环境变量缺失。请核对渠道模型的 Chat/Images 协议，不自动重试或切换模型。"
         raise ValueError(f"HTTP {response.status_code}: {detail}")
     response.raise_for_status()
 
@@ -150,7 +178,7 @@ def main():
             record.update(status="succeeded", output=str(args.out.resolve()), usage=result.get("usage"), request_id=response.headers.get("x-request-id"))
     except Exception as error:
         record.update(status="failed_or_unknown", error=str(error).replace(key, "[REDACTED]"))
-        raise
+        raise ValueError(record["error"]) from None
     finally:
         record["elapsed_seconds"] = round(time.monotonic() - started, 2)
         record_path.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")

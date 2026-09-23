@@ -30,7 +30,8 @@ description: 通过兔子渠道根据文字或上传的参考图生成图片，�
 ## 运行
 
 使用可用的 Python 3.11+ 或 conda 环境，依赖见 scripts/requirements.txt；脚本路径从本 SKILL.md 所在目录解析。CS 不内置 Python。
-配置由脚本读取；缺配置时停止，按报错和 [首次配置](references/cli.md#首次配置) 引导用户在本机完成，不要求用户在对话里发送密钥。
+配置由脚本依次读取进程、Windows 用户、Windows 系统环境变量；仅 TUZI_API_KEY 必填，TUZI_BASE_URL 默认 https://api.tu-zi.com/v1。不要在运行脚本前仅检查进程变量就判断缺配置。按具体报错和 [首次配置](references/cli.md#首次配置) 引导用户，不要求用户在对话里发送密钥。
+服务返回 wrong_endpoint_for_model 表示模型或令牌路由与接口不兼容，不是缺密钥或地址；历史 Chat 成功记录不能保证当前路由仍支持。核对当前渠道协议后再选择 --api，不自动重试或换模型。
 
 ## 结果边界
 

@@ -29,15 +29,15 @@ python $imageScript @common --image ./sketch.png --prompt-file ./reference-promp
 
 ## 首次配置
 
-脚本固定读取以下两个进程环境变量，无需在提示词或命令参数中重复指定：
+脚本对每项配置依次读取进程环境变量、Windows 用户环境变量、Windows 系统环境变量，使用第一个非空值。无需在提示词或命令参数中重复指定：
 
 | 变量 | 内容 |
 | --- | --- |
 | TUZI_API_KEY | 兔子渠道密钥 |
-| TUZI_BASE_URL | HTTPS API 根地址，通常为 https://api.tu-zi.com/v1，包含 /v1，不带具体接口后缀 |
+| TUZI_BASE_URL | 可选；默认 https://api.tu-zi.com/v1。自定义 HTTPS API 根地址需包含 /v1，不带具体接口后缀 |
 
-在 Windows 用户环境变量中配齐后，重新启动 CS；不要把密钥粘贴进对话。当前 PowerShell 的 $env: 设置仅对子进程生效，其他入口启动的 CS 不会继承。脚本不自动加载 .env。
-两项缺一就停止，不回读凭据文档或借用聊天渠道。曾配置 CODEX_SHELL_IMAGE_API_KEY / CODEX_SHELL_IMAGE_BASE_URL 的用户需改用上表名称；模型仍用 --model，不设环境变量。修改地址不代表其他渠道已验证兼容。
+只需在 Windows 用户或系统环境变量配置 TUZI_API_KEY，不要把密钥粘贴进对话。进程内缺失时脚本直接读取注册表，无需为新增变量重启 CS；若进程已继承旧值，该值优先，更新后需重启 CS 或清除当前进程旧值。当前 PowerShell 的 $env: 设置仅对子进程生效，其他入口启动的 CS 不会继承。脚本不自动加载 .env。
+仅密钥缺失时停止；未配置地址不算错误。不回读凭据文档或借用聊天渠道。曾配置 CODEX_SHELL_IMAGE_API_KEY / CODEX_SHELL_IMAGE_BASE_URL 的用户需改用上表名称；模型仍用 --model，不设环境变量。修改地址不代表其他渠道已验证兼容。
 
 ## 多张图片与文件命名
 
