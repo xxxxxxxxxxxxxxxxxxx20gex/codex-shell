@@ -453,7 +453,7 @@ function App() {
         </aside>
       </section>
 
-      {settingsOpen && <ModelSettingsPanel settings={conversation} providerSettings={settings} loadModels={session.listModels} loadProviderCapabilities={session.readModelProviderCapabilities} onManageChannels={() => { setSettingsOpen(false); openPreferences("providers"); }} switchDisabled={session.running || session.runningThreadCount > 0 || session.sideChat.submitting} onClose={() => setSettingsOpen(false)} onSave={saveAdvancedModelSettings} />}
+      {settingsOpen && <ModelSettingsPanel settings={conversation} providerSettings={settings} loadModels={session.listModels} onManageChannels={() => { setSettingsOpen(false); openPreferences("providers"); }} switchDisabled={session.running || session.runningThreadCount > 0 || session.sideChat.submitting} onClose={() => setSettingsOpen(false)} onSave={saveAdvancedModelSettings} />}
       {preferencesOpen && <PreferencesPanel
         settings={personalization}
         providerSettings={settings}

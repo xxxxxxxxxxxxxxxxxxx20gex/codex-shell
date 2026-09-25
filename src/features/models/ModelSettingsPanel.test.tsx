@@ -62,12 +62,6 @@ const loadModels = vi.fn(async (): Promise<Model[]> => [{
   isDefault: true,
 }]);
 
-const loadProviderCapabilities = vi.fn(async () => ({
-  namespaceTools: false,
-  imageGeneration: false,
-  webSearch: false,
-}));
-
 function renderPanel(overrides: Partial<ComponentProps<typeof ModelSettingsPanel>> = {}) {
   const onSave = vi.fn();
   render(
@@ -75,7 +69,6 @@ function renderPanel(overrides: Partial<ComponentProps<typeof ModelSettingsPanel
       settings={conversation}
       providerSettings={providerSettings}
       loadModels={loadModels}
-      loadProviderCapabilities={loadProviderCapabilities}
       onManageChannels={vi.fn()}
       onClose={vi.fn()}
       onSave={onSave}
@@ -88,9 +81,8 @@ function renderPanel(overrides: Partial<ComponentProps<typeof ModelSettingsPanel
 describe("ModelSettingsPanel", () => {
   it("preserves tiers while another channel's catalog is unknown", async () => {
     const { onSave } = renderPanel({ providerSettings: { ...providerSettings, channels: [openAiChannel, { ...deepSeekChannel, conversation: { ...deepSeekChannel.conversation, serviceTier: "priority" } }] } });
-    await screen.findByText("Provider 能力");
+    await screen.findByDisplayValue("custom-model");
     fireEvent.click(screen.getByRole("button", { name: /DeepSeek 官方/ }));
-    expect(screen.queryByText("Provider 能力")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "保存配置" }));
     await waitFor(() => expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ conversation: expect.objectContaining({ serviceTier: "priority" }) })));
   });
@@ -129,7 +121,6 @@ describe("ModelSettingsPanel", () => {
 
     expect(screen.getByDisplayValue("deepseek-flash")).toBeTruthy();
     expect(screen.queryByDisplayValue("https://api.deepseek.com")).toBeNull();
-    expect(screen.getByText(/由 Codex Core 管理/)).toBeTruthy();
     expect(screen.queryByText("能力模板")).toBeNull();
   });
 
