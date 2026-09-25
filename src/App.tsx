@@ -35,7 +35,6 @@ import { ComposerGoalStatus } from "./features/composer/ComposerGoalStatus";
 import { SlashCommandMenu } from "./features/commands/SlashCommandMenu";
 import { activeChannel } from "./features/models/channels";
 import { ModelQuickPicker } from "./features/models/ModelQuickPicker";
-import { modelIdDisplayName } from "./features/models/modelPresentation";
 import { ModelSettingsPanel } from "./features/models/ModelSettingsPanel";
 import { PreferencesPanel } from "./features/preferences/PreferencesPanel";
 import { RuntimeNoticeBanner } from "./features/runtime/RuntimeNoticeBanner";
@@ -383,7 +382,7 @@ function App() {
                 </div>
                 <div className="composer-actions">
                   <div className="model-picker-anchor">
-                    <button className="model-button" onClick={() => setModelPickerOpen((open) => !open)} title="选择模型与推理强度"><span>{conversation.modelId ? (modelDisplayName ?? modelIdDisplayName(conversation.modelId)) : "选择模型"}</span>{conversation.reasoningEffort && <small>{conversation.reasoningEffort}</small>}<ChevronDown className="chevron-icon" aria-hidden="true" /></button>
+                    <button className="model-button" onClick={() => setModelPickerOpen((open) => !open)} title="选择模型与推理强度"><span>{conversation.modelId ? (modelDisplayName ?? conversation.modelId) : "选择模型"}</span>{conversation.reasoningEffort && <small>{conversation.reasoningEffort}</small>}<ChevronDown className="chevron-icon" aria-hidden="true" /></button>
                     {modelPickerOpen && <ModelQuickPicker settings={conversation} loadModels={session.listModels} onChange={changeModelSettings} onDisplayName={setModelDisplayName} onAdvanced={() => { setModelPickerOpen(false); setSettingsOpen(true); }} onClose={() => setModelPickerOpen(false)} />}
                   </div>
                   <SendModeControl

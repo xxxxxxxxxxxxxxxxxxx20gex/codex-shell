@@ -48,6 +48,13 @@ export function visibleRetryingMessage(
   return retryingError?.threadId === activeThreadId ? retryingError.message : "";
 }
 
+/** Core has no catalog metadata for an intentionally custom model ID. */
+export function isExpectedCustomModelMetadataWarning(message: string, modelId: string) {
+  if (!modelId.trim()) return false;
+  const match = message.match(/^Model metadata for ['\"]([^'\"]+)['\"] not found\. Defaulting to fallback metadata/i);
+  return match?.[1] === modelId;
+}
+
 export function windowsSandboxSetupMessage(
   status: Exclude<WindowsSandboxReadiness, "ready">,
 ) {
@@ -215,12 +222,15 @@ export function useAgentSession(
       onThreadClosed: (notification) => onThreadClosed(notification.threadId),
       onThreadQueueChanged,
       onServerRequestResolved: (notification) => interactionStore.dismiss(notification.requestId),
-      onWarning: (notification) => runtimeNoticeStore.push({
-        kind: "warning",
-        destination: "diagnostics",
-        title: "app-server 提示",
-        message: notification.message,
-      }),
+      onWarning: (notification) => {
+        if (isExpectedCustomModelMetadataWarning(notification.message, settings.modelId)) return;
+        runtimeNoticeStore.push({
+          kind: "warning",
+          destination: "diagnostics",
+          title: "app-server 提示",
+          message: notification.message,
+        });
+      },
       onGuardianWarning: (notification) => runtimeNoticeStore.push({
         kind: "security",
         destination: "diagnostics",

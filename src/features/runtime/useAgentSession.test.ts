@@ -1,10 +1,20 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  isExpectedCustomModelMetadataWarning,
   sendOrQueue,
   updateRetryingError,
   visibleRetryingMessage,
   windowsSandboxSetupMessage,
 } from "./useAgentSession";
+
+describe("custom model metadata warning", () => {
+  it("recognizes only the fallback warning for the active custom model", () => {
+    const warning = "Model metadata for 'gpt-6-sol' not found. Defaulting to fallback metadata: this can degrade performance and cause issues.";
+    expect(isExpectedCustomModelMetadataWarning(warning, "gpt-6-sol")).toBe(true);
+    expect(isExpectedCustomModelMetadataWarning(warning, "gpt-6-astra")).toBe(false);
+    expect(isExpectedCustomModelMetadataWarning("Model metadata for 'gpt-6-sol' not found.", "gpt-6-sol")).toBe(false);
+  });
+});
 
 describe("Windows Sandbox setup notice", () => {
   it("points an unconfigured sandbox to the administrator setup action", () => {
