@@ -36,7 +36,7 @@
 
 ## 最近发布基线
 
-2026-09-20，v0.1.7：发布时完整门禁为 68 文件 / 372 项前端测试、14 项高德测试、43 项 Rust 单测（1 项忽略），以及类型、Lint、构建、Knip、Cargo check、Clippy 和 diff 检查。重新核验主 Runtime 与三个同源 helper 的 SHA-256，通过 codex-cli 0.154.0-alpha.6.2 协议兼容门禁、协议表面测试、隔离协议探针和扩展探针。探针覆盖 Thread 设置与队列、Skills 持久化启停、MCP 配置增删与 reload、本地插件安装卸载、当时三项 CS Office Skill 的安装路径及重启后开关保持，以及高德发现与禁用。
+2026-09-20，v0.1.7：发布时完整门禁为 68 文件 / 372 项前端测试、14 项高德测试、43 项 Rust 单测（1 项忽略），以及类型、Lint、构建、Knip、Cargo check、Clippy 和 diff 检查。插件探针属于历史发布范围，当前产品已移除插件管理，不能作为当前功能承诺。
 
 `pnpm release:package` 生成 NSIS 安装器、`.sig` 和 `latest.json`，通过配置公钥的 Ed25519 / BLAKE2b 验签、可信注释签名及 manifest 版本、下载 URL 和签名一致性检查；三项资产作为 v0.1.7 上传 GitHub Release。安装器 SHA-256：`4a4d8ce2e0892f47ebed8c9a557225c7424eedea525994b153e518472608a75b`。
 

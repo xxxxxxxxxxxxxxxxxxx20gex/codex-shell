@@ -15,14 +15,13 @@
 - 草稿行为：选择草稿末尾的 `/skills` 等无参数快捷命令时只移除命令片段，保留正文、图片批注文字和附件；Escape 仅关闭斜杠菜单，不清空草稿。`+` 菜单继续保留全部输入。扩展变更刷新与失效 Skill 选择清理行为不变。
 - 当前接口：`ComposerAddMenu`、`ComposerIntentControl`、`SlashCommandMenu`、`SkillPicker`、`McpStatusPanel`、`ReviewPanel`、`useAgentCommands` 及固定协议 RPC 包装。
 - 能力边界：Plan 在 `turn/start` 客户端封装中使用局部适配；生成协议与兼容门禁包含实验类型，但不代表产品启用所有实验能力，具体策略与 Runtime 限制见 [协议状态](protocol-status.md)。Codex Core 从模型元数据动态决定自动压缩阈值：缺省为原始上下文窗口的 90%，模型或配置提供的更低值优先且不会超过 90%；Codex Shell 不设置、不复制也不触发该阈值，只展示 app-server 上报的实际用量。独立 CODEX_HOME 只会列出安装到 Codex Shell 环境的 Skills 和 MCP 配置，不自动读取官方 Codex 用户目录。
-- 已知问题：`CS Office` 不绑定 Python 或办公运行库。PDF 渲染需 PyMuPDF；DOCX/PPTX/XLSX/XLSM 转 PDF 还需独立 LibreOffice。模板保存为当前 CODEX_HOME 下普通个人 Skill，无官方图库。Google Workspace、Excel Add-in 和实时 Excel 控制依赖官方账户与工具，不作为可运行 Skill 搬入。复杂 Word 修订、Office 对象和视觉质量仍需实际 Office 验收；源目录备份保留于隔离 CODEX_HOME/codex-shell 下，不自动清除。新增或替换 MCP Token 仍需任务结束后手动重启 Runtime；命令面板未实现焦点陷阱。
+- 已知问题：办公类 Skill 的 Python、LibreOffice 等依赖由各 Skill 自行声明，CS 不负责分发或验证。Google Workspace、Excel Add-in 和实时 Excel 控制依赖官方账户与工具，不作为 CS 内置能力。复杂办公文件和视觉质量仍需实际验收。新增或替换 MCP Token 仍需任务结束后手动重启 Runtime；命令面板未实现焦点陷阱。
 - 下一步：在干净 Windows 环境评估办公依赖分发成本，补独立 LibreOffice 的真实转换和复杂 Office 文件验收；继续验证第三方 MCP OAuth 与 Windows 凭据写入。
-- 验证证据：2026-09-20 隔离扩展探针验证 Skills 持久化启停、MCP 配置增删、插件安装卸载、CS Office 实际安装路径及重启状态、高德发现与禁用；组件和四尺寸布局验证列表、详情、开关、焦点及关闭。草稿保留、安装部分成功和脚本错误边界有回归。生图脚本采用 MockTransport；真实外部 API、办公产物及干净机器依赖未验收。完整基线见 [测试与发布](testing-release-status.md)。
-- 办公定向验证：2026-09-22 真实隔离 app-server 发现五项中文 Skill，安装、实际缓存路径、启停、重启持久化及卸载通过；插件和五项 Skill 格式校验通过。Python 辅助测试验证 PDF 实际渲染、源文件保留、模板生成及拒绝覆盖/越界、转换失败和独立配置调用。未安装独立 LibreOffice，Office 转 PDF 使用模拟调用，不能视为真实转换验收；未做模型驱动的复杂办公任务验收。
+- 验证证据：2026-09-20 的历史插件探针已随插件功能移除，不再作为当前验证入口。当前只保留 Skills、MCP、生图和高德专项验证；真实外部 API、办公产物及干净机器依赖仍未验收。完整基线见 [测试与发布](testing-release-status.md)。
 - 高德定向验证：2026-09-22，`pnpm test:amap` 34 项通过，覆盖四种路线的起终点歧义、确认坐标后继续、非法地理编码坐标、途经点上限/顺序/精度、策略传递、分页边界及 CLI 退出码/输出。对提交前源码和修改后源码使用相同模拟候选：旧版发出 1 次路线请求，新版 0 次并返回退出码 6。Skill 格式校验通过，Debug 内 19 个高德资源文件与源码哈希一致。官方接口文档已核对；未调用真实高德 API，不能视为账号权限、配额或真实路线验收。
 - 生图定向验证：2026-09-23，11 项 Python 测试通过，覆盖变量优先级、系统变量回退、默认地址、安全地址校验、接口错误区分、请求及异常脱敏和不重试；Skill 格式校验通过。旧版本在仅提供模拟密钥时复现缺地址失败。兔子公开目录仍列出默认型号的 Chat 入口，但用户实际返回 wrong_endpoint_for_model，当前令牌路由兼容性未确认；没有发送收费生图请求，不宣称接口错误已解决。
 - 最后更新：2026-09-23
-- 排序定向验证：2026-09-22，31 项扩展管理／插件详情测试通过，新增混合安装状态、卸载固定位置、启停后服务端乱序与插件刷新乱序回归；TypeScript、ESLint、四尺寸扩展布局和 Cargo check 通过。排序采用确定性规则，无新增持久化状态。
+- 排序定向验证：2026-09-22，Skill 列表固定排序测试通过；插件详情和插件排序测试已随插件管理移除。
 - 安装修复验证：2026-09-22，临时目录测试覆盖三项内置 Skill 在无开发源码时解析并复制嵌套资源、生产模式不回退、Debug 显式回退及包内资源优先。19 项扩展组件测试、四尺寸扩展布局、TypeScript、ESLint、Cargo check、46 项 Rust 单测（1 项忽略）和严格 Clippy 通过；未执行干净机器 NSIS 安装验收。
 - 出图定向验证：2026-09-22，`python -B -X utf8 tests/scripts/test-amap-travel-map.py` 6 项通过，覆盖缓存下载与离线复用、参数变化和旧缓存拒绝、网络错误脱敏、公交及其他线型和四类产物／拒绝覆盖；34 项 Bun 查询测试、Skill 格式校验、TypeScript、production build 与 Cargo check 通过。杭州示例使用当日真实高德静态底图生成并查看预览；路线几何沿用示例历史数据，未重新核验班次和营业状态。Debug 与资源同步结果见测试与发布状态。
 - Skill 开关：技能列表和正文弹窗共用滑动样式，由 Core 有效状态驱动；保留键盘语义、忙碌禁用和 reduced-motion 支持。

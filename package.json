@@ -19,7 +19,6 @@
     "runtime:probe-goal": "node tests/scripts/probe-goal-runtime.mjs",
     "runtime:probe-protocol": "node tests/scripts/probe-protocol-runtime.mjs",
     "test:protocol-surface": "node --test tests/scripts/check-protocol-surface.mjs",
-    "runtime:probe-extensions": "node tests/scripts/probe-extensions-runtime.mjs",
     "test:extension-layout": "node tests/scripts/check-extension-layout.mjs",
     "test:channel-layout": "node tests/scripts/check-channel-layout.mjs",
     "test:image-annotation-layout": "node tests/scripts/check-image-annotation-layout.mjs",
