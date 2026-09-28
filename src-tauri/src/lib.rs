@@ -25,6 +25,7 @@ pub fn run() {
         .setup(|app| {
             let window = app.get_webview_window("main").ok_or("主窗口不存在")?;
             window_layout::restore_to_monitor(&window).map_err(std::io::Error::other)?;
+            window_layout::watch_monitor_changes(&window).map_err(std::io::Error::other)?;
             window.maximize()?;
             window.show()?;
             Ok(())
