@@ -24,6 +24,7 @@ function handlers(overrides: Partial<Handlers> = {}): Handlers {
     onThreadDeleted: () => undefined,
     onThreadUnarchived: () => undefined,
     onThreadClosed: () => undefined,
+    onThreadReverted: () => undefined,
     onServerRequestResolved: () => undefined,
     onWarning: () => undefined,
     onGuardianWarning: () => undefined,
@@ -152,6 +153,17 @@ describe("session subscriptions", () => {
     expect(completedThreads).toEqual(["thread-background"]);
     expect(lifecycleEvents).toEqual(["status:thread-background:idle", "mcp:docs:ready"]);
     expect(warnings).toEqual(["review required"]);
+    dispose();
+  });
+
+  it("subscribes to thread reverts so an external rollback can refresh the session", async () => {
+    const transport = new FakeTransport();
+    const client = new AppServerClient(transport);
+    await client.start();
+    const reverted = vi.fn();
+    const dispose = subscribeToSessionEvents(client, handlers({ onThreadReverted: reverted }));
+    transport.emit({ method: "thread/reverted", params: { threadId: "thread-active" } });
+    expect(reverted).toHaveBeenCalledWith({ threadId: "thread-active" });
     dispose();
   });
 

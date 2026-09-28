@@ -35,6 +35,7 @@ import type { ThreadStartedNotification } from "../../generated/app-server/v2/Th
 import type { ThreadStatusChangedNotification } from "../../generated/app-server/v2/ThreadStatusChangedNotification";
 import type { ThreadTokenUsageUpdatedNotification } from "../../generated/app-server/v2/ThreadTokenUsageUpdatedNotification";
 import type { ThreadQueueChangedNotification } from "../../generated/app-server/v2/ThreadQueueChangedNotification";
+import type { ThreadRevertedNotification } from "../../generated/app-server/v2/ThreadRevertedNotification";
 import type { ThreadUnarchivedNotification } from "../../generated/app-server/v2/ThreadUnarchivedNotification";
 import type { ToolRequestUserInputParams } from "../../generated/app-server/v2/ToolRequestUserInputParams";
 import type { TurnCompletedNotification } from "../../generated/app-server/v2/TurnCompletedNotification";
@@ -64,6 +65,7 @@ interface Handlers {
   onThreadDeleted: (notification: ThreadDeletedNotification) => void;
   onThreadUnarchived: (notification: ThreadUnarchivedNotification) => void;
   onThreadClosed: (notification: ThreadClosedNotification) => void;
+  onThreadReverted?: (notification: ThreadRevertedNotification) => void;
   onThreadQueueChanged?: (notification: ThreadQueueChangedNotification) => void;
   onServerRequestResolved: (notification: ServerRequestResolvedNotification) => void;
   onWarning: (notification: WarningNotification) => void;
@@ -146,6 +148,7 @@ export function subscribeToSessionEvents(client: AppServerClient, handlers: Hand
     client.onNotification("thread/deleted", (params) => handlers.onThreadDeleted(params as ThreadDeletedNotification)),
     client.onNotification("thread/unarchived", (params) => handlers.onThreadUnarchived(params as ThreadUnarchivedNotification)),
     client.onNotification("thread/closed", (params) => handlers.onThreadClosed(params as ThreadClosedNotification)),
+    client.onNotification("thread/reverted", (params) => handlers.onThreadReverted?.(params as ThreadRevertedNotification)),
     client.onNotification("thread/queue/changed", (params) => handlers.onThreadQueueChanged?.(params as ThreadQueueChangedNotification)),
     client.onNotification("serverRequest/resolved", (params) => handlers.onServerRequestResolved(params as ServerRequestResolvedNotification)),
     client.onNotification("warning", (params) => handlers.onWarning(params as WarningNotification)),

@@ -222,6 +222,17 @@ export function useAgentSession(
       onThreadDeleted: (notification) => removeThread(notification.threadId),
       onThreadUnarchived: (notification) => onThreadUnarchived(notification.threadId),
       onThreadClosed: (notification) => onThreadClosed(notification.threadId),
+      onThreadReverted: (notification) => {
+        if (notification.threadId !== currentThreadId()) {
+          void refreshHistory();
+          return;
+        }
+        const client = clientRef.current;
+        if (!client) return;
+        void client.readThreadWithHistory(notification.threadId)
+          .then(({ thread }) => dispatch({ type: "loadThread", thread }))
+          .catch((readError) => setError(`回滚后的会话同步失败：${errorMessage(readError)}`));
+      },
       onThreadQueueChanged,
       onServerRequestResolved: (notification) => interactionStore.dismiss(notification.requestId),
       onWarning: (notification) => {
