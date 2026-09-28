@@ -12,7 +12,7 @@
 
 2026-09-22，高德增强后的代码基线上分别执行 TypeScript、ESLint、69 个文件 / 376 项前端测试、34 项高德 Bun 测试、production build、Knip、Cargo check、44 项 Rust 单测（1 项交互测试忽略）与严格 Clippy，均通过；diff 检查和高德 Skill 格式校验通过。新增 CLI 测试首次因 Windows Bun npm 包装器拒绝脚本参数而未启动子进程，改用当前可执行文件后复跑 34 项全部通过。`pnpm desktop:build` 成功生成 0.1.7 Debug，19 个高德资源文件与源码哈希一致，未生成新 Release。Vite 仍有既有主 chunk 大小提示，Debug 链接器输出创建库的信息警告，不影响构建成功。
 
-同日较早的四尺寸扩展布局通过，覆盖 1440×900、1280×780、1024×720 和 900×700；办公辅助脚本 7 项测试、插件及五项 Skill 校验、真实隔离扩展探针通过，本次高德脚本改动未重跑这些专项。Knip 未发现未使用文件、导出或依赖。LibreOffice 调用使用模拟，未验证真实 Office 转换及模型驱动的办公产物；高德使用模拟 API 响应，未验证真实权限、配额和路线；此基线不代表全量桌面或外部服务验收。
+同日较早的四尺寸扩展布局通过，覆盖 1440×900、1280×780 和 1024×720、900×700；办公辅助脚本和 Skill 校验通过。插件专项已随插件管理移除，后续办公能力改以独立 Skill 验收。Knip 未发现未使用文件、导出或依赖。LibreOffice 调用使用模拟，未验证真实 Office 转换及模型驱动的办公产物；高德使用模拟 API 响应，未验证真实权限、配额和路线；此基线不代表全量桌面或外部服务验收。
 
 ## 专项验证与未覆盖范围
 
@@ -20,7 +20,7 @@
 
 2026-09-22，会话名称优化通过 16 项定向测试、TypeScript、ESLint 和四尺寸浏览器探针（完整标题提示／改名、焦点、外部点击和横向溢出）；Cargo check 初次因 Debug 文件占用导致资源复制失败，改用独立临时 target 后通过。`pnpm desktop:build` 的 production build 与 Debug 构建成功，仍有既有 chunk 大小及链接器信息警告。浏览器探针不代替真实 WebView2 端到端验收；没有模型调用。新 DOM 测试首次因 happy-dom 未实现 prompt 而失败，显式提供测试替身后通过。
 
-2026-09-22，扩展固定排序改动通过 31 项扩展管理／插件详情测试、TypeScript、ESLint、四尺寸扩展布局及 Cargo check；覆盖内置项混合安装状态与卸载、启停引起的 Core 返回乱序、插件刷新乱序。`pnpm desktop:build` 的 production build 与 Debug 构建成功，保留既有 chunk 大小和链接器信息警告。未重新执行真实 app-server 扩展探针。
+2026-09-28，移除 CS 插件管理入口、插件客户端调用、内置插件准备命令及插件资源打包入口；保留 Core 生成协议类型以通过 Runtime 兼容门禁。全量前端测试 68 个文件 / 355 项通过，TypeScript、Cargo check、Debug 构建成功；未执行插件探针，因为该功能已从产品范围移除。
 
 2026-09-22，内置 Skill 资源路径与简介修复后，TypeScript、ESLint、19 项扩展组件测试、四尺寸扩展布局、Cargo check、46 项 Rust 单测（1 项忽略）及严格 Clippy 通过。`pnpm desktop:build` 包含的 production build 与 Debug 构建成功，仍有既有 chunk 大小和链接器信息警告。资源解析使用临时目录模拟 Tauri 实际打包结构，未运行干净机器 NSIS 安装；不代表生产安装端到端验收。
 

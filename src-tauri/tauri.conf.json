@@ -56,8 +56,7 @@
       "../licenses/CODEX-NOTICE",
       "../licenses/RIPGREP-MIT.txt",
       "../licenses/README.md",
-      "../bundled/skills",
-      "../bundled/office-marketplace"
+      "../bundled/skills"
     ]
   }
 }

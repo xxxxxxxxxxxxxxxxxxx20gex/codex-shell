@@ -10,7 +10,6 @@ import {
   MessageCircle,
   PanelLeft,
   PanelRight,
-  Puzzle,
   Settings,
   Sparkles,
   Square,
@@ -27,7 +26,6 @@ import { McpStatusPanel } from "./features/commands/McpStatusPanel";
 import { ReviewPanel } from "./features/commands/ReviewPanel";
 import { SkillPicker } from "./features/commands/SkillPicker";
 import { SkillManagementPage } from "./features/commands/SkillManagementPage";
-import { PluginManagementPage } from "./features/commands/PluginManagementPage";
 import { SendModeControl } from "./features/composer/SendModeControl";
 import { ComposerAddMenu } from "./features/composer/ComposerAddMenu";
 import { ComposerIntentControl } from "./features/composer/ComposerIntentControl";
@@ -58,7 +56,7 @@ import { defaultInspectorWidth, type InspectorView } from "./features/layout/pan
 
 function App() {
   const [inspectorView, setInspectorView] = useState<InspectorView>("home");
-  const [mainView, setMainView] = useState<"conversation" | "skills" | "plugins">("conversation");
+  const [mainView, setMainView] = useState<"conversation" | "skills">("conversation");
   const [sideChatMaximized, setSideChatMaximized] = useState(false);
   const {
     workspaceGridRef,
@@ -231,10 +229,6 @@ function App() {
               <MessageSquarePlus aria-hidden="true" />
               <span>新建对话</span>
             </button>
-            <button className={`sidebar-action ${mainView === "plugins" ? "active" : ""}`} type="button" onClick={() => { setMainView("plugins"); setCommandPanel(null); }} title="管理 Plugins">
-              <Puzzle aria-hidden="true" />
-              <span>插件</span>
-            </button>
             <button className={`sidebar-action ${mainView === "skills" ? "active" : ""}`} type="button" onClick={() => { setMainView("skills"); setCommandPanel(null); }} title="管理 Skills">
               <Sparkles aria-hidden="true" />
               <span>Skills</span>
@@ -288,7 +282,7 @@ function App() {
               <PanelRight aria-hidden="true" />
             </button>
           </header>
-          {mainView === "skills" ? <SkillManagementPage loadSkills={session.listSkills} revision={session.skillsRevision} codexHome={session.codexHome} setEnabled={setSkillEnabled} readSkillContent={session.extensions.readSkillContent} onOpenSkillPath={openResourceInExplorer} onChanged={session.extensionsChanged} onClose={() => setMainView("conversation")} /> : mainView === "plugins" ? <PluginManagementPage extensions={session.extensions} revision={session.skillsRevision} loadSkills={session.listSkills} onOpenSkillPath={openResourceInExplorer} onChanged={session.extensionsChanged} onClose={() => setMainView("conversation")} /> : <>
+          {mainView === "skills" ? <SkillManagementPage loadSkills={session.listSkills} revision={session.skillsRevision} codexHome={session.codexHome} setEnabled={setSkillEnabled} readSkillContent={session.extensions.readSkillContent} onOpenSkillPath={openResourceInExplorer} onChanged={session.extensionsChanged} onClose={() => setMainView("conversation")} /> : <>
           {session.turns.length > 0 ? (
             <ConversationTimeline
               key={session.thread?.id ?? "new"}
