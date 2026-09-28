@@ -217,6 +217,7 @@ Radii:
 
 ## Window Chrome
 
+- Launch maximized within the Windows work area, keeping the taskbar and title-bar controls available. Restore uses the configured 1280x780 window size; window placement is not persisted between launches.
 - Windows uses a 32px product-owned frameless title bar instead of native decorations.
 - The whole non-interactive title-bar area remains draggable; double-click toggles maximize and restore.
 - Minimize, maximize/restore, and close stay in a fixed right-side control group and call Tauri window APIs directly.
