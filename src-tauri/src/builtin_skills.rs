@@ -28,14 +28,17 @@ fn copy_directory(source: &Path, destination: &Path) -> Result<(), String> {
 }
 
 fn resolve_source(resource_root: &Path, skill_name: &str, development_root: Option<&Path>) -> Result<PathBuf, String> {
-    // Tauri preserves parent resource paths under _up_ (../bundled/skills).
-    let bundled = resource_root
-        .join("_up_")
-        .join("bundled")
-        .join("skills")
-        .join(skill_name);
-    if bundled.join("SKILL.md").is_file() {
-        return Ok(bundled);
+    // Tauri normally preserves parent resource paths under _up_. Debug/no-bundle
+    // layouts may expose the same resource directly below resource_dir.
+    let bundled_roots = [
+        resource_root.join("_up_").join("bundled").join("skills"),
+        resource_root.join("bundled").join("skills"),
+    ];
+    for root in bundled_roots {
+        let candidate = root.join(skill_name);
+        if candidate.join("SKILL.md").is_file() {
+            return Ok(candidate);
+        }
     }
     if let Some(root) = development_root {
         let candidate = root.join(skill_name);
@@ -43,7 +46,7 @@ fn resolve_source(resource_root: &Path, skill_name: &str, development_root: Opti
             return Ok(candidate);
         }
     }
-    Err(format!("找不到内置 Skill：{}，请重新构建或安装应用", bundled.display()))
+    Err(format!("找不到内置 Skill：{skill_name}，请重新构建或安装应用"))
 }
 
 fn source(app: &AppHandle, skill_name: &str) -> Result<PathBuf, String> {
@@ -118,5 +121,17 @@ mod tests {
         fs::create_dir_all(&packaged).unwrap();
         fs::write(packaged.join("SKILL.md"), "packaged").unwrap();
         assert_eq!(resolve_source(root.path(), "amap", Some(&dev)).unwrap(), packaged);
+    }
+
+    #[test]
+    fn direct_resource_layout_is_supported_without_exposing_a_path_on_failure() {
+        let root = tempfile::tempdir().unwrap();
+        let direct = root.path().join("bundled/skills/cs-docs");
+        fs::create_dir_all(&direct).unwrap();
+        fs::write(direct.join("SKILL.md"), "direct resource").unwrap();
+        assert_eq!(resolve_source(root.path(), "cs-docs", None).unwrap(), direct);
+        let error = resolve_source(root.path(), "missing", None).unwrap_err();
+        assert_eq!(error, "找不到内置 Skill：missing，请重新构建或安装应用");
+        assert!(!error.contains(root.path().to_string_lossy().as_ref()));
     }
 }

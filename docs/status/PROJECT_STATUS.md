@@ -1,15 +1,15 @@
 # 项目总状态
 
-- 当前阶段：Milestone 2 - P0 桌面编程工作台；公开稳定版本 `v0.1.7` 已启用 Tauri Updater，`main` 从 `v0.1.7` 发布提交继续开发。下一版版本号待下一次版本规划确定。
+- 当前阶段：Milestone 2 - P0 桌面编程工作台；公开稳定版本 `v0.1.8` 已启用 Tauri Updater，包含内置 Skill 资源路径修复。
 - 总体状态：核心对话、Session、工具活动、审批、文件、Diff 和模型配置可用；已发布带 minisign 更新签名的 NSIS Windows 安装包，Windows Authenticode 代码签名、CI 与 Runtime 恢复能力尚未完成。
 - 文档边界：本文件只记录跨模块当前快照、项目级风险、下一里程碑和完整验证基线。模块行为和定向证据以 [模块状态索引](../README.md#当前状态) 为准，历史由 Git 保留。
-- 最后更新：2026-09-22
+- 最后更新：2026-09-28
 
 ## 跨模块当前快照
 
 - 图片批注入口已贯通历史附件、生成/工具图片与项目文件预览，统一回填主会话草稿；剪贴板图片在 Tauri 边界限制格式和单张大小后保存到独立 CODEX_HOME，再以原生 `localImage` 输入发送。终端空轮询不进入时间线，真实终端输入收纳到折叠过程组。验证边界见时间线、客户端和测试状态。
 
-- 产品使用 Tauri 2、React、TypeScript 与 Rust 构建，以原版 `codex app-server` 为唯一执行核心，通过 stdio JSON-RPC 通信；公开 `v0.1.7` 已发布安装器、minisign 签名和 updater manifest。当前 Runtime 为通过兼容门禁的 `codex-cli 0.154.0-alpha.6.2`，生成协议类型已与该 Runtime 的实验导出对齐；静态门禁不代表所有运行时功能可用，见 [协议状态](protocol-status.md)。参见 [ADR-001](../decisions/ADR-001-unmodified-codex-app-server.md) 与 [ADR-003](../decisions/ADR-003-compatible-runtime-updates.md)。
+- 产品使用 Tauri 2、React、TypeScript 与 Rust 构建，以原版 `codex app-server` 为唯一执行核心，通过 stdio JSON-RPC 通信；公开 `v0.1.8` 已发布安装器、minisign 签名和 updater manifest。当前 Runtime 为通过兼容门禁的 `codex-cli 0.154.0-alpha.6.2`，生成协议类型已与该 Runtime 的实验导出对齐；静态门禁不代表所有运行时功能可用，见 [协议状态](protocol-status.md)。参见 [ADR-001](../decisions/ADR-001-unmodified-codex-app-server.md) 与 [ADR-003](../decisions/ADR-003-compatible-runtime-updates.md)。
 - 核心工作流已形成闭环：用户可以选择项目、创建和恢复多个 Session、发送文本/文件/图片、查看结构化执行时间线、处理审批、审查实时与历史 Diff，并按完成 Turn 分叉会话。
 - Composer 已统一模型、推理强度、权限、Goal、Plan、Review、Skills、MCP 和压缩入口；Thread 的模型、权限、审批者和 Goal 状态以 Core 权威通知及查询结果为准，不在 Shell 维护第二套执行状态。
 - 模型配置已改为「厂商分组 + 渠道列表」（[ADR-004](../decisions/ADR-004-model-provider-channels.md)）：设置中维护 OpenAI / DeepSeek 渠道的 Base URL、密钥、模型目录和该渠道自己的对话参数，对话高级设置只选择渠道；同一时刻只有一个激活渠道，切换渠道会重启 app-server，全部运行 Thread、主会话和侧聊提交期间禁止切换。DeepSeek 渠道注入随应用编译的官方模型目录，连接测试只验证路由、密钥与目录。
@@ -48,4 +48,4 @@
 - 用户已完成部分真实 CS 桌面检查且未报告问题；具体场景未枚举，不视为全量桌面、真实外部 API 或干净机器升级验收。四尺寸扩展布局及 Debug 构建沿用同日已通过记录。
 - 本机自动发现的更新 Runtime 缺少 `thread/rollback`，被兼容门禁拒绝；本版继续绑定上述已验证 Runtime，不修改 Core 或绕过门禁。
 - 发布资产与完整验证边界见 [测试与发布状态](testing-release-status.md)。历史发布基线由 Git 保留。
-- 下一版基线：发布冻结分支 `release/v0.1.7` 和 Tag `v0.1.7` 保持在发布提交；`main` 从该提交继续开发。后续功能直接在 `main` 开发，发布时按新的版本号重新建立发布分支和 Tag。
+- 当前发布基线：发布冻结分支 `release/v0.1.8` 和 Tag `v0.1.8` 应与本次发布提交保持一致；后续功能直接在 `main` 开发，发布时按新的版本号重新建立发布分支和 Tag。
