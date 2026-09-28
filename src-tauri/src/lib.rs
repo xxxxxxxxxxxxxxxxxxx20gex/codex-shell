@@ -10,8 +10,10 @@ mod mcp_credentials;
 mod skill_files;
 mod runtime;
 mod workspace;
+mod window_layout;
 
 use app_server::AppServerState;
+use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -20,7 +22,15 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(AppServerState::default())
+        .setup(|app| {
+            let window = app.get_webview_window("main").ok_or("主窗口不存在")?;
+            window_layout::restore_to_monitor(&window).map_err(std::io::Error::other)?;
+            window.maximize()?;
+            window.show()?;
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
+            window_layout::toggle_window_maximized,
             app_server::app_server_send,
             app_server::app_server_start,
             app_server::app_server_stop,

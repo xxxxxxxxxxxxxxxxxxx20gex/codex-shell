@@ -217,10 +217,10 @@ Radii:
 
 ## Window Chrome
 
-- Launch maximized within the Windows work area, keeping the taskbar and title-bar controls available. Restore uses the configured 1280x780 window size; window placement is not persisted between launches.
+- Launch maximized within the Windows work area, keeping the taskbar and title-bar controls available. Restore centers the window at 85% of the current monitor's work-area width and height. Apply a 900x640 logical-pixel minimum after DPI conversion, capped by the available work area on small screens. Window placement is not persisted between launches.
 - Windows uses a 32px product-owned frameless title bar instead of native decorations.
 - The whole non-interactive title-bar area remains draggable; double-click toggles maximize and restore.
-- Minimize, maximize/restore, and close stay in a fixed right-side control group and call Tauri window APIs directly.
+- Minimize, maximize/restore, and close stay in a fixed right-side control group. Maximize/restore uses the Rust window-layout command so monitor geometry stays in the system layer; minimize and close call Tauri window APIs directly.
 - Window buttons are borderless and rectangular. Only the close button uses danger color, and only on hover.
 - The custom title bar does not promise the Windows 11 native Snap Layout hover menu; resizing and explicit maximize/restore remain available.
 

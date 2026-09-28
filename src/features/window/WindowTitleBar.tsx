@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Copy, Minus, Square, X } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { invoke } from "@tauri-apps/api/core";
 import { ProductMark } from "../../shared/ProductMark";
 import "./WindowTitleBar.css";
 
@@ -36,7 +37,7 @@ export function WindowTitleBar() {
     if (!isTauri()) return;
     const appWindow = getCurrentWindow();
     if (action === "minimize") void appWindow.minimize().catch(() => undefined);
-    else if (action === "toggle") void appWindow.toggleMaximize().then(() => appWindow.isMaximized()).then(setMaximized).catch(() => undefined);
+    else if (action === "toggle") void invoke("toggle_window_maximized").then(() => appWindow.isMaximized()).then(setMaximized).catch((error: unknown) => console.error("切换窗口大小失败", error));
     else void appWindow.close().catch(() => undefined);
   }
 

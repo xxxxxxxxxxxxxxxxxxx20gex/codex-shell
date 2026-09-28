@@ -6,6 +6,7 @@
 - 当前接口：`pnpm test:quality` 依次执行 TypeScript、ESLint、Vitest、`pnpm test:amap`、production build、Knip、`pnpm rust:check` 和 diff 检查。完整门禁需要 Bun；Rust 入口包含 Cargo check、单元测试和严格 Clippy。协议、真实 Runtime 及五项四视口布局检查独立运行，入口见 [测试脚本说明](../../tests/scripts/README.md) 和 `package.json`。
 - 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；Vite 主 chunk 超过 500 kB；`cargo fmt --check` 尚未纳入门禁，现有 Rust 文件有格式差异。
 - 下一步：补真实系统凭据、多渠道对话、第三方 MCP OAuth，以及干净 Windows 用户环境安装和升级验收。
+- 窗口定向验证（2026-09-28）：按显示器工作区比例还原的 2 项 Rust 几何测试、3 项标题栏测试通过；Cargo check、严格 Clippy、窗口文件 ESLint 和渠道／设置四视口检查通过。全量 ESLint 仍被 `useAgentSession.ts` 中 3 处 `no-useless-escape` 和 1 处 `react-hooks/exhaustive-deps` 既有错误阻塞；本次不宣称全量质量门禁通过。窗口构建和原生探针结果见 [桌面 UI 壳状态](ui-shell-status.md)。
 - 最后更新：2026-09-28
 
 2026-09-28，v0.1.8：补充 `<resource_dir>/bundled/skills` 资源布局解析，找不到内置 Skill 时不再向界面暴露开发机路径；通过 68 个文件 / 355 项前端测试、45 项 Rust 单测（1 项忽略）、类型检查、生产构建、Cargo check、Debug 构建和 diff 检查。生产打包使用通过协议兼容门禁的 `codex-cli 0.154.0-alpha.6.2`，生成 NSIS 安装器、`.sig` 与 `latest.json` 于 `release-artifacts/v0.1.8/`，三项资产已上传 GitHub Release。
