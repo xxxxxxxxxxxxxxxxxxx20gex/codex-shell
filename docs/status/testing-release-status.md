@@ -1,14 +1,14 @@
 # 测试与发布状态
 
 - 模块职责：维护质量门禁、Runtime 兼容验证、Windows 发布证据及未覆盖边界。模块行为由对应状态文档维护，历史测试流水账由 Git 保留。
-- 当前状态：v0.1.8 已生成并准备发布，包含内置 Skill 资源路径兼容与错误信息脱敏修复；未配置 Windows Authenticode，SmartScreen 仍可能提示未知发布者。
+- 当前状态：v0.1.8 已正式发布，包含内置 Skill 资源路径兼容与错误信息脱敏修复；未配置 Windows Authenticode，SmartScreen 仍可能提示未知发布者。
 - 最近变更：模型渠道补充目录外自定义模型原样显示和预期 fallback metadata 警告过滤回归；生图 Python 专项补充 Windows 用户／系统环境变量回退、默认地址、注册表权限错误、协议错误区分及注册表密钥异常脱敏回归。Python 专项独立于通用质量门禁，命令与依赖见 [测试脚本说明](../../tests/scripts/README.md)。
 - 当前接口：`pnpm test:quality` 依次执行 TypeScript、ESLint、Vitest、`pnpm test:amap`、production build、Knip、`pnpm rust:check` 和 diff 检查。完整门禁需要 Bun；Rust 入口包含 Cargo check、单元测试和严格 Clippy。协议、真实 Runtime 及五项四视口布局检查独立运行，入口见 [测试脚本说明](../../tests/scripts/README.md) 和 `package.json`。
 - 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；Vite 主 chunk 超过 500 kB；`cargo fmt --check` 尚未纳入门禁，现有 Rust 文件有格式差异。
 - 下一步：补真实系统凭据、多渠道对话、第三方 MCP OAuth，以及干净 Windows 用户环境安装和升级验收。
 - 最后更新：2026-09-28
 
-2026-09-28，v0.1.8：补充 `<resource_dir>/bundled/skills` 资源布局解析，找不到内置 Skill 时不再向界面暴露开发机路径；通过 68 个文件 / 355 项前端测试、45 项 Rust 单测（1 项忽略）、类型检查、生产构建、Cargo check、Debug 构建和 diff 检查。生产打包使用通过协议兼容门禁的 `codex-cli 0.154.0-alpha.6.2`，生成 NSIS 安装器、`.sig` 与 `latest.json` 于 `release-artifacts/v0.1.8/`；资产上传状态以 GitHub Release 为准。
+2026-09-28，v0.1.8：补充 `<resource_dir>/bundled/skills` 资源布局解析，找不到内置 Skill 时不再向界面暴露开发机路径；通过 68 个文件 / 355 项前端测试、45 项 Rust 单测（1 项忽略）、类型检查、生产构建、Cargo check、Debug 构建和 diff 检查。生产打包使用通过协议兼容门禁的 `codex-cli 0.154.0-alpha.6.2`，生成 NSIS 安装器、`.sig` 与 `latest.json` 于 `release-artifacts/v0.1.8/`，三项资产已上传 GitHub Release。
 
 ## 当前开发验证基线
 
