@@ -87,6 +87,8 @@ export function useAgentSession(
   const [error, setError] = useState("");
   const [retryingError, dispatchRetryingError] = useReducer(updateRetryingError, null);
   const [windowsSandboxReadiness, setWindowsSandboxReadiness] = useState<WindowsSandboxReadiness | null>(null);
+  const currentModelIdRef = useRef(settings.modelId);
+  currentModelIdRef.current = settings.modelId;
   const runtimeLogStore = useStableStore(() => new RuntimeLogStore());
   const runtimeNoticeStore = useStableStore(() => new RuntimeNoticeStore());
   const interactionStore: ServerInteractionStore = useStableStore(() => new InteractionStore());
@@ -223,7 +225,7 @@ export function useAgentSession(
       onThreadQueueChanged,
       onServerRequestResolved: (notification) => interactionStore.dismiss(notification.requestId),
       onWarning: (notification) => {
-        if (isExpectedCustomModelMetadataWarning(notification.message, settings.modelId)) return;
+        if (isExpectedCustomModelMetadataWarning(notification.message, currentModelIdRef.current)) return;
         runtimeNoticeStore.push({
           kind: "warning",
           destination: "diagnostics",

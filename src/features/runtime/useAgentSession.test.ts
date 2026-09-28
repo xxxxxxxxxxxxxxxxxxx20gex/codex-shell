@@ -14,6 +14,14 @@ describe("custom model metadata warning", () => {
     expect(isExpectedCustomModelMetadataWarning(warning, "gpt-6-astra")).toBe(false);
     expect(isExpectedCustomModelMetadataWarning("Model metadata for 'gpt-6-sol' not found.", "gpt-6-sol")).toBe(false);
   });
+
+  it("matches the warning after the model changes without recreating the subscription", () => {
+    const currentModelId = { current: "gpt-6-sol" };
+    const warning = "Model metadata for 'gpt-6-sol' not found. Defaulting to fallback metadata: this can degrade performance and cause issues.";
+    expect(isExpectedCustomModelMetadataWarning(warning, currentModelId.current)).toBe(true);
+    currentModelId.current = "gpt-6-astra";
+    expect(isExpectedCustomModelMetadataWarning(warning, currentModelId.current)).toBe(false);
+  });
 });
 
 describe("Windows Sandbox setup notice", () => {
