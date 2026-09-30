@@ -41,4 +41,22 @@ describe("RuntimeNoticeStore", () => {
       path: `${"p".repeat(1_000)}…`,
     });
   });
+
+  it("expires ordinary notices while keeping security notices persistent", () => {
+    vi.useFakeTimers();
+    const store = new RuntimeNoticeStore();
+    store.push({ kind: "warning", destination: "diagnostics", title: "模型提示", message: "稍后消失" });
+    store.push({ kind: "security", destination: "runtime", title: "沙箱提示", message: "需要处理" });
+    vi.advanceTimersByTime(8_001);
+    expect(store.getSnapshot().map((notice) => notice.title)).toEqual(["沙箱提示"]);
+    store.dispose();
+    vi.useRealTimers();
+  });
+
+  it("can remove resolved notices by predicate", () => {
+    const store = new RuntimeNoticeStore();
+    store.push({ kind: "security", destination: "runtime", title: "Windows Sandbox 尚未就绪", message: "需要配置" });
+    store.dismissWhere((notice) => notice.title.startsWith("Windows Sandbox"));
+    expect(store.getSnapshot()).toEqual([]);
+  });
 });

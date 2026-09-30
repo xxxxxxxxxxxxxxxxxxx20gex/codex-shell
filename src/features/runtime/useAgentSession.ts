@@ -63,6 +63,10 @@ export function windowsSandboxSetupMessage(
     : "Windows Sandbox 需要更新。请前往“设置 → 运行环境”，点击“使用管理员权限配置”。";
 }
 
+function clearSandboxNotices(store: RuntimeNoticeStore) {
+  store.dismissWhere((notice) => notice.destination === "runtime" && notice.title.startsWith("Windows Sandbox"));
+}
+
 function useStableStore<T>(create: () => T) {
   const storeRef = useRef<T | null>(null);
   storeRef.current ??= create();
@@ -111,7 +115,9 @@ export function useAgentSession(
     try {
       const response = await client.readWindowsSandboxReadiness();
       setWindowsSandboxReadiness(response.status);
-      if (response.status !== "ready") {
+      if (response.status === "ready") {
+        clearSandboxNotices(runtimeNoticeStore);
+      } else {
         runtimeNoticeStore.push({
           kind: "security",
           destination: "runtime",
@@ -273,6 +279,7 @@ export function useAgentSession(
       }),
       onSandboxSetupCompleted: (notification) => {
         setWindowsSandboxReadiness(notification.success ? "ready" : "notConfigured");
+        if (notification.success) clearSandboxNotices(runtimeNoticeStore);
         runtimeNoticeStore.push({
           kind: notification.success ? "info" : "security",
           destination: "runtime",

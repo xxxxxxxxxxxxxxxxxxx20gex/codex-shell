@@ -9,6 +9,8 @@
 - 窗口定向验证（2026-09-28）：跨屏最小尺寸约束修复后，50 项 Rust 测试通过（1 项忽略），包含 5 项窗口几何回归；3 项标题栏测试、TypeScript、Cargo check、严格 Clippy、生产构建、Debug 和渠道／设置四视口检查通过。单屏原生启动／还原及真实 WebView2 连续 6 次切换通过，未进行实体双屏验收。此前全量 ESLint 被 `useAgentSession.ts` 中 3 处 `no-useless-escape` 和 1 处 `react-hooks/exhaustive-deps` 既有错误阻塞，本次不宣称全量质量门禁通过。原生验证边界见 [桌面 UI 壳状态](ui-shell-status.md)。
 - 最后更新：2026-09-28
 
+2026-09-30，Runtime 提示生命周期修复：14 项相关测试通过，普通 info／deprecation 5 秒、warning 8 秒自动消失，security 持续显示；沙箱成功后自动清除未就绪提示，管理员配置入口保持 elevated 模式。类型检查、定向 ESLint 和 Debug 构建通过。
+
 2026-09-28，v0.1.8：补充 `<resource_dir>/bundled/skills` 资源布局解析，找不到内置 Skill 时不再向界面暴露开发机路径；通过 68 个文件 / 355 项前端测试、45 项 Rust 单测（1 项忽略）、类型检查、生产构建、Cargo check、Debug 构建和 diff 检查。生产打包使用通过协议兼容门禁的 `codex-cli 0.154.0-alpha.6.2`，生成 NSIS 安装器、`.sig` 与 `latest.json` 于 `release-artifacts/v0.1.8/`，三项资产已上传 GitHub Release。
 
 ## 当前开发验证基线

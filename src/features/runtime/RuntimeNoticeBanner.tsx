@@ -14,7 +14,7 @@ export function RuntimeNoticeBanner({ store, onShowStatus }: Props) {
   if (!notice) return null;
   return (
     <div className="runtime-notice-banner" data-kind={notice.kind}>
-      <button type="button" onClick={() => onShowStatus(notice.destination)}>
+      <button type="button" onClick={() => onShowStatus(notice.destination)} aria-label={`${notice.title}：打开${notice.destination === "runtime" ? "运行环境" : "诊断"}`}>
         <strong>{notice.title}</strong>
         <span>{notice.message}</span>
         {notices.length > 1 && <i>另有 {notices.length - 1} 项</i>}
