@@ -1,5 +1,5 @@
-import type { Model } from "../../generated/app-server/v2/Model";
 import type { Channel, ModelSettings, ProviderSettings, VendorId } from "./types";
+import type { Model } from "../../generated/app-server/v2/Model";
 
 export interface VendorDescriptor {
   id: VendorId;
@@ -23,6 +23,20 @@ export const VENDORS: VendorDescriptor[] = [
     summary: "官方 Responses API，使用随应用内置的 DeepSeek 模型目录。",
   },
 ];
+
+const OPENAI_BUILTIN_MODEL_IDS = ["gpt-6-sol", "gpt-6.1-sol"] as const;
+
+export function appendOpenAiBuiltinModels(models: Model[]): Model[] {
+  const existing = new Set(models.flatMap((model) => [model.id, model.model]));
+  const builtins: Model[] = OPENAI_BUILTIN_MODEL_IDS.filter((id) => !existing.has(id)).map((id) => ({
+    id, model: id, upgrade: null, upgradeInfo: null, availabilityNux: null,
+    displayName: id.toUpperCase(), description: "CS 内置 GPT 模型 ID", modelSpecialty: null,
+    hidden: false, supportedReasoningEfforts: ["low", "medium", "high"].map((reasoningEffort) => ({ reasoningEffort, description: reasoningEffort })),
+    defaultReasoningEffort: "medium", inputModalities: ["text", "image"], supportsPersonality: false,
+    multiAgentVersion: null, additionalSpeedTiers: [], serviceTiers: [], defaultServiceTier: null, isDefault: false,
+  }));
+  return [...models, ...builtins];
+}
 
 export function vendorDescriptor(vendor: VendorId): VendorDescriptor {
   return VENDORS.find((descriptor) => descriptor.id === vendor) ?? VENDORS[0];

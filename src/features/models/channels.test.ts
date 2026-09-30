@@ -3,6 +3,7 @@ import type { Model } from "../../generated/app-server/v2/Model";
 import {
   activeChannel,
   activeConversation,
+  appendOpenAiBuiltinModels,
   createChannel,
   defaultConversation,
   generateChannelId,
@@ -59,6 +60,11 @@ function settings(activeChannelId: string | null, channels: Channel[]): Provider
 }
 
 describe("channel bookkeeping", () => {
+  it("adds the two CS OpenAI model IDs without duplicates", () => {
+    const models = appendOpenAiBuiltinModels([]);
+    expect(models.map((model) => model.model)).toEqual(["gpt-6-sol", "gpt-6.1-sol"]);
+    expect(appendOpenAiBuiltinModels(models)).toHaveLength(2);
+  });
   it("creates a vendor-shaped channel with an empty conversation", () => {
     const channel = createChannel("deepseek", []);
 

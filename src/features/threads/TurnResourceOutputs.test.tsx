@@ -22,13 +22,15 @@ it("extracts reply references, ignores code and web links, and lazily retains pr
   expect(readFile).toHaveBeenCalledWith("C:/work/mask.png");
 });
 
-it("only repeats images below replies, leaving document links in the reply body", () => {
+it("lists Markdown documents from reply links and opens them through the file viewer", () => {
   const message: ThreadItem = { type: "agentMessage", id: "a", text: "[skill](C:/skills/SKILL.md) [notes](notes.markdown) [pdf](report.pdf) [sheet](data.xlsx) [image](image.png)", phase: "final_answer", memoryCitation: null, questions: null, delivery: null };
   const view = render(<TurnResourceOutputs items={[message]} />);
   expect(view.getByText("image.png")).toBeTruthy();
-  expect(view.queryByText("SKILL.md")).toBeNull();
+  expect(view.getByText("SKILL.md")).toBeTruthy();
   expect(view.queryByText("report.pdf")).toBeNull();
   expect(view.queryByText("data.xlsx")).toBeNull();
-  view.rerender(<TurnResourceOutputs items={[{ ...message, text: "[notes](notes.md)" }]} />);
-  expect(view.container.textContent).toBe("");
+  const onOpenPath = vi.fn();
+  view.rerender(<TurnResourceOutputs items={[{ ...message, text: "[notes](notes.md)" }]} onOpenPath={onOpenPath} />);
+  fireEvent.click(view.getByRole("button", { name: "打开 notes.md" }));
+  expect(onOpenPath).toHaveBeenCalledWith("notes.md");
 });

@@ -26,10 +26,11 @@ function isImagePath(path: string) {
 }
 
 /** Only resources that have a useful visual/document representation belong in the turn summary. */
-function resourceKind(path: string): "image" | "pdf" | "spreadsheet" | null {
+function resourceKind(path: string): "image" | "pdf" | "spreadsheet" | "document" | null {
   if (isImagePath(path)) return "image";
   if (/\.pdf$/i.test(path)) return "pdf";
   if (/\.(?:csv|ods|xls|xlsx)$/i.test(path)) return "spreadsheet";
+  if (/\.(?:md|markdown)$/i.test(path)) return "document";
   return null;
 }
 
@@ -50,6 +51,10 @@ function replyPaths(items: ThreadItem[]) {
       node.children?.forEach(visit);
     }
     visit(tree);
+    for (const match of message.text.matchAll(/`([^`\r\n]+\.(?:md|markdown)(?::\d+(?::\d+)?)?)`/gi)) {
+      const target = markdownLinkTarget(match[1]);
+      if (target?.type === "localPath") result.push(target.value);
+    }
   }
   return result;
 }
@@ -58,7 +63,9 @@ export function TurnResourceOutputs(props: Props) {
   const { items } = props;
   const [expanded, setExpanded] = useState(false);
   const key = (path: string) => path.replace(/\\/g, "/").replace(/^\/([a-z]:)/i, "$1").replace(/\/\.\//g, "/").toLowerCase();
-  const replies = [...new Map(replyPaths(items).filter(isImagePath).map((path) => [key(path), path])).values()];
+  const replies = [...new Map(replyPaths(items).map((path) => [key(path), path])).values()];
+  const replyImages = replies.filter(isImagePath);
+  const replyDocuments = replies.filter((path) => resourceKind(path) === "document");
   const seen = new Set(replies.map(key));
   const process: string[] = [];
   for (const item of items) {
@@ -69,10 +76,12 @@ export function TurnResourceOutputs(props: Props) {
       if (!seen.has(key(path))) { seen.add(key(path)); process.push(path); }
     }
   }
+  const processFiles = process.filter((path) => resourceKind(path) !== "document");
   if (!replies.length && !process.length) return null;
   return <>
-    {replies.length > 0 && <ResourceList {...props} title="回复中的图片" resources={replies} />}
-    {process.length > 0 && <details className="turn-process-resources" onToggle={(event) => setExpanded(event.currentTarget.open)}><summary>过程资源 · {process.length} 个</summary>{expanded && <ResourceList {...props} title="查看、生成与修改的资源" resources={process} />}</details>}
+    {replyImages.length > 0 && <ResourceList {...props} title="回复中的图片" resources={replyImages} />}
+    {replyDocuments.length > 0 && <ResourceList {...props} title="回复中的文档" resources={replyDocuments} />}
+    {processFiles.length > 0 && <details className="turn-process-resources" onToggle={(event) => setExpanded(event.currentTarget.open)}><summary>过程资源 · {processFiles.length} 个</summary>{expanded && <ResourceList {...props} title="查看、生成与修改的资源" resources={processFiles} />}</details>}
   </>;
 }
 
@@ -97,7 +106,8 @@ function ResourceList({ resources, title, readFile, onOpenPath, onOpenInExplorer
     {files.length > 0 && <ul className="turn-resource-files">
       {files.map((path) => <li key={path} data-local-path={path}>
         {resourceKind(path) === "spreadsheet" ? <FileSpreadsheet aria-hidden="true" /> : <FileText aria-hidden="true" />}<code title={path}>{baseName(path)}</code><small title={path}>{path}</small>
-        {onOpenInExplorer && <button type="button" onClick={() => void onOpenInExplorer(path)} title="在资源管理器中显示" aria-label={`打开 ${path}`}><FolderOpen aria-hidden="true" /></button>}
+        {onOpenPath && <button type="button" onClick={() => void onOpenPath(path)} title="打开文件" aria-label={`打开 ${path}`}><FileText aria-hidden="true" /></button>}
+        {onOpenInExplorer && <button type="button" onClick={() => void onOpenInExplorer(path)} title="在资源管理器中显示" aria-label={`在资源管理器中显示 ${path}`}><FolderOpen aria-hidden="true" /></button>}
       </li>)}
     </ul>}
   </section>;

@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import "./App.css";
 import { PermissionModeSelector } from "./features/approvals/PermissionModeSelector";
 import { AttachmentGallery, AttachmentPreviewDialog } from "./features/attachments/AttachmentGallery";
@@ -31,7 +31,7 @@ import { ComposerAddMenu } from "./features/composer/ComposerAddMenu";
 import { ComposerIntentControl } from "./features/composer/ComposerIntentControl";
 import { ComposerGoalStatus } from "./features/composer/ComposerGoalStatus";
 import { SlashCommandMenu } from "./features/commands/SlashCommandMenu";
-import { activeChannel } from "./features/models/channels";
+import { activeChannel, appendOpenAiBuiltinModels } from "./features/models/channels";
 import { ModelQuickPicker } from "./features/models/ModelQuickPicker";
 import { ModelSettingsPanel } from "./features/models/ModelSettingsPanel";
 import { PreferencesPanel } from "./features/preferences/PreferencesPanel";
@@ -55,6 +55,7 @@ import { isPathWithinRoot, resolveLinkedProjectPath } from "./features/workspace
 import { defaultInspectorWidth, type InspectorView } from "./features/layout/panelLayout";
 
 function App() {
+  const composerInputRef = useRef<HTMLTextAreaElement | null>(null);
   const [inspectorView, setInspectorView] = useState<InspectorView>("home");
   const [mainView, setMainView] = useState<"conversation" | "skills">("conversation");
   const [sideChatMaximized, setSideChatMaximized] = useState(false);
@@ -137,6 +138,18 @@ function App() {
     clearActiveGoal,
   } = useAppController();
   const openSideChat = session.sideChat.openChat;
+  const listModels = session.listModels;
+  const loadModels = useCallback(async () => {
+    const models = await listModels();
+    return activeChannel(settings)?.vendor === "openai" ? appendOpenAiBuiltinModels(models) : models;
+  }, [listModels, settings]);
+
+  useLayoutEffect(() => {
+    const input = composerInputRef.current;
+    if (!input) return;
+    input.style.height = "auto";
+    input.style.height = `${Math.min(input.scrollHeight, 320)}px`;
+  }, [draft]);
 
   useEffect(() => {
     setInspectorWidth(defaultInspectorWidth(inspectorView));
@@ -348,7 +361,7 @@ function App() {
                 onRemoveFile={(path) => setMentions((current) => current.filter((item) => item.path !== path))}
                 onRemoveImage={(index) => setImages((current) => current.filter((_, itemIndex) => itemIndex !== index))}
               />
-              <textarea value={draft} onChange={(event) => { setDraft(event.target.value); setUiError(""); setCommandNotice(""); setSlashMenuDismissed(false); }} onPaste={(event) => void handleComposerPaste(event)} onKeyDown={handleComposerKeyDown} placeholder={session.running ? "输入下一条消息，当前回答完成后发送…" : composerIntent === "goal" ? "描述你的目标，最好包含可衡量的结果…" : composerIntent === "plan" ? "描述需要分析和规划的任务…" : currentProjectPath ? "交给 Codex 一个任务，输入 / 使用命令，输入 @ 引用文件…" : "正在准备默认项目目录…"} />
+              <textarea ref={composerInputRef} value={draft} onChange={(event) => { setDraft(event.target.value); setUiError(""); setCommandNotice(""); setSlashMenuDismissed(false); }} onPaste={(event) => void handleComposerPaste(event)} onKeyDown={handleComposerKeyDown} placeholder={session.running ? "输入下一条消息，当前回答完成后发送…" : composerIntent === "goal" ? "描述你的目标，最好包含可衡量的结果…" : composerIntent === "plan" ? "描述需要分析和规划的任务…" : currentProjectPath ? "交给 Codex 一个任务，输入 / 使用命令，输入 @ 引用文件…" : "正在准备默认项目目录…"} />
               {currentProjectPath && mentionQuery !== null && <FileMentionMenu query={mentionQuery} results={mentionResults} loading={mentionLoading} onSelect={selectMention} />}
               {slashMenuVisible && <SlashCommandMenu query={slashQuery ?? ""} selectedIndex={slashSelectedIndex} hasThread={Boolean(session.thread)} running={session.running} onSelect={(id) => void runSlashCommand(id)} />}
               {commandPanel === "skills" && <SkillPicker selected={skills} revision={session.skillsRevision} loadSkills={session.listSkills} onToggle={toggleSkill} onClose={() => setCommandPanel(null)} />}
@@ -377,7 +390,7 @@ function App() {
                 <div className="composer-actions">
                   <div className="model-picker-anchor">
                     <button className="model-button" onClick={() => setModelPickerOpen((open) => !open)} title="选择模型与推理强度"><span>{conversation.modelId ? (modelDisplayName ?? conversation.modelId) : "选择模型"}</span>{conversation.reasoningEffort && <small>{conversation.reasoningEffort}</small>}<ChevronDown className="chevron-icon" aria-hidden="true" /></button>
-                    {modelPickerOpen && <ModelQuickPicker settings={conversation} loadModels={session.listModels} onChange={changeModelSettings} onDisplayName={setModelDisplayName} onAdvanced={() => { setModelPickerOpen(false); setSettingsOpen(true); }} onClose={() => setModelPickerOpen(false)} />}
+                    {modelPickerOpen && <ModelQuickPicker settings={conversation} loadModels={loadModels} onChange={changeModelSettings} onDisplayName={setModelDisplayName} onAdvanced={() => { setModelPickerOpen(false); setSettingsOpen(true); }} onClose={() => setModelPickerOpen(false)} />}
                   </div>
                   <SendModeControl
                     canSteer={session.canSteer}
