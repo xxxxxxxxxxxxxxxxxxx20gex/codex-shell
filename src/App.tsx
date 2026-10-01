@@ -51,6 +51,7 @@ import { WindowTitleBar } from "./features/window/WindowTitleBar";
 import { ContextMenuPolicy } from "./features/window/ContextMenuPolicy";
 import { ProductMark } from "./shared/ProductMark";
 import { TransientNotice } from "./shared/TransientNotice";
+import { CompactIconButton } from "./shared/CompactIconButton";
 import "./styles/tokens.css";
 import { isPathWithinRoot, resolveLinkedProjectPath } from "./features/workspaces/workspaceState";
 import { defaultInspectorWidth, type InspectorView } from "./features/layout/panelLayout";
@@ -343,12 +344,13 @@ function App() {
                   <Clock3 className="queued-turn-icon" aria-hidden="true" />
                   <span>{label}</span>
                   <small className="queued-turn-status">等待中</small>
-                  <button type="button" onClick={() => editQueuedTurn(queued)} aria-label={`编辑待发送消息：${label}`} title="编辑"><FilePenLine aria-hidden="true" /></button>
-                  {session.canSteer && <button type="button" onClick={() => void steerQueuedTurn(queued)} aria-label={`引导发送待发送消息：${label}`} title="引导发送"><ArrowUpRight aria-hidden="true" /></button>}
-                  <button type="button" onClick={() => session.removeQueued(queued.id)} aria-label={`取消待发送消息：${label}`} title="取消待发送"><X aria-hidden="true" /></button>
+                  <CompactIconButton label={`编辑待发送消息：${label}`} title="编辑" icon={<FilePenLine aria-hidden="true" />} onClick={() => editQueuedTurn(queued)} />
+                  {session.canSteer && <CompactIconButton label={`引导发送待发送消息：${label}`} title="引导发送" icon={<ArrowUpRight aria-hidden="true" />} onClick={() => void steerQueuedTurn(queued)} />}
+                  <CompactIconButton label={`取消待发送消息：${label}`} title="取消待发送" icon={<X aria-hidden="true" />} onClick={() => session.removeQueued(queued.id)} />
                 </div>;
               })}
             </div>}
+            {composerIntent === "default" && session.threadGoal && <ComposerGoalStatus goal={session.threadGoal} onClear={() => void clearActiveGoal()} />}
             <div ref={composerRef} className="composer has-context-heatbar">
               <ContextHeatBar usage={session.tokenUsage} hasThread={Boolean(session.thread)} running={session.running} onCompact={() => runSlashCommand("compact", "", false)} />
               {skills.length > 0 && <div className="mention-chips">
@@ -385,12 +387,11 @@ function App() {
                     onReviewerChange={changeApprovalReviewer}
                   />
                   {composerIntent !== "default" && <ComposerIntentControl intent={composerIntent} onClear={() => { setComposerIntent("default"); setCommandNotice(""); }} />}
-                  {composerIntent === "default" && session.threadGoal && <ComposerGoalStatus goal={session.threadGoal} onClear={() => void clearActiveGoal()} />}
                   {session.activityLabel && <span className={`steer-mode-indicator ${session.canSteer ? "steerable" : ""}`}><i aria-hidden="true" />{session.activityLabel}</span>}
                 </div>
                 <div className="composer-actions">
                   <div className="model-picker-anchor">
-                    <button className="model-button" onClick={() => setModelPickerOpen((open) => !open)} title="选择模型与推理强度"><span>{conversation.modelId ? modelIdDisplayName(modelDisplayName ?? conversation.modelId) : "选择模型"}</span>{conversation.reasoningEffort && <small>{conversation.reasoningEffort}</small>}<ChevronDown className="chevron-icon" aria-hidden="true" /></button>
+                    <button type="button" className="model-button" onClick={() => setModelPickerOpen((open) => !open)} aria-haspopup="dialog" aria-expanded={modelPickerOpen} title="选择模型与推理强度"><span>{conversation.modelId ? modelIdDisplayName(modelDisplayName ?? conversation.modelId) : "选择模型"}</span>{conversation.reasoningEffort && <small>{conversation.reasoningEffort}</small>}<ChevronDown className="chevron-icon" aria-hidden="true" /></button>
                     {modelPickerOpen && <ModelQuickPicker settings={conversation} loadModels={loadModels} onChange={changeModelSettings} onDisplayName={setModelDisplayName} onAdvanced={() => { setModelPickerOpen(false); setSettingsOpen(true); }} onClose={() => setModelPickerOpen(false)} />}
                   </div>
                   <SendModeControl

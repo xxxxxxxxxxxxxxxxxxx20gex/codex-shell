@@ -103,15 +103,19 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .turn-error { margin: 12px 0 0 16px; color: var(--accent-danger); font-size: var(--text-meta); line-height: 16px; }
 code { color: var(--text-secondary); font-family: var(--font-mono); }
 .composer-wrap { position: relative; z-index: 4; width: min(100%, 860px); margin: 0 auto; padding: 0 24px 16px; background: var(--surface-canvas); }
-.composer-error, .composer-notice, .transient-notice { display: flex; min-width: 0; min-height: 38px; box-sizing: border-box; align-items: center; margin-bottom: 8px; padding: 8px 10px; border-radius: var(--radius-panel); font-size: var(--text-meta); line-height: 16px; }
+.composer-error, .composer-notice, .transient-notice { display: flex; min-width: 0; min-height: 38px; box-sizing: border-box; align-items: center; margin-bottom: 8px; padding: 8px 10px; border-radius: var(--radius-panel); font-size: var(--text-label); line-height: 16px; }
 .composer-error { border: 1px solid color-mix(in srgb, var(--accent-danger) 32%, transparent); color: var(--accent-danger); background: color-mix(in srgb, var(--accent-danger) 10%, var(--surface-panel)); }
 .transient-notice { gap: 8px; padding-right: 6px; border: 1px solid color-mix(in srgb, var(--accent-danger) 32%, transparent); color: var(--accent-danger); background: color-mix(in srgb, var(--accent-danger) 10%, var(--surface-panel)); }
 .transient-notice-success { border-color: color-mix(in srgb, var(--accent-success) 28%, transparent); color: var(--text-secondary); background: color-mix(in srgb, var(--accent-success) 8%, var(--surface-panel)); }
 .transient-notice > span { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.transient-notice > button { display: grid; width: 24px; height: 24px; flex: none; place-items: center; padding: 0; border: 0; border-radius: var(--radius-sm); color: currentColor; background: transparent; cursor: pointer; }
-.transient-notice > button:hover { background: color-mix(in srgb, var(--accent-danger) 12%, transparent); }
-.transient-notice > button:focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; }
-.transient-notice > button svg { width: 15px; height: 15px; stroke-width: 1.75; }
+.transient-notice > .compact-icon-button { width: var(--control-height-compact); height: var(--control-height-compact); color: currentColor; }
+.transient-notice > .compact-icon-button:hover { background: color-mix(in srgb, var(--accent-danger) 12%, transparent); }
+.composer-goal-status { display: flex; min-width: 0; min-height: 36px; align-items: center; gap: var(--space-2); padding: 3px var(--space-2) 3px var(--space-3); border: 1px solid var(--border-default); border-bottom: 0; border-radius: var(--radius-panel) var(--radius-panel) 0 0; color: var(--text-secondary); background: var(--surface-panel); }
+.composer-goal-status > svg { width: 16px; height: 16px; flex: none; color: var(--accent-info); stroke-width: 1.75; }
+.composer-goal-status strong { min-width: 0; flex: 1; overflow: hidden; color: var(--text-primary); font-size: var(--text-ui); font-weight: 500; line-height: 20px; text-overflow: ellipsis; white-space: nowrap; }
+.composer-goal-status span, .composer-goal-status time { flex: none; color: var(--text-muted); font-size: var(--text-meta); line-height: 16px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.composer-goal-status > .compact-icon-button { margin-left: var(--space-1); }
+.composer-goal-status + .composer { border-radius: 0 0 var(--radius-panel) var(--radius-panel); }
 .composer { position: relative; padding: 8px 9px 6px; border: 1px solid var(--border-default); border-radius: var(--radius-panel); background: var(--surface-panel); box-shadow: var(--ui-shadow-panel); }
 .composer:focus-within { border-color: var(--border-strong); }
 .composer.has-context-heatbar { padding-left: 27px; }
@@ -119,7 +123,7 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .composer textarea { width: 100%; min-height: 58px; max-height: 320px; overflow-y: auto; resize: vertical; border: 0; outline: 0; color: var(--text-primary); background: transparent; font-size: var(--conversation-font-size); line-height: 24px; }
 .composer textarea::placeholder { color: var(--text-muted); }
 .queued-turns { display: grid; gap: 4px; max-height: 132px; margin: 0 0 8px; padding: 6px 8px 7px; overflow-y: auto; border: 1px solid var(--border-subtle); border-radius: var(--radius-panel); background: color-mix(in srgb, var(--surface-panel) 72%, var(--surface-canvas)); }
-.queued-turns-heading { display: flex; align-items: center; justify-content: space-between; padding: 0 2px 3px; color: var(--text-secondary); font-size: var(--text-label); line-height: 16px; }
+.queued-turns-heading { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: var(--space-2); padding: 0 2px 3px; color: var(--text-secondary); font-size: var(--text-label); line-height: 16px; }
 .queued-turns-heading small { color: var(--text-muted); font-size: var(--text-meta); }
 .queued-turns-heading button { min-height: 28px; padding: 0 8px; border: 1px solid var(--border-default); border-radius: var(--radius-control); color: var(--text-secondary); background: transparent; font-size: var(--text-meta); }
 .queued-turns-heading button:hover { color: var(--text-primary); background: var(--surface-raised); }
@@ -128,13 +132,11 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .queued-turn > span { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .queued-turn-icon { width: 18px; height: 18px; flex: none; color: var(--text-secondary); stroke-width: 1.55; }
 .queued-turn-status { flex: none; color: var(--accent-action); font-size: var(--conversation-font-size-meta); white-space: nowrap; }
-.queued-turn button { display: grid; width: 20px; height: 20px; flex: none; place-items: center; padding: 0; border: 0; border-radius: 4px; color: var(--text-tertiary); background: transparent; font-size: 12px; line-height: 0; }
-.queued-turn button svg { display: block; width: 16px; height: 16px; flex: none; stroke-width: 1.75; }
-.queued-turn button:hover { color: var(--text-primary); background: var(--surface-raised); }
+.queued-turn > .compact-icon-button { flex: 0 0 var(--control-height-compact); }
 .composer-toolbar { display: flex; min-width: 0; min-height: 40px; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 6px; }
 .composer-tools { display: flex; min-width: 0; align-items: center; gap: 4px; }
 .composer-add-menu-anchor { position: relative; flex: none; }
-.composer-add-button { display: grid; width: 28px; height: 28px; place-items: center; border: 0; border-radius: var(--radius-control); color: var(--text-secondary); background: transparent; font-size: 18px; font-weight: 400; line-height: 1; cursor: pointer; }
+.composer-add-button { color: var(--text-secondary); }
 .composer-add-button svg, .composer-add-menu button > i svg, .composer-intent-button svg { width: 16px; height: 16px; stroke-width: 1.75; }
 .composer-add-button:hover, .composer-add-button:focus-visible, .composer-add-button.active { color: var(--text-primary); background: var(--surface-raised); }
 .composer-add-menu { position: absolute; z-index: 18; bottom: calc(100% + 8px); left: 0; display: grid; width: 300px; max-height: min(430px, 70vh); gap: 2px; padding: 6px; overflow-y: auto; border: 1px solid var(--border-default); border-radius: var(--radius-panel); background: var(--surface-panel); box-shadow: var(--shadow-popover); }
@@ -145,7 +147,7 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .composer-add-menu button:disabled { color: var(--text-disabled); cursor: not-allowed; }
 .composer-add-menu button > i { display: grid; width: 22px; height: 22px; place-items: center; color: var(--accent-action); font-size: 12px; font-style: normal; }
 .composer-add-menu button > span { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
-.composer-add-menu button b { overflow: hidden; font-size: 11px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.composer-add-menu button b { overflow: hidden; font-size: var(--text-label); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .composer-add-menu button small { overflow: hidden; color: var(--text-muted); font-size: var(--text-meta); text-overflow: ellipsis; white-space: nowrap; }
 .composer-add-menu button kbd { color: var(--text-muted); font: var(--text-meta)/16px var(--font-mono); }
 .composer-add-menu button:disabled > i, .composer-add-menu button:disabled small, .composer-add-menu button:disabled kbd { color: var(--text-disabled); }
@@ -162,10 +164,7 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .composer-intent-button.goal:hover { border-color: var(--accent-info); color: var(--text-primary); background: color-mix(in srgb, var(--accent-info) 14%, var(--surface-raised)); }
 .composer-intent-button.goal span { color: var(--accent-info); }
 .composer-intent-button.goal i { color: var(--text-muted); }
-.composer-intent-button.active-goal { min-width: 0; max-width: 280px; }
-.composer-intent-button.active-goal b { overflow: hidden; min-width: 0; color: var(--text-secondary); font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
-.composer-intent-button.active-goal small { flex: 0 0 auto; color: var(--text-muted); font-size: var(--text-meta); }
-.model-button { display: inline-flex; height: var(--ui-control-height); min-width: 0; align-items: center; gap: 5px; padding: 0 8px; border: 1px solid transparent; border-radius: var(--ui-control-radius); color: var(--text-secondary); background: transparent; font-size: 11px; cursor: pointer; }
+.model-button { display: inline-flex; height: var(--ui-control-height); min-width: 0; align-items: center; gap: 5px; padding: 0 8px; border: 1px solid transparent; border-radius: var(--ui-control-radius); color: var(--text-secondary); background: transparent; font-size: var(--text-label); cursor: pointer; }
 .model-button > span { overflow: hidden; max-width: 180px; text-overflow: ellipsis; white-space: nowrap; }
 .model-button > small { color: var(--text-secondary); font-size: var(--text-meta); text-transform: capitalize; white-space: nowrap; }
 .model-button:hover, .model-button:focus-visible { color: var(--text-primary); background: var(--surface-raised); }
@@ -208,7 +207,7 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .send-button:disabled { color: var(--text-disabled); background: var(--surface-selected); cursor: default; }
 .permission-selector { position: relative; }
 .permission-trigger { display: flex; height: 28px; min-height: 28px; align-items: center; gap: 6px; padding: 5px 8px; border: 1px solid var(--border-subtle); border-radius: var(--radius-control); color: var(--text-secondary); background: var(--surface-panel); cursor: pointer; }
-.permission-trigger strong { font-size: var(--text-meta); font-weight: 600; }.permission-trigger .chevron-icon { color: var(--text-muted); }
+.permission-trigger strong { font-size: var(--text-label); font-weight: 600; }.permission-trigger .chevron-icon { color: var(--text-muted); }
 .permission-trigger:hover, .permission-trigger:focus-visible { border-color: var(--border-default); background: var(--surface-raised); }
 .permission-trigger.danger { border-color: color-mix(in srgb, var(--accent-warning) 30%, var(--border-subtle)); color: var(--accent-warning); background: color-mix(in srgb, var(--accent-warning) 8%, var(--surface-panel)); }
 .permission-trigger.danger:hover, .permission-trigger.danger:focus-visible { background: color-mix(in srgb, var(--accent-warning) 12%, var(--surface-raised)); }

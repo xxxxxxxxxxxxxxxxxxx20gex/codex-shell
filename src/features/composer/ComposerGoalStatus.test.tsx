@@ -19,14 +19,17 @@ const goal: ThreadGoal = {
 };
 
 describe("ComposerGoalStatus", () => {
-  it("shows the authoritative objective and clears it through one action", () => {
+  it("shows the authoritative objective and duration without making the status text destructive", () => {
     const onClear = vi.fn();
-    render(<ComposerGoalStatus goal={goal} onClear={onClear} />);
+    render(<ComposerGoalStatus goal={{ ...goal, timeUsedSeconds: 131 }} onClear={onClear} />);
 
+    fireEvent.click(screen.getByText("目标：完成权威状态接入"));
+    expect(onClear).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "清除当前目标：完成权威状态接入" }));
 
     expect(screen.getByText("目标：完成权威状态接入")).toBeTruthy();
     expect(screen.getByText("进行中")).toBeTruthy();
+    expect(screen.getByText("2m 11s")).toBeTruthy();
     expect(onClear).toHaveBeenCalledOnce();
   });
 });

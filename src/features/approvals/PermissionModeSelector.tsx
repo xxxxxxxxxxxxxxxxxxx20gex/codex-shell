@@ -43,10 +43,12 @@ export function PermissionModeSelector({ value, reviewer, disabled, onChange, on
     <div ref={rootRef} className="permission-selector">
       <button
         className={`permission-trigger ${value === "full" ? "danger" : ""}`}
+        type="button"
         disabled={disabled}
         onClick={() => setOpen((current) => !current)}
         aria-haspopup="menu"
         aria-expanded={open}
+        title={`权限模式：${selected.label}`}
       >
         <span className="permission-icon"><PermissionIcon mode={value} /></span>
         <strong>{selected.label}</strong>

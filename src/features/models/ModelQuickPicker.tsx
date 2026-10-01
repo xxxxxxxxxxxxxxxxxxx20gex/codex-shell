@@ -4,6 +4,7 @@ import type { Model } from "../../generated/app-server/v2/Model";
 import type { ModelSettings } from "./types";
 import { useDismissiblePopover } from "../../shared/useDismissiblePopover";
 import { modelIdDisplayName } from "./modelPresentation";
+import { CompactIconButton } from "../../shared/CompactIconButton";
 
 interface Props {
   settings: ModelSettings;
@@ -57,7 +58,7 @@ export function ModelQuickPicker({ settings, loadModels, onChange, onDisplayName
         </div>
       </div>}
       <button className="model-picker-advanced" onClick={onAdvanced}>高级设置 <ChevronRight aria-hidden="true" /></button>
-      <button className="model-picker-close" onClick={onClose} aria-label="关闭模型选择"><X aria-hidden="true" /></button>
+      <CompactIconButton className="model-picker-close" label="关闭模型选择" icon={<X aria-hidden="true" />} onClick={onClose} />
     </div>
   );
 }

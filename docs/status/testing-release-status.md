@@ -3,11 +3,13 @@
 - 模块职责：维护质量门禁、Runtime 兼容验证、Windows 发布证据及未覆盖边界。模块行为由对应状态文档维护，历史测试流水账由 Git 保留。
 - 当前状态：v0.1.8 已正式发布，包含内置 Skill 资源路径兼容与错误信息脱敏修复；未配置 Windows Authenticode，SmartScreen 仍可能提示未知发布者。
 - 最近变更：模型渠道补充目录外自定义模型原样显示和预期 fallback metadata 警告过滤回归；生图 Python 专项补充 Windows 用户／系统环境变量回退、默认地址、注册表权限错误、协议错误区分及注册表密钥异常脱敏回归。Python 专项独立于通用质量门禁，命令与依赖见 [测试脚本说明](../../tests/scripts/README.md)。
-- 当前接口：`pnpm test:quality` 依次执行 TypeScript、ESLint、Vitest、`pnpm test:amap`、production build、Knip、`pnpm rust:check` 和 diff 检查。完整门禁需要 Bun；Rust 入口包含 Cargo check、单元测试和严格 Clippy。协议、真实 Runtime 及五项四视口布局检查独立运行，入口见 [测试脚本说明](../../tests/scripts/README.md) 和 `package.json`。
-- 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；Vite 主 chunk 超过 500 kB；`cargo fmt --check` 尚未纳入门禁，现有 Rust 文件有格式差异。
+- 当前接口：`pnpm test:quality` 依次执行 TypeScript、ESLint、Vitest、`pnpm test:amap`、production build、Knip、`pnpm rust:check` 和 diff 检查。完整门禁需要 Bun；Rust 入口包含 Cargo check、单元测试和严格 Clippy。协议、真实 Runtime 及输入区等四视口布局检查独立运行，入口见 [测试脚本说明](../../tests/scripts/README.md) 和 `package.json`。
+- 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；Vite 主 chunk 超过 500 kB；Knip 报告模型渠道的 `OPENAI_BUILTIN_MODEL_IDS` 未使用导出；`cargo fmt --check` 尚未纳入门禁，现有 Rust 文件有格式差异。
 - 下一步：补真实系统凭据、多渠道对话、第三方 MCP OAuth，以及干净 Windows 用户环境安装和升级验收。
 - 窗口定向验证（2026-09-28）：跨屏最小尺寸约束修复后，50 项 Rust 测试通过（1 项忽略），包含 5 项窗口几何回归；3 项标题栏测试、TypeScript、Cargo check、严格 Clippy、生产构建、Debug 和渠道／设置四视口检查通过。单屏原生启动／还原及真实 WebView2 连续 6 次切换通过，未进行实体双屏验收。此前全量 ESLint 被 `useAgentSession.ts` 中 3 处 `no-useless-escape` 和 1 处 `react-hooks/exhaustive-deps` 既有错误阻塞，本次不宣称全量质量门禁通过。原生验证边界见 [桌面 UI 壳状态](ui-shell-status.md)。
 - 最后更新：2026-10-01
+
+2026-10-01，新增输入区四尺寸浏览器探针，覆盖目标状态、提示文字、图标按钮、长文本截断、焦点和 reduced-motion；Edge 四尺寸检查及截图复核通过。68 个文件 / 362 项前端测试、ESLint、TypeScript、生产构建与 Cargo check 通过。Knip 因模型渠道的未使用导出失败；未在真实 WebView2 中验收工具栏交互，也未运行 Rust 单元测试和 Clippy；此记录不替代完整发布门禁。
 
 2026-09-30，Runtime 提示生命周期修复：14 项相关测试通过，普通 info／deprecation 5 秒、warning 8 秒自动消失，security 持续显示；沙箱成功后自动清除未就绪提示，管理员配置入口保持 elevated 模式。类型检查、定向 ESLint 和 Debug 构建通过。
 

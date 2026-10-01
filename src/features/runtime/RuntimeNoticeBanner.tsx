@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { X } from "lucide-react";
+import { CompactIconButton } from "../../shared/CompactIconButton";
 import type { RuntimeNoticeDestination, RuntimeNoticeStore } from "./runtimeNoticeStore";
 import "./RuntimeNotices.css";
 
@@ -19,7 +20,7 @@ export function RuntimeNoticeBanner({ store, onShowStatus }: Props) {
         <span>{notice.message}</span>
         {notices.length > 1 && <i>另有 {notices.length - 1} 项</i>}
       </button>
-      <button type="button" className="runtime-notice-dismiss" onClick={() => store.dismiss(notice.id)} aria-label="忽略这条提示"><X aria-hidden="true" /></button>
+      <CompactIconButton label="忽略这条提示" icon={<X aria-hidden="true" />} onClick={() => store.dismiss(notice.id)} />
     </div>
   );
 }

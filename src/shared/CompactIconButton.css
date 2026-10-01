@@ -1,0 +1,4 @@
+.compact-icon-button { display: grid; width: var(--control-height-compact); height: var(--control-height-compact); flex: 0 0 var(--control-height-compact); place-items: center; padding: 0; border: 0; border-radius: var(--radius-control); color: var(--text-muted); background: transparent; cursor: pointer; transition: color var(--motion-fast), background-color var(--motion-fast); }
+.compact-icon-button:hover, .compact-icon-button:focus-visible { color: var(--text-primary); background: var(--surface-raised); }
+.compact-icon-button:disabled { color: var(--text-disabled); background: transparent; cursor: not-allowed; }
+.compact-icon-button svg { width: 16px; height: 16px; stroke-width: 1.75; }

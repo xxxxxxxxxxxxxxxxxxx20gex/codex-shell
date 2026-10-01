@@ -5,6 +5,7 @@ import { commandDisabled } from "../commands/SlashCommandMenu";
 import { matchingSlashCommands, type SlashCommandId } from "../commands/slashCommands";
 import { errorMessage } from "../../shared/errors";
 import { useDismissiblePopover } from "../../shared/useDismissiblePopover";
+import { CompactIconButton } from "../../shared/CompactIconButton";
 
 interface Props {
   hasThread: boolean;
@@ -46,7 +47,7 @@ export function ComposerAddMenu({ hasThread, running, onSelectPaths, onCommand, 
 
   return (
     <div ref={rootRef} className="composer-add-menu-anchor">
-      <button type="button" className={`composer-add-button${openState ? " active" : ""}`} aria-label="添加与命令" title="添加文件或使用 Codex 命令" onClick={toggleMenu}><Plus aria-hidden="true" /></button>
+      <CompactIconButton className={`composer-add-button${openState ? " active" : ""}`} label="添加与命令" title="添加文件或使用 Codex 命令" icon={<Plus aria-hidden="true" />} onClick={toggleMenu} aria-expanded={openState} aria-haspopup="menu" />
       {openState && <div className="composer-add-menu" role="menu" aria-label="添加与命令">
         <strong>添加</strong>
         <button type="button" role="menuitem" onClick={() => void choosePaths()}>

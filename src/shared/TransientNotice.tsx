@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { X } from "lucide-react";
+import { CompactIconButton } from "./CompactIconButton";
 
 interface Props {
   message: string;
@@ -19,9 +20,7 @@ export function TransientNotice({ message, onDismiss, timeoutMs = 5000, tone = "
   return (
     <div className={`transient-notice transient-notice-${tone}`} role="alert">
       <span>{message}</span>
-      <button type="button" onClick={onDismiss} aria-label="关闭提示" title="关闭提示">
-        <X aria-hidden="true" />
-      </button>
+      <CompactIconButton label="关闭提示" icon={<X aria-hidden="true" />} onClick={onDismiss} />
     </div>
   );
 }
