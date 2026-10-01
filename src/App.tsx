@@ -49,6 +49,7 @@ import { ContextMenuPolicy } from "./features/window/ContextMenuPolicy";
 import { ProductMark } from "./shared/ProductMark";
 import { TransientNotice } from "./shared/TransientNotice";
 import { QueuedMessageList } from "./features/composer/QueuedMessageList";
+import { ComposerResizeHandle } from "./features/composer/ComposerResizeHandle";
 import { errorMessage } from "./shared/errors";
 import "./styles/tokens.css";
 import { isPathWithinRoot, resolveLinkedProjectPath } from "./features/workspaces/workspaceState";
@@ -147,6 +148,8 @@ function App() {
   useLayoutEffect(() => {
     const input = composerInputRef.current;
     if (!input) return;
+    if (draft && input.dataset.manualHeight) return;
+    delete input.dataset.manualHeight;
     input.style.height = "auto";
     input.style.height = `${Math.min(input.scrollHeight, 320)}px`;
   }, [draft]);
@@ -335,6 +338,7 @@ function App() {
             <QueuedMessageList items={session.queuedTurns} running={session.running} canSteer={session.canSteer} readFile={session.readWorkspaceFile} onEdit={editQueuedTurn} onSteer={steerQueuedTurn} onRemove={session.removeQueued} onResume={() => void session.resumeQueued()} onError={(error) => setUiError(errorMessage(error))} />
             {composerIntent === "default" && session.threadGoal && <ComposerGoalStatus goal={session.threadGoal} onClear={() => void clearActiveGoal()} />}
             <div ref={composerRef} className="composer has-context-heatbar">
+              <ComposerResizeHandle inputRef={composerInputRef} />
               <ContextHeatBar usage={session.tokenUsage} hasThread={Boolean(session.thread)} running={session.running} onCompact={() => runSlashCommand("compact", "", false)} />
               {skills.length > 0 && <div className="mention-chips">
                 {skills.map((skill) => <span className="skill-chip" key={skill.path} title={skill.path}><Sparkles aria-hidden="true" />{skill.name}<button type="button" aria-label={`移除 Skill ${skill.name}`} onClick={() => toggleSkill(skill)}><X aria-hidden="true" /></button></span>)}

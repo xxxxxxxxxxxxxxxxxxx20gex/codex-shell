@@ -242,6 +242,7 @@ Radii:
 
 - Composer is the dominant bounded tool surface and uses the dedicated 16px composer radius, with a quiet neutral background and a 32px action toolbar.
 - The text area has no inner card border; toolbar and input share one surface.
+- Composer height is adjusted from a compact handle at the upper right, with space reserved so it never covers text. Dragging upward expands the input upward while the bottom toolbar stays anchored; dragging downward shrinks it. Preserve the 64–320px input range, support Up/Down keys, and let Escape cancel an active drag. Disable the native bottom-right textarea resizer.
 - An active goal uses a single compact status strip immediately above the composer. Its icon and readable objective lead; status and elapsed time are secondary metadata; a separate right-side icon button owns the clear action. Long objectives truncate with their full text available on hover. The strip and composer meet without a double border.
 - Nearby runtime, error, success, and queue notices use `--text-label` for actionable text; reserve `--text-meta` for counts, elapsed time, and secondary state. Notices keep their main message readable and truncate only when space is constrained.
 - Repeated icon-only actions around the composer share the 28px compact-button geometry, 16px Lucide icon, focus ring, and descriptive hover title. Status text itself does not trigger destructive or dismiss actions.

@@ -120,7 +120,8 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .composer:focus-within { border-color: var(--border-strong); }
 .composer.has-context-heatbar { padding-left: 27px; }
 .composer > .attachment-gallery { margin-bottom: 9px; }
-.composer textarea { width: 100%; min-height: calc(var(--control-height) * 2); max-height: 320px; overflow-y: auto; resize: vertical; border: 0; outline: 0; color: var(--text-primary); background: transparent; font-size: var(--conversation-font-size); line-height: 24px; }
+.composer textarea { width: 100%; min-height: calc(var(--control-height) * 2); max-height: 320px; padding-right: var(--control-height-compact); overflow-y: auto; resize: none; transition-property: none; border: 0; outline: 0; color: var(--text-primary); background: transparent; font-size: var(--conversation-font-size); line-height: 24px; }
+.composer .composer-resize-handle { position: absolute; top: var(--space-1); right: var(--space-1); cursor: ns-resize; touch-action: none; user-select: none; }
 .composer textarea::placeholder { color: var(--text-muted); }
 .composer-toolbar { display: flex; min-width: 0; min-height: var(--control-height); flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .composer-tools { display: flex; min-width: 0; align-items: center; gap: 4px; }

@@ -14,7 +14,7 @@ try {
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.route("**/composer-layout-check", (route) => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head><meta charset="utf-8"><style>
-    .fixture-center { width: calc(100% - 536px); margin-left: 248px; }
+    .fixture-center { position: absolute; bottom: 0; width: calc(100% - 536px); margin-left: 248px; }
     @media (max-width: 1179px) { .fixture-center { width: calc(100% - 248px); } }
   </style></head><body><div id="root"></div><script type="module">
     import RefreshRuntime from "/@react-refresh";
@@ -35,18 +35,20 @@ try {
     const {ComposerAddMenu} = await import("/src/features/composer/ComposerAddMenu.tsx");
     const {PermissionModeSelector} = await import("/src/features/approvals/PermissionModeSelector.tsx");
     const {SendModeControl} = await import("/src/features/composer/SendModeControl.tsx");
+    const {ComposerResizeHandle} = await import("/src/features/composer/ComposerResizeHandle.tsx");
     const thumbnail = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" fill="#292d2e"/><path d="M4 23L12 11L19 19L24 13L29 23" fill="none" stroke="#b8d957"/></svg>');
     const queued = Array.from({length:6},(_,i)=>({id:String(i),text:i===0?"请参考这张图优化输入区域":"请检查最近的界面改动，统一按钮、提示和列表的大小比例，同时保留现有的消息和附件内容，并检查不同窗口尺寸下长消息截断和操作按钮的稳定布局",mentions:[],images:i===0?[{name:"参考图.svg",url:thumbnail}]:[]}));
     const store = new RuntimeNoticeStore();
     store.push({kind:"warning",destination:"runtime",title:"运行环境提示",message:"检查当前项目的运行环境和权限设置"});
     const goal = {threadId:"thread-1",objective:"检查文档记录，确认最新内容，并逐项处理需要修复的问题；随后检查所有相关项目，逐项记录和处理还需要修复的问题",status:"active",tokenBudget:null,tokensUsed:0,timeUsedSeconds:131,createdAt:1,updatedAt:1};
-    function Fixture() { return React.createElement("div",{className:"fixture-center"},React.createElement("div",{className:"composer-wrap",style:{marginTop:"20vh"}},
+    function Fixture() { const inputRef=React.useRef(null); return React.createElement("div",{className:"fixture-center"},React.createElement("div",{className:"composer-wrap"},
       React.createElement(RuntimeNoticeBanner,{store,onShowStatus:()=>{}}),
       React.createElement(TransientNotice,{message:"已保存当前任务的设置",tone:"success",onDismiss:()=>{}}),
       React.createElement(QueuedMessageList,{items:queued,running:true,canSteer:true,readFile:async()=>"",onEdit:()=>{},onSteer:async()=>{},onRemove:()=>{},onResume:()=>{},onError:()=>{}}),
       React.createElement(ComposerGoalStatus,{goal,onClear:()=>{window.__cleared=true;}}),
       React.createElement("div",{className:"composer has-context-heatbar"},
-        React.createElement("textarea",{placeholder:"交给 Codex 一个任务…"}),
+        React.createElement(ComposerResizeHandle,{inputRef}),
+        React.createElement("textarea",{ref:inputRef,placeholder:"交给 Codex 一个任务…"}),
         React.createElement("div",{className:"composer-toolbar"},
           React.createElement("div",{className:"composer-tools"},
             React.createElement(ComposerAddMenu,{hasThread:true,running:true,onSelectPaths:()=>{},onCommand:()=>{},onError:()=>{},onOpen:()=>{}}),
@@ -97,6 +99,40 @@ try {
     await trigger.click();
     await page.locator("textarea").click();
     assert.equal(await menu.count(), 0);
+    const input = page.locator("textarea");
+    const handle = page.getByRole("button", {name:"调整输入框高度"});
+    const composerBefore = await page.locator(".composer").boundingBox();
+    const toolbarBefore = await page.locator(".composer-toolbar").boundingBox();
+    const inputBefore = await input.boundingBox();
+    const grip = await handle.boundingBox();
+    assert.ok(grip.y - composerBefore.y < 8);
+    assert.ok(composerBefore.x + composerBefore.width - grip.x - grip.width < 8);
+    assert.equal(await input.evaluate(el => getComputedStyle(el).resize), "none");
+    assert.equal(await handle.evaluate(el => getComputedStyle(el).cursor), "ns-resize");
+    await page.mouse.move(grip.x + 14, grip.y + 14);
+    await page.mouse.down();
+    await page.mouse.move(grip.x + 14, grip.y + 14 - 80, {steps:8});
+    await page.waitForFunction(height => document.querySelector("textarea").getBoundingClientRect().height === height, inputBefore.height + 80);
+    assert.equal(await input.evaluate(el => el.getBoundingClientRect().height), inputBefore.height + 80);
+    assert.equal(await page.locator(".composer").evaluate(el => el.getBoundingClientRect().y), composerBefore.y - 80);
+    assert.equal(await page.locator(".composer-toolbar").evaluate(el => el.getBoundingClientRect().y), toolbarBefore.y);
+    await page.keyboard.press("Escape");
+    await page.mouse.up();
+    assert.equal(await input.evaluate(el => el.getBoundingClientRect().height), inputBefore.height);
+    await handle.focus();
+    await page.keyboard.press("ArrowUp");
+    assert.equal(await input.evaluate(el => el.getBoundingClientRect().height), inputBefore.height + 16);
+    await page.keyboard.press("ArrowDown");
+    assert.equal(await input.evaluate(el => el.getBoundingClientRect().height), inputBefore.height);
+    await page.mouse.move(grip.x + 14, grip.y + 14);
+    await page.mouse.down();
+    await page.mouse.move(grip.x + 14, grip.y - 350, {steps:8});
+    await page.waitForFunction(() => document.querySelector("textarea").getBoundingClientRect().height === 320);
+    assert.equal(await input.evaluate(el => el.getBoundingClientRect().height), 320);
+    await page.mouse.move(grip.x + 14, grip.y + 50, {steps:8});
+    await page.waitForFunction(() => document.querySelector("textarea").getBoundingClientRect().height === 64);
+    assert.equal(await input.evaluate(el => el.getBoundingClientRect().height), 64);
+    await page.mouse.up();
     assert.deepEqual(errors, []);
     console.log(`${width}x${height} passed`);
   }
