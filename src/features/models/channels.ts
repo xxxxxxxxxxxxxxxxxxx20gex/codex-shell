@@ -24,18 +24,24 @@ export const VENDORS: VendorDescriptor[] = [
   },
 ];
 
-const OPENAI_BUILTIN_MODEL_IDS = ["gpt-6-sol", "gpt-6.1-sol"] as const;
+export const OPENAI_BUILTIN_MODEL_IDS = ["gpt-6-sol", "gpt-6.1-sol"] as const;
+
+export function isOpenAiBuiltinModelId(modelId: string) {
+  return OPENAI_BUILTIN_MODEL_IDS.includes(modelId.trim().toLowerCase() as (typeof OPENAI_BUILTIN_MODEL_IDS)[number]);
+}
 
 export function appendOpenAiBuiltinModels(models: Model[]): Model[] {
-  const existing = new Set(models.flatMap((model) => [model.id, model.model]));
-  const builtins: Model[] = OPENAI_BUILTIN_MODEL_IDS.filter((id) => !existing.has(id)).map((id) => ({
+  const builtins: Model[] = OPENAI_BUILTIN_MODEL_IDS.map((id) => models.find((model) =>
+    model.id.toLowerCase() === id || model.model.toLowerCase() === id,
+  ) ?? ({
     id, model: id, upgrade: null, upgradeInfo: null, availabilityNux: null,
-    displayName: id.toUpperCase(), description: "CS 内置 GPT 模型 ID", modelSpecialty: null,
+    displayName: id, description: "CS 内置 GPT 模型 ID", modelSpecialty: null,
     hidden: false, supportedReasoningEfforts: ["low", "medium", "high"].map((reasoningEffort) => ({ reasoningEffort, description: reasoningEffort })),
     defaultReasoningEffort: "medium", inputModalities: ["text", "image"], supportsPersonality: false,
     multiAgentVersion: null, additionalSpeedTiers: [], serviceTiers: [], defaultServiceTier: null, isDefault: false,
   }));
-  return [...models, ...builtins];
+  const builtinIds = new Set<string>(OPENAI_BUILTIN_MODEL_IDS);
+  return [...builtins, ...models.filter((model) => !builtinIds.has(model.id.toLowerCase()) && !builtinIds.has(model.model.toLowerCase()))];
 }
 
 export function vendorDescriptor(vendor: VendorId): VendorDescriptor {

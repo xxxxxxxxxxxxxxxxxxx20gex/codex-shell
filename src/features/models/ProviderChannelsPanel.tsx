@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { AlertTriangle, Check, Pencil, Plus, Trash2 } from "lucide-react";
 import { errorMessage } from "../../shared/errors";
 import { VENDORS, activeChannel, createChannel, defaultConversation, vendorDescriptor } from "./channels";
+import { modelIdDisplayName } from "./modelPresentation";
 import type { Channel, ChannelSecretChange, ProviderSettings, VendorId } from "./types";
 
 interface Props {
@@ -205,7 +206,7 @@ export function ProviderChannelsPanel({ settings, onSave, switchDisabled = false
                 <div className="channel-row-main">
                   <strong>{channel.name}</strong>
                   <small>
-                    {hostOf(channel.baseUrl)} · {channel.conversation.modelId || "目录默认模型"} · {keyedChannels.includes(channel.id) ? "已保存密钥" : "未保存密钥"}
+                    {hostOf(channel.baseUrl)} · {channel.conversation.modelId ? modelIdDisplayName(channel.conversation.modelId) : "目录默认模型"} · {keyedChannels.includes(channel.id) ? "已保存密钥" : "未保存密钥"}
                   </small>
                 </div>
                 <div className="channel-row-actions">

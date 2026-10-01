@@ -62,6 +62,7 @@ function settings(activeChannelId: string | null, channels: Channel[]): Provider
 describe("channel bookkeeping", () => {
   it("adds the two CS OpenAI model IDs without duplicates", () => {
     const models = appendOpenAiBuiltinModels([]);
+    expect(models.slice(0, 2).map((model) => model.model)).toEqual(["gpt-6-sol", "gpt-6.1-sol"]);
     expect(models.map((model) => model.model)).toEqual(["gpt-6-sol", "gpt-6.1-sol"]);
     expect(appendOpenAiBuiltinModels(models)).toHaveLength(2);
   });

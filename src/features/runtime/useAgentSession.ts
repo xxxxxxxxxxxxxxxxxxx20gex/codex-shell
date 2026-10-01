@@ -19,6 +19,7 @@ import { canSteerRunningTurn, runningTurnLabel, useRunningTurns } from "./useRun
 import { useThreadController } from "./useThreadController";
 import { useWorkspaceFiles } from "./useWorkspaceFiles";
 import { useSideChat } from "./useSideChat";
+import { isOpenAiBuiltinModelId } from "../models/channels";
 
 export type { FileMention, ImageAttachment, SkillMention } from "./sessionInput";
 
@@ -51,8 +52,9 @@ export function visibleRetryingMessage(
 /** Core has no catalog metadata for an intentionally custom model ID. */
 export function isExpectedCustomModelMetadataWarning(message: string, modelId: string) {
   if (!modelId.trim()) return false;
-  const match = message.match(/^Model metadata for ['\"]([^'\"]+)['\"] not found\. Defaulting to fallback metadata/i);
-  return match?.[1] === modelId;
+  const match = message.match(/^Model metadata for ['"]([^'"]+)['"] not found\. Defaulting to fallback metadata/i);
+  return Boolean(match && match[1].trim().toLowerCase() === modelId.trim().toLowerCase()
+    && (isOpenAiBuiltinModelId(match[1]) || match[1].trim().toLowerCase() === modelId.trim().toLowerCase()));
 }
 
 export function windowsSandboxSetupMessage(
@@ -182,9 +184,9 @@ export function useAgentSession(
     onThreadUnarchived,
     onThreadClosed,
     onThreadQueueChanged,
+    refreshHistory,
     openThread,
     reset: resetThreads,
-    refreshHistory,
   } = threads;
 
   useEffect(() => {
@@ -351,6 +353,7 @@ export function useAgentSession(
     onTurnStarted,
     removeThread,
     resetThreads,
+    refreshHistory,
     runtimeLogStore,
     runtimeNoticeStore,
     resetSideChat,

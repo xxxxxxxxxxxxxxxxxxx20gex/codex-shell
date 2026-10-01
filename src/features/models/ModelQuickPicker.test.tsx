@@ -45,9 +45,9 @@ describe("ModelQuickPicker", () => {
     const onDisplayName = vi.fn();
     render(<ModelQuickPicker settings={settings} loadModels={vi.fn(async () => [model("gpt-current"), model("gpt-next")])} onChange={onChange} onDisplayName={onDisplayName} onAdvanced={vi.fn()} onClose={vi.fn()} />);
 
-    fireEvent.click(await screen.findByRole("button", { name: "Next Model" }));
+    fireEvent.click(await screen.findByRole("button", { name: "gpt-next" }));
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ modelId: "gpt-next", reasoningEffort: "low" }));
-    expect(onDisplayName).toHaveBeenLastCalledWith("Next Model");
+    expect(onDisplayName).toHaveBeenLastCalledWith("gpt-next");
     expect(screen.getByRole("dialog").querySelectorAll(".chevron-icon").length).toBe(0);
 
     expect(screen.getByRole("button", { name: /高级设置/ })).toBeTruthy();
@@ -77,9 +77,9 @@ describe("ModelQuickPicker", () => {
       onClose={vi.fn()}
     />);
 
-    expect(await screen.findByRole("button", { name: "Current Model" })).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "gpt-current" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "gpt-5.2" })).toBeNull();
     expect(screen.queryByRole("button", { name: "gpt-5.2-codex" })).toBeNull();
-    expect(screen.getByRole("button", { name: "Current Model" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "gpt-current" })).toBeTruthy();
   });
 });

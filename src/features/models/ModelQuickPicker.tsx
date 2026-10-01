@@ -3,6 +3,7 @@ import { ChevronRight, X } from "lucide-react";
 import type { Model } from "../../generated/app-server/v2/Model";
 import type { ModelSettings } from "./types";
 import { useDismissiblePopover } from "../../shared/useDismissiblePopover";
+import { modelIdDisplayName } from "./modelPresentation";
 
 interface Props {
   settings: ModelSettings;
@@ -31,7 +32,7 @@ export function ModelQuickPicker({ settings, loadModels, onChange, onDisplayName
         && !DESKTOP_HIDDEN_MODEL_ID.test(model.id));
       setModels(visibleModels);
       const selectedModel = visibleModels.find((model) => model.model === settings.modelId || model.id === settings.modelId);
-      onDisplayName(selectedModel?.displayName || selectedModel?.model || null);
+      onDisplayName(selectedModel ? modelIdDisplayName(selectedModel.model) : null);
     }).catch(() => undefined);
     return () => { active = false; };
   }, [loadModels, onDisplayName, settings.modelId]);
@@ -46,7 +47,7 @@ export function ModelQuickPicker({ settings, loadModels, onChange, onDisplayName
         <span className="model-picker-label">模型</span>
         <div className="model-picker-options">
           {models.length === 0 && <span className="model-picker-empty">暂无原生模型目录</span>}
-          {models.map((model) => <button key={model.id} className={model.model === settings.modelId ? "active" : ""} onClick={() => { onDisplayName(model.displayName || model.model); onChange({ ...settings, modelId: model.model, reasoningEffort: model.defaultReasoningEffort }); }}>{model.displayName || model.model}</button>)}
+          {models.map((model) => <button key={model.id} className={model.model === settings.modelId ? "active" : ""} onClick={() => { onDisplayName(modelIdDisplayName(model.model)); onChange({ ...settings, modelId: model.model, reasoningEffort: model.defaultReasoningEffort }); }}>{modelIdDisplayName(model.model)}</button>)}
         </div>
       </div>
       {efforts.length > 0 && <div className="model-picker-section">
