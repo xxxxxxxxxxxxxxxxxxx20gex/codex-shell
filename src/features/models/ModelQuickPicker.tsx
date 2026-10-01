@@ -48,7 +48,17 @@ export function ModelQuickPicker({ settings, loadModels, onChange, onDisplayName
         <span className="model-picker-label">模型</span>
         <div className="model-picker-options">
           {models.length === 0 && <span className="model-picker-empty">暂无原生模型目录</span>}
-          {models.map((model) => <button key={model.id} className={model.model === settings.modelId ? "active" : ""} onClick={() => { onDisplayName(modelIdDisplayName(model.model)); onChange({ ...settings, modelId: model.model, reasoningEffort: model.defaultReasoningEffort }); }}>{modelIdDisplayName(model.model)}</button>)}
+          {models.map((model) => <button key={model.id} className={model.model === settings.modelId ? "active" : ""} onClick={() => {
+            onDisplayName(modelIdDisplayName(model.model));
+            onChange({
+              ...settings,
+              modelId: model.model,
+              reasoningEffort: model.defaultReasoningEffort,
+              serviceTier: settings.serviceTier === "default" || model.serviceTiers.some((tier) => tier.id === settings.serviceTier)
+                ? settings.serviceTier
+                : "default",
+            });
+          }}>{modelIdDisplayName(model.model)}</button>)}
         </div>
       </div>
       {efforts.length > 0 && <div className="model-picker-section">

@@ -16,7 +16,7 @@ const settings = {
   serviceTier: "default" as const,
 };
 
-function model(id: string): Model {
+function model(id: string, serviceTiers: Model["serviceTiers"] = []): Model {
   return {
     id,
     model: id,
@@ -33,7 +33,7 @@ function model(id: string): Model {
     supportsPersonality: false,
     multiAgentVersion: null,
     additionalSpeedTiers: [],
-    serviceTiers: [],
+    serviceTiers,
     defaultServiceTier: null,
     isDefault: false,
   };
@@ -60,6 +60,22 @@ describe("ModelQuickPicker", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: "high" }));
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ modelId: "gpt-current", reasoningEffort: "high" }));
+  });
+
+  it("resets an unsupported service tier when switching models", async () => {
+    const onChange = vi.fn();
+    render(<ModelQuickPicker settings={{ ...settings, serviceTier: "priority" }} loadModels={vi.fn(async () => [model("gpt-current", [{ id: "priority", name: "Fast", description: "" }]), model("gpt-6.1-sol")])} onChange={onChange} onDisplayName={vi.fn()} onAdvanced={vi.fn()} onClose={vi.fn()} />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "gpt-6.1-sol" }));
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ modelId: "gpt-6.1-sol", serviceTier: "default" }));
+  });
+
+  it("preserves a service tier declared by the target model", async () => {
+    const onChange = vi.fn();
+    render(<ModelQuickPicker settings={{ ...settings, serviceTier: "priority" }} loadModels={vi.fn(async () => [model("gpt-current"), model("gpt-next", [{ id: "priority", name: "Fast", description: "" }])])} onChange={onChange} onDisplayName={vi.fn()} onAdvanced={vi.fn()} onClose={vi.fn()} />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "gpt-next" }));
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ modelId: "gpt-next", serviceTier: "priority" }));
   });
 
   it("hides GPT-5.2 model variants from the desktop picker", async () => {

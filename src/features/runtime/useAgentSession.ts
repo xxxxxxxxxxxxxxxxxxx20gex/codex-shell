@@ -58,6 +58,11 @@ export function isExpectedCustomModelMetadataWarning(message: string, modelId: s
     && (isOpenAiBuiltinModelId(match[1]) || match[1].trim().toLowerCase() === modelId.trim().toLowerCase()));
 }
 
+export function isOmittedServiceTierWarning(message: string, modelId: string) {
+  const match = message.match(/^Configured service tier [`'"](?:priority|flex)[`'"] is not advertised as supported for model [`'"]([^`'"]+)[`'"] and will be omitted from requests\.?$/i);
+  return Boolean(match && match[1].trim().toLowerCase() === modelId.trim().toLowerCase());
+}
+
 export function windowsSandboxSetupMessage(
   status: Exclude<WindowsSandboxReadiness, "ready">,
 ) {
@@ -256,7 +261,8 @@ export function useAgentSession(
       onThreadQueueChanged,
       onServerRequestResolved: (notification) => interactionStore.dismiss(notification.requestId),
       onWarning: (notification) => {
-        if (isExpectedCustomModelMetadataWarning(notification.message, currentModelIdRef.current)) return;
+        if (isExpectedCustomModelMetadataWarning(notification.message, currentModelIdRef.current)
+          || isOmittedServiceTierWarning(notification.message, currentModelIdRef.current)) return;
         runtimeNoticeStore.push({
           kind: "warning",
           destination: "diagnostics",

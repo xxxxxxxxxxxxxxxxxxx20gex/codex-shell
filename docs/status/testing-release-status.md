@@ -13,6 +13,8 @@
 
 2026-10-01，输入区四尺寸浏览器探针、Edge 截图复核、68 个文件 / 362 项前端测试、ESLint、TypeScript、生产构建、Cargo check、Rust 51 项单测（1 项交互测试忽略）、严格 Clippy、Debug 构建和本轮协议／边界回归均通过。Knip 失败项已在“已知问题”明确记录，未将其伪装成完整门禁通过。
 
+2026-10-01，模型快速切换服务层级校准及精确提示过滤后，69 个文件 / 370 项前端测试、ESLint、TypeScript、Cargo check 和 Debug 构建通过。Knip 仍因上述未使用导出失败；本次未调用真实模型，也未重跑 Rust 单测或四视口 UI 专项。
+
 本轮协议／边界回归覆盖三页历史分页顺序、20 MiB 图片／PDF 预览上限、HTTPS／本机回环 HTTP 渠道校验和 `thread/project/updated` 的权威 Thread 刷新。图片/PDF 当前仍由 app-server `fs/readFile` 完整返回后才判断大小，尚未实现源端分段读取。
 
 ## 未覆盖范围

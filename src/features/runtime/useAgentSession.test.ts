@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   isExpectedCustomModelMetadataWarning,
+  isOmittedServiceTierWarning,
   sendOrQueue,
   updateRetryingError,
   visibleRetryingMessage,
@@ -25,6 +26,16 @@ describe("custom model metadata warning", () => {
     expect(isExpectedCustomModelMetadataWarning(warning, currentModelId.current)).toBe(true);
     currentModelId.current = "gpt-6-astra";
     expect(isExpectedCustomModelMetadataWarning(warning, currentModelId.current)).toBe(false);
+  });
+});
+
+describe("unsupported service tier warning", () => {
+  const warning = "Configured service tier `priority` is not advertised as supported for model `gpt-6.1-sol` and will be omitted from requests.";
+
+  it("silences only the omitted-tier notice for the active model", () => {
+    expect(isOmittedServiceTierWarning(warning, "gpt-6.1-sol")).toBe(true);
+    expect(isOmittedServiceTierWarning(warning, "gpt-6-sol")).toBe(false);
+    expect(isOmittedServiceTierWarning("Configured service tier `priority` failed for model `gpt-6.1-sol`.", "gpt-6.1-sol")).toBe(false);
   });
 });
 
