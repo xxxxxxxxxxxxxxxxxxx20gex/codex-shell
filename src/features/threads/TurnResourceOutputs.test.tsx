@@ -34,3 +34,11 @@ it("lists Markdown documents from reply links and opens them through the file vi
   fireEvent.click(view.getByRole("button", { name: "打开 notes.md" }));
   expect(onOpenPath).toHaveBeenCalledWith("notes.md");
 });
+
+it("keeps file actions together when both actions are available", () => {
+  const message: ThreadItem = { type: "agentMessage", id: "a", text: "[notes](notes.md)", phase: "final_answer", memoryCitation: null, questions: null, delivery: null };
+  const view = render(<TurnResourceOutputs items={[message]} onOpenPath={vi.fn()} onOpenInExplorer={vi.fn()} />);
+  const actions = view.container.querySelector(".turn-resource-file-actions");
+  expect(actions?.querySelectorAll("button")).toHaveLength(2);
+  expect(actions?.parentElement?.querySelectorAll(":scope > button")).toHaveLength(0);
+});

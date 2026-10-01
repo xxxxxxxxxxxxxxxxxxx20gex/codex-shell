@@ -1,4 +1,4 @@
-import { FileSpreadsheet, FileText, FolderOpen, Image as ImageIcon } from "lucide-react";
+import { FileSearch, FileSpreadsheet, FileText, FolderOpen, Image as ImageIcon } from "lucide-react";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import { ImageAttachmentPreview } from "../attachments/AttachmentGallery";
 import { useState } from "react";
@@ -106,8 +106,10 @@ function ResourceList({ resources, title, readFile, onOpenPath, onOpenInExplorer
     {files.length > 0 && <ul className="turn-resource-files">
       {files.map((path) => <li key={path} data-local-path={path}>
         {resourceKind(path) === "spreadsheet" ? <FileSpreadsheet aria-hidden="true" /> : <FileText aria-hidden="true" />}<code title={path}>{baseName(path)}</code><small title={path}>{path}</small>
-        {onOpenPath && <button type="button" onClick={() => void onOpenPath(path)} title="打开文件" aria-label={`打开 ${path}`}><FileText aria-hidden="true" /></button>}
-        {onOpenInExplorer && <button type="button" onClick={() => void onOpenInExplorer(path)} title="在资源管理器中显示" aria-label={`在资源管理器中显示 ${path}`}><FolderOpen aria-hidden="true" /></button>}
+        {(onOpenPath || onOpenInExplorer) && <div className="turn-resource-file-actions">
+          {onOpenPath && <button type="button" onClick={() => void onOpenPath(path)} title="打开文件" aria-label={`打开 ${path}`}><FileSearch aria-hidden="true" /></button>}
+          {onOpenInExplorer && <button type="button" onClick={() => void onOpenInExplorer(path)} title="在资源管理器中显示" aria-label={`在资源管理器中显示 ${path}`}><FolderOpen aria-hidden="true" /></button>}
+        </div>}
       </li>)}
     </ul>}
   </section>;

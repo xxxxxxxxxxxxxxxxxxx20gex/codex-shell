@@ -449,14 +449,16 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .turn-resource-unavailable { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: var(--text-meta); }
 .turn-resource-unavailable svg { width: 16px; height: 16px; }
 .turn-resource-files { display: grid; gap: 3px; margin: 7px 0 0; padding: 0; list-style: none; }
-.turn-resource-files li { display: grid; min-height: 32px; grid-template-columns: 16px minmax(90px, 1fr) minmax(0, 2fr) 28px; align-items: center; gap: 8px; padding: 2px 6px; border-radius: var(--radius-sm); }
+.turn-resource-files li { display: grid; min-height: 32px; grid-template-columns: 16px minmax(90px, 1fr) minmax(0, 2fr) auto; align-items: center; gap: 8px; padding: 2px 6px; border-radius: var(--radius-sm); }
 .turn-resource-files li:hover { background: var(--surface-raised); }
 .turn-resource-files li > svg { width: 16px; height: 16px; color: var(--accent-info); }
 .turn-resource-files code, .turn-resource-files small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .turn-resource-files code { color: var(--text-secondary); font: var(--text-label)/18px var(--font-mono); }
 .turn-resource-files small { color: var(--text-muted); font: var(--text-meta)/16px var(--font-mono); }
-.turn-resource-files button { display: grid; width: 28px; height: 28px; place-items: center; padding: 0; border: 0; border-radius: var(--radius-control); color: var(--text-muted); background: transparent; cursor: pointer; }
-.turn-resource-files button:hover { color: var(--text-primary); background: var(--surface-selected); }
+.turn-resource-file-actions { display: flex; align-items: center; gap: 2px; flex: none; }
+.turn-resource-file-actions button { display: grid; width: 24px; height: 24px; place-items: center; padding: 0; border: 0; border-radius: var(--radius-control); color: var(--text-muted); background: transparent; cursor: pointer; }
+.turn-resource-file-actions button:hover { color: var(--text-primary); background: var(--surface-selected); }
+.turn-resource-file-actions button svg { width: 14px; height: 14px; stroke-width: 1.75; }
 .turn-file-changes summary { display: grid; min-height: 32px; grid-template-columns: 16px minmax(0,1fr) auto 16px; align-items: center; gap: 8px; padding: 0; cursor: pointer; list-style: none; }
 .turn-file-changes summary::-webkit-details-marker { display: none; }
 .turn-file-changes summary strong { color: var(--text-secondary); font-size: var(--text-label); font-weight: 500; }
