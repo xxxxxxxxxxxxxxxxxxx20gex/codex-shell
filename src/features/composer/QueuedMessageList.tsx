@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { CornerDownRight, FilePenLine, ListEnd, MoreHorizontal, Paperclip, Trash2 } from "lucide-react";
 import { CompactIconButton } from "../../shared/CompactIconButton";
 import { ContextMenu } from "../../shared/ContextMenu";
@@ -11,9 +11,9 @@ interface Props {
   running: boolean;
   canSteer: boolean;
   readFile: (path: string) => Promise<string>;
-  onEdit: (item: QueuedTurnInput) => void;
+  onEdit: (item: QueuedTurnInput) => void | Promise<void>;
   onSteer: (item: QueuedTurnInput) => Promise<void>;
-  onRemove: (id: string) => void;
+  onRemove: (id: string) => void | Promise<void>;
   onResume: () => void;
   onError: (error: unknown) => void;
 }
@@ -21,14 +21,16 @@ interface Props {
 export function QueuedMessageList({ items, running, canSteer, readFile, onEdit, onSteer, onRemove, onResume, onError }: Props) {
   const [menu, setMenu] = useState<{ id: string; anchor: HTMLButtonElement; x: number; y: number } | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const pendingRef = useRef(false);
   const closeMenu = useCallback(() => setMenu(null), []);
   const menuItem = menu && items.find((item) => item.id === menu.id);
 
-  async function steer(item: QueuedTurnInput) {
-    if (!canSteer || pendingId !== null) return;
-    setPendingId(item.id);
-    try { await onSteer(item); } catch (error) { onError(error); }
-    finally { setPendingId(null); }
+  async function perform(id: string, operation: () => void | Promise<void>) {
+    if (pendingRef.current) return;
+    pendingRef.current = true;
+    setPendingId(id);
+    try { await operation(); } catch (error) { onError(error); }
+    finally { pendingRef.current = false; setPendingId(null); }
   }
 
   if (items.length === 0) return null;
@@ -46,8 +48,8 @@ export function QueuedMessageList({ items, running, canSteer, readFile, onEdit, 
               : item.mentions.length > 0 && <Paperclip className="queued-message-icon" aria-label="包含文件附件" />}
             <span className="queued-message-text" title={label}>{label}</span>
             <div className="queued-message-actions">
-              {running && <button type="button" className="queued-message-steer" disabled={!canSteer || busy} onClick={() => void steer(item)} aria-label={`引导发送待发送消息：${label}`} title={canSteer ? "立即引导当前任务" : "当前阶段暂不可引导"}><CornerDownRight aria-hidden="true" /><span>{pendingId === item.id ? "发送中" : "引导"}</span></button>}
-              <CompactIconButton className="queued-message-delete" label={`取消待发送消息：${label}`} title="取消待发送" icon={<Trash2 aria-hidden="true" />} disabled={busy} onClick={() => onRemove(item.id)} />
+              {running && <button type="button" className="queued-message-steer" disabled={!canSteer || busy} onClick={() => void perform(item.id, () => onSteer(item))} aria-label={`引导发送待发送消息：${label}`} title={canSteer ? "立即引导当前任务" : "当前阶段暂不可引导"}><CornerDownRight aria-hidden="true" /><span>{pendingId === item.id ? "处理中" : "引导"}</span></button>}
+              <CompactIconButton className="queued-message-delete" label={`取消待发送消息：${label}`} title="取消待发送" icon={<Trash2 aria-hidden="true" />} disabled={busy} onClick={() => void perform(item.id, () => onRemove(item.id))} />
               <CompactIconButton label={`消息操作：${label}`} title="更多操作" icon={<MoreHorizontal aria-hidden="true" />} disabled={busy} aria-haspopup="menu" aria-expanded={menu?.id === item.id} onPointerDown={(event) => event.stopPropagation()} onClick={(event) => {
                 const anchor = event.currentTarget;
                 const bounds = anchor.getBoundingClientRect();
@@ -58,8 +60,8 @@ export function QueuedMessageList({ items, running, canSteer, readFile, onEdit, 
         })}
       </ul>
       {menu && menuItem && <ContextMenu x={menu.x} y={menu.y} anchor={menu.anchor} label="待发送消息操作" onClose={closeMenu} onError={onError} actions={[
-        { label: "编辑消息", icon: <FilePenLine aria-hidden="true" />, run: () => onEdit(menuItem) },
-        { label: "取消待发送", icon: <Trash2 aria-hidden="true" />, run: () => onRemove(menuItem.id) },
+        { label: "编辑消息", icon: <FilePenLine aria-hidden="true" />, run: () => perform(menuItem.id, () => onEdit(menuItem)) },
+        { label: "取消待发送", icon: <Trash2 aria-hidden="true" />, run: () => perform(menuItem.id, () => onRemove(menuItem.id)) },
       ]} />}
     </section>
   );

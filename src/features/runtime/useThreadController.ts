@@ -21,9 +21,9 @@ import type { ModelSettings, PersonalizationSettings } from "../models/types";
 import type { AppServerClient } from "./appServerClient";
 import type { AgentSessionAction } from "./sessionState";
 import type { FileMention, ImageAttachment, SkillMention } from "./sessionInput";
-import { buildUserInput } from "./sessionInput";
 import type { ThreadQueueChangedNotification } from "../../generated/app-server/v2/ThreadQueueChangedNotification";
-import { useQueuedTurns } from "./useQueuedTurns";
+import { useNativeQueue } from "./useNativeQueue";
+import { useThreadRevert } from "./useThreadRevert";
 import type { RunningTurn, RunningTurnKind } from "./useRunningTurns";
 import { useThreadActions } from "./useThreadActions";
 import { useThreadHistory } from "./useThreadHistory";
@@ -85,71 +85,12 @@ export function useThreadController(props: Props) {
   } = props;
   const threadIdRef = useRef<string | null>(null);
   const threadOperationRef = useRef(false);
+  const queueRemovalRef = useRef<symbol | null>(null);
   const subscribedThreadIdsRef = useRef(new Set<string>());
   const [openingThreadId, setOpeningThreadId] = useState<string | null>(null);
-  const {
-    queuedTurns: queuedTurnsByThread,
-    enqueue: enqueueQueued,
-    shift: shiftQueued,
-    restoreFront: restoreQueuedFront,
-    remove: removeQueuedInput,
-    clearThread: clearQueuedThread,
-    clear: clearQueued,
-    get: getQueued,
-    setServerId: setQueuedServerId,
-    replaceThread: replaceQueuedThread,
-  } = useQueuedTurns();
-  const nativeQueueRefreshRef = useRef(new Map<string, { dirty: boolean }>());
-
-  const refreshNativeQueue = useCallback(async (threadId: string) => {
-    const pending = nativeQueueRefreshRef.current.get(threadId);
-    if (pending) {
-      pending.dirty = true;
-      return;
-    }
-    const refresh = { dirty: false };
-    nativeQueueRefreshRef.current.set(threadId, refresh);
-    try {
-      const client = await ensureConnected();
-      if (typeof client.listQueuedSubmissions !== "function") return;
-      do {
-        if (nativeQueueRefreshRef.current.get(threadId) !== refresh) return;
-        refresh.dirty = false;
-        const response = await client.listQueuedSubmissions({ threadId });
-        if (nativeQueueRefreshRef.current.get(threadId) !== refresh) return;
-        if (refresh.dirty) continue;
-        // Keep the richer CS metadata (model, permissions, intent) by matching
-        // the server's stable clientUserMessageId. Items created elsewhere use
-        // conservative defaults and remain fully manageable in the UI.
-        const existing = getQueued(threadId);
-        const byClientId = new Map(existing.map((item) => [item.id, item]));
-        const next = response.data.map((item) => {
-          const preserved = byClientId.get(item.clientUserMessageId);
-          if (preserved) return { ...preserved, serverId: item.id };
-          return {
-          id: item.clientUserMessageId,
-          serverId: item.id,
-          text: item.input.filter((input) => input.type === "text").map((input) => input.text).join(""),
-          mentions: item.input.filter((input) => input.type === "mention").map((input) => ({ name: input.name, path: input.path })),
-          skills: item.input.filter((input) => input.type === "skill").map((input) => ({ name: input.name, path: input.path })),
-          images: item.input.filter((input) => input.type === "image" || input.type === "localImage").map((input) => ({
-            name: input.type === "localImage" ? input.path : "url" in input ? input.url : "托管图片",
-            ...(input.type === "localImage" ? { path: input.path } : "url" in input ? { url: input.url } : { fileId: input.fileId }),
-          })),
-          collaborationMode: "default" as const,
-          settings: { ...settings },
-          permissionMode,
-          approvalReviewer,
-          };
-        });
-        replaceQueuedThread(threadId, next);
-      } while (refresh.dirty);
-    } finally {
-      if (nativeQueueRefreshRef.current.get(threadId) === refresh) {
-        nativeQueueRefreshRef.current.delete(threadId);
-      }
-    }
-  }, [approvalReviewer, ensureConnected, getQueued, permissionMode, replaceQueuedThread, settings]);
+  const { queuedTurns: queuedTurnsByThread, get: getQueued, clearThread: clearQueuedThread, clear: clearQueued, add: addQueued, remove: removeNativeQueued, start: startQueued, refresh: refreshNativeQueue } = useNativeQueue({
+    ensureConnected, setError, defaults: { settings, permissionMode, approvalReviewer },
+  });
 
   const currentThreadId = useCallback(() => threadIdRef.current, []);
   const threadHistory = useThreadHistory({
@@ -210,7 +151,7 @@ export function useThreadController(props: Props) {
     return { client, threadId };
   }, [applyThreadRuntimeState, dispatch, ensureConnected]);
 
-  const { send, sendQueued, steer, interrupt } = useTurnExecution({
+  const { send, steer, interrupt } = useTurnExecution({
     clientRef: clientRef,
     threadIdRef,
     threadOperationRef,
@@ -270,57 +211,27 @@ export function useThreadController(props: Props) {
     const threadId = threadIdRef.current;
     if ((!message && mentions.length === 0 && images.length === 0)
       || !threadId || (!submitting && !isThreadRunning(threadId))) return false;
-    const clientUserMessageId = `queued-turn-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const accepted = enqueueQueued(threadId, {
-      text: message,
-      mentions: [...mentions],
-      skills: [...skills],
-      collaborationMode,
-      images: [...images],
-      settings: { ...settings },
-      permissionMode: permissionMode,
-      approvalReviewer: approvalReviewer,
-    }, clientUserMessageId);
-    if (!accepted) setError("当前 Session 最多排队 10 条消息");
-    else {
-      void ensureActiveThread().then(({ client }) => {
-        if (typeof client.addQueuedSubmission !== "function") return;
-        return client.addQueuedSubmission({
-          threadId,
-          input: buildUserInput(message, mentions, skills, images),
-          clientUserMessageId,
-        }).then((response) => setQueuedServerId(threadId, clientUserMessageId, response.queuedSubmission.id))
-          .catch((error) => {
-            removeQueuedInput(threadId, clientUserMessageId);
-            setError(`消息未能加入 app-server 队列：${errorMessage(error)}`);
-          });
-      }).catch((error) => {
-        removeQueuedInput(threadId, clientUserMessageId);
-        setError(`消息未能加入 app-server 队列：${errorMessage(error)}`);
-      });
-    }
-    return accepted;
-  }, [approvalReviewer, ensureActiveThread, enqueueQueued, isThreadRunning, permissionMode, removeQueuedInput, setError, setQueuedServerId, settings, submitting]);
+    return addQueued(threadId, {
+      text: message, mentions: [...mentions], skills: [...skills], images: [...images],
+      collaborationMode, settings: { ...settings }, permissionMode, approvalReviewer,
+    });
+  }, [addQueued, approvalReviewer, isThreadRunning, permissionMode, settings, submitting]);
 
-  const sendNextQueued = useCallback(async (threadId: string) => {
-    const next = shiftQueued(threadId);
-    if (!next) return false;
-    const sent = next.serverId
-      ? await ensureConnected().then((client) => client.startQueuedSubmission({ threadId, queuedSubmissionId: next.serverId }).then(() => true))
-      : await sendQueued(threadId, next);
-    if (!sent) restoreQueuedFront(threadId, next);
-    return sent;
-  }, [ensureConnected, restoreQueuedFront, shiftQueued, sendQueued]);
+  const { revertLastMessage, onThreadReverted, invalidate: invalidateRevert, reset: resetRevert } = useThreadRevert({
+    threadIdRef, threadOperationRef, ensureActiveThread, ensureConnected, isThreadRunning,
+    dispatch, setSubmitting, setError, refreshHistory,
+  });
 
   const clearActiveThread = useCallback(() => {
     const previousThreadId = threadIdRef.current;
+    invalidateRevert();
     threadIdRef.current = null;
     setSubmitting(false);
     setError("");
     dispatch({ type: "clear" });
     showArchivedHistory(false);
     void unsubscribeIfIdle(previousThreadId);
-  }, [dispatch, setError, setSubmitting, showArchivedHistory, unsubscribeIfIdle]);
+  }, [dispatch, invalidateRevert, setError, setSubmitting, showArchivedHistory, unsubscribeIfIdle]);
 
   const {
     threadActionId,
@@ -354,6 +265,7 @@ export function useThreadController(props: Props) {
     if (threadOperationRef.current || isActionInProgress()) return false;
     if (threadId === threadIdRef.current) return true;
     threadOperationRef.current = true;
+    invalidateRevert();
     setOpeningThreadId(threadId);
     setError("");
     const previousThreadId = threadIdRef.current;
@@ -395,6 +307,7 @@ export function useThreadController(props: Props) {
     setError,
     setSubmitting,
     isActionInProgress,
+    invalidateRevert,
     refreshNativeQueue,
     unsubscribeIfIdle,
   ]);
@@ -417,6 +330,7 @@ export function useThreadController(props: Props) {
   });
 
   const onTurnStarted = useCallback((notification: TurnStartedNotification) => {
+    if (notification.threadId === threadIdRef.current) invalidateRevert();
     markThreadRunning(notification.threadId, notification.turn.id, "unknown");
     if (notification.threadId === threadIdRef.current) {
       setSubmitting(false);
@@ -426,7 +340,7 @@ export function useThreadController(props: Props) {
         startedAt: Date.now() / 1_000,
       });
     }
-  }, [dispatch, markThreadRunning, setSubmitting]);
+  }, [dispatch, invalidateRevert, markThreadRunning, setSubmitting]);
 
   const onTurnCompleted = useCallback((notification: TurnCompletedNotification) => {
     markThreadStopped(notification.threadId);
@@ -441,17 +355,8 @@ export function useThreadController(props: Props) {
     } else if (notification.turn.status !== "completed" || getQueued(notification.threadId).length === 0) {
       void unsubscribeIfIdle(notification.threadId);
     }
-    // Native app-server queue advances itself after a completed turn. The
-    // previous client-side dispatch caused duplicate turns when both paths
-    // observed the same completion.
-    if (notification.turn.status === "completed" && getQueued(notification.threadId).length > 0) {
-      void ensureConnected().then((client) => {
-        // Compatibility fallback for runtimes predating thread/queue/*.
-        if (typeof client.addQueuedSubmission !== "function") void sendNextQueued(notification.threadId);
-      });
-    }
     void refreshHistory();
-  }, [dispatch, ensureConnected, markThreadStopped, setError, setSubmitting, getQueued, refreshHistory, sendNextQueued, unsubscribeIfIdle]);
+  }, [dispatch, markThreadStopped, setError, setSubmitting, getQueued, refreshHistory, unsubscribeIfIdle]);
 
   const onThreadQueueChanged = useCallback((notification: ThreadQueueChangedNotification) => {
     void refreshNativeQueue(notification.threadId).catch((error) => setError(`队列状态同步失败：${errorMessage(error)}`));
@@ -509,48 +414,41 @@ export function useThreadController(props: Props) {
     invalidateActions();
     threadIdRef.current = null;
     subscribedThreadIdsRef.current.clear();
-    nativeQueueRefreshRef.current.clear();
+    resetRevert();
+    queueRemovalRef.current = null;
+    threadOperationRef.current = false;
     clearQueued();
     setSubmitting(false);
     dispatch({ type: "clear" });
-  }, [clearQueued, dispatch, invalidateActions, setSubmitting]);
+  }, [clearQueued, dispatch, invalidateActions, resetRevert, setSubmitting]);
 
-  const removeQueued = useCallback((queuedTurnId: string) => {
+  const removeQueued = useCallback(async (queuedTurnId: string) => {
     const threadId = threadIdRef.current;
-    if (!threadId) return;
-    const queued = getQueued(threadId).find((item) => item.id === queuedTurnId);
-    removeQueuedInput(threadId, queuedTurnId);
-    if (queued?.serverId) {
-      void ensureConnected().then((client) => client.deleteQueuedSubmission({ threadId, queuedSubmissionId: queued.serverId! })).catch((error) => setError(`无法取消队列消息：${errorMessage(error)}`));
+    if (!threadId || threadOperationRef.current) throw new Error("会话正在处理其他操作，请稍后重试。");
+    const token = Symbol(queuedTurnId);
+    queueRemovalRef.current = token;
+    threadOperationRef.current = true;
+    setSubmitting(true);
+    try { await removeNativeQueued(threadId, queuedTurnId); }
+    finally {
+      if (queueRemovalRef.current === token) {
+        queueRemovalRef.current = null;
+        threadOperationRef.current = false;
+        setSubmitting(false);
+      }
     }
-  }, [ensureConnected, getQueued, removeQueuedInput, setError]);
+  }, [removeNativeQueued, setSubmitting]);
 
   const resumeQueued = useCallback(async () => {
     const threadId = threadIdRef.current;
     if (!threadId || submitting || isThreadRunning(threadId)) return false;
-    return sendNextQueued(threadId);
-  }, [isThreadRunning, submitting, sendNextQueued]);
+    return startQueued(threadId);
+  }, [isThreadRunning, submitting, startQueued]);
 
   return {
     currentThreadId,
-    revertLastMessage: async (expectedThreadId: string, turnId: string) => {
-      if (threadIdRef.current !== expectedThreadId || threadOperationRef.current || isThreadRunning(expectedThreadId)) throw new Error("会话已切换或正在运行，不能编辑历史消息。");
-      threadOperationRef.current = true;
-      setSubmitting(true);
-      try {
-        const { client } = await ensureActiveThread();
-        const page = await client.listThreadTurns({ threadId: expectedThreadId, sortDirection: "desc", limit: 1, itemsView: "full" });
-        if (threadIdRef.current !== expectedThreadId) throw new Error("会话已切换，请重新选择要编辑的消息。");
-        if (page.data[0]?.id !== turnId || page.data[0].status === "inProgress") throw new Error("只能编辑最后一个已结束回合的用户消息。");
-        if (page.data[0].items.filter((item) => item.type === "userMessage").length !== 1) throw new Error("该回合包含追加指令，不能单独替换消息。");
-        await client.revertThread({ threadId: expectedThreadId, beforeTurnId: turnId });
-        const { thread } = await client.readThreadWithHistory(expectedThreadId);
-        dispatch({ type: "loadThread", thread });
-      } finally {
-        threadOperationRef.current = false;
-        setSubmitting(false);
-      }
-    },
+    revertLastMessage,
+    onThreadReverted,
     ensureActiveThread,
     history,
     historyArchived,

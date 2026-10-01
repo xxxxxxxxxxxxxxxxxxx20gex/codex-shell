@@ -186,15 +186,17 @@ export function useThreadActions({
     try {
       const client = await ensureConnected();
       if (!isCurrent(token)) return false;
-      const response = await client.forkThread({ threadId, lastTurnId, ephemeral: false });
+      const response = await client.forkThread({ threadId, lastTurnId, ephemeral: false, excludeTurns: true });
+      if (!isCurrent(token)) return false;
+      const { thread } = await client.readThreadWithHistory(response.thread.id);
       if (!isCurrent(token)) return false;
       await unsubscribeIfIdle(threadIdRef.current);
       if (!isCurrent(token)) return false;
-      threadIdRef.current = response.thread.id;
-      subscribedThreadIdsRef.current.add(response.thread.id);
-      applyThreadRuntimeState(response.thread);
-      dispatch({ type: "loadThread", thread: response.thread });
-      showActiveWith(response.thread);
+      threadIdRef.current = thread.id;
+      subscribedThreadIdsRef.current.add(thread.id);
+      applyThreadRuntimeState(thread);
+      dispatch({ type: "loadThread", thread });
+      showActiveWith(thread);
       return true;
     } catch (forkError) {
       if (isCurrent(token)) setError(errorMessage(forkError));

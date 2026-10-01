@@ -3,6 +3,7 @@ import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import type { ProviderSettings } from "../models/types";
 import { useAppController } from "./useAppController";
+import { ThreadRevertHistoryError } from "../runtime/useThreadRevert";
 import type { KeyboardEvent } from "react";
 
 const channelSettings: ProviderSettings = {
@@ -28,6 +29,7 @@ const session = vi.hoisted(() => ({
   acquireProviderSwitch: vi.fn(() => () => {}),
   restart: vi.fn(async () => true),
   listModels: vi.fn(async () => []),
+  removeQueued: vi.fn(async () => {}),
 }));
 vi.mock("../runtime/useAgentSession", () => ({ useAgentSession: () => session, sendOrQueue: vi.fn() }));
 vi.mock("../composer/useComposerDropPaths", () => ({ useComposerDropPaths: vi.fn() }));
@@ -130,6 +132,25 @@ it("keeps the edit draft when history revert fails", async () => {
   expect(session.send).not.toHaveBeenCalled();
   expect(result.current.draft).toBe("keep");
   expect(result.current.editingMessage).not.toBeNull();
+});
+
+it("clears the edit target but keeps the draft when revert committed and hydration failed", async () => {
+  session.revertLastMessage.mockRejectedValueOnce(new ThreadRevertHistoryError("offline"));
+  const { result } = renderHook(useAppController);
+  act(() => result.current.editLastMessage({ type: "userMessage", id: "u", clientId: null, content: [{ type: "text", text: "keep", text_elements: [] }] }));
+  await act(() => result.current.submitWithMode("queue"));
+  expect(result.current.editingMessage).toBeNull();
+  expect(result.current.draft).toBe("keep");
+  expect(session.send).not.toHaveBeenCalled();
+});
+
+it("does not move a queued message into the draft when native cancellation fails", async () => {
+  session.removeQueued.mockRejectedValueOnce(new Error("cannot cancel"));
+  const { result } = renderHook(useAppController);
+  const queued = { id: "queued", text: "original", mentions: [], images: [], skills: [], collaborationMode: "default" as const,
+    settings: channelSettings.channels[0].conversation, permissionMode: "read" as const, approvalReviewer: "user" as const };
+  await act(async () => { await expect(result.current.editQueuedTurn(queued)).rejects.toThrow("cannot cancel"); });
+  expect(result.current.draft).toBe("");
 });
 
 it.each(["full", "workspace", "read"] as const)("preserves %s permission when switching model and effort", async (mode) => {

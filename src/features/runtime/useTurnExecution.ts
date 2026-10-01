@@ -1,4 +1,4 @@
-import { useCallback, useRef, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
+import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
 import type { ModeKind } from "../../generated/app-server/ModeKind";
 import type { Thread } from "../../generated/app-server/v2/Thread";
 import type { UserInput } from "../../generated/app-server/v2/UserInput";
@@ -17,7 +17,6 @@ import type { AppServerClient } from "./appServerClient";
 import { buildUserInput, type FileMention, type ImageAttachment, type SkillMention } from "./sessionInput";
 import { buildHostInstructions } from "./hostInstructions";
 import type { AgentSessionAction } from "./sessionState";
-import type { QueuedTurnInput } from "./useQueuedTurns";
 import { canSteerRunningTurn, type RunningTurn, type RunningTurnKind } from "./useRunningTurns";
 
 interface Props {
@@ -88,7 +87,6 @@ function validatedUserInput(
 }
 
 export function useTurnExecution(props: Props) {
-  const queuedTurnSendingRef = useRef(new Set<string>());
   const send = useCallback(async (
     text: string,
     mentions: FileMention[] = [],
@@ -198,49 +196,6 @@ export function useTurnExecution(props: Props) {
     }
   }, [props]);
 
-  const sendQueued = useCallback(async (threadId: string, queued: QueuedTurnInput) => {
-    if (queuedTurnSendingRef.current.has(threadId)) return false;
-    queuedTurnSendingRef.current.add(threadId);
-    if (props.threadIdRef.current === threadId) props.setSubmitting(true);
-    props.markThreadRunning(threadId, null, "regular");
-    try {
-      const client = await props.ensureConnected();
-      if (!props.subscribedThreadIdsRef.current.has(threadId)) {
-        await client.resumeThread({ threadId, excludeTurns: true });
-        props.subscribedThreadIdsRef.current.add(threadId);
-      }
-      const input = validatedUserInput(
-        queued.text,
-        queued.mentions,
-        queued.skills,
-        queued.images ?? [],
-        "队列消息和附件路径",
-      );
-      const submittedAt = Date.now() / 1_000;
-      const response = await startTurn(
-        client,
-        threadId,
-        input,
-        queued.collaborationMode,
-        queued.settings,
-        queued.permissionMode,
-        queued.approvalReviewer,
-      );
-      props.markThreadRunning(threadId, response.turn.id, "regular");
-      if (props.threadIdRef.current === threadId) {
-        props.dispatch({ type: "turnSubmitted", turn: response.turn, userInput: input, submittedAt });
-      }
-      return true;
-    } catch (sendError) {
-      props.markThreadStopped(threadId);
-      if (props.threadIdRef.current === threadId) props.setError(errorMessage(sendError));
-      return false;
-    } finally {
-      queuedTurnSendingRef.current.delete(threadId);
-      if (props.threadIdRef.current === threadId) props.setSubmitting(false);
-    }
-  }, [props]);
-
   const interrupt = useCallback(async () => {
     const threadId = props.threadIdRef.current;
     const runningTurn = threadId ? props.getRunningTurn(threadId) : undefined;
@@ -252,5 +207,5 @@ export function useTurnExecution(props: Props) {
     }
   }, [props]);
 
-  return { send, sendQueued, steer, interrupt };
+  return { send, steer, interrupt };
 }

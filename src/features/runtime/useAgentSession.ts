@@ -190,6 +190,7 @@ export function useAgentSession(
     onThreadUnarchived,
     onThreadClosed,
     onThreadQueueChanged,
+    onThreadReverted,
     refreshHistory,
     openThread,
     reset: resetThreads,
@@ -247,17 +248,7 @@ export function useAgentSession(
           .then(({ thread }) => dispatch({ type: "updateThread", thread }))
           .catch((readError) => setError(`项目目录同步失败：${errorMessage(readError)}`));
       },
-      onThreadReverted: (notification) => {
-        if (notification.threadId !== currentThreadId()) {
-          void refreshHistory();
-          return;
-        }
-        const client = clientRef.current;
-        if (!client) return;
-        void client.readThreadWithHistory(notification.threadId)
-          .then(({ thread }) => dispatch({ type: "loadThread", thread }))
-          .catch((readError) => setError(`回滚后的会话同步失败：${errorMessage(readError)}`));
-      },
+      onThreadReverted,
       onThreadQueueChanged,
       onServerRequestResolved: (notification) => interactionStore.dismiss(notification.requestId),
       onWarning: (notification) => {
@@ -363,6 +354,7 @@ export function useAgentSession(
     markThreadStopped,
     onThreadClosed,
     onThreadQueueChanged,
+    onThreadReverted,
     onThreadName,
     onThreadStarted,
     onThreadStatus,

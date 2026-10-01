@@ -15,11 +15,11 @@
 
 ## 当前验证基线
 
-2026-10-01，0.159.2 升级后 `pnpm test:quality` 全部通过：69 个文件 / 375 项前端测试、34 项高德离线测试、TypeScript、ESLint、生产构建、Knip、Cargo check、Rust 51 项单测（1 项交互测试忽略）、严格 Clippy 和 diff 检查。新回归覆盖原生回退后重读、回退失败保留显示、分页网络错误不降级、托管图片引用往返和预览状态。四尺寸 Edge 附件检查通过，包含既有批注、托管图片边界、字号、焦点、Escape、外部关闭与 reduced-motion。
+2026-10-01，0.159.2 升级后审查修复通过 `pnpm test:quality`；最后补充取消期间会话互斥后重跑前端测试、TypeScript、ESLint 和 Debug 构建。最终基线：71 个文件 / 388 项前端测试、34 项高德离线测试、生产构建、Knip、Cargo check、Rust 51 项单测（1 项交互测试忽略）、严格 Clippy 和 diff 检查。新增回归覆盖侧聊分页分叉、回退通知去重及重置后迟到响应、已提交回退的刷新失败、入队确认前撤回、删除失败／已消费状态、取消期间会话互斥及原生队列恢复。已删除旧 Runtime 的本地队列发送和伪能力检测分支。本轮四尺寸 Edge Composer／队列检查通过；附件与托管图片四尺寸验证沿用升级时证据。
 
-0.159.2 同源 Runtime 兼容门禁、隔离设置／队列协议探针、新旧历史升级探针、Goal 和内置 rg 探针通过。旧版 fixture 验证官方 CLI 与启动后台迁移，随后测试恢复、分页、回退替换和冷恢复；所有模型请求均到本机模拟 Responses 网关，不接触真实用户数据或收费模型。
+0.159.2 同源 Runtime 兼容门禁、隔离设置／队列协议探针、新旧历史升级探针、Goal 和内置 rg 探针通过。旧版 fixture 验证官方 CLI 与启动后台迁移，随后测试恢复、分页、回退替换、普通分叉、分页临时侧聊分叉及实际发送和冷恢复；所有模型请求均到本机模拟 Responses 网关，不接触真实用户数据或收费模型。
 
-升级后的 `pnpm desktop:build` 已通过，Debug 主程序及同目录 sidecar 为 0.159.2 适配版本；本次未启动真实用户 CODEX_HOME。实测发现并修复增量构建遗留旧 sidecar：在 Debug 输出放入旧内核、只触碰暂存二进制后重建，输出被更新到 0.159.2，主程序及三个 helper 的 manifest 哈希核验通过；修改 build.rs 后重新运行 Rust check／单测／Clippy 通过。
+审查修复后的 `pnpm desktop:build` 已通过，Debug 主程序及同目录 sidecar 为 0.159.2 适配版本；本次未启动真实用户 CODEX_HOME。实测发现并修复增量构建遗留旧 sidecar：在 Debug 输出放入旧内核、只触碰暂存二进制后重建，输出被更新到 0.159.2，主程序及三个 helper 的 manifest 哈希核验通过；修改 build.rs 后重新运行 Rust check／单测／Clippy 通过。
 
 本轮协议／边界回归覆盖三页历史分页顺序、20 MiB 图片／PDF 预览上限、HTTPS／本机回环 HTTP 渠道校验和 `thread/project/updated` 的权威 Thread 刷新。图片/PDF 当前仍由 app-server `fs/readFile` 完整返回后才判断大小，尚未实现源端分段读取。
 

@@ -37,6 +37,7 @@ import {
   type SkillMention,
   useAgentSession,
 } from "../runtime/useAgentSession";
+import { ThreadRevertHistoryError } from "../runtime/useThreadRevert";
 import {
   activeFileMentionQuery,
   type DefaultProjectDirectory,
@@ -341,7 +342,10 @@ export function useAppController() {
         if (await session.send(message, mentions, skills, collaborationMode, images)) {
           setDraft(""); setMentions([]); setImages([]); setSkills([]); setCommandNotice("");
         }
-      } catch (error) { setUiError(errorMessage(error)); }
+      } catch (error) {
+        if (error instanceof ThreadRevertHistoryError) setEditingMessage(null);
+        setUiError(errorMessage(error));
+      }
       finally { editSubmittingRef.current = false; }
       return;
     }
@@ -388,8 +392,13 @@ export function useAppController() {
 
   async function steerQueuedTurn(queued: (typeof session.queuedTurns)[number]) {
     if (!session.canSteer) return;
-    if (await session.steer(queued.text, queued.mentions, queued.skills, queued.images)) {
-      session.removeQueued(queued.id);
+    await session.removeQueued(queued.id);
+    if (!await session.steer(queued.text, queued.mentions, queued.skills, queued.images)) {
+      setDraft((current) => current ? `${current}\n\n${queued.text}` : queued.text);
+      setMentions((current) => [...current, ...queued.mentions]);
+      setImages((current) => [...current, ...(queued.images ?? [])]);
+      setSkills((current) => [...current, ...queued.skills]);
+      throw new Error("引导发送失败，消息已保留在输入框，请重新发送。");
     }
   }
 
@@ -568,7 +577,9 @@ export function useAppController() {
     setPreferencesOpen(true);
   }
 
-  function editQueuedTurn(turn: (typeof session.queuedTurns)[number]) {
+  async function editQueuedTurn(turn: (typeof session.queuedTurns)[number]) {
+    if (draft.trim() || mentions.length || images.length || skills.length) throw new Error("请先处理当前草稿，再编辑待发送消息。");
+    await session.removeQueued(turn.id);
     setDraft(turn.text); setMentions(turn.mentions); setImages(turn.images ?? []); setSkills(turn.skills);
     const channel = activeChannel(settings);
     if (channel) {
@@ -576,7 +587,7 @@ export function useAppController() {
       void saveProviderSettings(restored).catch((error) => setUiError(errorMessage(error)));
     }
     setPermissionMode(turn.permissionMode); setApprovalReviewer(turn.approvalReviewer);
-    setComposerIntent(turn.collaborationMode === "plan" ? "plan" : "default"); session.removeQueued(turn.id);
+    setComposerIntent(turn.collaborationMode === "plan" ? "plan" : "default");
   }
 
   function editLastMessage(item: Extract<ThreadItem, { type: "userMessage" }>) {

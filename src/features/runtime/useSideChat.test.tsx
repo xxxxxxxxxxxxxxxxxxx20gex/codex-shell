@@ -90,6 +90,22 @@ function setup() {
   return { client, ensureConnected, interruptTurn, unsubscribeThread, result };
 }
 
+it("forks paginated side chat without requesting copied history", async () => {
+  const forkThread = vi.fn(async (params: { excludeTurns?: boolean }) => {
+    if (!params.excludeTurns) throw new Error("ephemeral paginated thread/fork requires excludeTurns");
+    return { thread: fakeThread() };
+  });
+  const client = { forkThread } as unknown as AppServerClient;
+  const { result } = renderHook(() => useSideChat({
+    clientRef: { current: client }, ensureConnected: async () => client,
+    mainThread: { ...fakeThread(), id: "main", historyMode: "paginated", ephemeral: false },
+    mainTurns: [fakeTurn("completed")], settings, markThreadRunning: vi.fn(), markThreadStopped: vi.fn(),
+  }));
+  await act(async () => { expect(await result.current.openChat()).toBe(true); });
+  expect(forkThread).toHaveBeenCalledWith(expect.objectContaining({ threadId: "main", ephemeral: true, excludeTurns: true }));
+  expect(result.current.thread?.id).toBe("side-thread");
+});
+
 describe("useSideChat", () => {
   it("provides host context when creating a side chat without personalization", async () => {
     const { client, result } = setup();

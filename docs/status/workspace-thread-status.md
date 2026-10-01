@@ -6,11 +6,12 @@
 - 当前文件：文件树以选中背景和左侧 2px 动作色标记当前预览文件；从回复链接打开嵌套文件时展开父目录并滚动到可见位置，Windows 路径分隔符及大小写差异不影响高亮。项目外文件仍只显示预览，不伪造项目树节点。
 
 - 模块职责：管理项目目录（Thread `cwd`）、线程列表、创建、恢复与切换。
-- 当前状态：新 Thread 使用发送首条消息前选择的自定义项目，未选择时使用 `Documents/Codex-Shell/YYYY-MM-DD` 默认项目目录；自定义选择不跨新对话持久化。已有 Thread 始终使用服务端返回的不可变 `cwd`，文件浏览、文件附件和相对路径解析均以该目录为根。每个非运行中的历史 Turn 都可通过原生 `thread/fork(lastTurnId)` 从该轮末尾创建分支；右侧侧边聊天从当前已完成 Turn fork 一个 `ephemeral`、只读沙箱 Thread，不进入历史列表，主会话切换或关闭侧聊时退订并清理。
-- 最近变更：会话标题优先使用 Core 名称，预览回退通过 Markdown 解析提取纯文本、合并空白，空内容显示“未命名会话”。列表与顶部统一按最多 60 个 Unicode 字素显示，完整名称保留在悬停提示和重命名输入；不截断写回 Core，不调用模型自动命名。历史列表请求期间收到的名称更新会合并到响应，防止旧快照覆盖改名；项目变更事件通过 `thread/read` 同步权威 cwd；图片/PDF 预览超过 20 MiB 时只显示超限提示。
+- 当前状态：新 Thread 使用发送首条消息前选择的自定义项目，未选择时使用 `Documents/Codex-Shell/YYYY-MM-DD` 默认项目目录；自定义选择不跨新对话持久化。已有 Thread 始终使用服务端返回的不可变 `cwd`，文件浏览、文件附件和相对路径解析均以该目录为根。每个非运行中的历史 Turn 都可通过原生 `thread/fork(lastTurnId, excludeTurns: true)` 从该轮末尾创建分支，再分页读取最近 200 轮；右侧侧边聊天从当前已完成 Turn 以 `excludeTurns: true` fork 一个 `ephemeral`、只读沙箱 Thread，不进入历史列表，主会话切换或关闭侧聊时退订并清理。
+- 标题与项目同步：会话标题优先使用 Core 名称，预览回退通过 Markdown 解析提取纯文本、合并空白，空内容显示“未命名会话”。列表与顶部统一按最多 60 个 Unicode 字素显示，完整名称保留在悬停提示和重命名输入；不截断写回 Core，不调用模型自动命名。历史列表请求期间收到的名称更新会合并到响应，防止旧快照覆盖改名；项目变更事件通过 `thread/read` 同步权威 cwd；图片/PDF 预览超过 20 MiB 时只显示超限提示。
 - 宿主说明：新建主会话、独立侧聊及侧聊分叉通过原生 `developerInstructions` 注入统一 CS 宿主说明，再拼接用户自定义提示词；不覆盖 Core 基础提示词或修改系统 Skill。
 - 指令生命周期：恢复历史会话不重写原有 developer instructions，普通历史分叉沿用父会话指令。因此更新前的旧会话及其普通分叉不会自动补入宿主说明，需新建对话使用。个性化仍只在创建主会话或侧聊时读取。
-- 队列与历史：原生队列刷新按 Thread 合并通知，刷新期间再次收到变化时丢弃过期快照并补查；失败释放刷新状态，Runtime reset 使在途响应失效。0.159.2 使用原生分页读取最近 200 轮；只有明确的历史未就绪错误尝试读取／恢复，网络等错误保持可见。编辑最后一条消息使用 `thread/revert` 后重新分页加载，旧 legacy 格式由 Core 启动后台迁移；迁移中的忙文件或损坏历史仍可能需要重试。详见 [协议状态](protocol-status.md) 和 [迁移决策](../decisions/ADR-005-native-history-migration.md)。
+- 最近变更：侧聊分页分叉显式排除父历史；普通分叉只分页读取最近 200 轮。消息回退复用 Core 返回的 metadata／cursor，本地主动回退与 `thread/reverted` 不再重复加载，切换、重置或新 Turn 使旧刷新结果失效。回退已提交但历史刷新失败时清除旧编辑目标并保留草稿，重发不会再次回退。
+- 队列与历史：队列执行统一由 `thread/queue/*` 管理，删除本地自动发送及伪 Runtime 能力检测分支。提交中消息保留在界面，撤回等待入队 ID 和 Core 的 `deleted: true`；失败保留服务端队列状态，已开始执行时明确报错。撤回期间禁止切换会话，编辑／引导在撤回成功后继续；引导失败回填草稿。通知刷新合并并保留未确认操作，Runtime reset／卸载使在途结果失效。旧 legacy 历史的原生读取／恢复仍保留，不能假定后台迁移已完成；迁移边界见 [协议状态](protocol-status.md)。
 - 当前接口：Rust `get_default_project_directory`，以及 `WorkspaceSelector`、`WorkspaceExplorer`、`ThreadHistoryList`、`ConversationTimeline`、`useWorkspaceFiles`、`useThreadController` 和 `useThreadActions`。时间线滚动控制以当前可见用户消息为锚点，在上一条、下一条和最新位置之间跳转。
 - 交互校正：右侧功能区中的“项目文件”入口在存在项目路径时直接打开 `WorkspaceExplorer`；无路径时仅显示准备提示，避免重复的二级打开按钮。
 - 文件预览边界：图片和 PDF 超过 20 MiB 时不创建前端 Data URL，只显示超限提示；文件内容仍由 app-server 的 `fs/readFile` 返回后才可判断大小，尚未实现源端按字节分页读取。

@@ -133,6 +133,7 @@ export function useSideChat({
             ...permissions,
             developerInstructions: buildHostInstructions(personalization?.customInstructions),
             ephemeral: true,
+            excludeTurns: true,
             threadSource: "codex-shell-side-chat",
           })
         : await client.startThread({

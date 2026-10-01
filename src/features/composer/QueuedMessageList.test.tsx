@@ -15,11 +15,11 @@ function props() {
   return { items: [item], running: true, canSteer: true, readFile: vi.fn(async () => ""), onEdit: vi.fn(), onSteer: vi.fn(async () => {}), onRemove: vi.fn(), onResume: vi.fn(), onError: vi.fn() };
 }
 
-it("edits the selected queue item from the menu and keeps direct removal independent", () => {
+it("edits the selected queue item from the menu and keeps direct removal independent", async () => {
   const callbacks = props();
   render(<QueuedMessageList {...callbacks} />);
   fireEvent.click(screen.getByRole("button", { name: /消息操作/ }));
-  fireEvent.click(screen.getByRole("menuitem", { name: "编辑消息" }));
+  await act(async () => { fireEvent.click(screen.getByRole("menuitem", { name: "编辑消息" })); });
   expect(callbacks.onEdit).toHaveBeenCalledWith(item);
   expect(callbacks.onRemove).not.toHaveBeenCalled();
   expect(screen.queryByRole("menu")).toBeNull();

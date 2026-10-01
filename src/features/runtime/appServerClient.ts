@@ -258,12 +258,16 @@ export class AppServerClient {
    */
   async readThreadWithHistory(threadId: string, limit = 200) {
     const metadata = await this.readThread({ threadId, includeTurns: false });
-    let cursor: string | null = null;
+    return this.hydrateThreadHistory(metadata.thread, undefined, limit);
+  }
+
+  async hydrateThreadHistory(thread: ThreadReadResponse["thread"], cursor: string | null | undefined, limit = 200) {
+    if (cursor === null) return { thread: { ...thread, turns: [] } };
     const turns: ThreadTurnsListResponse["data"] = [];
     do {
       const page = await this.listThreadTurns({
-        threadId,
-        cursor,
+        threadId: thread.id,
+        cursor: cursor ?? null,
         limit: Math.max(1, Math.min(limit - turns.length, 200)),
         sortDirection: "desc",
         itemsView: "full",
@@ -271,7 +275,7 @@ export class AppServerClient {
       turns.push(...page.data);
       cursor = page.nextCursor;
     } while (cursor !== null && turns.length < limit);
-    return { thread: { ...metadata.thread, turns: turns.slice(0, limit).reverse() } };
+    return { thread: { ...thread, turns: turns.slice(0, limit).reverse() } };
   }
 
   listThreadTurns(params: ThreadTurnsListParams) {

@@ -173,6 +173,12 @@ try {
   await turn(thread.id, "Replacement input");
   const fork = await client.rpc("thread/fork", { threadId: thread.id, lastTurnId: first, excludeTurns: true });
   assert.equal((await history(fork.thread.id)).length, 1);
+  const side = await client.rpc("thread/fork", { threadId: thread.id, lastTurnId: first, ephemeral: true, excludeTurns: true, sandbox: "read-only", approvalPolicy: "never", threadSource: "codex-shell-side-chat" });
+  assert.equal(side.thread.ephemeral, true);
+  assert.deepEqual(side.thread.turns, []);
+  await turn(side.thread.id, "Side chat input");
+  await client.rpc("thread/unsubscribe", { threadId: side.thread.id });
+  console.log("PASS ephemeral paginated side-chat fork and turn");
   await client.rpc("thread/archive", { threadId: fork.thread.id });
   await client.rpc("thread/unarchive", { threadId: fork.thread.id });
   hold = true;

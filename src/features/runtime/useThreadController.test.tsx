@@ -68,13 +68,26 @@ function setup() {
     ["review-thread", reviewThread],
   ]);
   const running = new Set<string>();
+  threads.set("thread-fork", thread("thread-fork", { forkedFromId: "thread-a", turns: [turn("turn-previous", "completed")] }));
+  const nativeQueues = new Map<string, ThreadQueueListResponse["data"]>();
   const client = {
-    listQueuedSubmissions: vi.fn(async (): Promise<ThreadQueueListResponse> => ({ data: [], nextCursor: null })),
+    listQueuedSubmissions: vi.fn(async ({ threadId }: { threadId: string }): Promise<ThreadQueueListResponse> => ({ data: nativeQueues.get(threadId) ?? [], nextCursor: null })),
+    addQueuedSubmission: vi.fn(async (params: import("../../generated/app-server/v2/ThreadQueueAddParams").ThreadQueueAddParams) => {
+      const queuedSubmission = { id: "server-" + params.clientUserMessageId, clientUserMessageId: params.clientUserMessageId, input: params.input };
+      nativeQueues.set(params.threadId, [...(nativeQueues.get(params.threadId) ?? []), queuedSubmission]);
+      return { queuedSubmission };
+    }),
+    deleteQueuedSubmission: vi.fn(async ({ threadId, queuedSubmissionId }: { threadId: string; queuedSubmissionId: string }) => {
+      nativeQueues.set(threadId, (nativeQueues.get(threadId) ?? []).filter((item) => item.id !== queuedSubmissionId));
+      return { deleted: true };
+    }),
+    startQueuedSubmission: vi.fn(async () => ({ turn: turn("native-turn") })),
     listThreads: vi.fn(async () => ({ data: [...threads.values()], nextCursor: null })),
     readThread: vi.fn(async ({ threadId }: { threadId: string }) => ({ thread: threads.get(threadId)! })),
     readThreadWithHistory: vi.fn(async (threadId: string) => ({ thread: threads.get(threadId)! })),
     listThreadTurns: vi.fn(async () => ({ data: [turn("last", "completed")], nextCursor: null, backwardsCursor: null })),
-    revertThread: vi.fn(async () => ({})),
+    revertThread: vi.fn(async () => ({ thread: thread("thread-a"), turnsBackwardsCursor: "retained", itemsBackwardsCursor: null })),
+    hydrateThreadHistory: vi.fn(async (value: Thread) => ({ thread: value })),
     resumeThread: vi.fn(async ({ threadId }: { threadId: string }) => ({ thread: threads.get(threadId)! })),
     unsubscribeThread: vi.fn(async () => ({})),
     startThread: vi.fn(async () => ({ thread: thread("thread-new") })),
@@ -153,6 +166,22 @@ function setup() {
 }
 
 describe("useThreadController", () => {
+  it("blocks thread switching while a queue cancellation is awaiting Core", async () => {
+    const { client, props } = setup();
+    const { result } = renderHook(() => useThreadController(props));
+    await act(async () => { await result.current.openThread("thread-a"); await result.current.send("start"); result.current.queue("pending"); });
+    const id = result.current.queuedTurns[0].id;
+    let finish!: (response: { deleted: boolean }) => void;
+    client.deleteQueuedSubmission.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve; }));
+    let cancel!: Promise<void>;
+    act(() => { cancel = result.current.removeQueued(id); });
+    await waitFor(() => expect(finish).toBeDefined());
+    await act(async () => { expect(await result.current.openThread("thread-b")).toBe(false); });
+    expect(result.current.currentThreadId()).toBe("thread-a");
+    await act(async () => { finish({ deleted: true }); await cancel; });
+    await act(async () => { expect(await result.current.openThread("thread-b")).toBe(true); });
+  });
+
   it("reverts the last turn through Core and reloads retained paginated history", async () => {
     const { client, props, dispatch } = setup();
     const last = turn("last", "completed");
@@ -161,11 +190,11 @@ describe("useThreadController", () => {
     const { result } = renderHook(() => useThreadController(props));
     await act(async () => { await result.current.openThread("thread-a"); });
     const retained = thread("thread-a", { turns: [turn("retained", "completed")] });
-    client.readThreadWithHistory.mockResolvedValueOnce({ thread: retained });
+    client.hydrateThreadHistory.mockResolvedValueOnce({ thread: retained });
     await act(async () => { await result.current.revertLastMessage("thread-a", "last"); });
     expect(client.revertThread).toHaveBeenCalledWith({ threadId: "thread-a", beforeTurnId: "last" });
     expect(dispatch).toHaveBeenLastCalledWith({ type: "loadThread", thread: retained });
-    expect(client.readThreadWithHistory.mock.invocationCallOrder[1]).toBeGreaterThan(client.revertThread.mock.invocationCallOrder[0]);
+    expect(client.hydrateThreadHistory.mock.invocationCallOrder[0]).toBeGreaterThan(client.revertThread.mock.invocationCallOrder[0]);
     expect(props.setSubmitting).toHaveBeenLastCalledWith(false);
   });
 
@@ -441,7 +470,7 @@ describe("useThreadController", () => {
     await waitFor(() => expect(client.unsubscribeThread).toHaveBeenCalledWith({ threadId: "thread-a" }));
   });
 
-  it("queues follow-ups per Session and starts them only after the previous Turn completes", async () => {
+  it("queues follow-ups per Session and lets Core advance them without duplicate client turns", async () => {
     const { client, props } = setup();
     client.startTurn
       .mockResolvedValueOnce({ turn: turn("turn-a") })
@@ -465,21 +494,10 @@ describe("useThreadController", () => {
       threadId: "thread-a",
       turn: turn("turn-a", "completed"),
     }));
-    await waitFor(() => expect(client.startTurn).toHaveBeenCalledTimes(3));
-    expect(client.startTurn.mock.calls[2][0]).toMatchObject({
-      threadId: "thread-a",
-      input: [{ type: "text", text: "上海" }],
-    });
-
-    act(() => result.current.onTurnCompleted({
-      threadId: "thread-b",
-      turn: turn("turn-b", "completed"),
-    }));
-    await waitFor(() => expect(client.startTurn).toHaveBeenCalledTimes(4));
-    expect(client.startTurn.mock.calls[3][0]).toMatchObject({
-      threadId: "thread-b",
-      input: [{ type: "text", text: "广州" }],
-    });
+    act(() => result.current.onTurnCompleted({ threadId: "thread-b", turn: turn("turn-b", "completed") }));
+    expect(client.startTurn).toHaveBeenCalledTimes(2);
+    expect(client.addQueuedSubmission).toHaveBeenCalledTimes(2);
+    expect(client.startQueuedSubmission).not.toHaveBeenCalled();
   });
 
   it("keeps queued messages after an interrupted Turn", async () => {
@@ -503,11 +521,8 @@ describe("useThreadController", () => {
     await act(async () => {
       expect(await result.current.resumeQueued()).toBe(true);
     });
-    expect(client.startTurn).toHaveBeenCalledTimes(2);
-    expect(client.startTurn.mock.calls[1][0]).toMatchObject({
-      threadId: "thread-a",
-      input: [{ type: "text", text: "上海" }],
-    });
+    expect(client.startTurn).toHaveBeenCalledTimes(1);
+    expect(client.startQueuedSubmission).toHaveBeenCalledWith({ threadId: "thread-a", queuedSubmissionId: expect.any(String) });
   });
 
   it("retains a known fork parent when a refresh page only returns the child", async () => {
@@ -542,6 +557,7 @@ describe("useThreadController", () => {
       threadId: "thread-a",
       lastTurnId: "turn-previous",
       ephemeral: false,
+      excludeTurns: true,
     });
     expect(dispatch).toHaveBeenCalledWith(expect.objectContaining({
       type: "loadThread",

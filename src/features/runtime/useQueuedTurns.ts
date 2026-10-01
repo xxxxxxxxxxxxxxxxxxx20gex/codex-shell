@@ -8,7 +8,7 @@ export const MAX_QUEUED_TURNS_PER_THREAD = 10;
 
 export interface QueuedTurnInput {
   id: string;
-  /** app-server queue id; absent when running against an older runtime. */
+  /** app-server queue id; absent while the native add request is pending. */
   serverId?: string;
   text: string;
   mentions: FileMention[];
@@ -66,24 +66,6 @@ export function useQueuedTurns() {
     replace(next);
   }, [replace]);
 
-  const shift = useCallback((threadId: string) => {
-    const current = queuedTurnsRef.current.get(threadId);
-    if (!current?.length) return null;
-    const [first, ...remaining] = current;
-    const next = new Map(queuedTurnsRef.current);
-    if (remaining.length) next.set(threadId, remaining);
-    else next.delete(threadId);
-    replace(next);
-    return first;
-  }, [replace]);
-
-  const restoreFront = useCallback((threadId: string, input: QueuedTurnInput) => {
-    const current = queuedTurnsRef.current.get(threadId) ?? [];
-    const next = new Map(queuedTurnsRef.current);
-    next.set(threadId, [input, ...current]);
-    replace(next);
-  }, [replace]);
-
   const remove = useCallback((threadId: string, queuedTurnIdToRemove: string) => {
     const current = queuedTurnsRef.current.get(threadId);
     if (!current?.some((input) => input.id === queuedTurnIdToRemove)) return;
@@ -110,5 +92,5 @@ export function useQueuedTurns() {
     [],
   );
 
-  return { queuedTurns, enqueue, setServerId, replaceThread, shift, restoreFront, remove, clearThread, clear, get };
+  return { queuedTurns, enqueue, setServerId, replaceThread, remove, clearThread, clear, get };
 }
