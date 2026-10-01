@@ -1,9 +1,9 @@
 # 测试与发布状态
 
 - 模块职责：维护质量门禁、Runtime 兼容验证、Windows 发布证据及未覆盖边界。模块行为由对应状态文档维护，历史测试流水账由 Git 保留。
-- 当前状态：v0.1.8 已正式发布，包含内置 Skill 资源路径兼容和错误信息脱敏修复；Updater minisign 已启用，Windows Authenticode 尚未配置，SmartScreen 仍可能提示未知发布者。
+- 当前状态：v0.1.9 为内核升级前的发布基线，包含窗口尺寸、回复资源入口、输入区布局、临时提示及模型服务层级修复；Updater minisign 已启用，Windows Authenticode 尚未配置，SmartScreen 仍可能提示未知发布者。
 - 当前接口：`pnpm test:quality` 依次执行 TypeScript、ESLint、Vitest、`pnpm test:amap`、production build、Knip、`pnpm rust:check` 和 diff 检查。协议、Runtime、四视口布局和 Skill 专项验证独立运行，入口见 [测试脚本说明](../../tests/scripts/README.md) 与 `package.json`。
-- 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；Vite 主 chunk 超过 500 kB；`pnpm quality:knip` 当前因 `src/features/models/channels.ts` 的 `OPENAI_BUILTIN_MODEL_IDS` 未使用导出失败；`cargo fmt --check` 尚未纳入门禁。
+- 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；Vite 主 chunk 超过 500 kB；`cargo fmt --check` 尚未纳入门禁。
 - 下一步：补真实系统凭据、多渠道对话、第三方 MCP OAuth，以及干净 Windows 用户环境安装和升级验收。
 - 最后更新：2026-10-01
 
@@ -15,9 +15,7 @@
 
 ## 当前验证基线
 
-2026-10-01，输入区四尺寸浏览器探针、Edge 截图复核、68 个文件 / 362 项前端测试、ESLint、TypeScript、生产构建、Cargo check、Rust 51 项单测（1 项交互测试忽略）、严格 Clippy、Debug 构建和本轮协议／边界回归均通过。Knip 失败项已在“已知问题”明确记录，未将其伪装成完整门禁通过。
-
-2026-10-01，模型快速切换服务层级校准及精确提示过滤后，69 个文件 / 370 项前端测试、ESLint、TypeScript、Cargo check 和 Debug 构建通过。Knip 仍因上述未使用导出失败；本次未调用真实模型，也未重跑 Rust 单测或四视口 UI 专项。
+2026-10-01，v0.1.9 发布前 `pnpm test:quality` 全部通过：69 个文件 / 370 项前端测试、34 项高德离线测试、TypeScript、ESLint、生产构建、Knip、Cargo check、Rust 51 项单测（1 项交互测试忽略）、严格 Clippy 和 diff 检查。已去掉模型目录常量的无用导出，未改变模型行为。协议调用面测试、隔离 Runtime 设置／队列探针及内置 rg 探针通过；本次未重复四视口检查，其证据为上面的同日 UI 定向验证。
 
 本轮协议／边界回归覆盖三页历史分页顺序、20 MiB 图片／PDF 预览上限、HTTPS／本机回环 HTTP 渠道校验和 `thread/project/updated` 的权威 Thread 刷新。图片/PDF 当前仍由 app-server `fs/readFile` 完整返回后才判断大小，尚未实现源端分段读取。
 
@@ -31,4 +29,4 @@
 
 ## 最近发布
 
-v0.1.8 使用 `codex-cli 0.154.0-alpha.6.2` 同源 Runtime，已生成并上传 NSIS 安装器、`.sig` 和 `latest.json`。发布脚本通过 Runtime 哈希、协议兼容门禁和 updater 签名校验；发布历史及精确资产校验由 Git 与 GitHub Release 保留，不在状态文档重复。
+v0.1.9 使用 `codex-cli 0.154.0-alpha.6.2` 同源 Runtime，发布资产为 NSIS 安装器、`.sig` 和 `latest.json`。2026-10-01 本机打包通过 Runtime 哈希及协议兼容门禁；独立使用配置中的既有公钥验证安装器 minisign 签名、可信注释签名、manifest 版本及下载地址均通过。精确资产校验和发布记录由 GitHub Release 保留，不在状态文档重复。

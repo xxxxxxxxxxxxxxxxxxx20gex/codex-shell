@@ -201,7 +201,7 @@ Radii:
 
 - The product title belongs to the frameless window title bar and is not repeated inside the sidebar.
 - Sidebar primary actions use borderless icon-and-label rows, not framed buttons.
-- The initial action set is intentionally limited to New conversation and Plugins; Plugins may remain disabled while its implementation is not available.
+- The sidebar action set is New conversation and Skills; MCP is accessed from the composer. Plugin marketplace management is outside the shell product surface.
 
 ## Panels, Menus, And Dialogs
 

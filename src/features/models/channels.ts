@@ -24,7 +24,7 @@ export const VENDORS: VendorDescriptor[] = [
   },
 ];
 
-export const OPENAI_BUILTIN_MODEL_IDS = ["gpt-6-sol", "gpt-6.1-sol"] as const;
+const OPENAI_BUILTIN_MODEL_IDS = ["gpt-6-sol", "gpt-6.1-sol"] as const;
 
 export function isOpenAiBuiltinModelId(modelId: string) {
   return OPENAI_BUILTIN_MODEL_IDS.includes(modelId.trim().toLowerCase() as (typeof OPENAI_BUILTIN_MODEL_IDS)[number]);
