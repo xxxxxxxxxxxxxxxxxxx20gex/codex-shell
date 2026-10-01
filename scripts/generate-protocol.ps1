@@ -1,16 +1,40 @@
+param([string]$Runtime = "")
+
 $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$runtime = Join-Path $projectRoot "src-tauri\binaries\codex-x86_64-pc-windows-msvc.exe"
+if (-not $Runtime) {
+    $Runtime = Join-Path $projectRoot "src-tauri\binaries\codex-x86_64-pc-windows-msvc.exe"
+}
 $output = Join-Path $projectRoot "src\generated\app-server"
 
-if (-not (Test-Path -LiteralPath $runtime -PathType Leaf)) {
-    throw "暂存 Runtime 不存在，请先运行 scripts\stage-runtime.ps1"
+if (-not (Test-Path -LiteralPath $Runtime -PathType Leaf)) {
+    throw "Runtime not found. Use -Runtime to select the candidate binary."
 }
+$runtimePath = (Resolve-Path -LiteralPath $Runtime).Path
+$temporaryOutput = Join-Path ([IO.Path]::GetTempPath()) ("cs-protocol-generate-" + [guid]::NewGuid().ToString("N"))
 
-New-Item -ItemType Directory -Force -Path $output | Out-Null
-& $runtime app-server generate-ts --experimental --out $output
-if ($LASTEXITCODE -ne 0) {
-    throw "app-server TypeScript 协议生成失败，退出码：$LASTEXITCODE"
+try {
+    & $runtimePath app-server generate-ts --experimental --out $temporaryOutput
+    if ($LASTEXITCODE -ne 0) { throw "Protocol generation failed: exit code $LASTEXITCODE" }
+    foreach ($required in @("ClientRequest.ts", "ServerNotificationEnvelope.ts", "ServerRequest.ts")) {
+        if (-not (Test-Path -LiteralPath (Join-Path $temporaryOutput $required) -PathType Leaf)) {
+            throw "Incomplete candidate protocol: $required"
+        }
+    }
+    New-Item -ItemType Directory -Force -Path $output | Out-Null
+    # Remove only obsolete generated TypeScript files, never hand-written source.
+    Get-ChildItem -LiteralPath $output -Recurse -File -Filter *.ts | ForEach-Object {
+        $relative = $_.FullName.Substring($output.Length + 1)
+        if (-not (Test-Path -LiteralPath (Join-Path $temporaryOutput $relative) -PathType Leaf)) {
+            if (-not ((Get-Content -LiteralPath $_.FullName -TotalCount 1) -match 'GENERATED CODE')) {
+                throw "Refusing to remove a hand-written file: $relative"
+            }
+            Remove-Item -LiteralPath $_.FullName
+        }
+    }
+    Copy-Item -Path (Join-Path $temporaryOutput '*') -Destination $output -Recurse -Force
+    Write-Output "Generated candidate protocol. Review the diff, adapt consumers, run tests, then stage the same Runtime."
 }
-
-Write-Output "Generated app-server protocol from the staged compatible Runtime."
+finally {
+    if (Test-Path -LiteralPath $temporaryOutput) { Remove-Item -LiteralPath $temporaryOutput -Recurse -Force }
+}

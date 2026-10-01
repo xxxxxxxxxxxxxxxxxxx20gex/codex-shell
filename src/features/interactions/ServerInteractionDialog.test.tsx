@@ -152,6 +152,7 @@ describe("ServerInteractionDialog", () => {
       kind: "mcpElicitation",
       params: {
         mode: "openai/userVerification",
+        _meta: null,
         threadId: "thread-1",
         turnId: null,
         serverName: "protected",

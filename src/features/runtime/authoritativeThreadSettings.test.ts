@@ -41,6 +41,7 @@ const current: ModelSettings = {
 
 function threadSettings(overrides: Partial<ThreadSettings> = {}): ThreadSettings {
   return {
+    disabledPluginIds: [],
     cwd: "C:\\work",
     approvalPolicy: "on-request",
     approvalsReviewer: "auto_review",

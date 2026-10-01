@@ -23,7 +23,7 @@ interface Props {
 
 type PreviewTarget =
   | { kind: "file"; name: string; path: string }
-  | { kind: "image"; name: string; path?: string; url?: string };
+  | { kind: "image"; name: string; path?: string; url?: string; fileId?: string };
 
 function formatImageAnnotations(name: string, annotations: ImageAnnotation[], note: string) {
   const lines = annotations.map((annotation, index) => `${index + 1}. (x: ${(annotation.x * 100).toFixed(1)}%, y: ${(annotation.y * 100).toFixed(1)}%)${annotation.comment.trim() ? ` ${annotation.comment.trim()}` : ""}`);
@@ -134,7 +134,7 @@ export function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath,
       <button className="attachment-preview-scrim" type="button" onClick={onClose} aria-label="关闭附件预览" />
       <section className="attachment-preview-dialog">
         <header>
-          <div><strong>{target.name}</strong><small>{target.path ?? "剪贴板图片"}</small></div>
+          <div><strong>{target.name}</strong><small>{target.path ?? (target.kind === "image" && target.fileId ? "托管图片" : "剪贴板图片")}</small></div>
           <div className="attachment-preview-actions">
             {target.kind === "image" && preview?.kind === "image" && onApplyAnnotation && <button type="button" onClick={() => { setAnnotating((value) => !value); setSelected(null); }} aria-label={annotating ? "结束图片批注" : "添加图片批注"} title={annotating ? "结束图片批注" : "添加图片批注"}><Pencil aria-hidden="true" /></button>}
             {target.path && (onOpenInExplorer || onOpenPath) && <button type="button" onClick={() => void openResource()} aria-label="在资源管理器中打开" title="在资源管理器中打开"><FolderOpen aria-hidden="true" /></button>}
@@ -145,6 +145,7 @@ export function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath,
           {openError && <div className="attachment-preview-state error"><strong>无法打开资源管理器</strong><p>{openError}</p></div>}
           {local.loading && <div className="attachment-preview-state"><span className="attachment-loading" /><strong>正在读取附件…</strong></div>}
           {local.error && <div className="attachment-preview-state error"><strong>无法预览附件</strong><p>{local.error}</p></div>}
+          {target.kind === "image" && target.fileId && <div className="attachment-preview-state"><strong>此图片暂不支持本地预览</strong><p>图片引用已保留，编辑消息时仍会随消息发送。</p></div>}
           {preview?.kind === "image" && <ImageAnnotationCanvas source={preview.dataUrl} name={target.name} editing={annotating} annotations={annotations} selected={selected} onAdd={(point) => { setAnnotations((current) => { setSelected(current.length); return [...current, point]; }); }} onSelect={setSelected} />}
           {preview?.kind === "pdf" && <iframe className="attachment-pdf-preview" src={preview.dataUrl} title={`预览 ${target.name}`} />}
           {preview?.kind === "tooLarge" && <div className="attachment-preview-state"><strong>文件过大，暂不预览</strong><p>{formatFileSize(preview.byteSize)} · 可使用资源管理器打开原文件</p></div>}
@@ -175,7 +176,7 @@ export function AttachmentGallery({
     <>
       <div className={`attachment-gallery align-${align}`} aria-label="附件">
         {images.map((image, index) => (
-          <div className="attachment-image-card" key={image.path ?? image.url ?? index}>
+          <div className="attachment-image-card" key={image.path ?? image.url ?? image.fileId ?? index}>
             <button type="button" className="attachment-image-preview" data-local-path={image.path} onClick={() => setPreviewTarget({ kind: "image", ...image })} title={`预览 ${image.name}`}>
               <ImageThumbnail image={image} readFile={readFile} />
               <span>{image.name}</span>

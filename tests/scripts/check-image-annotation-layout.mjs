@@ -19,7 +19,7 @@ try {
     const {ImageAnnotationContext}=await import('/src/features/attachments/ImageAnnotationContext.ts');
     const canvas=document.createElement('canvas');canvas.width=1200;canvas.height=800;
     canvas.getContext('2d').fillRect(0,0,1200,800);
-    ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(ImageAnnotationContext.Provider,{value:(image,text)=>window.result={image,text}},React.createElement(AttachmentGallery,{files:[],images:[{name:'sample.png',url:canvas.toDataURL()}],readFile:async()=>''})));
+    ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(ImageAnnotationContext.Provider,{value:(image,text)=>window.result={image,text}},React.createElement(AttachmentGallery,{files:[],images:[{name:'sample.png',url:canvas.toDataURL()},{name:'hosted image',fileId:'file-probe'}],readFile:async()=>{throw new Error('Unexpected file read')}})));
     </script>` }));
   for (const [width, height] of [[1440,900],[1280,780],[1024,720],[900,700]]) {
     await page.setViewportSize({ width, height });
@@ -36,6 +36,17 @@ try {
     await page.getByText('插入到消息', {exact:true}).click();
     assert.match((await page.evaluate(() => window.result)).text, /这里调整/);
     await page.getByTitle("预览 sample.png").click();
+    await page.keyboard.press('Escape');
+    assert.equal(await page.getByRole('dialog').count(), 0);
+    await page.getByTitle("预览 hosted image").click();
+    assert.equal(await page.getByText("此图片暂不支持本地预览").count(), 1);
+    assert.equal(await page.getByLabel("添加图片批注", { exact: true }).count(), 0);
+    const hostedRect = await page.locator('.attachment-preview-dialog').boundingBox();
+    assert(hostedRect.x >= 0 && hostedRect.y >= 0 && hostedRect.x + hostedRect.width <= width && hostedRect.y + hostedRect.height <= height);
+    const messageSize = await page.getByText("图片引用已保留，编辑消息时仍会随消息发送。").evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
+    assert(messageSize >= 11);
+    await page.locator('.attachment-preview-actions button').focus();
+    assert(await page.locator('.attachment-preview-actions button').evaluate((element) => document.activeElement === element));
     await page.keyboard.press('Escape');
     assert.equal(await page.getByRole('dialog').count(), 0);
     await page.getByTitle("预览 sample.png").click();

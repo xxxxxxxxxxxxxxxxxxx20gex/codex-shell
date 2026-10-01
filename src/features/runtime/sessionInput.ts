@@ -17,11 +17,19 @@ export type ImageAttachment =
       name: string;
       path: string;
       url?: never;
+      fileId?: never;
     }
   | {
       name: string;
       path?: never;
       url: string;
+      fileId?: never;
+    }
+  | {
+      name: string;
+      fileId: string;
+      path?: never;
+      url?: never;
     };
 
 function utf8Length(value: string) {
@@ -62,6 +70,9 @@ export function buildUserInput(
       }
       if ("url" in image && typeof image.url === "string") {
         return [{ type: "image", url: image.url }];
+      }
+      if ("fileId" in image && typeof image.fileId === "string") {
+        return [{ type: "image", fileId: image.fileId }];
       }
       return [];
     }),

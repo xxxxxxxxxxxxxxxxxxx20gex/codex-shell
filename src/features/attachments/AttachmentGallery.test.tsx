@@ -8,6 +8,16 @@ import { ImageAnnotationContext } from "./ImageAnnotationContext";
 afterEach(cleanup);
 
 describe("AttachmentGallery", () => {
+  it("keeps a hosted image visible without reading its ID as a path or URL", () => {
+    const readFile = vi.fn();
+    render(<AttachmentGallery files={[]} images={[{ name: "托管附件", fileId: "file-probe" }]} readFile={readFile} />);
+    fireEvent.click(screen.getByTitle("预览 托管附件"));
+    expect(screen.getByText("此图片暂不支持本地预览")).toBeTruthy();
+    expect(screen.queryByLabelText("添加图片批注")).toBeNull();
+    expect(readFile).not.toHaveBeenCalled();
+    fireEvent.click(screen.getAllByLabelText("关闭附件预览")[0]);
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
   it.each(["history", "output", "explorer"])("adds original image and coordinates from %s preview", async (entry) => {
     const apply = vi.fn();
     const image = { name: "screen.png", path: "C:/work/screen.png" };

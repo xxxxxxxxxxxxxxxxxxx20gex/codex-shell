@@ -37,6 +37,8 @@ fn builds_environment_authenticated_gateway_provider() {
             "-c",
             "features.code_mode_host=true",
             "-c",
+            "features.background_paginated_rollout_migration=true",
+            "-c",
             "model=\"model-id\"",
             "-c",
             "model_provider=\"codex_shell_gateway\"",

@@ -503,6 +503,7 @@ describe("agentSessionReducer", () => {
       status: "inProgress",
       arguments: { query: "Codex" },
       appContext: null,
+      mcpAppUi: null,
       pluginId: null,
       readOnlyHint: null,
       result: null,
@@ -570,6 +571,7 @@ describe("agentSessionReducer", () => {
       thread: thread(),
     });
     const threadSettings = {
+      disabledPluginIds: [] as string[],
       cwd: "C:\\work",
       approvalPolicy: "never",
       approvalsReviewer: "user",

@@ -9,10 +9,13 @@ import { createServer } from "node:http";
 
 const root = resolve(import.meta.dirname, "../..");
 const temporaryHome = await mkdtemp(join(tmpdir(), "cs-protocol-probe-"));
-const gateway = createServer((request) => { request.resume(); });
+let observeModelRequest;
+const modelRequestObserved = new Promise((done) => { observeModelRequest = done; });
+const gateway = createServer((request) => { request.resume(); observeModelRequest(); });
 await new Promise((resolveListen) => gateway.listen(0, "127.0.0.1", resolveListen));
 const child = spawn(join(root, "src-tauri/binaries/codex-x86_64-pc-windows-msvc.exe"), [
   "app-server", "--stdio",
+  "-c", "features.background_paginated_rollout_migration=true",
   "-c", 'model_provider="protocol_probe"',
   "-c", 'model_providers.protocol_probe.name="Protocol Probe"',
   "-c", `model_providers.protocol_probe.base_url="http://127.0.0.1:${gateway.address().port}/v1"`,
@@ -57,18 +60,25 @@ try {
   await request("thread/settings/update", { threadId, model: "gpt-5.6-sol", effort: "high" });
   await assert.rejects(request("turn/settings/update", { threadId, turnId: "not-running", effort: "high" }), /step_model_switching/);
   await request("turn/start", { threadId, input: [{ type: "text", text: "local mock only", text_elements: [] }] });
+  let modelTimeout;
+  try {
+    await Promise.race([modelRequestObserved, new Promise((_, reject) => {
+      modelTimeout = setTimeout(() => reject(new Error("No local model request")), 15000);
+    })]);
+  } finally { clearTimeout(modelTimeout); }
   const input = [{ type: "text", text: "protocol probe; do not execute", text_elements: [] }];
   const added = await request("thread/queue/add", { threadId, clientUserMessageId: "probe-input", input });
   const queue = await request("thread/queue/list", { threadId });
   assert.equal(queue.data[0].id, added.queuedSubmission.id);
   await request("thread/queue/delete", { threadId, queuedSubmissionId: added.queuedSubmission.id });
   assert.deepEqual((await request("thread/queue/list", { threadId })).data, []);
-  await assert.rejects(request("thread/turns/list", { threadId, sortDirection: "desc", itemsView: "full", limit: 200 }), /list_turns is not supported yet/);
+  const turns = await request("thread/turns/list", { threadId, sortDirection: "desc", itemsView: "full", limit: 200 });
+  assert(Array.isArray(turns.data));
   const metadata = await request("thread/read", { threadId, includeTurns: false });
   assert.equal(metadata.thread.id, threadId);
   assert(notifications.some((message) => message.method === "thread/settings/updated"));
   assert(notifications.some((message) => message.method === "thread/queue/changed"));
-  console.log("Protocol probe passed: thread settings, queue add/list/delete + notifications, metadata read. Turn used only a local mock gateway. This Runtime rejects list_turns and requires step_model_switching for live turn settings; neither is claimed verified functional.");
+  console.log("Protocol probe passed: thread settings, queue add/list/delete + notifications, paginated history and metadata read. Local mock gateway only. Live turn settings still require step_model_switching and are not claimed functional.");
 } catch (error) {
   console.error(error);
   process.exitCode = 1;

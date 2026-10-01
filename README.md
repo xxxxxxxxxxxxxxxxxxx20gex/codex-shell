@@ -314,6 +314,25 @@ pnpm protocol:generate
 pnpm runtime:probe-protocol
 ```
 
+main 开发基线已升级到 `codex-cli 0.159.2`；公开 v0.1.9 安装包仍使用升级前的 0.154.0-alpha.6.2。
+升级到改变协议的候选内核时，先保留同源旧 Runtime 文件组，再按以下顺序适配，不能跳过兼容门禁：
+
+```powershell
+pnpm protocol:generate -Runtime "C:\tools\candidate\codex.exe"
+# 审查生成差异并适配调用方，然后运行完整质量门禁
+pnpm test:quality
+pnpm runtime:stage -Source "C:\tools\candidate\codex.exe"
+pnpm runtime:probe-protocol
+pnpm runtime:probe-upgrade "C:\tools\candidate\codex.exe" "C:\tools\previous\codex.exe"
+pnpm desktop:build
+```
+
+`protocol:generate` 也可不传参数，使用已暂存内核重新生成；它会移除上游已经删除的生成类型。
+升级探针仅使用临时 CODEX_HOME、假 Key 和本机模拟网关，第二个参数用于验证旧版历史迁移。
+新版启动会调用 Core 的后台 legacy 历史迁移能力。首次运行升级后的开发版前，关闭使用同一
+CODEX_HOME 的其他实例并备份整个目录；回退到旧安装器不等于回退数据，必要时应恢复备份。
+迁移由官方 Core 处理，CS 不自行改写 rollout／SQLite；边界见 [历史迁移决策](docs/decisions/ADR-005-native-history-migration.md)。
+
 Runtime 不要求与上一次 manifest 的完整版本号相同。暂存时会从同一来源复制主 Runtime
 和 companion binaries，记录实际版本与 SHA-256，并检查 CS 当前依赖的 app-server
 请求、通知和反向请求仍存在。协议新增能力不会自动改变 UI；如果生成类型发生变化，

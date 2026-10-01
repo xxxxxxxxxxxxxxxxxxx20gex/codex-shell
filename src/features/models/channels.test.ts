@@ -20,6 +20,7 @@ function model(overrides: Partial<Model> = {}): Model {
     upgrade: null,
     upgradeInfo: null,
     availabilityNux: null,
+    availableAccessPrograms: null,
     displayName: "Catalog model",
     description: "",
     modelSpecialty: null,

@@ -23,6 +23,7 @@ function model(id: string, serviceTiers: Model["serviceTiers"] = []): Model {
     upgrade: null,
     upgradeInfo: null,
     availabilityNux: null,
+    availableAccessPrograms: null,
     displayName: id === "gpt-next" ? "Next Model" : id === "gpt-current" ? "Current Model" : id,
     description: "model",
     modelSpecialty: null,

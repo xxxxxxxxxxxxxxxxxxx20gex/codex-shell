@@ -8,6 +8,11 @@ function userMessage(content: Extract<ThreadItem, { type: "userMessage" }>["cont
 }
 
 describe("userMessagePresentation", () => {
+  it("preserves hosted image IDs through history editing without inventing a URL", () => {
+    const presentation = userMessagePresentation(userMessage([{ type: "image", fileId: "file-probe" }]));
+    expect(presentation.images).toEqual([{ name: "图片 1", fileId: "file-probe" }]);
+    expect(buildUserInput("edited", [], [], presentation.images)).toContainEqual({ type: "image", fileId: "file-probe" });
+  });
   it("restores attached files without showing the internal path block", () => {
     const content = buildUserInput(
       "检查这些文件",

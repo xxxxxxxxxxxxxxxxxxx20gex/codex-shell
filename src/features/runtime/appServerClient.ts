@@ -254,9 +254,7 @@ export class AppServerClient {
   }
 
   /**
-   * Hydrate a thread using the paginated history API introduced by newer
-   * runtimes. Older runtimes may reject the endpoint, so callers can safely
-   * fall back to the legacy includeTurns read without changing semantics.
+   * Hydrate at most the newest visible turns using Core's paginated history.
    */
   async readThreadWithHistory(threadId: string, limit = 200) {
     const metadata = await this.readThread({ threadId, includeTurns: false });
@@ -378,10 +376,6 @@ export class AppServerClient {
 
   revertThread(params: import("../../generated/app-server/v2/ThreadRevertParams").ThreadRevertParams) {
     return this.request<import("../../generated/app-server/v2/ThreadRevertResponse").ThreadRevertResponse>("thread/revert", params);
-  }
-
-  rollbackThread(params: import("../../generated/app-server/v2/ThreadRollbackParams").ThreadRollbackParams) {
-    return this.request<import("../../generated/app-server/v2/ThreadRollbackResponse").ThreadRollbackResponse>("thread/rollback", params);
   }
 
   writeSkillConfig(params: SkillsConfigWriteParams) {

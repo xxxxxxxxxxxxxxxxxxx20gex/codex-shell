@@ -53,6 +53,25 @@ try {
     if ($LASTEXITCODE -ne 0) {
         throw "Tauri 桌面构建失败，退出码：$LASTEXITCODE"
     }
+    $manifest = Get-Content -Raw (Join-Path $projectRoot "bundled/runtime-manifest.json") | ConvertFrom-Json
+    $debugDirectory = Join-Path $projectRoot "src-tauri/target/debug"
+    foreach ($entry in @($manifest) + @($manifest.helpers)) {
+        $name = $entry.fileName.Replace("-$($manifest.target)", "")
+        $path = Join-Path $debugDirectory $name
+        if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+            throw "Debug Runtime output missing: $name"
+        }
+        $stream = [IO.File]::OpenRead($path)
+        $sha256 = [Security.Cryptography.SHA256]::Create()
+        try {
+            $hash = ([BitConverter]::ToString($sha256.ComputeHash($stream))).Replace("-", "").ToLowerInvariant()
+        }
+        finally { $stream.Dispose(); $sha256.Dispose() }
+        if ($hash -ne $entry.sha256) {
+            throw "Debug Runtime output does not match staged manifest: $name"
+        }
+    }
+    Write-Output "Debug Runtime and all companions verified against staged manifest: $($manifest.version)"
 }
 finally {
     Pop-Location

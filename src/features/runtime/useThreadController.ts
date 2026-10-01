@@ -133,8 +133,8 @@ export function useThreadController(props: Props) {
           mentions: item.input.filter((input) => input.type === "mention").map((input) => ({ name: input.name, path: input.path })),
           skills: item.input.filter((input) => input.type === "skill").map((input) => ({ name: input.name, path: input.path })),
           images: item.input.filter((input) => input.type === "image" || input.type === "localImage").map((input) => ({
-            name: input.type === "image" ? input.url : input.path,
-            ...(input.type === "image" ? { url: input.url } : { path: input.path }),
+            name: input.type === "localImage" ? input.path : "url" in input ? input.url : "托管图片",
+            ...(input.type === "localImage" ? { path: input.path } : "url" in input ? { url: input.url } : { fileId: input.fileId }),
           })),
           collaborationMode: "default" as const,
           settings: { ...settings },
@@ -366,6 +366,7 @@ export function useThreadController(props: Props) {
         // does not block the renderer with one unbounded payload.
         openedThread = (await client.readThreadWithHistory(threadId)).thread;
       } catch (historyError) {
+        if (!errorMessage(historyError).includes("list_turns is not supported yet") && !canResumeAfterReadError(historyError)) throw historyError;
         try {
           openedThread = (await client.readThread({ threadId, includeTurns: true })).thread;
         } catch (readError) {
@@ -539,17 +540,11 @@ export function useThreadController(props: Props) {
       try {
         const { client } = await ensureActiveThread();
         const page = await client.listThreadTurns({ threadId: expectedThreadId, sortDirection: "desc", limit: 1, itemsView: "full" });
+        if (threadIdRef.current !== expectedThreadId) throw new Error("会话已切换，请重新选择要编辑的消息。");
         if (page.data[0]?.id !== turnId || page.data[0].status === "inProgress") throw new Error("只能编辑最后一个已结束回合的用户消息。");
         if (page.data[0].items.filter((item) => item.type === "userMessage").length !== 1) throw new Error("该回合包含追加指令，不能单独替换消息。");
-        let thread: Thread;
-        try {
-          const response = await client.revertThread({ threadId: expectedThreadId, beforeTurnId: turnId });
-          const retained = response.turnsBackwardsCursor === null ? [] : (await client.listThreadTurns({ threadId: expectedThreadId, cursor: response.turnsBackwardsCursor, sortDirection: "desc", limit: 200, itemsView: "full" })).data.reverse();
-          thread = { ...response.thread, turns: retained };
-        } catch (error) {
-          if (!errorMessage(error).includes("thread/revert only supports paginated threads")) throw error;
-          thread = (await client.rollbackThread({ threadId: expectedThreadId, numTurns: 1 })).thread;
-        }
+        await client.revertThread({ threadId: expectedThreadId, beforeTurnId: turnId });
+        const { thread } = await client.readThreadWithHistory(expectedThreadId);
         dispatch({ type: "loadThread", thread });
       } finally {
         threadOperationRef.current = false;

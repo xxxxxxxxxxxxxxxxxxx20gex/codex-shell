@@ -15,7 +15,11 @@
 
 ## 当前验证基线
 
-2026-10-01，v0.1.9 发布前 `pnpm test:quality` 全部通过：69 个文件 / 370 项前端测试、34 项高德离线测试、TypeScript、ESLint、生产构建、Knip、Cargo check、Rust 51 项单测（1 项交互测试忽略）、严格 Clippy 和 diff 检查。已去掉模型目录常量的无用导出，未改变模型行为。协议调用面测试、隔离 Runtime 设置／队列探针及内置 rg 探针通过；本次未重复四视口检查，其证据为上面的同日 UI 定向验证。
+2026-10-01，0.159.2 升级后 `pnpm test:quality` 全部通过：69 个文件 / 375 项前端测试、34 项高德离线测试、TypeScript、ESLint、生产构建、Knip、Cargo check、Rust 51 项单测（1 项交互测试忽略）、严格 Clippy 和 diff 检查。新回归覆盖原生回退后重读、回退失败保留显示、分页网络错误不降级、托管图片引用往返和预览状态。四尺寸 Edge 附件检查通过，包含既有批注、托管图片边界、字号、焦点、Escape、外部关闭与 reduced-motion。
+
+0.159.2 同源 Runtime 兼容门禁、隔离设置／队列协议探针、新旧历史升级探针、Goal 和内置 rg 探针通过。旧版 fixture 验证官方 CLI 与启动后台迁移，随后测试恢复、分页、回退替换和冷恢复；所有模型请求均到本机模拟 Responses 网关，不接触真实用户数据或收费模型。
+
+升级后的 `pnpm desktop:build` 已通过，Debug 主程序及同目录 sidecar 为 0.159.2 适配版本；本次未启动真实用户 CODEX_HOME。实测发现并修复增量构建遗留旧 sidecar：在 Debug 输出放入旧内核、只触碰暂存二进制后重建，输出被更新到 0.159.2，主程序及三个 helper 的 manifest 哈希核验通过；修改 build.rs 后重新运行 Rust check／单测／Clippy 通过。
 
 本轮协议／边界回归覆盖三页历史分页顺序、20 MiB 图片／PDF 预览上限、HTTPS／本机回环 HTTP 渠道校验和 `thread/project/updated` 的权威 Thread 刷新。图片/PDF 当前仍由 app-server `fs/readFile` 完整返回后才判断大小，尚未实现源端分段读取。
 
@@ -23,10 +27,12 @@
 
 - 真实 Windows Credential Manager 故障注入、真实第三方 MCP OAuth、真实生图／高德 API 的账号权限与配额。
 - 干净机器安装升级、跨实体显示器、完整 WebView2 工具栏交互、超长 Diff／活动性能验收。
-- 源端分段读取超大文件，以及真实 Runtime 消息编辑链路的完整端到端验收。
+- 源端分段读取超大文件、真实模型与完整 WebView2 消息编辑链路，以及真实大型旧库迁移。
 
 模拟 Runtime、浏览器探针和局部手工检查不替代上述验收。模块定向证据分别见 [Runtime](runtime-status.md)、[协议](protocol-status.md)、[扩展能力](agent-capabilities-status.md)、[项目与线程](workspace-thread-status.md)、[桌面 UI](ui-shell-status.md)、[模型配置](model-config-status.md)、[凭据](credentials-status.md) 和 [时间线](timeline-status.md)。
 
 ## 最近发布
 
 v0.1.9 使用 `codex-cli 0.154.0-alpha.6.2` 同源 Runtime，发布资产为 NSIS 安装器、`.sig` 和 `latest.json`。2026-10-01 本机打包通过 Runtime 哈希及协议兼容门禁；独立使用配置中的既有公钥验证安装器 minisign 签名、可信注释签名、manifest 版本及下载地址均通过。精确资产校验和发布记录由 GitHub Release 保留，不在状态文档重复。
+
+v0.1.9 发布基线为 370 项前端测试、34 项高德测试及 51 项 Rust 测试通过，Debug 与签名安装包均构建完成；GitHub 三项资产已正式公开。内核升级在 main 后续提交中交付，不覆盖 v0.1.9 的 tag、发布分支或安装器。

@@ -34,7 +34,7 @@ export function appendOpenAiBuiltinModels(models: Model[]): Model[] {
   const builtins: Model[] = OPENAI_BUILTIN_MODEL_IDS.map((id) => models.find((model) =>
     model.id.toLowerCase() === id || model.model.toLowerCase() === id,
   ) ?? ({
-    id, model: id, upgrade: null, upgradeInfo: null, availabilityNux: null,
+    id, model: id, upgrade: null, upgradeInfo: null, availabilityNux: null, availableAccessPrograms: null,
     displayName: id, description: "CS 内置 GPT 模型 ID", modelSpecialty: null,
     hidden: false, supportedReasoningEfforts: ["low", "medium", "high"].map((reasoningEffort) => ({ reasoningEffort, description: reasoningEffort })),
     defaultReasoningEffort: "medium", inputModalities: ["text", "image"], supportsPersonality: false,

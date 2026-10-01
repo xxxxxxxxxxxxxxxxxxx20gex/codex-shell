@@ -72,6 +72,9 @@ function setup() {
     listQueuedSubmissions: vi.fn(async (): Promise<ThreadQueueListResponse> => ({ data: [], nextCursor: null })),
     listThreads: vi.fn(async () => ({ data: [...threads.values()], nextCursor: null })),
     readThread: vi.fn(async ({ threadId }: { threadId: string }) => ({ thread: threads.get(threadId)! })),
+    readThreadWithHistory: vi.fn(async (threadId: string) => ({ thread: threads.get(threadId)! })),
+    listThreadTurns: vi.fn(async () => ({ data: [turn("last", "completed")], nextCursor: null, backwardsCursor: null })),
+    revertThread: vi.fn(async () => ({})),
     resumeThread: vi.fn(async ({ threadId }: { threadId: string }) => ({ thread: threads.get(threadId)! })),
     unsubscribeThread: vi.fn(async () => ({})),
     startThread: vi.fn(async () => ({ thread: thread("thread-new") })),
@@ -150,6 +153,46 @@ function setup() {
 }
 
 describe("useThreadController", () => {
+  it("reverts the last turn through Core and reloads retained paginated history", async () => {
+    const { client, props, dispatch } = setup();
+    const last = turn("last", "completed");
+    last.items = [{ type: "userMessage", id: "user-last", clientId: null, content: [{ type: "text", text: "replace", text_elements: [] }] }];
+    client.listThreadTurns.mockResolvedValue({ data: [last], nextCursor: null, backwardsCursor: null });
+    const { result } = renderHook(() => useThreadController(props));
+    await act(async () => { await result.current.openThread("thread-a"); });
+    const retained = thread("thread-a", { turns: [turn("retained", "completed")] });
+    client.readThreadWithHistory.mockResolvedValueOnce({ thread: retained });
+    await act(async () => { await result.current.revertLastMessage("thread-a", "last"); });
+    expect(client.revertThread).toHaveBeenCalledWith({ threadId: "thread-a", beforeTurnId: "last" });
+    expect(dispatch).toHaveBeenLastCalledWith({ type: "loadThread", thread: retained });
+    expect(client.readThreadWithHistory.mock.invocationCallOrder[1]).toBeGreaterThan(client.revertThread.mock.invocationCallOrder[0]);
+    expect(props.setSubmitting).toHaveBeenLastCalledWith(false);
+  });
+
+  it("does not retry a failed revert through a removed RPC or clear displayed history", async () => {
+    const { client, props, dispatch } = setup();
+    const last = turn("last", "completed");
+    last.items = [{ type: "userMessage", id: "user-last", clientId: null, content: [] }];
+    client.listThreadTurns.mockResolvedValue({ data: [last], nextCursor: null, backwardsCursor: null });
+    client.revertThread.mockRejectedValueOnce(new Error("Core revert failed"));
+    const { result } = renderHook(() => useThreadController(props));
+    await act(async () => { await result.current.openThread("thread-a"); });
+    dispatch.mockClear();
+    await act(async () => { await expect(result.current.revertLastMessage("thread-a", "last")).rejects.toThrow("Core revert failed"); });
+    expect(dispatch.mock.calls.some(([action]) => action.type === "loadThread")).toBe(false);
+    expect(client.readThreadWithHistory).toHaveBeenCalledTimes(1);
+    expect(props.setSubmitting).toHaveBeenLastCalledWith(false);
+  });
+
+  it("keeps pagination transport failures visible instead of falling back to full history", async () => {
+    const { client, props } = setup();
+    client.readThreadWithHistory.mockRejectedValueOnce(new Error("connection lost"));
+    const { result } = renderHook(() => useThreadController(props));
+    await act(async () => { expect(await result.current.openThread("thread-a")).toBe(false); });
+    expect(client.readThread).not.toHaveBeenCalled();
+    expect(client.resumeThread).not.toHaveBeenCalled();
+    expect(props.setError).toHaveBeenCalledWith("connection lost");
+  });
   it("coalesces notifications during a queue refresh and discards its stale result", async () => {
     const { client, props } = setup();
     const { result } = renderHook(() => useThreadController(props));
@@ -209,7 +252,7 @@ describe("useThreadController", () => {
     await act(async () => {
       await result.current.openThread("thread-a");
     });
-    expect(client.readThread).toHaveBeenCalledWith({ threadId: "thread-a", includeTurns: true });
+    expect(client.readThreadWithHistory).toHaveBeenCalledWith("thread-a");
     expect(client.resumeThread).not.toHaveBeenCalled();
 
     await act(async () => {
@@ -588,6 +631,7 @@ describe("useThreadController", () => {
 
   it("falls back to resume when a paginated rollout cannot be read with turns", async () => {
     const { client, props, dispatch } = setup();
+    client.readThreadWithHistory.mockRejectedValueOnce(new Error("list_turns is not supported yet"));
     client.readThread.mockRejectedValueOnce(new Error(
       "paginated threads do not support thread/read(includeTurns=true)",
     ));
@@ -648,7 +692,7 @@ describe("useThreadController", () => {
 
   it("restores an active Session as unknown instead of promising steering", async () => {
     const { client, props } = setup();
-    client.readThread.mockResolvedValueOnce({
+    client.readThreadWithHistory.mockResolvedValueOnce({
       thread: thread("thread-a", {
         status: { type: "active", activeFlags: [] },
         turns: [turn("turn-running")],

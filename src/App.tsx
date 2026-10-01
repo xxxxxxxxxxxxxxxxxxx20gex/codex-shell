@@ -222,7 +222,7 @@ function App() {
 
   return (
     <ImageAnnotationContext.Provider value={(image, text) => {
-      setImages((current) => current.some((item) => (item.path ?? item.url) === (image.path ?? image.url)) ? current : [...current, image]);
+      setImages((current) => current.some((item) => (item.path ?? item.url ?? item.fileId) === (image.path ?? image.url ?? image.fileId)) ? current : [...current, image]);
       setDraft((current) => current ? `${current}\n\n${text}` : text);
       setMainView("conversation");
       setSideChatMaximized(false);

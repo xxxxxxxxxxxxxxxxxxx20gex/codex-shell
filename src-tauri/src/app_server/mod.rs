@@ -181,6 +181,9 @@ fn app_server_arguments(
         "--stdio".to_string(),
         "-c".to_string(),
         "features.code_mode_host=true".to_string(),
+        // Native migration is required for editing pre-paginated session history.
+        "-c".to_string(),
+        "features.background_paginated_rollout_migration=true".to_string(),
     ];
     if let Some(encoded_model) = encoded_model {
         arguments.extend(["-c".to_string(), format!("model={encoded_model}")]);

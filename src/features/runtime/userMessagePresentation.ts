@@ -45,7 +45,7 @@ export function userMessagePresentation(item: ThreadItem): UserMessagePresentati
       const path = String(content.path);
       images.push({ name: path.split(/[\\/]/).pop() || path, path });
     } else if (content.type === "image") {
-      images.push({ name: `图片 ${images.length + 1}`, url: content.url });
+      images.push({ name: `图片 ${images.length + 1}`, ...("url" in content ? { url: content.url } : { fileId: content.fileId }) });
     } else if (content.type === "mention" && isAbsoluteLocalPath(content.path)) {
       files.push({ name: content.name, path: content.path });
     }

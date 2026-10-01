@@ -40,6 +40,7 @@ AI 处理任务时从 `AGENTS.md` 开始，只继续读取与任务直接相关�
 - [ADR-002：隔离 Codex Shell 的运行数据与凭据](decisions/ADR-002-isolated-runtime-data.md)
 - [ADR-003：允许通过协议门禁的 Runtime 兼容更新](decisions/ADR-003-compatible-runtime-updates.md)
 - [ADR-004：以厂商分组的渠道承载模型路由](decisions/ADR-004-model-provider-channels.md)
+- [ADR-005：使用 Core 原生迁移保留旧会话编辑](decisions/ADR-005-native-history-migration.md)
 
 ## 模块状态模板
 

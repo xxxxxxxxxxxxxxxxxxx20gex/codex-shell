@@ -47,6 +47,7 @@ const loadModels = vi.fn(async (): Promise<Model[]> => [{
   upgrade: null,
   upgradeInfo: null,
   availabilityNux: null,
+  availableAccessPrograms: null,
   displayName: "Custom model",
   description: "",
   modelSpecialty: null,
