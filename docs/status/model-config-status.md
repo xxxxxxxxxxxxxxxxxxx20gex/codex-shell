@@ -11,9 +11,6 @@
 - 安全边界：渠道 Base URL 只接受 HTTPS；本机调试允许 localhost、127.0.0.1 和 ::1 的 HTTP。连接探针与 app-server 启动共用该边界，避免把 API Key 发往公网明文地址。
 - 已知问题：仅支持单进程单渠道，不提供并行多 Provider、自动切换或渠道级代理。/models 成功不证明 Responses 对话或工具可用；自定义模型的可用性由实际服务端决定。外部修改配置触发冲突后需重新启动应用读取最新配置。model/list 不公开 verbosity 与 reasoning summary 的完整能力。
 - 下一步：人工验证真实系统凭据与多渠道对话切换；可选最小对话探测另行评估，不自动消耗额度。
-- 验证证据：2026-09-10；定向回归覆盖高级设置激活 ID、保存失败保留草稿、重启失败重试、切换互斥、执行 RPC 暂停、非激活渠道 Key、自定义模型与未知目录服务层级。四视口布局脚本通过，使用真实组件及模拟回调，不是真实 Tauri 端到端。完整基线见 [测试与发布](testing-release-status.md)。
 - 相关决策：[ADR-004](../decisions/ADR-004-model-provider-channels.md)。
-- 验证证据：2026-09-25；新增自定义模型显示与 fallback metadata 警告过滤单测，完整验证记录见 [测试与发布](testing-release-status.md)。
-- 验证证据：2026-09-25；高级模型设置精简后定向组件测试 10 项通过，TypeScript 与 Debug 构建通过。
-- 验证证据：2026-09-28；新增模型变更后事件过滤回归，定向测试 8 项、TypeScript 与 Debug 构建通过。
-- 最后更新：2026-09-28
+- 验证证据：2026-10-01；覆盖渠道保存、激活切换、自定义模型、预期 fallback metadata 警告过滤和事件订阅更新；类型检查、定向组件测试与 Debug 构建通过。四视口布局和真实系统凭据仍按 [测试与发布](testing-release-status.md) 的边界执行。
+- 最后更新：2026-10-01

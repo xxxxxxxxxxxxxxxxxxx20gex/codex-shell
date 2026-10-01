@@ -1,52 +1,28 @@
 # 测试与发布状态
 
 - 模块职责：维护质量门禁、Runtime 兼容验证、Windows 发布证据及未覆盖边界。模块行为由对应状态文档维护，历史测试流水账由 Git 保留。
-- 当前状态：v0.1.8 已正式发布，包含内置 Skill 资源路径兼容与错误信息脱敏修复；未配置 Windows Authenticode，SmartScreen 仍可能提示未知发布者。
-- 最近变更：模型渠道补充目录外自定义模型原样显示和预期 fallback metadata 警告过滤回归；生图 Python 专项补充 Windows 用户／系统环境变量回退、默认地址、注册表权限错误、协议错误区分及注册表密钥异常脱敏回归。Python 专项独立于通用质量门禁，命令与依赖见 [测试脚本说明](../../tests/scripts/README.md)。
-- 当前接口：`pnpm test:quality` 依次执行 TypeScript、ESLint、Vitest、`pnpm test:amap`、production build、Knip、`pnpm rust:check` 和 diff 检查。完整门禁需要 Bun；Rust 入口包含 Cargo check、单元测试和严格 Clippy。协议、真实 Runtime 及输入区等四视口布局检查独立运行，入口见 [测试脚本说明](../../tests/scripts/README.md) 和 `package.json`。
-- 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；Vite 主 chunk 超过 500 kB；Knip 报告模型渠道的 `OPENAI_BUILTIN_MODEL_IDS` 未使用导出；`cargo fmt --check` 尚未纳入门禁，现有 Rust 文件有格式差异。
+- 当前状态：v0.1.8 已正式发布，包含内置 Skill 资源路径兼容和错误信息脱敏修复；Updater minisign 已启用，Windows Authenticode 尚未配置，SmartScreen 仍可能提示未知发布者。
+- 当前接口：`pnpm test:quality` 依次执行 TypeScript、ESLint、Vitest、`pnpm test:amap`、production build、Knip、`pnpm rust:check` 和 diff 检查。协议、Runtime、四视口布局和 Skill 专项验证独立运行，入口见 [测试脚本说明](../../tests/scripts/README.md) 与 `package.json`。
+- 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；Vite 主 chunk 超过 500 kB；`pnpm quality:knip` 当前因 `src/features/models/channels.ts` 的 `OPENAI_BUILTIN_MODEL_IDS` 未使用导出失败；`cargo fmt --check` 尚未纳入门禁。
 - 下一步：补真实系统凭据、多渠道对话、第三方 MCP OAuth，以及干净 Windows 用户环境安装和升级验收。
-- 窗口定向验证（2026-09-28）：跨屏最小尺寸约束修复后，50 项 Rust 测试通过（1 项忽略），包含 5 项窗口几何回归；3 项标题栏测试、TypeScript、Cargo check、严格 Clippy、生产构建、Debug 和渠道／设置四视口检查通过。单屏原生启动／还原及真实 WebView2 连续 6 次切换通过，未进行实体双屏验收。此前全量 ESLint 被 `useAgentSession.ts` 中 3 处 `no-useless-escape` 和 1 处 `react-hooks/exhaustive-deps` 既有错误阻塞，本次不宣称全量质量门禁通过。原生验证边界见 [桌面 UI 壳状态](ui-shell-status.md)。
 - 最后更新：2026-10-01
 
-2026-10-01，新增输入区四尺寸浏览器探针，覆盖目标状态、提示文字、图标按钮、长文本截断、焦点和 reduced-motion；Edge 四尺寸检查及截图复核通过。68 个文件 / 362 项前端测试、ESLint、TypeScript、生产构建与 Cargo check 通过。Knip 因模型渠道的未使用导出失败；未在真实 WebView2 中验收工具栏交互，也未运行 Rust 单元测试和 Clippy；此记录不替代完整发布门禁。
+2026-10-01，新增 Markdown 代码块四尺寸 Edge 布局探针，验证短代码收拢、长行内部滚动、复制按钮焦点和截图；对应模块事实见 [任务时间线](timeline-status.md)。
 
-2026-09-30，Runtime 提示生命周期修复：14 项相关测试通过，普通 info／deprecation 5 秒、warning 8 秒自动消失，security 持续显示；沙箱成功后自动清除未就绪提示，管理员配置入口保持 elevated 模式。类型检查、定向 ESLint 和 Debug 构建通过。
+## 当前验证基线
 
-2026-10-01，审查边界修复：新增三页历史分页顺序回归、20 MiB 图片／PDF Data URL 上限、HTTPS／本机回环 HTTP 渠道校验，以及 `thread/project/updated` 的权威 Thread 刷新。定向前端 54 项测试、TypeScript、定向 ESLint 和 Rust 全量 51 项单测通过（1 项交互测试忽略）。
+2026-10-01，输入区四尺寸浏览器探针、Edge 截图复核、68 个文件 / 362 项前端测试、ESLint、TypeScript、生产构建、Cargo check、Rust 51 项单测（1 项交互测试忽略）、严格 Clippy、Debug 构建和本轮协议／边界回归均通过。Knip 失败项已在“已知问题”明确记录，未将其伪装成完整门禁通过。
 
-2026-09-28，v0.1.8：补充 `<resource_dir>/bundled/skills` 资源布局解析，找不到内置 Skill 时不再向界面暴露开发机路径；通过 68 个文件 / 355 项前端测试、45 项 Rust 单测（1 项忽略）、类型检查、生产构建、Cargo check、Debug 构建和 diff 检查。生产打包使用通过协议兼容门禁的 `codex-cli 0.154.0-alpha.6.2`，生成 NSIS 安装器、`.sig` 与 `latest.json` 于 `release-artifacts/v0.1.8/`，三项资产已上传 GitHub Release。
+本轮协议／边界回归覆盖三页历史分页顺序、20 MiB 图片／PDF 预览上限、HTTPS／本机回环 HTTP 渠道校验和 `thread/project/updated` 的权威 Thread 刷新。图片/PDF 当前仍由 app-server `fs/readFile` 完整返回后才判断大小，尚未实现源端分段读取。
 
-## 当前开发验证基线
+## 未覆盖范围
 
-2026-09-22，高德增强后的代码基线上分别执行 TypeScript、ESLint、69 个文件 / 376 项前端测试、34 项高德 Bun 测试、production build、Knip、Cargo check、44 项 Rust 单测（1 项交互测试忽略）与严格 Clippy，均通过；diff 检查和高德 Skill 格式校验通过。新增 CLI 测试首次因 Windows Bun npm 包装器拒绝脚本参数而未启动子进程，改用当前可执行文件后复跑 34 项全部通过。`pnpm desktop:build` 成功生成 0.1.7 Debug，19 个高德资源文件与源码哈希一致，未生成新 Release。Vite 仍有既有主 chunk 大小提示，Debug 链接器输出创建库的信息警告，不影响构建成功。
+- 真实 Windows Credential Manager 故障注入、真实第三方 MCP OAuth、真实生图／高德 API 的账号权限与配额。
+- 干净机器安装升级、跨实体显示器、完整 WebView2 工具栏交互、超长 Diff／活动性能验收。
+- 源端分段读取超大文件，以及真实 Runtime 消息编辑链路的完整端到端验收。
 
-同日较早的四尺寸扩展布局通过，覆盖 1440×900、1280×780 和 1024×720、900×700；办公辅助脚本和 Skill 校验通过。插件专项已随插件管理移除，后续办公能力改以独立 Skill 验收。Knip 未发现未使用文件、导出或依赖。LibreOffice 调用使用模拟，未验证真实 Office 转换及模型驱动的办公产物；高德使用模拟 API 响应，未验证真实权限、配额和路线；此基线不代表全量桌面或外部服务验收。
+模拟 Runtime、浏览器探针和局部手工检查不替代上述验收。模块定向证据分别见 [Runtime](runtime-status.md)、[协议](protocol-status.md)、[扩展能力](agent-capabilities-status.md)、[项目与线程](workspace-thread-status.md)、[桌面 UI](ui-shell-status.md)、[模型配置](model-config-status.md)、[凭据](credentials-status.md) 和 [时间线](timeline-status.md)。
 
-## 专项验证与未覆盖范围
+## 最近发布
 
-2026-09-23，image-gen 配置修复通过 11 项 Python 测试、Skill 格式校验、`pnpm typecheck`、`pnpm desktop:build` 内的 production build 与 Debug 构建，以及独立 target 的 Cargo check。旧版在仅配置模拟密钥时复现缺地址失败，新版使用兔子默认地址；MockTransport 验证请求、失败不重试和脱敏。Debug 包内 image-gen 资源与源码哈希一致。构建仍有既有 chunk 大小和链接器信息提示；独立 Cargo target 有增量缓存旧文件清理警告但退出成功。未调用真实生图 API，未验收具体令牌的模型接口兼容性；Windows 注册表由测试替身覆盖，没有读取真实密钥。未改桌面 UI 或 Rust 行为，未重跑全量前端和布局专项。
-
-2026-09-22，会话名称优化通过 16 项定向测试、TypeScript、ESLint 和四尺寸浏览器探针（完整标题提示／改名、焦点、外部点击和横向溢出）；Cargo check 初次因 Debug 文件占用导致资源复制失败，改用独立临时 target 后通过。`pnpm desktop:build` 的 production build 与 Debug 构建成功，仍有既有 chunk 大小及链接器信息警告。浏览器探针不代替真实 WebView2 端到端验收；没有模型调用。新 DOM 测试首次因 happy-dom 未实现 prompt 而失败，显式提供测试替身后通过。
-
-2026-09-28，移除 CS 插件管理入口、插件客户端调用、内置插件准备命令及插件资源打包入口；保留 Core 生成协议类型以通过 Runtime 兼容门禁。全量前端测试 68 个文件 / 355 项通过，TypeScript、Cargo check、Debug 构建成功；未执行插件探针，因为该功能已从产品范围移除。
-
-2026-09-22，内置 Skill 资源路径与简介修复后，TypeScript、ESLint、19 项扩展组件测试、四尺寸扩展布局、Cargo check、46 项 Rust 单测（1 项忽略）及严格 Clippy 通过。`pnpm desktop:build` 包含的 production build 与 Debug 构建成功，仍有既有 chunk 大小和链接器信息警告。资源解析使用临时目录模拟 Tauri 实际打包结构，未运行干净机器 NSIS 安装；不代表生产安装端到端验收。
-
-2026-09-22，高德出图模板更新后，6 项 Python 专项、34 项 Bun 查询测试、Skill 格式校验、TypeScript、production build 和 Cargo check 通过；真实高德静态底图的杭州示例已生成并查看预览，旧缓存错配探针被新实现正确拒绝。Debug 重建成功，包内 23 个高德资源文件与源码哈希一致。路线数据沿用历史示例，未验证当前客运、景区或价格。此次未改桌面 UI 和 Rust 行为，未重跑完整前端、Clippy 或四视口专项；上方完整门禁记录属于同日较早基线。
-
-模块的定向验证由各模块状态维护，完整历史由 Git 保存：
-
-- [Runtime](runtime-status.md) 与 [协议](protocol-status.md)：隔离探针不等于真实模型对话；分页和运行中换模仍受 Runtime 限制。
-- [扩展能力](agent-capabilities-status.md)：真实办公产物、生图／高德 API 和干净机器依赖未验收。
-- [项目与线程](workspace-thread-status.md) 与 [桌面 UI](ui-shell-status.md)：保留真实资源管理器定位证据；Chromium 测试不等于 WebView2 剪贴板权限验收，大型项目 watch 滚动仍缺人工验证。
-- [模型配置](model-config-status.md) 与 [凭据](credentials-status.md)：真实系统凭据故障注入、多渠道对话及第三方 MCP OAuth 尚需验收。
-- [时间线](timeline-status.md)：历史消息编辑仍缺真实 Runtime 链路及对应四视口验收。
-
-## 最近发布基线
-
-2026-09-20，v0.1.7：发布时完整门禁为 68 文件 / 372 项前端测试、14 项高德测试、43 项 Rust 单测（1 项忽略），以及类型、Lint、构建、Knip、Cargo check、Clippy 和 diff 检查。插件探针属于历史发布范围，当前产品已移除插件管理，不能作为当前功能承诺。
-
-`pnpm release:package` 生成 NSIS 安装器、`.sig` 和 `latest.json`，通过配置公钥的 Ed25519 / BLAKE2b 验签、可信注释签名及 manifest 版本、下载 URL 和签名一致性检查；三项资产作为 v0.1.7 上传 GitHub Release。安装器 SHA-256：`4a4d8ce2e0892f47ebed8c9a557225c7424eedea525994b153e518472608a75b`。
-
-自动发现的更新 Runtime 因缺少 `thread/rollback` 被门禁拒绝，随后显式使用哈希匹配的暂存同源 Runtime 完成发布。用户已完成部分真实桌面检查且未报告问题，但未枚举具体场景；不据此宣称全量桌面、真实外部 API 或干净机器安装升级验收通过。
+v0.1.8 使用 `codex-cli 0.154.0-alpha.6.2` 同源 Runtime，已生成并上传 NSIS 安装器、`.sig` 和 `latest.json`。发布脚本通过 Runtime 哈希、协议兼容门禁和 updater 签名校验；发布历史及精确资产校验由 Git 与 GitHub Release 保留，不在状态文档重复。
