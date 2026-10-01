@@ -115,25 +115,14 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .composer-goal-status strong { min-width: 0; flex: 1; overflow: hidden; color: var(--text-primary); font-size: var(--text-ui); font-weight: 500; line-height: 20px; text-overflow: ellipsis; white-space: nowrap; }
 .composer-goal-status span, .composer-goal-status time { flex: none; color: var(--text-muted); font-size: var(--text-meta); line-height: 16px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .composer-goal-status > .compact-icon-button { margin-left: var(--space-1); }
-.composer-goal-status + .composer { border-radius: 0 0 var(--radius-panel) var(--radius-panel); }
-.composer { position: relative; padding: 8px 9px 6px; border: 1px solid var(--border-default); border-radius: var(--radius-panel); background: var(--surface-panel); box-shadow: var(--ui-shadow-panel); }
+.composer-goal-status + .composer { border-radius: 0 0 var(--radius-composer) var(--radius-composer); }
+.composer { position: relative; padding: var(--space-3) var(--space-3) var(--space-2); border: 1px solid var(--border-default); border-radius: var(--radius-composer); background: var(--surface-panel); }
 .composer:focus-within { border-color: var(--border-strong); }
 .composer.has-context-heatbar { padding-left: 27px; }
 .composer > .attachment-gallery { margin-bottom: 9px; }
-.composer textarea { width: 100%; min-height: 58px; max-height: 320px; overflow-y: auto; resize: vertical; border: 0; outline: 0; color: var(--text-primary); background: transparent; font-size: var(--conversation-font-size); line-height: 24px; }
+.composer textarea { width: 100%; min-height: calc(var(--control-height) * 2); max-height: 320px; overflow-y: auto; resize: vertical; border: 0; outline: 0; color: var(--text-primary); background: transparent; font-size: var(--conversation-font-size); line-height: 24px; }
 .composer textarea::placeholder { color: var(--text-muted); }
-.queued-turns { display: grid; gap: 4px; max-height: 132px; margin: 0 0 8px; padding: 6px 8px 7px; overflow-y: auto; border: 1px solid var(--border-subtle); border-radius: var(--radius-panel); background: color-mix(in srgb, var(--surface-panel) 72%, var(--surface-canvas)); }
-.queued-turns-heading { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: var(--space-2); padding: 0 2px 3px; color: var(--text-secondary); font-size: var(--text-label); line-height: 16px; }
-.queued-turns-heading small { color: var(--text-muted); font-size: var(--text-meta); }
-.queued-turns-heading button { min-height: 28px; padding: 0 8px; border: 1px solid var(--border-default); border-radius: var(--radius-control); color: var(--text-secondary); background: transparent; font-size: var(--text-meta); }
-.queued-turns-heading button:hover { color: var(--text-primary); background: var(--surface-raised); }
-.queued-turn { display: flex; min-width: 0; min-height: 36px; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid transparent; border-radius: var(--radius-control); color: var(--text-primary); background: var(--surface-raised); font-size: var(--text-ui); }
-.queued-turn:hover { border-color: var(--border-default); background: var(--surface-selected); }
-.queued-turn > span { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.queued-turn-icon { width: 18px; height: 18px; flex: none; color: var(--text-secondary); stroke-width: 1.55; }
-.queued-turn-status { flex: none; color: var(--accent-action); font-size: var(--conversation-font-size-meta); white-space: nowrap; }
-.queued-turn > .compact-icon-button { flex: 0 0 var(--control-height-compact); }
-.composer-toolbar { display: flex; min-width: 0; min-height: 40px; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 6px; }
+.composer-toolbar { display: flex; min-width: 0; min-height: var(--control-height); flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .composer-tools { display: flex; min-width: 0; align-items: center; gap: 4px; }
 .composer-add-menu-anchor { position: relative; flex: none; }
 .composer-add-button { color: var(--text-secondary); }
@@ -506,6 +495,7 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 
 .composer-actions {
   display: flex;
+  margin-left: auto;
   min-width: 0;
   flex: none;
   align-items: center;

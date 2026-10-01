@@ -1,0 +1,17 @@
+.queued-message-panel { min-width: 0; margin: 0 var(--space-3) var(--space-1); padding: var(--space-1); border: 1px solid var(--border-subtle); border-radius: var(--radius-panel); background: var(--surface-sidebar); }
+.queued-message-list { max-height: calc(var(--control-height-large) * 4); margin: 0; padding: 0; overflow-y: auto; list-style: none; }
+.queued-message-row { display: flex; min-width: 0; min-height: var(--control-height-large); align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-2); border-radius: var(--radius-control); }
+.queued-message-row:hover, .queued-message-row:focus-within { background: var(--surface-panel); }
+.queued-message-icon { width: 16px; height: 16px; flex: none; color: var(--text-muted); stroke-width: 1.75; }
+.queued-message-thumbnail { display: grid; width: var(--control-height); height: var(--control-height); flex: none; place-items: center; overflow: hidden; border: 1px solid var(--border-default); border-radius: var(--radius-sm); background: var(--surface-panel); }
+.queued-message-thumbnail img { width: 100%; height: 100%; object-fit: cover; }
+.queued-message-thumbnail .attachment-image-fallback { color: var(--text-muted); font-size: var(--text-meta); }
+.queued-message-text { min-width: 0; flex: 1; overflow: hidden; color: var(--text-secondary); font-size: var(--text-ui); line-height: 20px; text-overflow: ellipsis; white-space: nowrap; }
+.queued-message-actions { display: flex; flex: none; align-items: center; gap: var(--space-1); }
+.queued-message-steer, .queued-message-heading button { display: inline-flex; height: var(--control-height-compact); align-items: center; justify-content: center; gap: var(--space-1); padding: 0 var(--space-2); border: 0; border-radius: var(--radius-control); color: var(--text-muted); background: transparent; font-size: var(--text-label); white-space: nowrap; cursor: pointer; }
+.queued-message-steer { min-width: calc(var(--control-height-compact) * 2 + var(--space-2)); }
+.queued-message-steer svg { width: 16px; height: 16px; flex: none; stroke-width: 1.75; }
+.queued-message-steer:hover:not(:disabled), .queued-message-heading button:hover { color: var(--text-primary); background: var(--surface-raised); }
+.queued-message-steer:disabled { color: var(--text-disabled); cursor: not-allowed; }
+.queued-message-delete:hover:not(:disabled) { color: var(--accent-danger); }
+.queued-message-heading { display: flex; align-items: center; justify-content: space-between; padding-left: var(--space-2); color: var(--text-muted); font-size: var(--text-label); }

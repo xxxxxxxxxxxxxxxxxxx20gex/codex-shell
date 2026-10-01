@@ -64,11 +64,6 @@ const initialPersonalization: PersonalizationSettings = {
   theme: "dark",
 };
 
-export function queuedTurnLabel(turn: { text: string; mentions: FileMention[]; images?: ImageAttachment[] }) {
-  if (turn.text) return turn.text;
-  return [...turn.mentions, ...(turn.images ?? [])].map((attachment) => attachment.name).join("、") || "附件";
-}
-
 export function useAppController() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [preferencesOpen, setPreferencesOpen] = useState(false);

@@ -144,7 +144,7 @@ Radii:
 
 - row and inline highlight: `4px`;
 - button, input, compact control: `6px`;
-- menu, dialog, composer: `8px`;
+- menu and dialog: `8px`; composer: `16px` to distinguish the primary writing surface;
 - do not use pills unless the value is a short status or removable selection.
 
 ## Icons
@@ -240,7 +240,7 @@ Radii:
 
 ## Composer
 
-- Composer is the dominant bounded tool surface and may use the 8px radius.
+- Composer is the dominant bounded tool surface and uses the dedicated 16px composer radius, with a quiet neutral background and a 32px action toolbar.
 - The text area has no inner card border; toolbar and input share one surface.
 - An active goal uses a single compact status strip immediately above the composer. Its icon and readable objective lead; status and elapsed time are secondary metadata; a separate right-side icon button owns the clear action. Long objectives truncate with their full text available on hover. The strip and composer meet without a double border.
 - Nearby runtime, error, success, and queue notices use `--text-label` for actionable text; reserve `--text-meta` for counts, elapsed time, and secondary state. Notices keep their main message readable and truncate only when space is constrained.
@@ -248,7 +248,7 @@ Radii:
 - Left group: add, permission, mode, activity. Right group: model, effort, send.
 - Goal and Plan share one mutually exclusive mode slot.
 - The send button is a stable 32px square and changes function without moving.
-- Queued messages appear above the input as compact rows, not cards nested inside the composer.
+- Queued messages appear in one inset sibling panel immediately above the input. Use continuous 40px rows, 13px single-line previews, optional 32px image thumbnails, and stable right-aligned actions. The labeled Steer action precedes 28px delete and more buttons; edit lives in the shared menu. Running queues omit repeated waiting labels and headings; idle queues retain the resume action. Long queues scroll within a four-row viewport, and menus render outside that scroll region.
 
 ## Responsive Behavior
 

@@ -64,7 +64,7 @@ function usePathPreview(path: string | undefined, readFile: ReadFile, enabled: b
   return { preview, loading, error };
 }
 
-function ImageThumbnail({ image, readFile }: { image: ImageAttachment; readFile: ReadFile }) {
+export function ImageThumbnail({ image, readFile }: { image: ImageAttachment; readFile: ReadFile }) {
   const local = usePathPreview(image.path, readFile, Boolean(image.path));
   const source = image.url ?? (local.preview?.kind === "image" ? local.preview.dataUrl : null);
   if (source) return <img src={source} alt={image.name} />;

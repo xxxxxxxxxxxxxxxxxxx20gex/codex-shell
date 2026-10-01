@@ -1,7 +1,4 @@
 import {
-  ArrowUpRight,
-  Clock3,
-  FilePenLine,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -37,7 +34,7 @@ import { ModelQuickPicker } from "./features/models/ModelQuickPicker";
 import { ModelSettingsPanel } from "./features/models/ModelSettingsPanel";
 import { PreferencesPanel } from "./features/preferences/PreferencesPanel";
 import { RuntimeNoticeBanner } from "./features/runtime/RuntimeNoticeBanner";
-import { queuedTurnLabel, useAppController } from "./features/app/useAppController";
+import { useAppController } from "./features/app/useAppController";
 import { ServerInteractionDialog } from "./features/interactions/ServerInteractionDialog";
 import { ConversationTimeline } from "./features/threads/ConversationTimeline";
 import { ContextHeatBar } from "./features/threads/ContextHeatBar";
@@ -51,7 +48,8 @@ import { WindowTitleBar } from "./features/window/WindowTitleBar";
 import { ContextMenuPolicy } from "./features/window/ContextMenuPolicy";
 import { ProductMark } from "./shared/ProductMark";
 import { TransientNotice } from "./shared/TransientNotice";
-import { CompactIconButton } from "./shared/CompactIconButton";
+import { QueuedMessageList } from "./features/composer/QueuedMessageList";
+import { errorMessage } from "./shared/errors";
 import "./styles/tokens.css";
 import { isPathWithinRoot, resolveLinkedProjectPath } from "./features/workspaces/workspaceState";
 import { defaultInspectorWidth, type InspectorView } from "./features/layout/panelLayout";
@@ -334,22 +332,7 @@ function App() {
               onChange={changeProject}
               onError={setUiError}
             />}
-            {session.queuedTurns.length > 0 && <div className="queued-turns" aria-label="待发送消息">
-              <div className="queued-turns-heading"><span>待发送 · {session.queuedTurns.length}</span>{session.running
-                ? <small>当前回答完成后依次发送</small>
-                : <button type="button" onClick={() => void session.resumeQueued()} title="继续发送队列">继续发送</button>}</div>
-              {session.queuedTurns.map((queued) => {
-                const label = queuedTurnLabel(queued);
-                return <div className="queued-turn" key={queued.id}>
-                  <Clock3 className="queued-turn-icon" aria-hidden="true" />
-                  <span>{label}</span>
-                  <small className="queued-turn-status">等待中</small>
-                  <CompactIconButton label={`编辑待发送消息：${label}`} title="编辑" icon={<FilePenLine aria-hidden="true" />} onClick={() => editQueuedTurn(queued)} />
-                  {session.canSteer && <CompactIconButton label={`引导发送待发送消息：${label}`} title="引导发送" icon={<ArrowUpRight aria-hidden="true" />} onClick={() => void steerQueuedTurn(queued)} />}
-                  <CompactIconButton label={`取消待发送消息：${label}`} title="取消待发送" icon={<X aria-hidden="true" />} onClick={() => session.removeQueued(queued.id)} />
-                </div>;
-              })}
-            </div>}
+            <QueuedMessageList items={session.queuedTurns} running={session.running} canSteer={session.canSteer} readFile={session.readWorkspaceFile} onEdit={editQueuedTurn} onSteer={steerQueuedTurn} onRemove={session.removeQueued} onResume={() => void session.resumeQueued()} onError={(error) => setUiError(errorMessage(error))} />
             {composerIntent === "default" && session.threadGoal && <ComposerGoalStatus goal={session.threadGoal} onClear={() => void clearActiveGoal()} />}
             <div ref={composerRef} className="composer has-context-heatbar">
               <ContextHeatBar usage={session.tokenUsage} hasThread={Boolean(session.thread)} running={session.running} onCompact={() => runSlashCommand("compact", "", false)} />
