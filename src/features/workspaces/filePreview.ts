@@ -1,5 +1,6 @@
 const MAX_TEXT_BYTES = 200_000;
 const MAX_TEXT_LINES = 4_000;
+export const MAX_BINARY_PREVIEW_BYTES = 20 * 1024 * 1024;
 
 const IMAGE_TYPES: Record<string, string> = {
   ".avif": "image/avif",
@@ -15,6 +16,7 @@ export type FilePreview =
   | { kind: "text"; content: string; byteSize: number; truncated: boolean }
   | { kind: "image"; dataUrl: string; byteSize: number }
   | { kind: "pdf"; dataUrl: string; byteSize: number }
+  | { kind: "tooLarge"; byteSize: number }
   | { kind: "binary"; byteSize: number };
 
 function extension(path: string) {
@@ -36,8 +38,11 @@ function decodePrefix(dataBase64: string) {
 export function decodeFilePreview(path: string, dataBase64: string): FilePreview {
   const byteSize = decodedSize(dataBase64);
   const imageType = IMAGE_TYPES[extension(path)];
-  if (imageType) return { kind: "image", dataUrl: `data:${imageType};base64,${dataBase64}`, byteSize };
-  if (extension(path) === ".pdf") return { kind: "pdf", dataUrl: `data:application/pdf;base64,${dataBase64}`, byteSize };
+  if (imageType || extension(path) === ".pdf") {
+    if (byteSize > MAX_BINARY_PREVIEW_BYTES) return { kind: "tooLarge", byteSize };
+    if (imageType) return { kind: "image", dataUrl: `data:${imageType};base64,${dataBase64}`, byteSize };
+    return { kind: "pdf", dataUrl: `data:application/pdf;base64,${dataBase64}`, byteSize };
+  }
 
   const bytes = decodePrefix(dataBase64);
   if (bytes.some((byte) => byte === 0)) return { kind: "binary", byteSize };

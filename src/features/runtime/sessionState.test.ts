@@ -612,6 +612,7 @@ describe("agentSessionReducer", () => {
 
     expect(unchanged).toBe(loaded);
     expect(withSettings.threadSettings).toEqual(threadSettings);
+    expect(withSettings.thread?.cwd).toBe("C:\\work");
     expect(withGoal.threadGoal).toEqual(goal);
     expect(cleared.threadGoal).toBeNull();
   });

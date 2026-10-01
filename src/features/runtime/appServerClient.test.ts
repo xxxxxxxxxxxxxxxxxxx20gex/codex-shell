@@ -110,6 +110,22 @@ describe("AppServerClient", () => {
     expect(transport.sent.filter((message) => message.method === "thread/turns/list")).toHaveLength(2);
   });
 
+  it("preserves chronological order across three descending pages", async () => {
+    const transport = new FakeTransport();
+    const client = new AppServerClient(transport);
+    await client.start();
+    const pending = client.readThreadWithHistory("thread-1", 5);
+    transport.emit({ id: transport.sent[transport.sent.length - 1]?.id, result: { thread: { id: "thread-1", turns: [] } } });
+    await Promise.resolve();
+    transport.emit({ id: transport.sent[transport.sent.length - 1]?.id, result: { data: [{ id: "turn-9" }, { id: "turn-8" }], nextCursor: "page-2" } });
+    await Promise.resolve();
+    transport.emit({ id: transport.sent[transport.sent.length - 1]?.id, result: { data: [{ id: "turn-7" }, { id: "turn-6" }], nextCursor: "page-3" } });
+    await Promise.resolve();
+    transport.emit({ id: transport.sent[transport.sent.length - 1]?.id, result: { data: [{ id: "turn-5" }, { id: "turn-4" }], nextCursor: "page-4" } });
+    const response = await pending;
+    expect(response.thread.turns.map((turn) => turn.id)).toEqual(["turn-5", "turn-6", "turn-7", "turn-8", "turn-9"]);
+  });
+
   it("exposes native live settings and queue requests without creating a thread", async () => {
     const transport = new FakeTransport();
     const client = new AppServerClient(transport);

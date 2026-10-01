@@ -64,6 +64,21 @@ fn defaults_to_a_single_active_openai_channel() {
 }
 
 #[test]
+fn accepts_https_and_loopback_http_but_rejects_public_http() {
+    let mut settings = default_settings();
+    for base_url in ["https://api.example.com/v1", "http://localhost:8080/v1", "http://127.0.0.1:8080/v1", "http://[::1]:8080/v1"] {
+        settings.channels[0].base_url = base_url.to_string();
+        assert!(validate_settings(&settings).is_ok(), "expected {base_url} to be accepted");
+    }
+    settings.channels[0].base_url = "http://public.example.com/v1".to_string();
+    assert!(validate_settings(&settings).is_err());
+    settings.channels[0].base_url = "file:///C:/keys".to_string();
+    assert!(validate_settings(&settings).is_err());
+    settings.channels[0].base_url = "https://api.example.com/v1 with-space".to_string();
+    assert!(validate_settings(&settings).is_err());
+}
+
+#[test]
 fn migrates_legacy_settings_into_one_equivalent_channel() {
     let legacy: super::LegacyModelSettings = serde_json::from_str(
         r#"{"baseUrl":"https://api.deepseek.com","modelId":"deepseek-flash","reasoningEffort":"high","reasoningSummary":"detailed","verbosity":"low","serviceTier":"priority"}"#,

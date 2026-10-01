@@ -19,11 +19,8 @@ pub struct ChannelProbeReport {
 /// `GET {base}/models` 是 OpenAI 兼容路由的通用目录接口，OpenAI 与 DeepSeek 都提供。
 fn models_endpoint(base_url: &str) -> Result<String, String> {
     let trimmed = base_url.trim().trim_end_matches('/');
-    let absolute = trimmed.split_once("://").is_some_and(|(scheme, rest)| {
-        matches!(scheme.to_ascii_lowercase().as_str(), "http" | "https") && !rest.is_empty()
-    });
-    if !absolute {
-        return Err("Base URL 必须以 http:// 或 https:// 开头".to_string());
+    if !crate::config::is_allowed_base_url(trimmed) {
+        return Err("Base URL 必须使用 HTTPS；本机调试地址可使用 HTTP".to_string());
     }
     if trimmed.chars().any(char::is_whitespace) {
         return Err("Base URL 不能包含空白字符".to_string());
@@ -118,13 +115,14 @@ mod tests {
 
     #[test]
     fn rejects_endpoints_that_cannot_carry_a_bearer_token() {
-        for base_url in ["", "   ", "api.deepseek.com", "file:///C:/keys.txt", "ftp://host"] {
+        for base_url in ["", "   ", "api.deepseek.com", "file:///C:/keys.txt", "ftp://host", "http://public.example.com"] {
             assert!(
                 models_endpoint(base_url).is_err(),
                 "expected {base_url:?} to be rejected"
             );
         }
         assert!(models_endpoint("https://host/with space").is_err());
+        assert_eq!(models_endpoint("http://127.0.0.1:8080/v1").unwrap(), "http://127.0.0.1:8080/v1/models");
     }
 
     #[test]

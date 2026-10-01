@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decodeFilePreview, formatFileSize } from "./filePreview";
+import { decodeFilePreview, formatFileSize, MAX_BINARY_PREVIEW_BYTES } from "./filePreview";
 
 function encode(bytes: Uint8Array) {
   return btoa(String.fromCharCode(...bytes));
@@ -30,6 +30,11 @@ describe("decodeFilePreview", () => {
       kind: "binary",
       byteSize: 3,
     });
+  });
+
+  it("does not create a data URL for oversized previews", () => {
+    const encoded = "A".repeat(Math.ceil((MAX_BINARY_PREVIEW_BYTES + 1) * 4 / 3));
+    expect(decodeFilePreview("large.png", encoded)).toEqual({ kind: "tooLarge", byteSize: expect.any(Number) });
   });
 });
 

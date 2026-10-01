@@ -164,6 +164,31 @@ fn host_of(base_url: &str) -> &str {
         .unwrap_or_default()
 }
 
+pub(crate) fn is_allowed_base_url(base_url: &str) -> bool {
+    if base_url.chars().any(char::is_whitespace) {
+        return false;
+    }
+    let Some((scheme, rest)) = base_url.split_once("://") else {
+        return false;
+    };
+    let authority = rest.split(['/', '?', '#']).next().unwrap_or_default();
+    let host_part = authority
+        .rsplit_once('@')
+        .map(|(_, value)| value)
+        .unwrap_or(authority);
+    let host = if let Some(value) = host_part.strip_prefix('[') {
+        value.split(']').next().unwrap_or_default().to_ascii_lowercase()
+    } else {
+        host_part.split(':').next().unwrap_or_default().to_ascii_lowercase()
+    };
+    if host.is_empty() {
+        return false;
+    }
+    scheme.eq_ignore_ascii_case("https")
+        || (scheme.eq_ignore_ascii_case("http")
+            && matches!(host.as_str(), "localhost" | "127.0.0.1" | "::1"))
+}
+
 fn vendor_for_base_url(base_url: &str) -> &'static str {
     if host_of(base_url).to_ascii_lowercase().contains("deepseek") {
         VENDOR_DEEPSEEK
@@ -301,8 +326,8 @@ fn validate_settings(settings: &ModelSettings) -> Result<(), String> {
         if base_url.is_empty() {
             return Err("渠道的 Base URL 不能为空".to_string());
         }
-        if host_of(base_url).is_empty() || !base_url.contains("://") {
-            return Err(format!("渠道的 Base URL 不是绝对地址：{base_url}"));
+        if !is_allowed_base_url(base_url) {
+            return Err("渠道的 Base URL 必须使用 HTTPS；本机调试地址可使用 HTTP".to_string());
         }
     }
     if let Some(active) = settings.active_channel_id.as_deref()

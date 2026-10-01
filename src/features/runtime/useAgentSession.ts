@@ -2,6 +2,7 @@ import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import type { ModeKind } from "../../generated/app-server/ModeKind";
 import type { WindowsSandboxReadiness } from "../../generated/app-server/v2/WindowsSandboxReadiness";
 import type { WindowsSandboxSetupMode } from "../../generated/app-server/v2/WindowsSandboxSetupMode";
+import type { ThreadProjectUpdatedNotification } from "../../generated/app-server/v2/ThreadProjectUpdatedNotification";
 import { errorMessage } from "../../shared/errors";
 import type { ServerInteractionStore } from "../interactions/serverInteractionStore";
 import { ServerInteractionStore as InteractionStore } from "../interactions/serverInteractionStore";
@@ -230,6 +231,17 @@ export function useAgentSession(
       onThreadDeleted: (notification) => removeThread(notification.threadId),
       onThreadUnarchived: (notification) => onThreadUnarchived(notification.threadId),
       onThreadClosed: (notification) => onThreadClosed(notification.threadId),
+      onThreadProjectUpdated: (notification: ThreadProjectUpdatedNotification) => {
+        if (notification.threadId !== currentThreadId()) {
+          void refreshHistory();
+          return;
+        }
+        const client = clientRef.current;
+        if (!client) return;
+        void client.readThread({ threadId: notification.threadId, includeTurns: false })
+          .then(({ thread }) => dispatch({ type: "updateThread", thread }))
+          .catch((readError) => setError(`项目目录同步失败：${errorMessage(readError)}`));
+      },
       onThreadReverted: (notification) => {
         if (notification.threadId !== currentThreadId()) {
           void refreshHistory();

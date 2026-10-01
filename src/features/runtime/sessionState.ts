@@ -410,7 +410,11 @@ export function agentSessionReducer(
         : state;
     case "threadSettingsUpdated":
       return state.thread?.id === action.notification.threadId
-        ? { ...state, threadSettings: action.notification.threadSettings }
+        ? {
+            ...state,
+            thread: { ...state.thread, cwd: action.notification.threadSettings.cwd },
+            threadSettings: action.notification.threadSettings,
+          }
         : state;
     case "threadGoalUpdated":
       return state.thread?.id === action.notification.threadId

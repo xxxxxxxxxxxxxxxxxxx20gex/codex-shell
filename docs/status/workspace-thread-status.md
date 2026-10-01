@@ -13,7 +13,8 @@
 - 队列与历史：原生队列刷新按 Thread 合并通知，刷新期间再次收到变化时丢弃过期快照并补查；失败释放刷新状态，Runtime reset 使在途响应失效。历史读取按最近 200 轮排序；当前 Runtime 的实际分页支持限制见 [协议状态](protocol-status.md)。
 - 当前接口：Rust `get_default_project_directory`，以及 `WorkspaceSelector`、`WorkspaceExplorer`、`ThreadHistoryList`、`ConversationTimeline`、`useWorkspaceFiles`、`useThreadController` 和 `useThreadActions`。时间线滚动控制以当前可见用户消息为锚点，在上一条、下一条和最新位置之间跳转。
 - 交互校正：右侧功能区中的“项目文件”入口在存在项目路径时直接打开 `WorkspaceExplorer`；无路径时仅显示准备提示，避免重复的二级打开按钮。
-- 已知问题：尚未提供显式的最近项目列表；文件预览会在前端截断前先跨 IPC 读取完整文件；侧边聊天暂不支持审批、队列或写入操作；继续扩展 Thread 通知路由前仍应优先按生命周期职责拆分。
+- 文件预览边界：图片和 PDF 超过 20 MiB 时不创建前端 Data URL，只显示超限提示；文件内容仍由 app-server 的 `fs/readFile` 返回后才可判断大小，尚未实现源端按字节分页读取。
+- 已知问题：尚未提供显式的最近项目列表；侧边聊天暂不支持审批、队列或写入操作；继续扩展 Thread 通知路由前仍应优先按生命周期职责拆分。
 - 下一步：增加断线后的 Session 恢复、最近项目列表和 Git 摘要。
 - 验证证据：Hook/DOM 测试覆盖项目选择、取消、Session 创建后锁定、默认目录识别、只读打开、按需 Resume、按指定历史 Turn 分叉、执行中分叉已完成 Turn、同步双击互斥、分叉期间拒绝发送/切换、重置后忽略迟到响应、Runtime 重启后同 Session 续聊、后台完成后退订、paginated fallback、归档隔离、文件 watch 防抖刷新、附件预览读取和 unmount 清理。
 - 相关决策：[ADR-002：隔离运行数据与凭据](../decisions/ADR-002-isolated-runtime-data.md)。

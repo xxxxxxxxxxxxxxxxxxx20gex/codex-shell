@@ -8,6 +8,7 @@
 - 参数边界：目录外非空自定义模型 ID 和参数原样保留；只有空模型选择目录默认项，已知模型校准不支持的推理强度与服务层级。未取得目标目录时不清空服务层级，也不展示其他渠道的 Provider 能力。快捷模型切换保留当前权限和审批设置；切换事务期间忽略恢复过程的旧权威设置回流。
 - 配置边界：加载失败显示错误并禁止保存和自动启动，不以空配置覆盖损坏文件。首次读取会持久化初始渠道 ID。catalog.file 暂不支持，读写时明确拒绝，不再静默忽略；OpenAI 使用 Core 内置目录，DeepSeek 使用随应用绑定的目录。
 - 当前接口：ModelSettingsPanel、ProviderChannelsPanel、useProviderSettingsSave、channels.ts、load_model_settings、save_model_settings(settings, expected, secretChange)、channel_secret_presence、test_channel_connection、model/list。凭据事务见 [凭据安全](credentials-status.md)。
+- 安全边界：渠道 Base URL 只接受 HTTPS；本机调试允许 localhost、127.0.0.1 和 ::1 的 HTTP。连接探针与 app-server 启动共用该边界，避免把 API Key 发往公网明文地址。
 - 已知问题：仅支持单进程单渠道，不提供并行多 Provider、自动切换或渠道级代理。/models 成功不证明 Responses 对话或工具可用；自定义模型的可用性由实际服务端决定。外部修改配置触发冲突后需重新启动应用读取最新配置。model/list 不公开 verbosity 与 reasoning summary 的完整能力。
 - 下一步：人工验证真实系统凭据与多渠道对话切换；可选最小对话探测另行评估，不自动消耗额度。
 - 验证证据：2026-09-10；定向回归覆盖高级设置激活 ID、保存失败保留草稿、重启失败重试、切换互斥、执行 RPC 暂停、非激活渠道 Key、自定义模型与未知目录服务层级。四视口布局脚本通过，使用真实组件及模拟回调，不是真实 Tauri 端到端。完整基线见 [测试与发布](testing-release-status.md)。
