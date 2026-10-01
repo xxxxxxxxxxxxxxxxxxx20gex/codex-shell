@@ -15,6 +15,10 @@ describe("custom model metadata warning", () => {
     expect(isExpectedCustomModelMetadataWarning("Model metadata for 'gpt-6-sol' not found.", "gpt-6-sol")).toBe(false);
   });
 
+  it("silences metadata warnings for CS built-in OpenAI model IDs", () => {
+    expect(isExpectedCustomModelMetadataWarning("Model metadata for 'GPT-6-SOL' not found. Defaulting to fallback metadata: this can degrade performance and cause issues.", "gpt-6-sol")).toBe(true);
+  });
+
   it("matches the warning after the model changes without recreating the subscription", () => {
     const currentModelId = { current: "gpt-6-sol" };
     const warning = "Model metadata for 'gpt-6-sol' not found. Defaulting to fallback metadata: this can degrade performance and cause issues.";
