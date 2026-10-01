@@ -40,3 +40,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tests/scripts/run-quality-ga
 
 - `pnpm test:channel-layout <playwright/index.mjs绝对路径> <浏览器可执行文件绝对路径> [端口]`：先启动 `pnpm dev --host 127.0.0.1 --port 1435`；脚本挂载真实的 `PreferencesPanel`（模型渠道分区）与 `ModelSettingsPanel`，检查四尺寸布局、模态框边界、字号下限、键盘焦点、删除二次确认、Escape 关闭和 reduced-motion，截图保存到系统临时目录。
 - `pnpm test:composer-layout <playwright/index.mjs绝对路径> <浏览器可执行文件绝对路径> [端口]`：先启动 `pnpm dev --host 127.0.0.1 --port 1435`；脚本挂载真实的目标状态栏和提示组件，检查四尺寸布局、焦点、文字下限与 reduced-motion，截图保存到系统临时目录。
+- `pnpm test:markdown-code-layout <playwright/index.mjs绝对路径> <浏览器可执行文件绝对路径> [端口]`：先启动 `pnpm dev --host 127.0.0.1 --port 1435`；脚本挂载真实 Markdown 回复，检查短代码块收拢、长行滚动、复制按钮焦点和四尺寸边界，截图保存到系统临时目录。

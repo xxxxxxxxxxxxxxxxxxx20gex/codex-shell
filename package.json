@@ -24,6 +24,7 @@
     "test:image-annotation-layout": "node tests/scripts/check-image-annotation-layout.mjs",
     "test:terminal-layout": "node tests/scripts/check-terminal-interaction-layout.mjs",
     "test:composer-layout": "node tests/scripts/check-composer-layout.mjs",
+    "test:markdown-code-layout": "node tests/scripts/check-markdown-code-layout.mjs",
     "test:explorer-menu-layout": "node tests/scripts/check-explorer-menu-layout.mjs",
     "runtime:probe-model-parameters": "node tests/scripts/probe-model-parameters.mjs",
     "runtime:probe-local-tool": "node tests/scripts/probe-local-tool-runtime.mjs",

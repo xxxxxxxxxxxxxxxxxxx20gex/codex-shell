@@ -1,28 +1,31 @@
 .markdown-code-block {
+  width: fit-content;
+  min-width: min(100%, 160px);
+  max-width: 100%;
   overflow: hidden;
-  margin: 12px 0 16px;
-  border: 1px solid var(--border-default);
+  margin: 10px 0 14px;
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-panel);
   background: var(--surface-raised);
 }
 
 .markdown-code-block > header {
   display: flex;
-  min-height: 40px;
+  min-height: var(--control-height-compact);
   align-items: center;
   justify-content: space-between;
-  padding: 0 8px 0 12px;
-  border-bottom: 1px solid var(--border-default);
+  padding: 0 var(--space-1) 0 var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
   color: var(--text-muted);
   background: var(--surface-raised);
-  font-size: var(--text-label);
+  font-size: var(--text-meta);
   line-height: 16px;
 }
 
 .markdown-code-block > header button {
   display: grid;
-  width: 28px;
-  height: 28px;
+  width: var(--space-6);
+  height: var(--space-6);
   place-items: center;
   padding: 0;
   border: 0;
@@ -39,8 +42,8 @@
 }
 
 .markdown-code-block > header svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   stroke-width: 1.75;
 }
 
@@ -49,7 +52,7 @@
   max-height: 440px;
   overflow: auto;
   margin: 0;
-  padding: 13px 12px;
+  padding: var(--space-2) var(--space-3);
   border: 0;
   border-radius: 0;
   color: var(--text-conversation-primary);

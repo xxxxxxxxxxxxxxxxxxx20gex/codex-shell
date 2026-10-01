@@ -236,7 +236,7 @@ Radii:
 - Timestamps and duration sit at least 6px away from message content.
 - File changes appear once at the end of the turn, grouped by file with semantic status color.
 - Streaming indicators must not resize the message column or steal focus.
-- Fenced Markdown code renders as one bounded structure with a language header (`纯文本` when unspecified), a copy action, and a monospaced scrollable body; inline code remains inline.
+- Fenced Markdown code renders as one bounded structure with a language header (`纯文本` when unspecified), a copy action, and a monospaced scrollable body; inline code remains inline. Short blocks fit their content, while long lines stay within the reply column and scroll inside the block. The compact code header is 28px high with 11px metadata text; its copy control is 24px with a 14px icon.
 
 ## Composer
 
