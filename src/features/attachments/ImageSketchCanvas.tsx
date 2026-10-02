@@ -26,6 +26,7 @@ export function ImageSketchCanvas({ source, name, onCancel, onSave }: Props) {
   const redoRef = useRef<ImageData[]>([]);
   const baseRef = useRef<ImageData | null>(null);
   const startRef = useRef<Point | null>(null);
+  const brushRef = useRef<{ last: Point; midpoint: Point; moved: boolean } | null>(null);
   const [tool, setTool] = useState<SketchTool>("pen");
   const [color, setColor] = useState("#b8d957");
   const [size, setSize] = useState(6);
@@ -86,7 +87,7 @@ export function ImageSketchCanvas({ source, name, onCancel, onSave }: Props) {
     if (file) readImageFile(file);
   }
 
-  const pointFromEvent = (event: PointerEvent<HTMLCanvasElement>): Point => {
+  const pointFromEvent = (event: Pick<PointerEvent<HTMLCanvasElement>, "clientX" | "clientY">): Point => {
     const canvas = canvasRef.current!;
     const rect = canvas.getBoundingClientRect();
     return { x: (event.clientX - rect.left) * canvas.width / rect.width, y: (event.clientY - rect.top) * canvas.height / rect.height };
@@ -99,6 +100,7 @@ export function ImageSketchCanvas({ source, name, onCancel, onSave }: Props) {
     redoRef.current = [];
     refreshHistory((value) => value + 1);
     startRef.current = pointFromEvent(event);
+    brushRef.current = tool === "pen" || tool === "eraser" ? { last: startRef.current, midpoint: startRef.current, moved: false } : null;
     const context = canvasRef.current!.getContext("2d")!;
     context.beginPath();
     context.moveTo(startRef.current.x, startRef.current.y);
@@ -109,6 +111,20 @@ export function ImageSketchCanvas({ source, name, onCancel, onSave }: Props) {
     context.lineJoin = "round";
   }
 
+  function appendBrushPoint(point: Point) {
+    const brush = brushRef.current;
+    const context = canvasRef.current?.getContext("2d");
+    if (!brush || !context || (point.x === brush.last.x && point.y === brush.last.y)) return;
+    const midpoint = { x: (brush.last.x + point.x) / 2, y: (brush.last.y + point.y) / 2 };
+    context.beginPath();
+    context.moveTo(brush.midpoint.x, brush.midpoint.y);
+    context.quadraticCurveTo(brush.last.x, brush.last.y, midpoint.x, midpoint.y);
+    context.stroke();
+    brush.last = point;
+    brush.midpoint = midpoint;
+    brush.moved = true;
+  }
+
   function move(event: PointerEvent<HTMLCanvasElement>) {
     const start = startRef.current;
     const canvas = canvasRef.current;
@@ -116,8 +132,9 @@ export function ImageSketchCanvas({ source, name, onCancel, onSave }: Props) {
     const context = canvas.getContext("2d")!;
     const point = pointFromEvent(event);
     if (tool === "pen" || tool === "eraser") {
-      context.lineTo(point.x, point.y);
-      context.stroke();
+      const samples = event.nativeEvent.getCoalescedEvents?.();
+      if (samples?.length) samples.forEach((sample) => appendBrushPoint(pointFromEvent(sample)));
+      else appendBrushPoint(point);
       return;
     }
     const previous = baseRef.current;
@@ -137,6 +154,21 @@ export function ImageSketchCanvas({ source, name, onCancel, onSave }: Props) {
     const canvas = canvasRef.current;
     const context = canvas?.getContext("2d");
     if (!context || !canvas) return;
+    const brush = brushRef.current;
+    if (commit && brush) {
+      appendBrushPoint(pointFromEvent(event));
+      context.beginPath();
+      if (brush.moved) {
+        context.moveTo(brush.midpoint.x, brush.midpoint.y);
+        context.lineTo(brush.last.x, brush.last.y);
+        context.stroke();
+      } else {
+        context.arc(brush.last.x, brush.last.y, size / 2, 0, Math.PI * 2);
+        context.fillStyle = tool === "eraser" ? "#000" : color;
+        context.fill();
+      }
+    }
+    brushRef.current = null;
     context.globalCompositeOperation = "source-over";
     if (commit) {
       historyRef.current.push(context.getImageData(0, 0, canvas.width, canvas.height));

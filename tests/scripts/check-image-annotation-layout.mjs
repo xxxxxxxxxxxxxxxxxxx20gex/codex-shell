@@ -6,7 +6,7 @@ import { pathToFileURL } from "node:url";
 const { chromium } = await import(pathToFileURL(process.argv[2]).href);
 const browser = await chromium.launch({ executablePath: process.argv[3], headless: true });
 try {
-  const page = await browser.newPage();
+  const page = await browser.newPage({ deviceScaleFactor: 1.5 });
   const errors = [];
   page.on("pageerror", (error) => { errors.push(error.message); console.error(error.message); });
   await page.route("**/image-check", (route) => route.fulfill({ contentType: "text/html", body: `
@@ -61,17 +61,59 @@ try {
     await slider.focus();
     await page.keyboard.press("End");
     assert.equal(await slider.inputValue(), "32");
-    assert.equal(await marker.evaluate((element) => getComputedStyle(element.firstElementChild).width), "32px");
+    await page.waitForFunction(() => document.querySelector(".image-sketch-size-marker").style.getPropertyValue("--brush-size") === "32px");
+    assert.equal(await marker.evaluate((element) => getComputedStyle(element.firstElementChild).width), "24px");
     await page.screenshot({ path: join(tmpdir(), `cs-sketch-size-max-${width}x${height}.png`) });
     await page.keyboard.press("Home");
     assert.equal(await slider.inputValue(), "2");
-    assert.equal(await marker.evaluate((element) => getComputedStyle(element.firstElementChild).width), "2px");
+    await page.waitForFunction(() => document.querySelector(".image-sketch-size-marker").style.getPropertyValue("--brush-size") === "2px");
+    assert.equal(await marker.evaluate((element) => getComputedStyle(element.firstElementChild).width), "6px");
     const railRect = await page.locator(".image-sketch-size-rail").boundingBox();
     const dialogRect = await page.locator(".attachment-preview-dialog").boundingBox();
     assert(railRect.x >= dialogRect.x && railRect.x + railRect.width <= dialogRect.x + dialogRect.width);
     assert(railRect.y >= dialogRect.y && railRect.y + railRect.height <= dialogRect.y + dialogRect.height);
     assert(await page.locator(".image-sketch-size-rail").evaluate((element) => getComputedStyle(element).outlineWidth) === "2px");
     await page.screenshot({ path: join(tmpdir(), `cs-sketch-size-${width}x${height}.png`) });
+    await slider.fill("18");
+    const canvasRect = await page.locator(".image-sketch-canvas-wrap canvas").boundingBox();
+    assert(Math.abs(canvasRect.width / canvasRect.height - 1.5) < .01, `Canvas aspect ratio changed: ${canvasRect.width}x${canvasRect.height}`);
+    const startX = canvasRect.x + canvasRect.width * .25;
+    const startY = canvasRect.y + canvasRect.height * .5;
+    await page.mouse.move(startX, startY);
+    await page.mouse.down();
+    for (let step = 1; step <= 40; step++) {
+      await page.mouse.move(startX + step * canvasRect.width * .012, startY - Math.sin(step / 7) * canvasRect.height * .14);
+    }
+    await page.mouse.up();
+    const strokePixels = await page.locator(".image-sketch-canvas-wrap canvas").evaluate((canvas) => {
+      const pixels = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
+      let solid = 0;
+      let blended = 0;
+      for (let index = 0; index < pixels.length; index += 4) {
+        if (pixels[index + 1] === 217) solid++;
+        else if (pixels[index + 1] > 0 && pixels[index + 1] < 217) blended++;
+      }
+      return { solid, blended };
+    });
+    assert(strokePixels.solid > 100 && strokePixels.blended > 100, `Missing smooth stroke pixels: ${JSON.stringify(strokePixels)}`);
+    await page.screenshot({ path: join(tmpdir(), `cs-sketch-stroke-${width}x${height}.png`) });
+    const strokeCenter = async () => page.locator(".image-sketch-canvas-wrap canvas").evaluate((canvas, position) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.round((position.x - rect.left) * canvas.width / rect.width);
+      const y = Math.round((position.y - rect.top) * canvas.height / rect.height);
+      return Array.from(canvas.getContext("2d").getImageData(x, y, 1, 1).data);
+    }, { x: startX, y: startY });
+    assert((await strokeCenter())[1] > 0, "Stroke did not cover its starting point");
+    await page.getByRole("button", { name: "撤销" }).click();
+    assert.equal((await strokeCenter())[1], 0, "Undo did not restore the canvas");
+    await page.getByRole("button", { name: "重做" }).click();
+    assert((await strokeCenter())[1] > 0, "Redo did not restore the stroke");
+    await page.getByRole("button", { name: "橡皮擦" }).click();
+    await page.mouse.click(startX, startY);
+    assert.equal((await strokeCenter())[3], 0, "Single-click eraser did not clear the stroke");
+    await page.getByRole("button", { name: "画笔" }).click();
+    await page.mouse.click(startX, startY);
+    assert((await strokeCenter())[1] > 0, "Single-click pen did not draw a round dot");
     await page.getByLabel("取消编辑").click();
     await page.keyboard.press('Escape');
     assert.equal(await page.getByRole('dialog').count(), 0);
