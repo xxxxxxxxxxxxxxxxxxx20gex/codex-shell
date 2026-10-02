@@ -65,7 +65,7 @@ const initialPersonalization: PersonalizationSettings = {
   theme: "dark",
 };
 
-export function useAppController() {
+export function useAppController(options: { onOpenSketch?: () => void } = {}) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [preferencesSection, setPreferencesSection] = useState<PreferencesSection>("personalization");
@@ -285,6 +285,7 @@ export function useAppController() {
     try {
       if (id === "skills") { setCommandPanel("skills"); return; }
       if (id === "mcp") { setCommandPanel("mcp"); return; }
+      if (id === "绘图") { options.onOpenSketch?.(); return; }
       if (id === "review") {
         if (session.running) throw new Error("当前任务完成后才能启动代码审查");
         if (!args) { setCommandPanel("review"); return; }

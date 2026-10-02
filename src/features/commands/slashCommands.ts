@@ -3,12 +3,13 @@ import {
   ListChecks,
   Plug,
   ShieldCheck,
+  Pencil,
   Sparkles,
   Target,
   type LucideIcon,
 } from "lucide-react";
 
-export type SlashCommandId = "skills" | "mcp" | "compact" | "plan" | "goal" | "review";
+export type SlashCommandId = "skills" | "mcp" | "compact" | "plan" | "goal" | "review" | "绘图";
 
 export interface SlashCommandDefinition {
   id: SlashCommandId;
@@ -26,6 +27,7 @@ const SLASH_COMMANDS: SlashCommandDefinition[] = [
   { id: "plan", label: "计划模式", description: "让 Codex 先分析需求并制定执行计划", icon: ListChecks, blockedWhileRunning: true },
   { id: "goal", label: "目标", description: "定义目标并让 Codex 持续推进", icon: Target, blockedWhileRunning: true },
   { id: "review", label: "代码审查", description: "使用 app-server 原生 Reviewer 审查修改", icon: ShieldCheck, requiresThread: true, blockedWhileRunning: true },
+  { id: "绘图", label: "绘制草图", description: "打开画布绘制草图并作为图片附件发送", icon: Pencil },
 ];
 
 export function activeSlashCommandQuery(text: string) {
@@ -41,7 +43,7 @@ export function matchingSlashCommands(query: string) {
 }
 
 export function parseSlashCommand(text: string) {
-  const match = /^\/(skills|mcp|compact|plan|goal|review)(?:\s+(.*))?$/i.exec(text.trim());
+  const match = /^\/(skills|mcp|compact|plan|goal|review|绘图)(?:\s+(.*))?$/i.exec(text.trim());
   if (!match) return null;
   return { id: match[1].toLocaleLowerCase() as SlashCommandId, args: match[2]?.trim() ?? "" };
 }
