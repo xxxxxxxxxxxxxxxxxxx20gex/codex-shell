@@ -257,7 +257,7 @@ Radii:
 - The drawing toolbar is a small floating capsule centered near the top of the canvas. It uses shared 28px icon buttons, one visible action label for adding an image, and a restrained local selected state for the active tool.
 - Brush size is controlled by a vertical slider on the left edge of the canvas. Color choices sit in a compact bottom palette with circular swatches and one custom-color control. These controls stay over the canvas so they do not create a second panel or reduce the working area with a full-width toolbar.
 - Close remains in the upper-left header action slot; cancel and the single primary save action remain right-aligned in the footer. The save action is the only filled action in that local group.
-- The canvas uses the existing surface and border tokens for the checkerboard transparency treatment, popover background, focus ring, and shadow. Feature CSS must not introduce a new global color, radius, or control scale for drawing tools.
+- The canvas uses the existing canvas surface as a uniform black working field; popover background, focus ring, and shadow continue to use semantic tokens. Feature CSS must not introduce a new global color, radius, or control scale for drawing tools.
 - Tooltips and accessible names are required for icon-only tools, swatches, the size slider, and custom color input. Focus must remain visible, and the layout must fit at 1440x900, 1280x780, 1024x720, and 900x700 without horizontal overflow. Reduced motion keeps the controls static.
 
 ## Responsive Behavior

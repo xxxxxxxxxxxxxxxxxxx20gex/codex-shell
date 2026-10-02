@@ -182,7 +182,7 @@ export function ImageSketchCanvas({ source, name, onCancel, onSave }: Props) {
           <button type="button" onClick={undo} disabled={historyRef.current.length <= 1} aria-label="撤销" title="撤销"><Undo2 /></button>
           <button type="button" onClick={redo} disabled={redoRef.current.length === 0} aria-label="重做" title="重做"><Redo2 /></button>
         </div>
-        <label className="image-sketch-size-rail" title={`笔刷大小 ${size}px`}><span aria-hidden="true" /><input aria-label="笔刷大小" type="range" min="2" max="32" value={size} onChange={(event) => setSize(Number(event.target.value))} /></label>
+        <label className="image-sketch-size-rail" title={`笔刷大小 ${size}px`}><input aria-label="笔刷大小" type="range" min="2" max="32" value={size} onChange={(event) => setSize(Number(event.target.value))} /></label>
         <div className="image-sketch-palette" aria-label="笔刷颜色">
           <Palette aria-hidden="true" />
           {palette.map((value) => <button key={value} type="button" className={color === value ? "active" : ""} style={{ "--swatch": value } as CSSProperties} onClick={() => setColor(value)} aria-label={`选择颜色 ${value}`} title={`颜色 ${value}`} />)}
