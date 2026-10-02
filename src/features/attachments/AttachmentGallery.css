@@ -18,7 +18,7 @@
 .attachment-loading { display: inline-block; width: 15px; height: 15px; margin: auto; border: 2px solid var(--border-strong); border-top-color: var(--accent-action); border-radius: 50%; animation: attachment-spin .75s linear infinite; }
 .attachment-preview-layer { position: fixed; z-index: 80; inset: 0; display: grid; place-items: center; padding: 28px; }
 .attachment-preview-scrim { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: rgba(5,5,4,.78); cursor: default; backdrop-filter: blur(5px); }
-.attachment-preview-dialog { position: relative; z-index: 1; display: grid; width: min(920px, 92vw); height: min(720px, 88vh); grid-template-rows: auto minmax(0,1fr); overflow: hidden; border: 1px solid var(--border-default); border-radius: var(--radius-panel); background: var(--surface-panel); box-shadow: var(--shadow-popover); }
+.attachment-preview-dialog { position: relative; z-index: 1; display: grid; width: min(1120px, 94vw); height: min(820px, 92vh); grid-template-rows: auto minmax(0,1fr); overflow: hidden; border: 1px solid var(--border-default); border-radius: var(--radius-panel); background: var(--surface-panel); box-shadow: var(--shadow-popover); }
 .attachment-preview-dialog.is-direct-sketch { grid-template-rows: minmax(0, 1fr); }
 .attachment-preview-dialog.is-direct-sketch > header { display: none; }
 .attachment-preview-dialog header { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 13px; border-bottom: 1px solid var(--border-subtle); }
@@ -79,7 +79,7 @@
 .image-sketch-toolbar button.active { color: var(--accent-action); border-radius: 50%; background: var(--surface-selected); box-shadow: inset 0 0 0 1px var(--border-strong); }
 .image-sketch-icon svg, .image-sketch-toolbar svg, .image-sketch-footer svg, .image-sketch-palette > svg { width: 16px; height: 16px; stroke-width: 1.75; }
 .image-sketch-workspace { display: grid; min-height: 0; }
-.image-sketch-canvas-wrap { position: relative; display: grid; min-width: 0; min-height: 0; place-items: center; overflow: auto; padding: 56px 56px 64px; background: var(--surface-canvas); }
+.image-sketch-canvas-wrap { position: relative; display: grid; min-width: 0; min-height: 0; place-items: center; overflow: auto; padding: 44px 48px 52px; background: var(--surface-canvas); }
 .image-sketch-canvas-wrap canvas { display: block; max-width: 100%; max-height: 100%; box-shadow: 0 8px 28px rgb(0 0 0 / 35%); cursor: crosshair; touch-action: none; }
 .image-sketch-toolbar { position: absolute; z-index: 2; top: 12px; left: 50%; display: flex; align-items: center; max-width: calc(100% - 32px); gap: 4px; padding: 4px 6px; overflow-x: auto; border: 1px solid var(--border-default); border-radius: 999px; background: color-mix(in srgb, var(--surface-panel) 94%, transparent); box-shadow: var(--shadow-popover); transform: translateX(-50%); }
 .image-sketch-divider { width: 1px; height: 20px; flex: 0 0 auto; margin: 0 4px; background: var(--border-subtle); }
@@ -107,7 +107,7 @@
 .image-sketch-footer .image-sketch-save { display: inline-flex; align-items: center; gap: 6px; color: var(--ui-accent-ink); border-color: var(--accent-action); background: var(--accent-action); }
 .image-sketch-footer button:focus-visible, .image-sketch-toolbar button:focus-visible, .image-sketch-icon:focus-visible, .image-sketch-palette button:focus-visible, .image-sketch-custom-color:focus-within { outline: 2px solid var(--accent-info); outline-offset: 2px; }
 @media (max-width: 700px) {
-  .image-sketch-canvas-wrap { padding: 52px 44px 58px; }
+  .image-sketch-canvas-wrap { padding: 44px 40px 52px; }
   .image-sketch-paste-hint { display: none; }
   .image-sketch-size-rail { left: 8px; }
   .image-sketch-palette { gap: 6px; }
