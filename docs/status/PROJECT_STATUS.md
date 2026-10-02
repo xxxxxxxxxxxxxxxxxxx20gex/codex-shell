@@ -7,7 +7,7 @@
 
 ## 跨模块当前快照
 
-- 图片批注入口已贯通历史附件、生成/工具图片与项目文件预览，统一回填主会话草稿；剪贴板图片在 Tauri 边界限制格式和单张大小后保存到独立 CODEX_HOME，再以原生 `localImage` 输入发送。终端空轮询不进入时间线，真实终端输入收纳到折叠过程组。验证边界见时间线、客户端和测试状态。
+- 图片附件已贯通历史附件、生成/工具图片与项目文件预览，支持坐标批注和本地草图编辑原型；草图导出复用 Tauri 附件保存与原生 `localImage` 输入，托管 `fileId` 图片仍只读。剪贴板图片在 Tauri 边界限制格式和单张大小后保存到独立 CODEX_HOME，再以原生 `localImage` 输入发送。终端空轮询不进入时间线，真实终端输入收纳到折叠过程组。验证边界见时间线、客户端和测试状态。
 
 - 产品使用 Tauri 2、React、TypeScript 与 Rust 构建，以原版 `codex app-server` 为唯一执行核心，通过 stdio JSON-RPC 通信；公开 `v0.1.9` 已发布安装器、minisign 签名和 updater manifest，使用 0.154.0-alpha.6.2。main 的 Runtime 及生成协议已同步到 `codex-cli 0.159.2`，通过同源兼容门禁与隔离升级探针；具体能力和限制见 [协议状态](protocol-status.md)。升级遵循 [ADR-003](../decisions/ADR-003-compatible-runtime-updates.md)，历史迁移使用 [ADR-005](../decisions/ADR-005-native-history-migration.md) 的原生方案。
 - 核心工作流已形成闭环：用户可以选择项目、创建和恢复多个 Session、发送文本/文件/图片、查看结构化执行时间线、处理审批、审查实时与历史 Diff，并按完成 Turn 分叉会话。
