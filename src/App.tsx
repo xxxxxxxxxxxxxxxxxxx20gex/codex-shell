@@ -224,10 +224,10 @@ function App() {
   return (
     <ImageAnnotationContext.Provider value={(image, text) => {
       setImages((current) => current.some((item) => (item.path ?? item.url ?? item.fileId) === (image.path ?? image.url ?? image.fileId)) ? current : [...current, image]);
-      setDraft((current) => current ? `${current}\n\n${text}` : text);
+      if (text) setDraft((current) => current ? `${current}\n\n${text}` : text);
       setMainView("conversation");
       setSideChatMaximized(false);
-      setCommandNotice("图片与批注已加入草稿，请确认后发送。");
+      setCommandNotice(text ? "图片与批注已加入草稿，请确认后发送。" : "草图已加入附件，请确认后发送。");
     }}>
     <main className="app-shell" data-theme={personalization.theme}>
       {conversationImage && <AttachmentPreviewDialog key={conversationImage} target={{ kind: "image", name: conversationImage.split(/[\\/]/).pop() || "图片", path: conversationImage }} readFile={session.readWorkspaceFile} onClose={() => setConversationImage(null)} onOpenPath={openResourceInExplorer} onOpenInExplorer={openResourceInExplorer} />}

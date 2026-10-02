@@ -7,6 +7,8 @@
 - 下一步：补真实系统凭据、多渠道对话、第三方 MCP OAuth，以及干净 Windows 用户环境安装和升级验收。
 - 最后更新：2026-10-03
 
+2026-10-03，草图保存不再自动写入固定文字：附件/输入定向 16 项 Vitest、TypeScript、ESLint、production build、Knip、Cargo check 和 Debug 构建通过；Debug Runtime manifest 为 `codex-cli 0.159.2`。全量 Vitest 为 71 个文件中 70 个通过、399 项中 398 项通过，唯一失败仍为加号菜单数量旧断言。真实 WebView2 草图保存尚未人工验收。
+
 2026-10-03，失败 Turn 与顶部错误提示去重：`useThreadController` 定向 28 项 Vitest、TypeScript、ESLint、production build、Knip、Cargo check 和 Debug 构建通过；Debug Runtime manifest 校验为 `codex-cli 0.159.2`。全量 Vitest 为 71 个文件中 70 个通过、397 项中 396 项通过，唯一失败仍为上述加号菜单旧断言。未做真实 WebView2 失败回合人工验收。
 
 2026-10-03，修复 Core `file://` 图片路径的过程资源与活动预览；相关 18 项 Vitest、TypeScript、ESLint、production build、Knip、Cargo check、Debug 构建及 Runtime manifest 校验通过。全量 Vitest 为 71 个文件中 70 个通过、396 项中 395 项通过；唯一失败为上述加号菜单旧断言，与本次资源路径改动无关。首次 Cargo check 因运行中的旧 Debug 程序占用构建产物报“拒绝访问”，Debug 脚本停止本项目旧进程并构建后重跑通过。未做真实 WebView2 图片预览人工验收。

@@ -1,9 +1,13 @@
 // @vitest-environment happy-dom
 
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { invoke } from "@tauri-apps/api/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AttachmentGallery, ImageAttachmentPreview, AttachmentPreviewDialog } from "./AttachmentGallery";
 import { ImageAnnotationContext } from "./ImageAnnotationContext";
+
+vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn() }));
+vi.mock("./ImageSketchCanvas", () => ({ ImageSketchCanvas: ({ onSave }: { onSave: (dataUrl: string) => void }) => <button onClick={() => onSave("data:image/png;base64,AA==")}>保存草图</button> }));
 
 afterEach(cleanup);
 
@@ -45,6 +49,30 @@ describe("AttachmentGallery", () => {
     render(<ImageAnnotationContext.Provider value={vi.fn()}><AttachmentPreviewDialog sketchMode target={{ kind: "image", name: "草图.png", url: "" }} readFile={vi.fn()} onClose={onClose} /></ImageAnnotationContext.Provider>);
     fireEvent.click(screen.getAllByLabelText("关闭附件预览")[1]);
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+  it("adds a saved sketch as an image without inserting default prompt text", async () => {
+    const apply = vi.fn();
+    const onClose = vi.fn();
+    vi.mocked(invoke).mockResolvedValueOnce("C:/work/sketch.png");
+    render(<ImageAnnotationContext.Provider value={apply}><AttachmentPreviewDialog sketchMode target={{ kind: "image", name: "草图.png", url: "data:image/png;base64,AA==" }} readFile={vi.fn()} onClose={onClose} /></ImageAnnotationContext.Provider>);
+
+    fireEvent.click(screen.getByText("保存草图"));
+
+    await waitFor(() => expect(apply).toHaveBeenCalledWith({ name: "草图-草图.png", path: "C:/work/sketch.png" }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps a failed sketch save out of the draft", async () => {
+    const apply = vi.fn();
+    const onClose = vi.fn();
+    vi.mocked(invoke).mockRejectedValueOnce(new Error("保存失败"));
+    render(<ImageAnnotationContext.Provider value={apply}><AttachmentPreviewDialog sketchMode target={{ kind: "image", name: "草图.png", url: "data:image/png;base64,AA==" }} readFile={vi.fn()} onClose={onClose} /></ImageAnnotationContext.Provider>);
+
+    fireEvent.click(screen.getByText("保存草图"));
+
+    expect(await screen.findByText("保存失败")).toBeTruthy();
+    expect(apply).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
   });
   it("shows file cards and previews text through the app-server file reader", async () => {
     const readFile = vi.fn().mockResolvedValue(btoa("hello from file"));

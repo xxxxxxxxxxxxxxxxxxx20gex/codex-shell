@@ -120,7 +120,7 @@ export function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath,
     try {
       setSketchError("");
       const path = await invoke<string>("save_pasted_image", { dataUrl });
-      applyAnnotation({ name: `${target.name.replace(/\.[^.]+$/, "")}-草图.png`, path }, "已根据草图标注，请结合图片内容处理。");
+      applyAnnotation({ name: `${target.name.replace(/\.[^.]+$/, "")}-草图.png`, path });
       onClose();
     } catch (error) {
       setSketchError(errorMessage(error));
