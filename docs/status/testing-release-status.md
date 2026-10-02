@@ -5,7 +5,7 @@
 - 当前接口：`pnpm test:quality` 依次执行 TypeScript、ESLint、Vitest、`pnpm test:amap`、production build、Knip、`pnpm rust:check` 和 diff 检查。协议、Runtime、四视口布局和 Skill 专项验证独立运行，入口见 [测试脚本说明](../../tests/scripts/README.md) 与 `package.json`。
 - 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；Vite 主 chunk 超过 500 kB；`cargo fmt --check` 尚未纳入门禁。
 - 下一步：补真实系统凭据、多渠道对话、第三方 MCP OAuth，以及干净 Windows 用户环境安装和升级验收。
-- 最后更新：2026-10-01
+- 最后更新：2026-10-02
 
 2026-10-01，新增 Markdown 代码块四尺寸 Edge 布局探针，验证短代码收拢、长行内部滚动、复制按钮焦点和截图；对应模块事实见 [任务时间线](timeline-status.md)。
 
@@ -15,7 +15,7 @@
 
 ## 当前验证基线
 
-2026-10-01，0.159.2 升级后审查修复通过 `pnpm test:quality`；最后补充取消期间会话互斥后重跑前端测试、TypeScript、ESLint 和 Debug 构建。最终基线：71 个文件 / 388 项前端测试、34 项高德离线测试、生产构建、Knip、Cargo check、Rust 51 项单测（1 项交互测试忽略）、严格 Clippy 和 diff 检查。新增回归覆盖侧聊分页分叉、回退通知去重及重置后迟到响应、已提交回退的刷新失败、入队确认前撤回、删除失败／已消费状态、取消期间会话互斥及原生队列恢复。已删除旧 Runtime 的本地队列发送和伪能力检测分支。本轮四尺寸 Edge Composer／队列检查通过；附件与托管图片四尺寸验证沿用升级时证据。
+2026-10-02，0.159.2 升级后审查修复通过 `pnpm test:quality`；最终基线：71 个文件 / 391 项前端测试、34 项高德离线测试、生产构建、Knip、Cargo check、Rust 51 项单测（1 项交互测试忽略）、严格 Clippy 和 diff 检查。新增回归覆盖侧聊分页分叉、回退通知去重及重置后迟到响应、已提交回退的刷新失败、入队确认前撤回、删除失败／已消费状态、取消期间会话互斥、原生队列恢复和清理 Thread 后的迟到队列响应。已删除旧 Runtime 的本地队列发送和伪能力检测分支。本轮四尺寸 Edge Composer／队列检查通过；附件与托管图片四尺寸验证沿用升级时证据。
 
 0.159.2 同源 Runtime 兼容门禁、隔离设置／队列协议探针、新旧历史升级探针、Goal 和内置 rg 探针通过。旧版 fixture 验证官方 CLI 与启动后台迁移，随后测试恢复、分页、回退替换、普通分叉、分页临时侧聊分叉及实际发送和冷恢复；所有模型请求均到本机模拟 Responses 网关，不接触真实用户数据或收费模型。
 

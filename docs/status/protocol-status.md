@@ -8,7 +8,7 @@
 - 实验边界：为保留 legacy 会话编辑能力，在 Rust 启动参数中开启官方 `background_paginated_rollout_migration`；参数单测、CLI 迁移和启动后台迁移均有真实隔离证据。数据格式与回退边界见 [ADR-005](../decisions/ADR-005-native-history-migration.md)。
 - 已知问题：`turn/settings/update` 默认仍受 `step_model_switching` 限制，不能承诺当前运行回合立即换模；Core 会为 CS 主动开启的迁移实验参数发送一次开发功能提示，Shell 精确过滤该已知提示，其他 warning 仍进入诊断；AST 门禁只覆盖字面量调用，不能替代真实协议探针。无 CI 门禁。
 - 产品边界：新 `ThreadAttachment` 是 JSON 元数据接口，本轮不替换本地图片存储，也不假定 Core 会管理图片文件回收。账户、Gateway OAuth、Connector、插件市场及实时音频不接入。
-- 验证证据：2026-10-01；同源暂存兼容门禁、`runtime:probe-protocol`、`runtime:probe-upgrade`（旧内核生成 fixture、官方 CLI／后台迁移、新旧历史恢复、分页、回退替换、普通分叉、临时侧聊分叉与发送、归档、队列及通知）通过。全部模型请求仅到本机模拟 Responses 网关，无真实账号或用户 Session；完整基线见 [测试与发布](testing-release-status.md)。
+- 验证证据：2026-10-02；同源暂存兼容门禁、`runtime:probe-protocol`、`runtime:probe-upgrade`（旧内核生成 fixture、官方 CLI／后台迁移、新旧历史恢复、分页、回退替换、普通分叉、临时侧聊分叉与发送、归档、队列及通知）通过。全部模型请求仅到本机模拟 Responses 网关，无真实账号或用户 Session；完整基线见 [测试与发布](testing-release-status.md)。
 - 下一步：真实 WebView2 的历史编辑与大型旧库迁移验收，再单独评估运行回合模型切换。
 - 相关决策：[ADR-001](../decisions/ADR-001-unmodified-codex-app-server.md)、[ADR-003](../decisions/ADR-003-compatible-runtime-updates.md)。
-- 最后更新：2026-10-01
+- 最后更新：2026-10-02

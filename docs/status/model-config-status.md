@@ -12,5 +12,5 @@
 - 已知问题：仅支持单进程单渠道，不提供并行多 Provider、自动切换或渠道级代理。/models 成功不证明 Responses 对话或工具可用；自定义模型的可用性由实际服务端决定。外部修改配置触发冲突后需重新启动应用读取最新配置。model/list 不公开 verbosity 与 reasoning summary 的完整能力。
 - 下一步：人工验证真实系统凭据与多渠道对话切换；可选最小对话探测另行评估，不自动消耗额度。
 - 相关决策：[ADR-004](../decisions/ADR-004-model-provider-channels.md)。
-- 验证证据：2026-10-01；快速切换回归覆盖目标模型支持和不支持 `priority` 两种路径；提示回归只过滤当前模型的省略通知。模型／Runtime 定向测试 25 项、全量前端 370 项、ESLint、TypeScript、Cargo check 和 Debug 构建通过。真实模型请求尚未复测；四视口布局和真实系统凭据仍按 [测试与发布](testing-release-status.md) 的边界执行。
-- 最后更新：2026-10-01
+- 验证证据：2026-10-02；快速切换回归覆盖目标模型支持和不支持 `priority` 两种路径；提示回归只过滤当前模型的省略通知。模型／Runtime 定向测试 25 项、全量前端 391 项、ESLint、TypeScript、Cargo check 和 Debug 构建通过。真实模型请求尚未复测；四视口布局和真实系统凭据仍按 [测试与发布](testing-release-status.md) 的边界执行。
+- 最后更新：2026-10-02

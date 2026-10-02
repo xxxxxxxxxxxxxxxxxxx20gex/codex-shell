@@ -16,5 +16,5 @@
 - 交互校正：Windows Sandbox 未配置或需要更新时，运行时提示会明确引导到“设置 → 运行环境 → 使用管理员权限配置”，不再指向不存在的右侧状态页。
 - 提示跳转：运行提示携带明确目标；Windows Sandbox 配置与结果进入“运行环境”，其他 app-server、配置、Guardian、模型与 MCP 提示进入“诊断”，不再统一跳到无关的运行环境页面。
 - 相关决策：[ADR-001：使用原版 Codex app-server](../decisions/ADR-001-unmodified-codex-app-server.md)、[ADR-002：隔离运行数据与凭据](../decisions/ADR-002-isolated-runtime-data.md)、[ADR-004：以厂商分组的渠道承载模型路由](../decisions/ADR-004-model-provider-channels.md)。
-- 验证证据：2026-10-01；0.159.2 同源哈希及兼容门禁、隔离新旧会话升级探针、设置／队列协议探针、Goal 和内置 rg 探针通过；后台迁移参数通过 Rust 单测。未覆盖真实模型、完整用户旧库、elevated Sandbox 或干净机器。完整基线见 [测试与发布](testing-release-status.md)。
-- 最后更新：2026-10-01
+- 验证证据：2026-10-02；0.159.2 同源哈希及兼容门禁、隔离新旧会话升级探针、设置／队列协议探针、Goal 和内置 rg 探针通过；后台迁移参数通过 Rust 单测。未覆盖真实模型、完整用户旧库、elevated Sandbox 或干净机器。完整基线见 [测试与发布](testing-release-status.md)。
+- 最后更新：2026-10-02

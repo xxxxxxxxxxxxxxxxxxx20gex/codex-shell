@@ -7,6 +7,6 @@
 - 已知问题：粘贴图片为保证历史 Session 路径仍可读取而持续保存在 CODEX_HOME，目前没有自动清理入口。尚未实现自动断线重连和请求级取消。远程目录、Account、Plugin/Marketplace 管理、Hooks、Realtime 和 Feedback 不属于 CS 产品范围。
 - 升级适配：0.159.2 删除的 rollback RPC 已清理；普通分叉使用 metadata-only 响应后分页读取；revert 复用响应及 cursor，并合并本地主动回退与通知加载。分页历史 hydration 已独立为 Core 适配模块；删除本地队列执行兜底及按客户端函数存在性判断 Runtime 能力的分支，Thread 清理也会使原生队列在途结果失效；网络失败保持可见，legacy 历史恢复保留。图片输入 `fileId` 从历史及队列恢复到草稿后仍按原生格式发送，不请求托管文件下载、不暴露新账户能力。
 - 下一步：优先增加断线后的可控恢复，保持 Skills 和 MCP 的薄管理边界。
-- 验证证据：2026-09-16；Rust 定向测试覆盖受支持格式、未知 MIME、无效 Base64 和编码长度上限；前端输入测试覆盖持久化本地图片路径转为 `localImage`，MCP 交互测试覆盖 userVerification 的明确拒绝响应。订阅测试继续覆盖 Thread settings/Goal 权威通知、主/侧聊天隔离和过程事件过滤。
+- 验证证据：2026-10-02；Rust 定向测试覆盖受支持格式、未知 MIME、无效 Base64 和编码长度上限；前端输入测试覆盖持久化本地图片路径转为 `localImage`，MCP 交互测试覆盖 userVerification 的明确拒绝响应。订阅测试继续覆盖 Thread settings/Goal 权威通知、主/侧聊天隔离和过程事件过滤；队列清理代际和 Core 分页 hydration 也有回归覆盖。
 - 相关决策：[ADR-001：使用原版 Codex app-server](../decisions/ADR-001-unmodified-codex-app-server.md)。
-- 最后更新：2026-10-01
+- 最后更新：2026-10-02
