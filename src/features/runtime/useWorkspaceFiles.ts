@@ -3,6 +3,7 @@ import type { FuzzyFileSearchResult } from "../../generated/app-server/FuzzyFile
 import type { FsReadDirectoryEntry } from "../../generated/app-server/v2/FsReadDirectoryEntry";
 import type { FsChangedNotification } from "../../generated/app-server/v2/FsChangedNotification";
 import type { AppServerClient } from "./appServerClient";
+import { resolveLinkedProjectPath } from "../workspaces/workspaceState";
 
 type EnsureConnected = () => Promise<AppServerClient>;
 export type DisposeWorkspaceWatch = () => void | Promise<void>;
@@ -55,9 +56,7 @@ export function useWorkspaceFiles(
   }, [ensureConnected]);
 
   const pathExists = useCallback(async (path: string) => {
-    const normalized = /^(?:[a-zA-Z]:[\\/]|\\\\)/.test(path)
-      ? path
-      : projectCwd ? `${projectCwd.replace(/[\\/]+$/, "")}${projectCwd.includes("\\") ? "\\" : "/"}${path.replace(/^[\\/]+/, "")}` : null;
+    const normalized = resolveLinkedProjectPath(projectCwd ?? "", path);
     if (!normalized) return false;
     try {
       const client = await ensureConnected();
