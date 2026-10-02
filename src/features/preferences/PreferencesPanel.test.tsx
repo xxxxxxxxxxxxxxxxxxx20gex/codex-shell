@@ -79,6 +79,17 @@ describe("PreferencesPanel", () => {
     }));
   });
 
+  it("keeps focus in the prompt textarea while its draft rerenders", () => {
+    const props = panelProps();
+    render(<PreferencesPanel {...props} onSave={async () => undefined} />);
+    const textarea = screen.getByPlaceholderText(/回答时优先给出结论/) as HTMLTextAreaElement;
+    textarea.focus();
+    fireEvent.change(textarea, { target: { value: "第一段" } });
+    expect(document.activeElement).toBe(textarea);
+    fireEvent.change(textarea, { target: { value: "第一段\n第二段" } });
+    expect(document.activeElement).toBe(textarea);
+  });
+
   it("switches appearance without mixing model settings into the page", () => {
     render(<PreferencesPanel {...panelProps()} onSave={async () => undefined} />);
 

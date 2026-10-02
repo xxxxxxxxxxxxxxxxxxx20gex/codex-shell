@@ -56,12 +56,14 @@ export function PreferencesPanel({
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState("");
   const dialogRef = useRef<HTMLElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     const previousFocus = document.activeElement as HTMLElement | null;
     dialogRef.current?.focus();
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") onCloseRef.current();
       if (event.key === "Tab") {
         const controls = dialogRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), [tabindex="0"]');
         const visible = Array.from(controls ?? []).filter((element) => element.getClientRects().length > 0);
@@ -81,7 +83,7 @@ export function PreferencesPanel({
       window.removeEventListener("keydown", closeOnEscape);
       previousFocus?.focus();
     };
-  }, [onClose]);
+  }, []);
 
   async function save() {
     setSaving(true);
