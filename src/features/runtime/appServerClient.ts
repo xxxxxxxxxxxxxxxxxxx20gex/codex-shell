@@ -11,6 +11,8 @@ import type { FsReadDirectoryParams } from "../../generated/app-server/v2/FsRead
 import type { FsReadDirectoryResponse } from "../../generated/app-server/v2/FsReadDirectoryResponse";
 import type { FsReadFileParams } from "../../generated/app-server/v2/FsReadFileParams";
 import type { FsReadFileResponse } from "../../generated/app-server/v2/FsReadFileResponse";
+import type { FsGetMetadataParams } from "../../generated/app-server/v2/FsGetMetadataParams";
+import type { FsGetMetadataResponse } from "../../generated/app-server/v2/FsGetMetadataResponse";
 import type { FsUnwatchParams } from "../../generated/app-server/v2/FsUnwatchParams";
 import type { FsUnwatchResponse } from "../../generated/app-server/v2/FsUnwatchResponse";
 import type { FsWatchParams } from "../../generated/app-server/v2/FsWatchParams";
@@ -408,6 +410,10 @@ export class AppServerClient {
 
   readFile(params: FsReadFileParams) {
     return this.request<FsReadFileResponse>("fs/readFile", params);
+  }
+
+  getMetadata(params: FsGetMetadataParams) {
+    return this.request<FsGetMetadataResponse>("fs/getMetadata", params);
   }
 
   watchPath(params: FsWatchParams) {

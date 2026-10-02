@@ -27,7 +27,7 @@ def load_base(spec, root):
     if path.exists():
         if not metadata.exists():
             raise ValueError('Map cache has no parameter record; choose a new map.image path to download a verified cache')
-        if json.loads(metadata.read_text(encoding='utf-8')) != identity:
+        if json.loads(metadata.read_text(encoding='utf-8-sig')) != identity:
             raise ValueError('Map cache parameters differ; choose a new map.image path')
     if not path.exists():
         key = os.environ.get('AMAP_MAPS_API_KEY')
@@ -80,7 +80,7 @@ def route_line(draw, points, mode, color):
 
 def render(config, output):
     root = config.parent
-    cfg = json.loads(config.read_text(encoding='utf-8'))
+    cfg = json.loads(config.read_text(encoding='utf-8-sig'))
     if cfg.get('coordinate_system') != 'GCJ-02':
         raise ValueError('Only verified GCJ-02 coordinates may be overlaid on this AMap base')
     if cfg.get('version') != 1:
@@ -135,7 +135,7 @@ def render(config, output):
         if not (mx+3 <= x <= mx+side-3 and my+3 <= y <= my+side-3):
             raise ValueError('Point or route outside map bounds; widen map or filter detail routes')
         return x, y
-    geometry = json.loads((root / cfg['geometry']).read_text(encoding='utf-8'))
+    geometry = json.loads((root / cfg['geometry']).read_text(encoding='utf-8-sig'))
     counts = {}
     for route in geometry['routes']:
         mode = route['mode']

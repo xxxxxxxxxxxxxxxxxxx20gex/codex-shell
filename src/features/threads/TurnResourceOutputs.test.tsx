@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { cleanup, fireEvent, render } from "@testing-library/react";
+import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import { TurnResourceOutputs } from "./TurnResourceOutputs";
@@ -41,4 +41,11 @@ it("keeps file actions together when both actions are available", () => {
   const actions = view.container.querySelector(".turn-resource-file-actions");
   expect(actions?.querySelectorAll("button")).toHaveLength(2);
   expect(actions?.parentElement?.querySelectorAll(":scope > button")).toHaveLength(0);
+});
+
+it("does not present a reply link as a resource when the file is missing", async () => {
+  const message: ThreadItem = { type: "agentMessage", id: "a", text: "[路线图](travel-map.png)", phase: "final_answer", memoryCitation: null, questions: null, delivery: null };
+  const view = render(<TurnResourceOutputs items={[message]} pathExists={vi.fn().mockResolvedValue(false)} onOpenPath={vi.fn()} />);
+  await waitFor(() => expect(view.queryByText("travel-map.png")).toBeNull());
+  expect(view.container.querySelector(".turn-resource-outputs")).toBeNull();
 });

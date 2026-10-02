@@ -385,7 +385,7 @@ export function useAgentSession(
   const activeProjectCwd = sessionState.thread?.cwd
     ? String(sessionState.thread.cwd)
     : projectCwd;
-  const { searchFiles, readWorkspaceDirectory, readWorkspaceFile, watchWorkspacePath } = useWorkspaceFiles(
+  const { searchFiles, readWorkspaceDirectory, readWorkspaceFile, pathExists, watchWorkspacePath } = useWorkspaceFiles(
     ensureConnected,
     activeProjectCwd,
   );
@@ -511,6 +511,7 @@ export function useAgentSession(
     searchFiles,
     readWorkspaceDirectory,
     readWorkspaceFile,
+    pathExists,
     watchWorkspacePath,
     ...threads,
     ...agentCommands,

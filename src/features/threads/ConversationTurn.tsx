@@ -27,6 +27,7 @@ interface Props {
   mcpProgressByItemId: Record<string, McpToolCallProgressNotification>;
   processEvents?: ThreadProcessEvent[];
   readFile?: (path: string) => Promise<string>;
+  pathExists?: (path: string) => Promise<boolean>;
   onOpenPath?: (path: string) => void | Promise<void>;
   onOpenInExplorer?: (path: string) => void | Promise<void>;
   onOpenError?: (message: string) => void;
@@ -122,6 +123,7 @@ export function ConversationTurn({
   mcpProgressByItemId,
   processEvents = [],
   readFile,
+  pathExists,
   onOpenPath,
   onOpenInExplorer,
   onOpenError,
@@ -300,7 +302,7 @@ export function ConversationTurn({
           )}
         </Fragment>
       ))}
-      {!active && <TurnResourceOutputs items={items} readFile={readFile} onOpenPath={onOpenPath} onOpenInExplorer={onOpenInExplorer} />}
+      {!active && <TurnResourceOutputs items={items} readFile={readFile} pathExists={pathExists} onOpenPath={onOpenPath} onOpenInExplorer={onOpenInExplorer} />}
       {active && answerItems.length === 0 && activityItems.length === 0 && (
         <TurnActivityGroup
           items={[]}

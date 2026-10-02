@@ -314,6 +314,7 @@ function App() {
               mcpProgressByItemId={session.mcpProgressByItemId}
               processEventsByTurnId={session.processEventsByTurnId}
               readFile={session.readWorkspaceFile}
+              pathExists={session.pathExists}
               onOpenPath={openConversationPath}
               onOpenInExplorer={openResourceInExplorer}
               onOpenError={setUiError}

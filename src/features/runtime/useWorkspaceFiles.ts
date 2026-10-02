@@ -54,6 +54,19 @@ export function useWorkspaceFiles(
     return (await client.readFile({ path })).dataBase64;
   }, [ensureConnected]);
 
+  const pathExists = useCallback(async (path: string) => {
+    const normalized = /^(?:[a-zA-Z]:[\\/]|\\\\)/.test(path)
+      ? path
+      : projectCwd ? `${projectCwd.replace(/[\\/]+$/, "")}${projectCwd.includes("\\") ? "\\" : "/"}${path.replace(/^[\\/]+/, "")}` : null;
+    if (!normalized) return false;
+    try {
+      const client = await ensureConnected();
+      return (await client.getMetadata({ path: normalized })).isFile;
+    } catch {
+      return false;
+    }
+  }, [ensureConnected, projectCwd]);
+
   const watchWorkspacePath = useCallback<WatchWorkspacePath>(async (path, onChanged) => {
     const client = await ensureConnected();
     const watchId = `codex-shell-workspace-${Date.now()}-${nextWatchId++}`;
@@ -80,5 +93,5 @@ export function useWorkspaceFiles(
     };
   }, [ensureConnected]);
 
-  return { searchFiles, readWorkspaceDirectory, readWorkspaceFile, watchWorkspacePath };
+  return { searchFiles, readWorkspaceDirectory, readWorkspaceFile, pathExists, watchWorkspacePath };
 }

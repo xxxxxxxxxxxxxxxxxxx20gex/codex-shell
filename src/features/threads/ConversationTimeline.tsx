@@ -21,6 +21,7 @@ interface Props {
   mcpProgressByItemId?: Record<string, McpToolCallProgressNotification>;
   processEventsByTurnId?: Record<string, ThreadProcessEvent[]>;
   readFile?: (path: string) => Promise<string>;
+  pathExists?: (path: string) => Promise<boolean>;
   onOpenPath?: (path: string) => void | Promise<void>;
   onOpenInExplorer?: (path: string) => void | Promise<void>;
   onOpenError?: (message: string) => void;
@@ -64,6 +65,7 @@ export function ConversationTimeline({
   mcpProgressByItemId = EMPTY_MCP_PROGRESS,
   processEventsByTurnId = EMPTY_PROCESS_EVENTS,
   readFile,
+  pathExists,
   onOpenPath,
   onOpenInExplorer,
   onOpenError,
@@ -282,6 +284,7 @@ export function ConversationTimeline({
               mcpProgressByItemId={mcpProgressByItemId}
               processEvents={processEventsByTurnId[turn.id] ?? []}
               readFile={readFile}
+              pathExists={pathExists}
               onOpenPath={onOpenPath}
               onOpenInExplorer={onOpenInExplorer}
               onOpenError={onOpenError}

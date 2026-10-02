@@ -1,7 +1,7 @@
 import { FileSearch, FileSpreadsheet, FileText, FolderOpen, Image as ImageIcon } from "lucide-react";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import { ImageAttachmentPreview } from "../attachments/AttachmentGallery";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
@@ -10,6 +10,7 @@ import { markdownLinkTarget } from "./MarkdownContent";
 interface Props {
   items: ThreadItem[];
   readFile?: (path: string) => Promise<string>;
+  pathExists?: (path: string) => Promise<boolean>;
   onOpenPath?: (path: string) => void | Promise<void>;
   onOpenInExplorer?: (path: string) => void | Promise<void>;
 }
@@ -60,12 +61,11 @@ function replyPaths(items: ThreadItem[]) {
 }
 
 export function TurnResourceOutputs(props: Props) {
-  const { items } = props;
+  const { items, pathExists } = props;
   const [expanded, setExpanded] = useState(false);
+  const [missing, setMissing] = useState<Set<string>>(new Set());
   const key = (path: string) => path.replace(/\\/g, "/").replace(/^\/([a-z]:)/i, "$1").replace(/\/\.\//g, "/").toLowerCase();
   const replies = [...new Map(replyPaths(items).map((path) => [key(path), path])).values()];
-  const replyImages = replies.filter(isImagePath);
-  const replyDocuments = replies.filter((path) => resourceKind(path) === "document");
   const seen = new Set(replies.map(key));
   const process: string[] = [];
   for (const item of items) {
@@ -76,8 +76,25 @@ export function TurnResourceOutputs(props: Props) {
       if (!seen.has(key(path))) { seen.add(key(path)); process.push(path); }
     }
   }
-  const processFiles = process.filter((path) => resourceKind(path) !== "document");
-  if (!replies.length && !process.length) return null;
+  const resourceSignature = [...replies, ...process].join("\u0000");
+  useEffect(() => {
+    if (!pathExists) {
+      setMissing(new Set());
+      return;
+    }
+    let cancelled = false;
+    const candidates = [...new Set([...replies, ...process])];
+    void Promise.all(candidates.map(async (path) => [path, await pathExists(path)] as const)).then((results) => {
+      if (!cancelled) setMissing(new Set(results.filter(([, exists]) => !exists).map(([path]) => key(path))));
+    });
+    return () => { cancelled = true; };
+  }, [pathExists, resourceSignature]);
+  const visibleReplies = replies.filter((path) => !missing.has(key(path)));
+  const visibleProcess = process.filter((path) => !missing.has(key(path)));
+  const replyImages = visibleReplies.filter(isImagePath);
+  const replyDocuments = visibleReplies.filter((path) => resourceKind(path) === "document");
+  const processFiles = visibleProcess.filter((path) => resourceKind(path) !== "document");
+  if (!visibleReplies.length && !visibleProcess.length) return null;
   return <>
     {replyImages.length > 0 && <ResourceList {...props} title="回复中的图片" resources={replyImages} />}
     {replyDocuments.length > 0 && <ResourceList {...props} title="回复中的文档" resources={replyDocuments} />}
