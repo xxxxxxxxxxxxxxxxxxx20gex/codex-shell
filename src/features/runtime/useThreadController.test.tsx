@@ -470,6 +470,23 @@ describe("useThreadController", () => {
     await waitFor(() => expect(client.unsubscribeThread).toHaveBeenCalledWith({ threadId: "thread-a" }));
   });
 
+  it("keeps a completed Turn error in the timeline without duplicating its composer notice", async () => {
+    const { props, dispatch } = setup();
+    const { result } = renderHook(() => useThreadController(props));
+    await act(async () => result.current.openThread("thread-a"));
+    const failedTurn: Turn = {
+      ...turn("turn-a", "failed"),
+      error: { message: "stream disconnected", codexErrorInfo: null, additionalDetails: null, misalignment: null },
+    };
+
+    act(() => result.current.onTurnCompleted({ threadId: "thread-a", turn: failedTurn }));
+
+    expect(dispatch).toHaveBeenCalledWith(expect.objectContaining({ type: "turnCompleted", notification: { threadId: "thread-a", turn: failedTurn } }));
+    const clearMatchingNotice = props.setError.mock.lastCall?.[0] as (current: string) => string;
+    expect(clearMatchingNotice("stream disconnected")).toBe("");
+    expect(clearMatchingNotice("项目目录同步失败")).toBe("项目目录同步失败");
+  });
+
   it("queues follow-ups per Session and lets Core advance them without duplicate client turns", async () => {
     const { client, props } = setup();
     client.startTurn

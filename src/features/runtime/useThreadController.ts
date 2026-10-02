@@ -351,7 +351,10 @@ export function useThreadController(props: Props) {
         notification,
         completedAt: Date.now() / 1_000,
       });
-      if (notification.turn.error) setError(notification.turn.error.message);
+      const completedError = notification.turn.error?.message;
+      if (completedError) {
+        setError((current) => current === completedError ? "" : current);
+      }
     } else if (notification.turn.status !== "completed" || getQueued(notification.threadId).length === 0) {
       void unsubscribeIfIdle(notification.threadId);
     }
