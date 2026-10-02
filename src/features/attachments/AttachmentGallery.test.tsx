@@ -40,6 +40,12 @@ describe("AttachmentGallery", () => {
     expect(await screen.findByText("文件不存在")).toBeTruthy();
     expect(screen.queryByLabelText("添加图片批注")).toBeNull();
   });
+  it("closes the direct sketch workspace from the outer close action", async () => {
+    const onClose = vi.fn();
+    render(<ImageAnnotationContext.Provider value={vi.fn()}><AttachmentPreviewDialog sketchMode target={{ kind: "image", name: "草图.png", url: "" }} readFile={vi.fn()} onClose={onClose} /></ImageAnnotationContext.Provider>);
+    fireEvent.click(screen.getAllByLabelText("关闭附件预览")[1]);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
   it("shows file cards and previews text through the app-server file reader", async () => {
     const readFile = vi.fn().mockResolvedValue(btoa("hello from file"));
     const onRemoveFile = vi.fn();

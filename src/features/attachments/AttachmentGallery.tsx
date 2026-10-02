@@ -168,7 +168,7 @@ export function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath,
           {local.error && <div className="attachment-preview-state error"><strong>无法预览附件</strong><p>{local.error}</p></div>}
           {target.kind === "image" && target.fileId && <div className="attachment-preview-state"><strong>此图片暂不支持本地预览</strong><p>图片引用已保留，编辑消息时仍会随消息发送。</p></div>}
           {preview?.kind === "image" && !sketching && <ImageAnnotationCanvas source={preview.dataUrl} name={target.name} editing={annotating} annotations={annotations} selected={selected} onAdd={(point) => { setAnnotations((current) => { setSelected(current.length); return [...current, point]; }); }} onSelect={setSelected} />}
-          {preview?.kind === "image" && sketching && <ImageSketchCanvas source={preview.dataUrl} name={target.name} onCancel={() => setSketching(false)} onSave={(dataUrl) => void saveSketch(dataUrl)} />}
+          {preview?.kind === "image" && sketching && <ImageSketchCanvas source={preview.dataUrl} name={target.name} onCancel={() => { if (sketchMode) onClose(); else setSketching(false); }} onSave={(dataUrl) => void saveSketch(dataUrl)} />}
           {preview?.kind === "pdf" && <iframe className="attachment-pdf-preview" src={preview.dataUrl} title={`预览 ${target.name}`} />}
           {preview?.kind === "tooLarge" && <div className="attachment-preview-state"><strong>文件过大，暂不预览</strong><p>{formatFileSize(preview.byteSize)} · 可使用资源管理器打开原文件</p></div>}
           {preview?.kind === "text" && <pre>{preview.content}</pre>}
