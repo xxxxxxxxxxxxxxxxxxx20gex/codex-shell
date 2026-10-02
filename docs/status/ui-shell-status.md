@@ -6,7 +6,7 @@
 - 对话提示：普通信息／弃用提示 5 秒后消失，一般警告 8 秒后消失，安全提示持续到用户关闭或问题解决；重复提示会刷新计时，沙箱准备完成自动清理旧提示。沙箱设置入口固定使用管理员权限模式。
 - 默认窗口：启动最大化；标题栏还原按钮和双击共用 `toggle_window_maximized`，按当前显示器工作区宽、高的 85% 居中。最小外框尺寸 900×640 逻辑像素按 DPI 换算，并受工作区上限约束；Windows 原生拖拽／快捷键还原沿用系统保存位置，若显示器条件变化再执行边界校正。不保存退出时的位置与大小。
 - Composer 编辑历史消息时直接显示原文，不额外显示编辑提示条或取消按钮；发送仍沿用末回合替换逻辑，失败时保留当前草稿。
-- 当前接口：`App`、`WindowTitleBar`、`ContextMenuPolicy`、`ContextMenu`、`PreferencesPanel`、`useResizablePanels`、`WorkspaceExplorer`、`SideChatPanel`、`TransientNotice`。附件预览支持本地图片草图编辑原型：画笔、直线、矩形、橡皮擦、颜色、大小、撤销／重做；输入框的 `/绘图` 命令也可直接打开空白画布。确认后通过现有 Tauri `save_pasted_image` 保存独立 PNG，再沿 `localImage` 输入链路加入草稿。托管 `fileId` 图片仍只读，不能伪造为本地路径。
+- 当前接口：`App`、`WindowTitleBar`、`ContextMenuPolicy`、`ContextMenu`、`PreferencesPanel`、`useResizablePanels`、`WorkspaceExplorer`、`SideChatPanel`、`TransientNotice`。附件预览支持本地图片草图编辑原型：画笔、直线、矩形、橡皮擦、颜色、大小、撤销／重做；输入框的 `/绘图` 命令直接打开独立空白画布，支持添加本地图片和粘贴剪贴板图片。确认后通过现有 Tauri `save_pasted_image` 保存独立 PNG，再沿 `localImage` 输入链路加入草稿。托管 `fileId` 图片仍只读，不能伪造为本地路径。
 - 布局边界：右侧详情共享 Inspector 生命周期；最大化保留左栏并收起对话列，恢复回到三栏。分隔线通过 CSS 变量及 requestAnimationFrame 更新，释放后同步状态。窗口自绘按钮不保证 Windows 11 Snap Layout 悬停菜单。右键策略只覆盖应用 DOM，不接管 iframe 内嵌文档查看器；粘贴只在用户点击时读取剪贴板，权限拒绝会提示使用 Ctrl+V，不会覆盖草稿。
 - 模块归属：渠道见 [模型配置](model-config-status.md)，消息与资源见 [时间线](timeline-status.md) 和 [Diff](diff-status.md)，Skills/MCP 见 [扩展能力](agent-capabilities-status.md)，侧聊生命周期见 [项目与线程](workspace-thread-status.md)。
 - 资源菜单：带本地路径的回复链接、附件/资源缩略图及文件变更条目优先提供“复制绝对路径”，复用共享菜单、剪贴板及当前会话项目路径解析；现有输入框和文件树规则保持不变。路径解析边界见 [时间线](timeline-status.md)。

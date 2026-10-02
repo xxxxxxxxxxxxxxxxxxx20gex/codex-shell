@@ -231,7 +231,7 @@ function App() {
     }}>
     <main className="app-shell" data-theme={personalization.theme}>
       {conversationImage && <AttachmentPreviewDialog key={conversationImage} target={{ kind: "image", name: conversationImage.split(/[\\/]/).pop() || "图片", path: conversationImage }} readFile={session.readWorkspaceFile} onClose={() => setConversationImage(null)} onOpenPath={openResourceInExplorer} onOpenInExplorer={openResourceInExplorer} />}
-      {sketchOpen && <AttachmentPreviewDialog target={{ kind: "image", name: "草图.png", url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='800'%3E%3Crect width='1200' height='800' fill='%23101112'/%3E%3C/svg%3E" }} readFile={session.readWorkspaceFile} onClose={() => setSketchOpen(false)} />}
+      {sketchOpen && <AttachmentPreviewDialog sketchMode target={{ kind: "image", name: "草图.png", url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='800'%3E%3Crect width='1200' height='800' fill='%23101112'/%3E%3C/svg%3E" }} readFile={session.readWorkspaceFile} onClose={() => setSketchOpen(false)} />}
       <WindowTitleBar />
       <ContextMenuPolicy projectPath={currentProjectPath} />
       <section

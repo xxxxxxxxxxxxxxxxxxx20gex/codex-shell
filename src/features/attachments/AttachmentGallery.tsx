@@ -88,12 +88,13 @@ export function ImageAttachmentPreview({ path, name, readFile, onOpenPath, onOpe
   );
 }
 
-export function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath, onOpenInExplorer }: {
+export function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath, onOpenInExplorer, sketchMode = false }: {
   target: PreviewTarget;
   readFile: ReadFile;
   onClose: () => void;
   onOpenPath?: (path: string) => void | Promise<void>;
   onOpenInExplorer?: (path: string) => void | Promise<void>;
+  sketchMode?: boolean;
 }) {
   const applyAnnotation = useContext(ImageAnnotationContext);
   const local = usePathPreview(target.path, readFile, Boolean(target.path));
@@ -103,7 +104,7 @@ export function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath,
   const [openError, setOpenError] = useState("");
   const [sketchError, setSketchError] = useState("");
   const [annotating, setAnnotating] = useState(false);
-  const [sketching, setSketching] = useState(false);
+  const [sketching, setSketching] = useState(sketchMode);
   const [annotations, setAnnotations] = useState<ImageAnnotation[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [note, setNote] = useState("");
@@ -148,7 +149,7 @@ export function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath,
   return createPortal(
     <div className="attachment-preview-layer" role="dialog" aria-modal="true" aria-label={`预览 ${target.name}`}>
       <button className="attachment-preview-scrim" type="button" onClick={onClose} aria-label="关闭附件预览" />
-      <section className="attachment-preview-dialog">
+      <section className={`attachment-preview-dialog ${sketchMode ? "is-direct-sketch" : ""}`}>
         <header>
           <div><strong>{target.name}</strong><small>{target.path ?? (target.kind === "image" && target.fileId ? "托管图片" : "剪贴板图片")}</small></div>
           <div className="attachment-preview-actions">

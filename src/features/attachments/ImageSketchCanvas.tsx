@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState, type PointerEvent } from "react";
-import { Eraser, Pencil, Redo2, Square, Undo2, X, Check, Minus } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, type ClipboardEvent, type PointerEvent } from "react";
+import { Eraser, Pencil, Redo2, Square, Undo2, X, Check, Minus, ImagePlus } from "lucide-react";
 
 type SketchTool = "pen" | "line" | "rect" | "eraser";
 type Point = { x: number; y: number };
@@ -31,6 +31,32 @@ export function ImageSketchCanvas({ source, name, onCancel, onSave }: Props) {
   const [ready, setReady] = useState(false);
   const [, refreshHistory] = useState(0);
 
+  function insertImage(dataUrl: string) {
+    const image = new Image();
+    image.onload = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const context = canvas.getContext("2d")!;
+      const scale = Math.min((canvas.width * 0.85) / image.naturalWidth, (canvas.height * 0.85) / image.naturalHeight, 1);
+      const width = image.naturalWidth * scale;
+      const height = image.naturalHeight * scale;
+      snapshot();
+      context.drawImage(image, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
+      historyRef.current.push(context.getImageData(0, 0, canvas.width, canvas.height));
+      if (historyRef.current.length > MAX_HISTORY) historyRef.current.shift();
+      redoRef.current = [];
+      refreshHistory((value) => value + 1);
+    };
+    image.src = dataUrl;
+  }
+
+  function readImageFile(file: File) {
+    if (!file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = () => { if (typeof reader.result === "string") insertImage(reader.result); };
+    reader.readAsDataURL(file);
+  }
+
   const snapshot = useCallback(() => {
     const canvas = canvasRef.current;
     if (canvas) baseRef.current = canvas.getContext("2d")!.getImageData(0, 0, canvas.width, canvas.height);
@@ -50,6 +76,14 @@ export function ImageSketchCanvas({ source, name, onCancel, onSave }: Props) {
     };
     image.src = source;
   }, [source]);
+
+  function handlePaste(event: ClipboardEvent<HTMLDivElement>) {
+    const image = Array.from(event.clipboardData.items).find((item) => item.type.startsWith("image/"));
+    if (!image) return;
+    event.preventDefault();
+    const file = image.getAsFile();
+    if (file) readImageFile(file);
+  }
 
   const pointFromEvent = (event: PointerEvent<HTMLCanvasElement>): Point => {
     const canvas = canvasRef.current!;
@@ -130,13 +164,16 @@ export function ImageSketchCanvas({ source, name, onCancel, onSave }: Props) {
     refreshHistory((value) => value + 1);
   }
 
-  return <div className="image-sketch-editor" role="dialog" aria-label={`编辑草图 ${name}`}>
+  return <div className="image-sketch-editor" role="dialog" aria-label={`编辑草图 ${name}`} tabIndex={0} autoFocus onPaste={handlePaste}>
     <header className="image-sketch-header">
       <div><strong>编辑草图</strong><small>{name}</small></div>
       <button type="button" className="image-sketch-icon" onClick={onCancel} aria-label="取消编辑"><X /></button>
     </header>
     <div className="image-sketch-workspace">
       <div className="image-sketch-toolbar" aria-label="绘图工具">
+        <label className="image-sketch-upload" title="添加图片"><ImagePlus /><span>添加图片</span><input type="file" accept="image/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) readImageFile(file); event.target.value = ""; }} /></label>
+        <span className="image-sketch-paste-hint">也可直接粘贴图片</span>
+        <span className="image-sketch-divider" />
         {tools.map(({ id, label, icon: Icon }) => <button key={id} type="button" className={tool === id ? "active" : ""} onClick={() => setTool(id)} aria-label={label} title={label}><Icon /></button>)}
         <span className="image-sketch-divider" />
         <button type="button" onClick={undo} disabled={historyRef.current.length <= 1} aria-label="撤销" title="撤销"><Undo2 /></button>

@@ -19,6 +19,8 @@
 .attachment-preview-layer { position: fixed; z-index: 80; inset: 0; display: grid; place-items: center; padding: 28px; }
 .attachment-preview-scrim { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: rgba(5,5,4,.78); cursor: default; backdrop-filter: blur(5px); }
 .attachment-preview-dialog { position: relative; z-index: 1; display: grid; width: min(920px, 92vw); height: min(720px, 88vh); grid-template-rows: auto minmax(0,1fr); overflow: hidden; border: 1px solid var(--border-default); border-radius: var(--radius-panel); background: var(--surface-panel); box-shadow: var(--shadow-popover); }
+.attachment-preview-dialog.is-direct-sketch { grid-template-rows: minmax(0, 1fr); }
+.attachment-preview-dialog.is-direct-sketch > header { display: none; }
 .attachment-preview-dialog header { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 13px; border-bottom: 1px solid var(--border-subtle); }
 .attachment-preview-dialog header > div:first-child { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
 .attachment-preview-dialog header strong, .attachment-preview-dialog header small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -80,6 +82,11 @@
 .image-sketch-toolbar { display: flex; align-items: center; gap: 4px; padding: 8px 12px; border-bottom: 1px solid var(--border-subtle); background: var(--surface-panel); }
 .image-sketch-divider { width: 1px; height: 20px; margin: 0 4px; background: var(--border-subtle); }
 .image-sketch-toolbar button:disabled { color: var(--text-disabled); cursor: not-allowed; }
+.image-sketch-upload { display: inline-flex; height: 28px; align-items: center; gap: 5px; padding: 0 8px; border: 1px solid var(--border-default); border-radius: var(--radius-control); color: var(--text-secondary); background: var(--surface-raised); font-size: var(--text-label); cursor: pointer; }
+.image-sketch-upload:hover { color: var(--text-primary); border-color: var(--border-strong); }
+.image-sketch-upload svg { width: 16px; height: 16px; stroke-width: 1.75; }
+.image-sketch-upload input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
+.image-sketch-paste-hint { color: var(--text-muted); font-size: var(--text-meta); }
 .image-sketch-color, .image-sketch-size { display: inline-flex; align-items: center; gap: 6px; margin-left: 6px; color: var(--text-muted); font-size: var(--text-meta); }
 .image-sketch-color input { width: 24px; height: 24px; padding: 0; border: 0; background: transparent; cursor: pointer; }
 .image-sketch-size input { width: 78px; accent-color: var(--accent-action); }
