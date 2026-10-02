@@ -17,6 +17,7 @@ import {
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import { formatTurnDuration } from "./conversationTiming";
 import { ImageAttachmentPreview } from "../attachments/AttachmentGallery";
+import { localResourcePath } from "./MarkdownContent";
 
 interface Props {
   item: ThreadItem;
@@ -141,17 +142,21 @@ function ActivityBody({ item, readFile }: Props) {
       return <code>{item.agentPath || item.agentThreadId}</code>;
     case "webSearch":
       return <>{item.results && <pre>{jsonPreview(item.results)}</pre>}</>;
-    case "imageView":
+    case "imageView": {
+      const path = localResourcePath(item.path);
       return <>
-        {readFile && <ImageAttachmentPreview path={item.path} name={item.path.split(/[\\/]/).pop() || "图片"} readFile={readFile} />}
-        <code>{item.path}</code>
+        {readFile && path && <ImageAttachmentPreview path={path} name={path.split(/[\\/]/).pop() || "图片"} readFile={readFile} />}
+        <code>{path ?? item.path}</code>
       </>;
-    case "imageGeneration":
+    }
+    case "imageGeneration": {
+      const path = item.savedPath && localResourcePath(item.savedPath);
       return <>
         {item.revisedPrompt && <p>{item.revisedPrompt}</p>}
-        {readFile && item.savedPath && <ImageAttachmentPreview path={item.savedPath} name={item.savedPath.split(/[\\/]/).pop() || "生成图片"} readFile={readFile} />}
-        {item.savedPath && <code>{item.savedPath}</code>}
+        {readFile && path && <ImageAttachmentPreview path={path} name={path.split(/[\\/]/).pop() || "生成图片"} readFile={readFile} />}
+        {item.savedPath && <code>{path ?? item.savedPath}</code>}
       </>;
+    }
     case "hookPrompt":
       return <pre>{jsonPreview(item.fragments)}</pre>;
     case "sleep":

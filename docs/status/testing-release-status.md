@@ -3,9 +3,11 @@
 - 模块职责：维护质量门禁、Runtime 兼容验证、Windows 发布证据及未覆盖边界。模块行为由对应状态文档维护，历史测试流水账由 Git 保留。
 - 当前状态：v0.1.9 为内核升级前的发布基线，包含窗口尺寸、回复资源入口、输入区布局、临时提示及模型服务层级修复；Updater minisign 已启用，Windows Authenticode 尚未配置，SmartScreen 仍可能提示未知发布者。
 - 当前接口：`pnpm test:quality` 依次执行 TypeScript、ESLint、Vitest、`pnpm test:amap`、production build、Knip、`pnpm rust:check` 和 diff 检查。协议、Runtime、四视口布局和 Skill 专项验证独立运行，入口见 [测试脚本说明](../../tests/scripts/README.md) 与 `package.json`。
-- 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；Vite 主 chunk 超过 500 kB；`cargo fmt --check` 尚未纳入门禁。
+- 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；Vite 主 chunk 超过 500 kB；`cargo fmt --check` 尚未纳入门禁。全量 Vitest 仍有 `ComposerAddMenu.test.tsx` 的菜单数量旧断言（期望 7，实际 8）未通过。
 - 下一步：补真实系统凭据、多渠道对话、第三方 MCP OAuth，以及干净 Windows 用户环境安装和升级验收。
-- 最后更新：2026-10-02
+- 最后更新：2026-10-03
+
+2026-10-03，修复 Core `file://` 图片路径的过程资源与活动预览；相关 18 项 Vitest、TypeScript、ESLint、production build、Knip、Cargo check、Debug 构建及 Runtime manifest 校验通过。全量 Vitest 为 71 个文件中 70 个通过、396 项中 395 项通过；唯一失败为上述加号菜单旧断言，与本次资源路径改动无关。首次 Cargo check 因运行中的旧 Debug 程序占用构建产物报“拒绝访问”，Debug 脚本停止本项目旧进程并构建后重跑通过。未做真实 WebView2 图片预览人工验收。
 
 2026-10-01，新增 Markdown 代码块四尺寸 Edge 布局探针，验证短代码收拢、长行内部滚动、复制按钮焦点和截图；对应模块事实见 [任务时间线](timeline-status.md)。
 
@@ -13,7 +15,7 @@
 
 2026-10-01，输入区四尺寸 Edge 探针新增右上角高度手柄验证：向上拖动增高且底部固定、64–320px 限制、上下键和 Escape 均通过，截图已复核；TypeScript、ESLint、生产构建和 Cargo check 通过。未进行真实 WebView2 人工拖拽验收。
 
-2026-10-02，草图编辑器视觉更新完成：浮动工具胶囊、左侧尺寸滑杆、底部颜色色板和紧凑 footer 已通过 TypeScript、production build 与 Cargo check；本轮尚未完成四视口真实浏览器探针和 WebView2 手写触控验收。全量 lint 仍受既有 `TurnResourceOutputs.tsx` Hook 依赖告警影响，全量测试仍有既有 `ComposerAddMenu.test.tsx` 菜单数量断言失败。
+2026-10-02，草图编辑器视觉更新完成：浮动工具胶囊、左侧尺寸滑杆、底部颜色色板和紧凑 footer 已通过 TypeScript、production build 与 Cargo check；本轮尚未完成四视口真实浏览器探针和 WebView2 手写触控验收。当时全量 lint 受 `TurnResourceOutputs.tsx` Hook 依赖告警影响，该告警已于 2026-10-03 修复。
 
 ## 当前验证基线
 

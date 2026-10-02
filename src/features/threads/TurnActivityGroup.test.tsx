@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import { TurnActivityGroup } from "./TurnActivityGroup";
@@ -108,4 +108,13 @@ describe("TurnActivityGroup timing", () => {
     view.unmount();
     expect(vi.getTimerCount()).toBe(0);
   });
+});
+
+it("reads a Core imageView file URL as a local file in the activity", async () => {
+  const readFile = vi.fn(async () => "AA==");
+  const view = render(<TurnActivityGroup items={[{ type: "imageView", id: "image", path: "file:///C:/work/My%20Image.png" }]} active={false} turnActive={false} startedAt={null} durationMs={null} showHeader={false} turnId="turn-1" activeItemTurnIds={{}} mcpProgressByItemId={{}} readFile={readFile} />);
+
+  fireEvent.click(view.getByText("查看图片"));
+  await waitFor(() => expect(readFile).toHaveBeenCalledWith("C:/work/My Image.png"));
+  expect(view.getByText("C:/work/My Image.png")).toBeTruthy();
 });

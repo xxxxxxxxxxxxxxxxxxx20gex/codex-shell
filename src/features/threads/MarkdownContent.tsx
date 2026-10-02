@@ -60,6 +60,12 @@ export function markdownLinkTarget(href: string): LinkTarget | null {
   return { type: "localPath", value: stripLineReference(decodeLinkValue(value)) };
 }
 
+export function localResourcePath(path: string) {
+  if (!/^file:/i.test(path)) return path;
+  const target = markdownLinkTarget(path);
+  return target?.type === "localPath" && /^(?:[a-zA-Z]:[\\/]|\\\\)/.test(target.value) ? target.value : null;
+}
+
 function safeUrlTransform(url: string) {
   const target = markdownLinkTarget(url);
   if (!target) return "";

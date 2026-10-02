@@ -5,9 +5,9 @@
 - 消息编辑：末回合结束后可替换单条用户输入，发送前使用 `thread/revert` 返回的 metadata／cursor 获取保留历史，并消费对应通知避免重复加载。会话切换、Runtime reset 或新 Turn 后忽略迟到刷新。回退失败保留编辑草稿；回退已成功但历史刷新失败则清除旧编辑目标，保留草稿供重新发送。回退不撤销文件修改，多用户输入回合不支持单条替换。
 - 图片与文档：本地图片进入共享预览与批注窗口；本地 Markdown 无论是否位于项目内均进入 CS 文件面板，外部 URL 仍由浏览器打开。资源路径规范化不会放宽文件读取边界。
 - 代码块：短 Markdown 代码块按内容收拢，保留语言标题和复制按钮；超长行限制在回复列内并在块内横向滚动。
-- 最近变更：适配 0.159.2 的托管图片 `fileId`，历史读取、编辑回填及再次发送保留原引用，不伪造成 URL 或本地路径；缺少图片内容时预览明确说明暂不可用。回复资源现在复用 Core 元数据接口过滤不存在的文件；内置高德路线脚本兼容带 BOM 的 JSON 配置。代码块的内容自适应与内部滚动保持不变。
+- 最近变更：Core 活动项中的本地 `file://` 图片 URL 在元数据检查和预览前转换为文件路径；无效文件 URL 不作为可预览资源。适配 0.159.2 的托管图片 `fileId`，历史读取、编辑回填及再次发送保留原引用，不伪造成 URL 或本地路径；缺少图片内容时预览明确说明暂不可用。回复资源复用 Core 元数据接口过滤不存在的文件；内置高德路线脚本兼容带 BOM 的 JSON 配置。
 - 当前接口：`agentSessionReducer`、`ConversationTimeline`、`ConversationTurn`、`TurnActivityGroup`、`TurnActivityItem`、`MarkdownContent`、`TurnFileChanges`、`TurnPlanView`。
 - 已知问题：MCP/动态工具结构化结果仍以安全截断 JSON 展示；自动审批通知只依赖稳定摘要字段；尚未提供活动类型过滤和单个超长命令日志虚拟化。回退替换已有真实 Runtime＋本机模拟网关验证，真实模型和完整 WebView2 操作尚未验收。
 - 下一步：增加活动筛选和超长活动局部截断/虚拟化，补真实模型与 WebView2 编辑链路验收。
-- 验证证据：2026-10-02；资源存在性过滤、Markdown 资源解析和缺失文件回归测试通过；`pnpm typecheck`、相关 Vitest 和 `cargo check --manifest-path src-tauri/Cargo.toml` 通过。0.159.2 的回退替换与新旧历史恢复通过真实 Runtime＋本机模拟网关验证；真实模型、完整 WebView2 验收和大型项目 watch 长列表仍未覆盖。
-- 最后更新：2026-10-02
+- 验证证据：2026-10-03；Core `file://` 图片 URL 的过程资源、活动预览和无效 URL 回归通过；相关 18 项 Vitest、TypeScript、ESLint、production build、Knip、Cargo check 与 Debug 构建通过。真实模型和 WebView2 图片点击尚未人工验收。此前 0.159.2 的回退替换与新旧历史恢复通过真实 Runtime＋本机模拟网关验证；大型项目 watch 长列表仍未覆盖。完整质量结果见 [测试与发布](testing-release-status.md)。
+- 最后更新：2026-10-03

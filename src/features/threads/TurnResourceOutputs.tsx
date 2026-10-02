@@ -1,11 +1,11 @@
 import { FileSearch, FileSpreadsheet, FileText, FolderOpen, Image as ImageIcon } from "lucide-react";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import { ImageAttachmentPreview } from "../attachments/AttachmentGallery";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
-import { markdownLinkTarget } from "./MarkdownContent";
+import { localResourcePath, markdownLinkTarget } from "./MarkdownContent";
 
 interface Props {
   items: ThreadItem[];
@@ -17,6 +17,10 @@ interface Props {
 
 function baseName(path: string) {
   return path.split(/[\\/]/).pop() || path;
+}
+
+function resourceKey(path: string) {
+  return path.replace(/\\/g, "/").replace(/^\/([a-z]:)/i, "$1").replace(/\/\.\//g, "/").toLowerCase();
 }
 
 function isImagePath(path: string) {
@@ -64,19 +68,22 @@ export function TurnResourceOutputs(props: Props) {
   const { items, pathExists } = props;
   const [expanded, setExpanded] = useState(false);
   const [missing, setMissing] = useState<Set<string>>(new Set());
-  const key = (path: string) => path.replace(/\\/g, "/").replace(/^\/([a-z]:)/i, "$1").replace(/\/\.\//g, "/").toLowerCase();
-  const replies = [...new Map(replyPaths(items).map((path) => [key(path), path])).values()];
-  const seen = new Set(replies.map(key));
-  const process: string[] = [];
-  for (const item of items) {
-    const candidates = item.type === "imageView" ? [item.path]
-      : item.type === "imageGeneration" && item.savedPath ? [item.savedPath]
-      : item.type === "fileChange" ? item.changes.filter((change) => change.kind.type !== "delete" && resourceKind(change.path)).map((change) => change.path) : [];
-    for (const path of candidates) {
-      if (!seen.has(key(path))) { seen.add(key(path)); process.push(path); }
+  const replies = useMemo(() => [...new Map(replyPaths(items).map((path) => [resourceKey(path), path])).values()], [items]);
+  const process = useMemo(() => {
+    const seen = new Set(replies.map(resourceKey));
+    const result: string[] = [];
+    for (const item of items) {
+      const candidates = item.type === "imageView" ? [item.path]
+        : item.type === "imageGeneration" && item.savedPath ? [item.savedPath]
+        : item.type === "fileChange" ? item.changes.filter((change) => change.kind.type !== "delete" && resourceKind(change.path)).map((change) => change.path) : [];
+      for (const rawPath of candidates) {
+        const path = localResourcePath(rawPath);
+        if (!path) continue;
+        if (!seen.has(resourceKey(path))) { seen.add(resourceKey(path)); result.push(path); }
+      }
     }
-  }
-  const resourceSignature = [...replies, ...process].join("\u0000");
+    return result;
+  }, [items, replies]);
   useEffect(() => {
     if (!pathExists) {
       setMissing(new Set());
@@ -85,12 +92,12 @@ export function TurnResourceOutputs(props: Props) {
     let cancelled = false;
     const candidates = [...new Set([...replies, ...process])];
     void Promise.all(candidates.map(async (path) => [path, await pathExists(path)] as const)).then((results) => {
-      if (!cancelled) setMissing(new Set(results.filter(([, exists]) => !exists).map(([path]) => key(path))));
+      if (!cancelled) setMissing(new Set(results.filter(([, exists]) => !exists).map(([path]) => resourceKey(path))));
     });
     return () => { cancelled = true; };
-  }, [pathExists, resourceSignature]);
-  const visibleReplies = replies.filter((path) => !missing.has(key(path)));
-  const visibleProcess = process.filter((path) => !missing.has(key(path)));
+  }, [pathExists, replies, process]);
+  const visibleReplies = replies.filter((path) => !missing.has(resourceKey(path)));
+  const visibleProcess = process.filter((path) => !missing.has(resourceKey(path)));
   const replyImages = visibleReplies.filter(isImagePath);
   const replyDocuments = visibleReplies.filter((path) => resourceKind(path) === "document");
   const processFiles = visibleProcess.filter((path) => resourceKind(path) !== "document");

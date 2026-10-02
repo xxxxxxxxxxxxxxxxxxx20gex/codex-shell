@@ -49,3 +49,25 @@ it("does not present a reply link as a resource when the file is missing", async
   await waitFor(() => expect(view.queryByText("travel-map.png")).toBeNull());
   expect(view.container.querySelector(".turn-resource-outputs")).toBeNull();
 });
+
+it("resolves Core file URLs before checking and previewing process images", async () => {
+  const readFile = vi.fn(async () => "AA==");
+  const pathExists = vi.fn(async () => true);
+  const view = render(<TurnResourceOutputs items={[{ type: "imageView", id: "view", path: "file:///C:/work/My%20Image.png" }]} readFile={readFile} pathExists={pathExists} />);
+
+  await waitFor(() => expect(pathExists).toHaveBeenCalledWith("C:/work/My Image.png"));
+  const details = view.getByText("过程资源 · 1 个").parentElement as HTMLDetailsElement;
+  details.open = true;
+  fireEvent(details, new Event("toggle"));
+  await waitFor(() => expect(readFile).toHaveBeenCalledWith("C:/work/My Image.png"));
+});
+
+it("does not read or list an invalid Core file URL", () => {
+  const readFile = vi.fn(async () => "AA==");
+  const pathExists = vi.fn(async () => true);
+  const view = render(<TurnResourceOutputs items={[{ type: "imageView", id: "view", path: "file://" }]} readFile={readFile} pathExists={pathExists} />);
+
+  expect(view.queryByText(/过程资源/)).toBeNull();
+  expect(pathExists).not.toHaveBeenCalled();
+  expect(readFile).not.toHaveBeenCalled();
+});
