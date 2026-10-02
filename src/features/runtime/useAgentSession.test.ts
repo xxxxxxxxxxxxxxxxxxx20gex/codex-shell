@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   isExpectedCustomModelMetadataWarning,
   isOmittedServiceTierWarning,
+  isExpectedDevelopmentFeatureWarning,
   sendOrQueue,
   updateRetryingError,
   visibleRetryingMessage,
@@ -36,6 +37,14 @@ describe("unsupported service tier warning", () => {
     expect(isOmittedServiceTierWarning(warning, "gpt-6.1-sol")).toBe(true);
     expect(isOmittedServiceTierWarning(warning, "gpt-6-sol")).toBe(false);
     expect(isOmittedServiceTierWarning("Configured service tier `priority` failed for model `gpt-6.1-sol`.", "gpt-6.1-sol")).toBe(false);
+  });
+});
+
+describe("expected development feature warning", () => {
+  it("silences the Core notice for the migration flag enabled by CS", () => {
+    expect(isExpectedDevelopmentFeatureWarning("Under-development features enabled: background_paginated_rollout_migration. Under-development features are incomplete.")).toBe(true);
+    expect(isExpectedDevelopmentFeatureWarning("Under-development features enabled: another_feature.")).toBe(false);
+    expect(isExpectedDevelopmentFeatureWarning("background_paginated_rollout_migration failed")).toBe(false);
   });
 });
 

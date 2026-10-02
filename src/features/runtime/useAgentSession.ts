@@ -63,6 +63,11 @@ export function isOmittedServiceTierWarning(message: string, modelId: string) {
   return Boolean(match && match[1].trim().toLowerCase() === modelId.trim().toLowerCase());
 }
 
+/** Core announces explicitly enabled development flags on every connection. */
+export function isExpectedDevelopmentFeatureWarning(message: string) {
+  return /^Under-development features enabled:\s*background_paginated_rollout_migration\.?/i.test(message.trim());
+}
+
 export function windowsSandboxSetupMessage(
   status: Exclude<WindowsSandboxReadiness, "ready">,
 ) {
@@ -253,7 +258,8 @@ export function useAgentSession(
       onServerRequestResolved: (notification) => interactionStore.dismiss(notification.requestId),
       onWarning: (notification) => {
         if (isExpectedCustomModelMetadataWarning(notification.message, currentModelIdRef.current)
-          || isOmittedServiceTierWarning(notification.message, currentModelIdRef.current)) return;
+          || isOmittedServiceTierWarning(notification.message, currentModelIdRef.current)
+          || isExpectedDevelopmentFeatureWarning(notification.message)) return;
         runtimeNoticeStore.push({
           kind: "warning",
           destination: "diagnostics",
