@@ -17,11 +17,13 @@ const tools: Array<{ id: SketchTool; label: string; icon: typeof Pencil }> = [
   { id: "rect", label: "矩形", icon: Square },
   { id: "eraser", label: "橡皮擦", icon: Eraser },
 ];
+const MAX_HISTORY = 30;
 
 export function ImageSketchCanvas({ source, name, onCancel, onSave }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const historyRef = useRef<ImageData[]>([]);
   const redoRef = useRef<ImageData[]>([]);
+  const baseRef = useRef<ImageData | null>(null);
   const startRef = useRef<Point | null>(null);
   const [tool, setTool] = useState<SketchTool>("pen");
   const [color, setColor] = useState("#b8d957");
@@ -31,7 +33,7 @@ export function ImageSketchCanvas({ source, name, onCancel, onSave }: Props) {
 
   const snapshot = useCallback(() => {
     const canvas = canvasRef.current;
-    if (canvas) historyRef.current.push(canvas.getContext("2d")!.getImageData(0, 0, canvas.width, canvas.height));
+    if (canvas) baseRef.current = canvas.getContext("2d")!.getImageData(0, 0, canvas.width, canvas.height);
   }, []);
 
   useEffect(() => {
@@ -83,7 +85,7 @@ export function ImageSketchCanvas({ source, name, onCancel, onSave }: Props) {
       context.stroke();
       return;
     }
-    const previous = historyRef.current[historyRef.current.length - 1];
+    const previous = baseRef.current;
     if (previous) context.putImageData(previous, 0, 0);
     context.beginPath();
     context.strokeStyle = color;
@@ -93,12 +95,21 @@ export function ImageSketchCanvas({ source, name, onCancel, onSave }: Props) {
     context.stroke();
   }
 
-  function end(event: PointerEvent<HTMLCanvasElement>) {
+  function end(event: PointerEvent<HTMLCanvasElement>, commit = true) {
     if (!startRef.current) return;
     startRef.current = null;
     canvasRef.current?.releasePointerCapture(event.pointerId);
-    const context = canvasRef.current?.getContext("2d");
-    if (context) context.globalCompositeOperation = "source-over";
+    const canvas = canvasRef.current;
+    const context = canvas?.getContext("2d");
+    if (!context || !canvas) return;
+    context.globalCompositeOperation = "source-over";
+    if (commit) {
+      historyRef.current.push(context.getImageData(0, 0, canvas.width, canvas.height));
+      if (historyRef.current.length > MAX_HISTORY) historyRef.current.shift();
+      refreshHistory((value) => value + 1);
+    } else if (baseRef.current) {
+      context.putImageData(baseRef.current, 0, 0);
+    }
   }
 
   function undo() {
@@ -133,7 +144,7 @@ export function ImageSketchCanvas({ source, name, onCancel, onSave }: Props) {
         <label className="image-sketch-color" title="笔刷颜色"><span>颜色</span><input type="color" value={color} onChange={(event) => setColor(event.target.value)} /></label>
         <label className="image-sketch-size" title="笔刷大小"><span>大小</span><input type="range" min="2" max="32" value={size} onChange={(event) => setSize(Number(event.target.value))} /></label>
       </div>
-      <div className="image-sketch-canvas-wrap"><canvas ref={canvasRef} onPointerDown={begin} onPointerMove={move} onPointerUp={end} onPointerCancel={end} /></div>
+      <div className="image-sketch-canvas-wrap"><canvas ref={canvasRef} onPointerDown={begin} onPointerMove={move} onPointerUp={(event) => end(event)} onPointerCancel={(event) => end(event, false)} /></div>
     </div>
     <footer className="image-sketch-footer"><button type="button" className="image-sketch-cancel" onClick={onCancel}>取消</button><button type="button" className="image-sketch-save" disabled={!ready} onClick={() => { const canvas = canvasRef.current; if (canvas) onSave(canvas.toDataURL("image/png")); }}><Check />保存草图</button></footer>
   </div>;

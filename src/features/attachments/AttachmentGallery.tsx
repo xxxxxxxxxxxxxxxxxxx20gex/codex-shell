@@ -101,6 +101,7 @@ export function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath,
     ? { kind: "image" as const, dataUrl: target.url, byteSize: 0 }
     : local.preview;
   const [openError, setOpenError] = useState("");
+  const [sketchError, setSketchError] = useState("");
   const [annotating, setAnnotating] = useState(false);
   const [sketching, setSketching] = useState(false);
   const [annotations, setAnnotations] = useState<ImageAnnotation[]>([]);
@@ -116,11 +117,12 @@ export function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath,
   async function saveSketch(dataUrl: string) {
     if (!applyAnnotation || preview?.kind !== "image") return;
     try {
+      setSketchError("");
       const path = await invoke<string>("save_pasted_image", { dataUrl });
       applyAnnotation({ name: `${target.name.replace(/\.[^.]+$/, "")}-草图.png`, path }, "已根据草图标注，请结合图片内容处理。");
       onClose();
     } catch (error) {
-      setOpenError(errorMessage(error));
+      setSketchError(errorMessage(error));
     }
   }
 
@@ -160,6 +162,7 @@ export function AttachmentPreviewDialog({ target, readFile, onClose, onOpenPath,
         </header>
         <div className={`attachment-preview-content ${annotating ? "is-annotating" : ""} ${sketching ? "is-sketching" : ""}`}>
           {openError && <div className="attachment-preview-state error"><strong>无法打开资源管理器</strong><p>{openError}</p></div>}
+          {sketchError && <div className="attachment-preview-state error"><strong>无法保存草图</strong><p>{sketchError}</p></div>}
           {local.loading && <div className="attachment-preview-state"><span className="attachment-loading" /><strong>正在读取附件…</strong></div>}
           {local.error && <div className="attachment-preview-state error"><strong>无法预览附件</strong><p>{local.error}</p></div>}
           {target.kind === "image" && target.fileId && <div className="attachment-preview-state"><strong>此图片暂不支持本地预览</strong><p>图片引用已保留，编辑消息时仍会随消息发送。</p></div>}
