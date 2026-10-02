@@ -7,6 +7,8 @@
 - 下一步：补真实系统凭据、多渠道对话、第三方 MCP OAuth，以及干净 Windows 用户环境安装和升级验收。
 - 最后更新：2026-10-03
 
+2026-10-03，草图尺寸轨道改为笔触粗细预览：附件定向 13 项 Vitest、Edge 四尺寸布局/键盘端点及截图检查、TypeScript、ESLint、production build、Knip、Cargo check 和 Debug 构建通过；Debug Runtime manifest 为 `codex-cli 0.159.2`。全量 Vitest 为 72 个文件中 71 个通过、400 项中 399 项通过，唯一失败仍为既有加号菜单数量旧断言。真实 WebView2 草图交互未人工验收。
+
 2026-10-03，草图保存不再自动写入固定文字：附件/输入定向 16 项 Vitest、TypeScript、ESLint、production build、Knip、Cargo check 和 Debug 构建通过；Debug Runtime manifest 为 `codex-cli 0.159.2`。全量 Vitest 为 71 个文件中 70 个通过、399 项中 398 项通过，唯一失败仍为加号菜单数量旧断言。真实 WebView2 草图保存尚未人工验收。
 
 2026-10-03，失败 Turn 与顶部错误提示去重：`useThreadController` 定向 28 项 Vitest、TypeScript、ESLint、production build、Knip、Cargo check 和 Debug 构建通过；Debug Runtime manifest 校验为 `codex-cli 0.159.2`。全量 Vitest 为 71 个文件中 70 个通过、397 项中 396 项通过，唯一失败仍为上述加号菜单旧断言。未做真实 WebView2 失败回合人工验收。

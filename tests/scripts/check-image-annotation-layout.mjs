@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const { chromium } = await import(pathToFileURL(process.argv[2]).href);
@@ -51,6 +53,27 @@ try {
     assert.equal(await page.getByRole('dialog').count(), 0);
     await page.getByTitle("预览 sample.png").click();
     await page.locator('.attachment-preview-scrim').click({position:{x:2,y:2}});
+    assert.equal(await page.getByRole('dialog').count(), 0);
+    await page.getByTitle("预览 sample.png").click();
+    await page.getByLabel("编辑草图", { exact: true }).click();
+    const slider = page.getByRole("slider", { name: "笔刷粗细" });
+    const marker = page.locator(".image-sketch-size-marker");
+    await slider.focus();
+    await page.keyboard.press("End");
+    assert.equal(await slider.inputValue(), "32");
+    assert.equal(await marker.evaluate((element) => getComputedStyle(element.firstElementChild).width), "32px");
+    await page.screenshot({ path: join(tmpdir(), `cs-sketch-size-max-${width}x${height}.png`) });
+    await page.keyboard.press("Home");
+    assert.equal(await slider.inputValue(), "2");
+    assert.equal(await marker.evaluate((element) => getComputedStyle(element.firstElementChild).width), "2px");
+    const railRect = await page.locator(".image-sketch-size-rail").boundingBox();
+    const dialogRect = await page.locator(".attachment-preview-dialog").boundingBox();
+    assert(railRect.x >= dialogRect.x && railRect.x + railRect.width <= dialogRect.x + dialogRect.width);
+    assert(railRect.y >= dialogRect.y && railRect.y + railRect.height <= dialogRect.y + dialogRect.height);
+    assert(await page.locator(".image-sketch-size-rail").evaluate((element) => getComputedStyle(element).outlineWidth) === "2px");
+    await page.screenshot({ path: join(tmpdir(), `cs-sketch-size-${width}x${height}.png`) });
+    await page.getByLabel("取消编辑").click();
+    await page.keyboard.press('Escape');
     assert.equal(await page.getByRole('dialog').count(), 0);
     console.log(`${width}x${height} passed`);
   }
