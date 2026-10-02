@@ -251,6 +251,15 @@ Radii:
 - The send button is a stable 32px square and changes function without moving.
 - Queued messages appear in one inset sibling panel immediately above the input. Use continuous 40px rows, 13px single-line previews, optional 32px image thumbnails, and stable right-aligned actions. The labeled Steer action precedes 28px delete and more buttons; edit lives in the shared menu. Running queues omit repeated waiting labels and headings; idle queues retain the resume action. Long queues scroll within a four-row viewport, and menus render outside that scroll region.
 
+## Sketch Workspace
+
+- Image sketching uses a quiet, immersive canvas with the editor title and file name in a compact header; the canvas remains the dominant surface.
+- The drawing toolbar is a small floating capsule centered near the top of the canvas. It uses shared 28px icon buttons, one visible action label for adding an image, and a restrained local selected state for the active tool.
+- Brush size is controlled by a vertical slider on the left edge of the canvas. Color choices sit in a compact bottom palette with circular swatches and one custom-color control. These controls stay over the canvas so they do not create a second panel or reduce the working area with a full-width toolbar.
+- Close remains in the upper-left header action slot; cancel and the single primary save action remain right-aligned in the footer. The save action is the only filled action in that local group.
+- The canvas uses the existing surface and border tokens for the checkerboard transparency treatment, popover background, focus ring, and shadow. Feature CSS must not introduce a new global color, radius, or control scale for drawing tools.
+- Tooltips and accessible names are required for icon-only tools, swatches, the size slider, and custom color input. Focus must remain visible, and the layout must fit at 1440x900, 1280x780, 1024x720, and 900x700 without horizontal overflow. Reduced motion keeps the controls static.
+
 ## Responsive Behavior
 
 - At `>= 1180px`, show all three regions.

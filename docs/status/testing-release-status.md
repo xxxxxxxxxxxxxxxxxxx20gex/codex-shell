@@ -13,6 +13,8 @@
 
 2026-10-01，输入区四尺寸 Edge 探针新增右上角高度手柄验证：向上拖动增高且底部固定、64–320px 限制、上下键和 Escape 均通过，截图已复核；TypeScript、ESLint、生产构建和 Cargo check 通过。未进行真实 WebView2 人工拖拽验收。
 
+2026-10-02，草图编辑器视觉更新完成：浮动工具胶囊、左侧尺寸滑杆、底部颜色色板和紧凑 footer 已通过 TypeScript、production build 与 Cargo check；本轮尚未完成四视口真实浏览器探针和 WebView2 手写触控验收。全量 lint 仍受既有 `TurnResourceOutputs.tsx` Hook 依赖告警影响，全量测试仍有既有 `ComposerAddMenu.test.tsx` 菜单数量断言失败。
+
 ## 当前验证基线
 
 2026-10-02，0.159.2 升级后审查修复通过 `pnpm test:quality`；最终基线：71 个文件 / 391 项前端测试、34 项高德离线测试、生产构建、Knip、Cargo check、Rust 51 项单测（1 项交互测试忽略）、严格 Clippy 和 diff 检查。新增回归覆盖侧聊分页分叉、回退通知去重及重置后迟到响应、已提交回退的刷新失败、入队确认前撤回、删除失败／已消费状态、取消期间会话互斥、原生队列恢复和清理 Thread 后的迟到队列响应。已删除旧 Runtime 的本地队列发送和伪能力检测分支。本轮四尺寸 Edge Composer／队列检查通过；附件与托管图片四尺寸验证沿用升级时证据。

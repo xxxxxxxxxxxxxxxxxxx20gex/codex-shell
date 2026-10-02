@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState, type ClipboardEvent, type PointerEvent } from "react";
-import { Eraser, Pencil, Redo2, Square, Undo2, X, Check, Minus, ImagePlus } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, type ClipboardEvent, type PointerEvent, type CSSProperties } from "react";
+import { Eraser, Pencil, Redo2, Square, Undo2, X, Check, Minus, ImagePlus, Palette } from "lucide-react";
 
 type SketchTool = "pen" | "line" | "rect" | "eraser";
 type Point = { x: number; y: number };
@@ -18,6 +18,7 @@ const tools: Array<{ id: SketchTool; label: string; icon: typeof Pencil }> = [
   { id: "eraser", label: "橡皮擦", icon: Eraser },
 ];
 const MAX_HISTORY = 30;
+const palette = ["#f1f3f1", "#909691", "#e17972", "#ddb45e", "#b8d957", "#74bf83", "#73b7e8", "#9b6cff", "#101112"];
 
 export function ImageSketchCanvas({ source, name, onCancel, onSave }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -170,18 +171,24 @@ export function ImageSketchCanvas({ source, name, onCancel, onSave }: Props) {
       <button type="button" className="image-sketch-icon" onClick={onCancel} aria-label="取消编辑"><X /></button>
     </header>
     <div className="image-sketch-workspace">
-      <div className="image-sketch-toolbar" aria-label="绘图工具">
-        <label className="image-sketch-upload" title="添加图片"><ImagePlus /><span>添加图片</span><input type="file" accept="image/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) readImageFile(file); event.target.value = ""; }} /></label>
-        <span className="image-sketch-paste-hint">也可直接粘贴图片</span>
-        <span className="image-sketch-divider" />
-        {tools.map(({ id, label, icon: Icon }) => <button key={id} type="button" className={tool === id ? "active" : ""} onClick={() => setTool(id)} aria-label={label} title={label}><Icon /></button>)}
-        <span className="image-sketch-divider" />
-        <button type="button" onClick={undo} disabled={historyRef.current.length <= 1} aria-label="撤销" title="撤销"><Undo2 /></button>
-        <button type="button" onClick={redo} disabled={redoRef.current.length === 0} aria-label="重做" title="重做"><Redo2 /></button>
-        <label className="image-sketch-color" title="笔刷颜色"><span>颜色</span><input type="color" value={color} onChange={(event) => setColor(event.target.value)} /></label>
-        <label className="image-sketch-size" title="笔刷大小"><span>大小</span><input type="range" min="2" max="32" value={size} onChange={(event) => setSize(Number(event.target.value))} /></label>
+      <div className="image-sketch-canvas-wrap">
+        <canvas ref={canvasRef} onPointerDown={begin} onPointerMove={move} onPointerUp={(event) => end(event)} onPointerCancel={(event) => end(event, false)} />
+        <div className="image-sketch-toolbar" aria-label="绘图工具">
+          <label className="image-sketch-upload" title="添加图片"><ImagePlus /><span>添加图片</span><input type="file" accept="image/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) readImageFile(file); event.target.value = ""; }} /></label>
+          <span className="image-sketch-paste-hint">可直接粘贴</span>
+          <span className="image-sketch-divider" />
+          {tools.map(({ id, label, icon: Icon }) => <button key={id} type="button" className={tool === id ? "active" : ""} onClick={() => setTool(id)} aria-label={label} title={label}><Icon /></button>)}
+          <span className="image-sketch-divider" />
+          <button type="button" onClick={undo} disabled={historyRef.current.length <= 1} aria-label="撤销" title="撤销"><Undo2 /></button>
+          <button type="button" onClick={redo} disabled={redoRef.current.length === 0} aria-label="重做" title="重做"><Redo2 /></button>
+        </div>
+        <label className="image-sketch-size-rail" title={`笔刷大小 ${size}px`}><span aria-hidden="true" /><input aria-label="笔刷大小" type="range" min="2" max="32" value={size} onChange={(event) => setSize(Number(event.target.value))} /></label>
+        <div className="image-sketch-palette" aria-label="笔刷颜色">
+          <Palette aria-hidden="true" />
+          {palette.map((value) => <button key={value} type="button" className={color === value ? "active" : ""} style={{ "--swatch": value } as CSSProperties} onClick={() => setColor(value)} aria-label={`选择颜色 ${value}`} title={`颜色 ${value}`} />)}
+          <label className="image-sketch-custom-color" title="自定义颜色"><input type="color" value={color} onChange={(event) => setColor(event.target.value)} aria-label="自定义颜色" /></label>
+        </div>
       </div>
-      <div className="image-sketch-canvas-wrap"><canvas ref={canvasRef} onPointerDown={begin} onPointerMove={move} onPointerUp={(event) => end(event)} onPointerCancel={(event) => end(event, false)} /></div>
     </div>
     <footer className="image-sketch-footer"><button type="button" className="image-sketch-cancel" onClick={onCancel}>取消</button><button type="button" className="image-sketch-save" disabled={!ready} onClick={() => { const canvas = canvasRef.current; if (canvas) onSave(canvas.toDataURL("image/png")); }}><Check />保存草图</button></footer>
   </div>;
