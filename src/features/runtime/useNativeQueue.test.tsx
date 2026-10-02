@@ -74,6 +74,15 @@ it("ignores add responses after reset and never deletes on the new runtime", asy
   expect(client.deleteQueuedSubmission).not.toHaveBeenCalled();
 });
 
+it("invalidates a thread when it is cleared while add is pending", async () => {
+  const { result, client, finishAdd } = setup();
+  await act(async () => { result.current.add("closed-thread", input); });
+  act(() => result.current.clearThread("closed-thread"));
+  await act(async () => { finishAdd(); });
+  expect(result.current.get("closed-thread")).toEqual([]);
+  expect(client.listQueuedSubmissions).not.toHaveBeenCalledWith({ threadId: "closed-thread" });
+});
+
 it("keeps a failed native start visible and prevents duplicate start requests", async () => {
   const { result, client, finishAdd, setError } = setup();
   await act(async () => { result.current.add("t", input); });

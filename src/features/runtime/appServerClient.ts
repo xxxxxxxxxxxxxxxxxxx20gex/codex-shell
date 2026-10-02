@@ -1,5 +1,6 @@
 import { APP_VERSION } from "../../appVersion";
 import { ExtensionClient } from "./extensionClient";
+import { hydrateThreadHistory as hydratePaginatedThreadHistory } from "./threadHistoryClient";
 import type { SkillsConfigWriteParams } from "../../generated/app-server/v2/SkillsConfigWriteParams";
 import type { SkillsConfigWriteResponse } from "../../generated/app-server/v2/SkillsConfigWriteResponse";
 import type { InitializeResponse } from "../../generated/app-server/InitializeResponse";
@@ -262,20 +263,7 @@ export class AppServerClient {
   }
 
   async hydrateThreadHistory(thread: ThreadReadResponse["thread"], cursor: string | null | undefined, limit = 200) {
-    if (cursor === null) return { thread: { ...thread, turns: [] } };
-    const turns: ThreadTurnsListResponse["data"] = [];
-    do {
-      const page = await this.listThreadTurns({
-        threadId: thread.id,
-        cursor: cursor ?? null,
-        limit: Math.max(1, Math.min(limit - turns.length, 200)),
-        sortDirection: "desc",
-        itemsView: "full",
-      });
-      turns.push(...page.data);
-      cursor = page.nextCursor;
-    } while (cursor !== null && turns.length < limit);
-    return { thread: { ...thread, turns: turns.slice(0, limit).reverse() } };
+    return hydratePaginatedThreadHistory(this.listThreadTurns.bind(this), thread, cursor, limit);
   }
 
   listThreadTurns(params: ThreadTurnsListParams) {
