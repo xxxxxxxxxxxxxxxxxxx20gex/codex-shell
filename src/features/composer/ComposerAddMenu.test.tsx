@@ -30,7 +30,7 @@ describe("ComposerAddMenu", () => {
     expect(screen.getByRole("menuitem", { name: /添加文件和文件夹/ })).toBeTruthy();
     expect(screen.getByRole("menuitem", { name: /Skills/ })).toBeTruthy();
     expect(screen.getByRole("menuitem", { name: /压缩上下文/ })).toBeTruthy();
-    expect(screen.getAllByRole("menuitem")).toHaveLength(7);
+    expect(screen.getAllByRole("menuitem")).toHaveLength(8);
   });
 
   it("runs a command from the plus menu and closes it", () => {

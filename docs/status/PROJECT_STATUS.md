@@ -3,11 +3,11 @@
 - 当前阶段：Milestone 2 - P0 桌面编程工作台；公开 `v0.1.9` 是内核升级前的发布基线，保持原有 Runtime。main 已升级至 0.159.2，作为尚未另行发布的开发基线。
 - 总体状态：核心对话、Session、工具活动、审批、文件、Diff 和模型配置可用；已发布带 minisign 更新签名的 NSIS Windows 安装包，Windows Authenticode 代码签名、CI 与 Runtime 恢复能力尚未完成。
 - 文档边界：本文件只记录跨模块当前快照、项目级风险、下一里程碑和完整验证基线。模块行为和定向证据以 [模块状态索引](../README.md#当前状态) 为准，历史由 Git 保留。
-- 最后更新：2026-10-02
+- 最后更新：2026-10-03
 
 ## 跨模块当前快照
 
-- 图片附件已贯通历史附件、生成/工具图片与项目文件预览，支持坐标批注和本地草图编辑原型；草图导出复用 Tauri 附件保存与原生 `localImage` 输入，托管 `fileId` 图片仍只读。剪贴板图片在 Tauri 边界限制格式和单张大小后保存到独立 CODEX_HOME，再以原生 `localImage` 输入发送。终端空轮询不进入时间线，真实终端输入收纳到折叠过程组。验证边界见时间线、客户端和测试状态。
+- 图片附件已贯通历史附件、生成/工具图片与项目文件预览，支持坐标批注和本地草图编辑原型；自由画笔与橡皮擦使用合并指针采样逐段绘制平滑曲线，草图导出复用 Tauri 附件保存与原生 `localImage` 输入，托管 `fileId` 图片仍只读。剪贴板图片在 Tauri 边界限制格式和单张大小后保存到独立 CODEX_HOME，再以原生 `localImage` 输入发送。终端空轮询不进入时间线，真实终端输入收纳到折叠过程组。验证边界见时间线、客户端和测试状态。
 
 - 产品使用 Tauri 2、React、TypeScript 与 Rust 构建，以原版 `codex app-server` 为唯一执行核心，通过 stdio JSON-RPC 通信；公开 `v0.1.9` 已发布安装器、minisign 签名和 updater manifest，使用 0.154.0-alpha.6.2。main 的 Runtime 及生成协议已同步到 `codex-cli 0.159.2`，通过同源兼容门禁与隔离升级探针；具体能力和限制见 [协议状态](protocol-status.md)。升级遵循 [ADR-003](../decisions/ADR-003-compatible-runtime-updates.md)，历史迁移使用 [ADR-005](../decisions/ADR-005-native-history-migration.md) 的原生方案。
 - 核心工作流已形成闭环：用户可以选择项目、创建和恢复多个 Session、发送文本/文件/图片、查看结构化执行时间线、处理审批、审查实时与历史 Diff，并按完成 Turn 分叉会话。

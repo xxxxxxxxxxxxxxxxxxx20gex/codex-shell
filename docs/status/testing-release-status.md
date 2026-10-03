@@ -3,9 +3,11 @@
 - 模块职责：维护质量门禁、Runtime 兼容验证、Windows 发布证据及未覆盖边界。模块行为由对应状态文档维护，历史测试流水账由 Git 保留。
 - 当前状态：v0.1.9 为内核升级前的发布基线，包含窗口尺寸、回复资源入口、输入区布局、临时提示及模型服务层级修复；Updater minisign 已启用，Windows Authenticode 尚未配置，SmartScreen 仍可能提示未知发布者。
 - 当前接口：`pnpm test:quality` 依次执行 TypeScript、ESLint、Vitest、`pnpm test:amap`、production build、Knip、`pnpm rust:check` 和 diff 检查。协议、Runtime、四视口布局和 Skill 专项验证独立运行，入口见 [测试脚本说明](../../tests/scripts/README.md) 与 `package.json`。
-- 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；Vite 主 chunk 超过 500 kB；`cargo fmt --check` 尚未纳入门禁。全量 Vitest 仍有 `ComposerAddMenu.test.tsx` 的菜单数量旧断言（期望 7，实际 8）未通过。
+- 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；Vite 主 chunk 超过 500 kB；`cargo fmt --check` 尚未纳入门禁。真实 WebView2 手写触控、系统凭据和第三方外部服务仍未完成人工验收。
 - 下一步：补真实系统凭据、多渠道对话、第三方 MCP OAuth，以及干净 Windows 用户环境安装和升级验收。
 - 最后更新：2026-10-03
+
+2026-10-03，修正加号菜单中绘图命令加入后的失效数量断言；`pnpm test:quality` 全部通过，包括 72 个 Vitest 文件、400 项前端测试、生产构建、Knip、Cargo check、Rust 测试及 diff 检查。草图定向 Edge 探针与 Debug 构建继续通过，Debug Runtime manifest 为 `codex-cli 0.159.2`。
 
 2026-10-03，草图自由画笔和橡皮擦改为逐段平滑绘制：附件定向 13 项 Vitest、Edge 四尺寸与 150% DPI 绘制探针、TypeScript、ESLint、production build、Knip、Cargo check 和 Debug 构建通过；Debug Runtime manifest 为 `codex-cli 0.159.2`。全量 Vitest 为 72 个文件中 71 个通过、400 项中 399 项通过，唯一失败仍为既有加号菜单数量旧断言。真实 WebView2 手写触控未人工验收。
 
