@@ -13,7 +13,7 @@ Chat 不接受 --size 或 --quality。Images 文生图可使用，默认 1024x10
 脚本默认型号为 gpt-image-2.5，不设置模型环境变量；--model 可指定其他型号。默认值不会自动追踪渠道最新型号。
 --timeout 默认 300 秒，是网络操作超时，不是严格的总耗时上限。
 --out 必须是新 PNG 路径，同名 JSON 也不能存在。不自动重试，不自动替换模型。
-使用 CS 草图或聊天附件时，先确认附件的真实绝对路径存在并能打开，再将该路径作为 --image 参数；找不到原图应停止，不能省略 --image 改做文生图。生成后核对同名 JSON 的 input_images 是否包含该路径，以及 api/status 和成图内容。
+使用 CS 草图或聊天附件时，先确认附件的真实绝对路径存在并能读取，再将该路径作为 --image 参数；找不到原图应停止，不能省略 --image 改做文生图。生成后核对同名 JSON 的 input_images 是否包含该路径，以及 api/status、尺寸和输出文件；默认直接交付，不额外看图。
 
 ## Windows 环境与可移动路径
 
@@ -61,3 +61,13 @@ low 可用于草稿；medium/high/auto 可在用户需要时指定，但本渠�
 输出 PNG 和同名 JSON，JSON 保存参数、提示词、输入路径、实际尺寸、耗时和可用的 usage。
 保留原始生成图；若后续确需压缩或缩放，另存衍生文件并检查尺寸，不把缩放结果当作模型原生分辨率。
 交付时给出图片路径，按用户要求提供提示词；不要向图片 CDN 发送密钥。网络问题见 [网络排查](codex-network.md)。
+
+## 按需预览
+
+仅在需要视觉检查时运行（不调用生图服务）：
+
+```powershell
+python ./scripts/prepare_preview.py ./results/scene.png --out ./results/scene-preview.jpg
+```
+
+输出目录必须已存在，目标必须为新的 .jpg/.jpeg 文件。预览使用长边最多 1024px、JPEG quality=80、白色透明背景和 EXIF 方向校正，不放大小图、不覆盖原图。将预览绝对路径传给 view_image；原始 PNG 用于最终展示。预览不保证网关兼容，检查失败不自动重复生图或回传大图。

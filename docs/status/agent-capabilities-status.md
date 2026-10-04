@@ -3,6 +3,7 @@
 - 模块职责：把 app-server 的 Skill、MCP、上下文压缩、目标、计划和 Review 映射为 Composer `+` 菜单与 `/` 快捷命令体验。
 - 当前状态：CS 只提供 Skill 管理和 MCP 配置。内置目录提供兔子生图 `image-gen`、高德地图 `amap` 和 `cs-docs`；支持用户本地 Skill 安装、Core 启停、可恢复卸载、MCP 配置与 OAuth。插件市场、插件安装／卸载及详情不属于 CS 产品功能；Core 插件协议类型仅为运行时兼容保留，不由壳子调用。
 - Skill 行为：列表进入页面、扩展 revision 变化及安装／卸载后自动读取；启停写入 `skills/config/write`，以服务端 `effectiveEnabled` 为准。内置 Skill 固定排序为兔子生图→高德，系统组 `cs-docs` 置前，其余按 name/path 排序；安装状态、启停状态和 Core 返回顺序不参与排序。
+- 最近变更：image-gen 默认核对成功记录与输出文件后直接展示原图，不再强制回传成图进行视觉检查；按需通过本地 prepare_preview.py 生成长边最多 1024px 的 JPEG，保留原图、不覆盖目标。看图或续答失败后优先交付已有产物，不重复生图；此为工作流缓解，不代表网关断流已修复，亦不改变 Core 重试策略。
 - 内置资源：生产环境从 `_up_/bundled/skills` 读取，Debug 才允许源码回退；安装前后保留在 CS 内置组，不覆盖已有用户 Skill。高德依赖外部 Bun 和 `AMAP_MAPS_API_KEY`；生图依次读取进程、Windows 用户和系统环境变量，`TUZI_BASE_URL` 缺省为 `https://api.tu-zi.com/v1`。CS 不分发这些外部依赖和用户密钥。
 - 能力边界：高德支持地点、路线、距离、天气、途经点、避收费、分页和带真实底图的行程图；不自动核实班次、价格或房态。生图已验证当前兔子渠道 `gpt-image-2.5` 的单草图参考请求，不保证其他模型、请求方式、配额或后续路由持续可用。办公能力应以独立 Skill 接入，Python、LibreOffice 等依赖由 Skill 自行声明。
 - 安全与生命周期：Token 通过系统凭据或环境变量引用，新增/替换 MCP Token 后需在任务结束后重启 Runtime；扩展变更刷新状态，不自动中断任务。命令面板尚未实现焦点陷阱。

@@ -1,5 +1,7 @@
 # 测试与发布状态
 
+2026-10-05 image-gen 定向验证：本地预览 3 项与原生图脚本 11 项 Python 测试、内置及已安装 Skill 格式校验、TypeScript、production build、Cargo check、51 项 Rust 单测（1 项忽略）、Clippy、Debug 构建及 Runtime 哈希核验通过。预览覆盖缩放、透明背景、EXIF、防覆盖和非法输入；未执行收费生图或真实网关视觉续答，不代表断流已修复。
+
 - 模块职责：维护质量门禁、Runtime 兼容验证、Windows 发布证据及未覆盖边界。模块行为由对应状态文档维护，历史测试流水账由 Git 保留。
 - 当前状态：v0.1.9 为内核升级前的发布基线，包含窗口尺寸、回复资源入口、输入区布局、临时提示及模型服务层级修复；Updater minisign 已启用，Windows Authenticode 尚未配置，SmartScreen 仍可能提示未知发布者。
 - 当前接口：`pnpm test:quality` 依次执行 TypeScript、ESLint、Vitest、`pnpm test:amap`、production build、Knip、`pnpm rust:check` 和 diff 检查。协议、Runtime、四视口布局和 Skill 专项验证独立运行，入口见 [测试脚本说明](../../tests/scripts/README.md) 与 `package.json`。
