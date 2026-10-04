@@ -4,10 +4,10 @@
 - 当前状态：CS 只提供 Skill 管理和 MCP 配置。内置目录提供兔子生图 `image-gen`、高德地图 `amap` 和 `cs-docs`；支持用户本地 Skill 安装、Core 启停、可恢复卸载、MCP 配置与 OAuth。插件市场、插件安装／卸载及详情不属于 CS 产品功能；Core 插件协议类型仅为运行时兼容保留，不由壳子调用。
 - Skill 行为：列表进入页面、扩展 revision 变化及安装／卸载后自动读取；启停写入 `skills/config/write`，以服务端 `effectiveEnabled` 为准。内置 Skill 固定排序为兔子生图→高德，系统组 `cs-docs` 置前，其余按 name/path 排序；安装状态、启停状态和 Core 返回顺序不参与排序。
 - 内置资源：生产环境从 `_up_/bundled/skills` 读取，Debug 才允许源码回退；安装前后保留在 CS 内置组，不覆盖已有用户 Skill。高德依赖外部 Bun 和 `AMAP_MAPS_API_KEY`；生图依次读取进程、Windows 用户和系统环境变量，`TUZI_BASE_URL` 缺省为 `https://api.tu-zi.com/v1`。CS 不分发这些外部依赖和用户密钥。
-- 能力边界：高德支持地点、路线、距离、天气、途经点、避收费、分页和带真实底图的行程图；不自动核实班次、价格或房态。生图的令牌路由兼容性尚未由真实收费请求确认。办公能力应以独立 Skill 接入，Python、LibreOffice 等依赖由 Skill 自行声明。
+- 能力边界：高德支持地点、路线、距离、天气、途经点、避收费、分页和带真实底图的行程图；不自动核实班次、价格或房态。生图已验证当前兔子渠道 `gpt-image-2.5` 的单草图参考请求，不保证其他模型、请求方式、配额或后续路由持续可用。办公能力应以独立 Skill 接入，Python、LibreOffice 等依赖由 Skill 自行声明。
 - 安全与生命周期：Token 通过系统凭据或环境变量引用，新增/替换 MCP Token 后需在任务结束后重启 Runtime；扩展变更刷新状态，不自动中断任务。命令面板尚未实现焦点陷阱。
 - 当前接口：`ComposerAddMenu`、`ComposerIntentControl`、`SlashCommandMenu`、`SkillPicker`、`McpStatusPanel`、`ReviewPanel`、`useAgentCommands` 及固定协议 RPC 包装。
-- 已知问题：真实 Windows 凭据写入、第三方 MCP OAuth、办公产物、真实生图／高德账号权限与配额，以及干净机器依赖仍未验收；Skill 所需外部依赖由 CS 展示错误但不负责分发。
+- 已知问题：真实 Windows 凭据写入、第三方 MCP OAuth、办公产物、高德账号权限与配额、生图其他模型与干净机器依赖仍未验收；Skill 所需外部依赖由 CS 展示错误但不负责分发。
 - 下一步：在干净 Windows 环境验收内置 Skill 资源和办公依赖；继续验证第三方 MCP OAuth 与系统凭据写入。
-- 验证证据：2026-10-01；Skill 固定排序、资源解析与卸载、Skill 格式、高德 34 项 Bun 测试、生图 11 项 Python 测试、扩展组件测试、TypeScript、Debug 构建及 Rust 检查均有记录。测试使用模拟外部接口，不能替代真实 API、账号权限或干净机器验收。
-- 最后更新：2026-10-01
+- 验证证据：2026-10-01；Skill 固定排序、资源解析与卸载、Skill 格式、高德 34 项 Bun 测试、生图 11 项 Python 测试、扩展组件测试、TypeScript、Debug 构建及 Rust 检查均有记录。2026-10-05 使用 CS 草图附件执行一次真实 `gpt-image-2.5 --image` 请求，JSON 记录为 Chat、输入路径正确、成功返回 1536x1024 PNG；未验证其他模型、账号权限或干净机器。
+- 最后更新：2026-10-05
