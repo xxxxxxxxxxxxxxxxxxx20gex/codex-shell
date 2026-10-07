@@ -1,7 +1,7 @@
 # 测试与发布状态
 
 - 模块职责：维护质量门禁、Runtime 兼容验证、Windows 发布证据及未覆盖边界；模块行为由对应状态文档维护，历史由 Git 保留。
-- 当前状态：v0.1.10 已打包验证但尚未上传；GitHub Git 推送与独立写入请求均返回 500，读取正常。公开版仍为 v0.1.9。v0.1.10 使用官方 Core 0.160.1，沿用既有 Updater minisign 公钥。Windows Authenticode 尚未配置，SmartScreen 仍可能提示未知发布者。
+- 当前状态：v0.1.10 使用官方 Core 0.160.1，沿用既有 Updater minisign 公钥。Windows Authenticode 尚未配置，SmartScreen 仍可能提示未知发布者。
 - 当前接口：`pnpm test:quality` 执行 TypeScript、ESLint、Vitest、高德离线测试、production build、Knip、Cargo check、Rust 单测、严格 Clippy 和 diff 检查。专项入口见 [测试脚本说明](../../tests/scripts/README.md)。
 - 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；Vite 主 chunk 超过 500 kB；Rust 既有格式差异尚未整理，`cargo fmt --check` 未纳入门禁。
 - 下一步：真实系统凭据、多渠道对话、第三方 MCP OAuth、干净 Windows 安装升级和大型历史迁移验收。
@@ -24,8 +24,8 @@ image-gen 最近专项证据为 2026-10-05 的 14 项 Python 测试，覆盖预�
 - 真实大型旧库迁移、真实网关安全缓冲／重路由、完整 WebView2 消息编辑链路。
 - 图片／PDF 仍由 app-server 完整返回后判断预览大小，尚无源端分段读取；第三方网关工具图片续答问题不能宣称由内核升级解决。
 
-## 当前发布准备
+## 最近发布
 
-v0.1.10 使用 Core 0.160.1，发布资产为 NSIS 安装器、`.sig` 和 `latest.json`，目标入口为 [GitHub Release](https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/releases/tag/v0.1.10)。2026-10-08 本机生产打包及 Debug 构建通过；独立校验安装器 minisign 签名、可信注释签名、manifest 版本／下载地址、主 Runtime 和三个 helper 哈希通过，公钥与 v0.1.9 一致。Release 输出的内置 rg 探针通过；资产保存在本机 `release-artifacts/v0.1.10/`，尚未上传；正式发布后精确校验和以 GitHub Release 为准。这不代表干净机器安装或真实用户数据升级已经验收。
+v0.1.10 使用 Core 0.160.1，发布资产为 NSIS 安装器、`.sig` 和 `latest.json`，入口为 [GitHub Release](https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/releases/tag/v0.1.10)。2026-10-08 本机生产打包及 Debug 构建通过；独立校验安装器 minisign 签名、可信注释签名、manifest 版本／下载地址、主 Runtime 和三个 helper 哈希通过，公钥与 v0.1.9 一致。Release 输出的内置 rg 探针通过；上传资产及精确校验和以 GitHub Release 为准。这不代表干净机器安装或真实用户数据升级已经验收。
 
 从 v0.1.9 或更早版本升级前，关闭 CS 并备份独立 CODEX_HOME。新版 Core 会迁移 legacy 历史，降级安装包不能代替数据恢复。v0.1.9 的 tag、发布分支和资产保留不变。
