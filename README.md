@@ -8,7 +8,7 @@ CS 复用原版 `codex app-server` 作为执行内核，提供独立的桌面界
 
 [下载 Windows 版](https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/releases/latest) · [配置 GPT / DeepSeek](#配置-gpt--deepseek) · [从源码运行](#从源码运行)
 
-当前稳定版 `v0.1.10` 使用 Codex Core `0.160.1`，包含侧边聊天、草图画布、资源校验和模型提示修复；也可[从源码构建 Debug 桌面端](#从源码运行)。从旧版升级前，请关闭 CS 并备份 `%USERPROFILE%\.codex-shell`（自定义 CODEX_HOME 请备份对应目录）；新版 Core 会迁移旧历史，降级安装器不能还原数据。
+待发布版 `v0.1.10` 已完成本机构建与签名，GitHub 上传暂受服务端写入故障阻塞；当前公开稳定版仍为 `v0.1.9`。v0.1.10 使用 Codex Core `0.160.1`，包含侧边聊天、草图画布、资源校验和模型提示修复；也可[从源码构建 Debug 桌面端](#从源码运行)。从旧版升级前，请关闭 CS 并备份 `%USERPROFILE%\.codex-shell`（自定义 CODEX_HOME 请备份对应目录）；新版 Core 会迁移旧历史，降级安装器不能还原数据。
 
 ## 为什么值得使用
 
@@ -82,8 +82,8 @@ CS 不修改 Codex Core，也不在前端复制一套 Agent 执行循环。所�
 
 ### 下载 Windows 安装包
 
-当前公开稳定版为 [Codex Shell v0.1.10](https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/releases/tag/v0.1.10)：下载
-`codex-shell_0.1.10_x64-setup.exe` 后按向导安装。`v0.1.10` 已启用 Tauri Updater，但当前公开 Release 未进行 Windows Authenticode 代码签名，
+当前公开稳定版为 [Codex Shell v0.1.9](https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/releases/tag/v0.1.9)：下载
+`codex-shell_0.1.9_x64-setup.exe` 后按向导安装。`v0.1.9` 已启用 Tauri Updater，但当前公开 Release 未进行 Windows Authenticode 代码签名，
 Windows SmartScreen 可能在首次运行时显示提示；这是个人二开项目，不代表 OpenAI
 官方产品或背书。
 
@@ -143,7 +143,7 @@ CS 不会将与功能无关的遥测数据上传到外部服务。
 
 ### 代码签名
 
-当前 `v0.1.10` Windows 安装包使用 Tauri Updater 的 minisign 更新签名校验；安装包本身
+当前 `v0.1.9` 及待发布 `v0.1.10` Windows 安装包使用 Tauri Updater 的 minisign 更新签名校验；安装包本身
 仍可能因未配置 Windows Authenticode 代码签名而触发
 SmartScreen 提示。Tauri 更新签名与 Windows 代码签名是两套独立机制。签名私钥只保存在
 本机安全目录或其他受控密钥存储中，不提交到仓库。
@@ -234,7 +234,7 @@ CS 采用“代码实现 + 仓库文档 Wiki”协同的开发方式。文档不
 ### 分支与版本
 
 - `main`：个人项目的日常开发与稳定主线；
-- `release/vX.Y.Z`：对应已发布版本的冻结维护分支，并与同名 Git tag 对齐；当前公开版本为 `release/v0.1.10`。Updater 已在当前发布分支中生效。
+- `release/vX.Y.Z`：对应已发布版本的冻结维护分支，并与同名 Git tag 对齐；当前公开版本为 `release/v0.1.9`，`release/v0.1.10` 已在本机准备。Updater 已在当前发布分支中生效。
 
 日常改动直接提交到 `main`，通过质量门禁后正式发布。发布时从 `main` 创建版本分支
 和 tag，安装包与该 tag 保持一致。
@@ -326,7 +326,7 @@ pnpm protocol:generate
 pnpm runtime:probe-protocol
 ```
 
-当前 v0.1.10 安装包及 main 发布基线使用 `codex-cli 0.160.1`。
+待发布 v0.1.10 安装包及 main 开发基线使用 `codex-cli 0.160.1`。
 升级到改变协议的候选内核时，先保留同源旧 Runtime 文件组，再按以下顺序适配，不能跳过兼容门禁：
 
 ```powershell
