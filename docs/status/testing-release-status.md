@@ -1,13 +1,15 @@
 # 测试与发布状态
 
+2026-10-07 当前升级基线：main 使用官方稳定版 `codex-cli 0.160.1`，主程序及三个同源 helper 已通过 manifest SHA-256 校验；875 个生成协议文件无变化，101 处调用／订阅兼容门禁通过。`pnpm test:quality` 全部通过：400 项前端、34 项高德离线和 51 项 Rust 测试（1 项交互测试忽略）、TypeScript、ESLint、production build、Knip、Cargo check、严格 Clippy 及 diff 检查。设置／队列、Goal、0.159.2 到 0.160.1 的隔离历史升级与迁移探针通过；Debug 构建、sidecar 哈希及内置 rg 探针通过。首次 Rust 测试因临时 WebView2 静态库缓存缺失失败，移走该依赖缓存后全量重跑通过。安全回归覆盖目录隔离、凭据失败补偿、MCP 环境变量保护、渠道 URL 和图片输入校验。未启动真实用户 CODEX_HOME，未验证真实网关图片续答、大型旧库及 elevated Sandbox；本次不宣称此前图片回传问题已修复。公开 v0.1.9 发布资产不变。以下较早日期记录仅保留其专项验证范围。
+
 2026-10-05 image-gen 定向验证：本地预览 3 项与原生图脚本 11 项 Python 测试、内置及已安装 Skill 格式校验、TypeScript、production build、Cargo check、51 项 Rust 单测（1 项忽略）、Clippy、Debug 构建及 Runtime 哈希核验通过。预览覆盖缩放、透明背景、EXIF、防覆盖和非法输入；未执行收费生图或真实网关视觉续答，不代表断流已修复。
 
 - 模块职责：维护质量门禁、Runtime 兼容验证、Windows 发布证据及未覆盖边界。模块行为由对应状态文档维护，历史测试流水账由 Git 保留。
-- 当前状态：v0.1.9 为内核升级前的发布基线，包含窗口尺寸、回复资源入口、输入区布局、临时提示及模型服务层级修复；Updater minisign 已启用，Windows Authenticode 尚未配置，SmartScreen 仍可能提示未知发布者。
+- 当前状态：main 使用 `codex-cli 0.160.1`，完整质量门禁通过；公开 v0.1.9 保持升级前的发布基线。Updater minisign 已启用，Windows Authenticode 尚未配置，SmartScreen 仍可能提示未知发布者。
 - 当前接口：`pnpm test:quality` 依次执行 TypeScript、ESLint、Vitest、`pnpm test:amap`、production build、Knip、`pnpm rust:check` 和 diff 检查。协议、Runtime、四视口布局和 Skill 专项验证独立运行，入口见 [测试脚本说明](../../tests/scripts/README.md) 与 `package.json`。
 - 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；Vite 主 chunk 超过 500 kB；`cargo fmt --check` 尚未纳入门禁。真实 WebView2 手写触控、系统凭据和第三方外部服务仍未完成人工验收。
 - 下一步：补真实系统凭据、多渠道对话、第三方 MCP OAuth，以及干净 Windows 用户环境安装和升级验收。
-- 最后更新：2026-10-03
+- 最后更新：2026-10-07
 
 2026-10-03，修正加号菜单中绘图命令加入后的失效数量断言；`pnpm test:quality` 全部通过，包括 72 个 Vitest 文件、400 项前端测试、生产构建、Knip、Cargo check、Rust 测试及 diff 检查。草图定向 Edge 探针与 Debug 构建继续通过，Debug Runtime manifest 为 `codex-cli 0.159.2`。
 

@@ -326,7 +326,7 @@ pnpm protocol:generate
 pnpm runtime:probe-protocol
 ```
 
-main 开发基线已升级到 `codex-cli 0.159.2`；公开 v0.1.9 安装包仍使用升级前的 0.154.0-alpha.6.2。
+main 开发基线已升级到 `codex-cli 0.160.1`；公开 v0.1.9 安装包仍使用升级前的 0.154.0-alpha.6.2。
 升级到改变协议的候选内核时，先保留同源旧 Runtime 文件组，再按以下顺序适配，不能跳过兼容门禁：
 
 ```powershell
