@@ -1,5 +1,7 @@
 # 测试与发布状态
 
+2026-10-08 模型提示修复基线：`pnpm test:quality` 通过（403 项前端、34 项高德、51 项 Rust 测试，1 项交互测试忽略）；新增回归验证缓冲解除和终止清理、跨会话提示隔离。Edge 四尺寸 Composer／提示布局、Debug 构建及 0.160.1 Runtime 哈希校验通过。模型事件使用模拟通知验证，未触发真实网关安全缓冲或重路由；行为边界见 [客户端状态](app-server-client-status.md)。
+
 2026-10-07 当前升级基线：main 使用官方稳定版 `codex-cli 0.160.1`，主程序及三个同源 helper 已通过 manifest SHA-256 校验；875 个生成协议文件无变化，101 处调用／订阅兼容门禁通过。`pnpm test:quality` 全部通过：400 项前端、34 项高德离线和 51 项 Rust 测试（1 项交互测试忽略）、TypeScript、ESLint、production build、Knip、Cargo check、严格 Clippy 及 diff 检查。设置／队列、Goal、0.159.2 到 0.160.1 的隔离历史升级与迁移探针通过；Debug 构建、sidecar 哈希及内置 rg 探针通过。首次 Rust 测试因临时 WebView2 静态库缓存缺失失败，移走该依赖缓存后全量重跑通过。安全回归覆盖目录隔离、凭据失败补偿、MCP 环境变量保护、渠道 URL 和图片输入校验。未启动真实用户 CODEX_HOME，未验证真实网关图片续答、大型旧库及 elevated Sandbox；本次不宣称此前图片回传问题已修复。公开 v0.1.9 发布资产不变。以下较早日期记录仅保留其专项验证范围。
 
 2026-10-05 image-gen 定向验证：本地预览 3 项与原生图脚本 11 项 Python 测试、内置及已安装 Skill 格式校验、TypeScript、production build、Cargo check、51 项 Rust 单测（1 项忽略）、Clippy、Debug 构建及 Runtime 哈希核验通过。预览覆盖缩放、透明背景、EXIF、防覆盖和非法输入；未执行收费生图或真实网关视觉续答，不代表断流已修复。

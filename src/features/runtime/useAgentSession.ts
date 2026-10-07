@@ -211,6 +211,8 @@ export function useAgentSession(
       dispatch,
       onTurnStarted,
       onTurnCompleted: (notification) => {
+        runtimeNoticeStore.dismissWhere((notice) => notice.category === "modelBuffering"
+          && notice.threadId === notification.threadId && notice.turnId === notification.turn.id);
         onTurnCompleted(notification);
         dispatchRetryingError({ type: "settled", threadId: notification.threadId });
       },
@@ -227,6 +229,8 @@ export function useAgentSession(
           }
         }
         if (!notification.willRetry) {
+          runtimeNoticeStore.dismissWhere((notice) => notice.category === "modelBuffering"
+            && notice.threadId === notification.threadId && notice.turnId === notification.turnId);
           dispatchRetryingError({ type: "settled", threadId: notification.threadId });
           markThreadStopped(notification.threadId);
           if (notification.threadId === currentThreadId()) setSubmitting(false);
@@ -241,7 +245,10 @@ export function useAgentSession(
       onThreadArchived: (notification) => removeThread(notification.threadId),
       onThreadDeleted: (notification) => removeThread(notification.threadId),
       onThreadUnarchived: (notification) => onThreadUnarchived(notification.threadId),
-      onThreadClosed: (notification) => onThreadClosed(notification.threadId),
+      onThreadClosed: (notification) => {
+        runtimeNoticeStore.dismissWhere((notice) => notice.category === "modelBuffering" && notice.threadId === notification.threadId);
+        onThreadClosed(notification.threadId);
+      },
       onThreadProjectUpdated: (notification: ThreadProjectUpdatedNotification) => {
         if (notification.threadId !== currentThreadId()) {
           void refreshHistory();
@@ -305,20 +312,29 @@ export function useAgentSession(
         });
       },
       onModelRerouted: (notification) => runtimeNoticeStore.push({
+        threadId: notification.threadId,
+        turnId: notification.turnId,
         kind: "warning",
         destination: "diagnostics",
         title: "模型已被重新路由",
         message: `${notification.fromModel} → ${notification.toModel}（${notification.reason}）`,
       }),
       onModelVerification: (notification) => runtimeNoticeStore.push({
+        threadId: notification.threadId,
+        turnId: notification.turnId,
         kind: "warning",
         destination: "diagnostics",
         title: "模型需要额外验证",
         message: `当前请求需要：${notification.verifications.join("、")}`,
       }),
       onModelSafetyBuffering: (notification) => {
+        runtimeNoticeStore.dismissWhere((notice) => notice.category === "modelBuffering"
+          && notice.threadId === notification.threadId && notice.turnId === notification.turnId);
         if (!notification.showBufferingUi) return;
         runtimeNoticeStore.push({
+          category: "modelBuffering",
+          threadId: notification.threadId,
+          turnId: notification.turnId,
           kind: "warning",
           destination: "diagnostics",
           title: "模型响应正在安全缓冲",
@@ -340,6 +356,7 @@ export function useAgentSession(
         message: notification.error ?? (notification.status === "ready" ? "服务器已就绪。" : "服务器启动状态已更新。"),
       }); },
       onStopped: () => {
+        runtimeNoticeStore.dismissWhere((notice) => Boolean(notice.threadId));
         dispatchRetryingError({ type: "clear" });
         setCodexHome("");
         setWindowsSandboxReadiness(null);

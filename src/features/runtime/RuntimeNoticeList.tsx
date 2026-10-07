@@ -18,6 +18,7 @@ export function RuntimeNoticeList({ store }: Props) {
         <article key={notice.id} data-kind={notice.kind}>
           <div><strong>{notice.title}</strong><button type="button" onClick={() => store.dismiss(notice.id)} aria-label="忽略"><X aria-hidden="true" /></button></div>
           <p>{notice.message}</p>
+          {notice.threadId && <code>会话：{notice.threadId} · 回合：{notice.turnId}</code>}
           {notice.path && <code>{notice.path}</code>}
         </article>
       ))}

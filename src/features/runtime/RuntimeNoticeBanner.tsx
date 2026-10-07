@@ -6,11 +6,13 @@ import "./RuntimeNotices.css";
 
 interface Props {
   store: RuntimeNoticeStore;
+  threadId?: string;
   onShowStatus: (destination: RuntimeNoticeDestination) => void;
 }
 
-export function RuntimeNoticeBanner({ store, onShowStatus }: Props) {
-  const notices = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
+export function RuntimeNoticeBanner({ store, threadId, onShowStatus }: Props) {
+  const allNotices = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
+  const notices = allNotices.filter((notice) => !notice.threadId || notice.threadId === threadId);
   const notice = notices[notices.length - 1];
   if (!notice) return null;
   return (

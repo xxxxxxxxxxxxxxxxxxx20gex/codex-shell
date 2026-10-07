@@ -327,6 +327,7 @@ function App() {
           <div className="composer-wrap">
             <RuntimeNoticeBanner
               store={session.runtimeNoticeStore}
+              threadId={session.thread?.id}
               onShowStatus={(destination) => openPreferences(destination)}
             />
             {session.error && <div className="composer-error" role="alert">{session.error}</div>}

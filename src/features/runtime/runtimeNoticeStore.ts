@@ -9,6 +9,9 @@ export interface RuntimeNotice {
   path?: string;
   destination: RuntimeNoticeDestination;
   receivedAt: number;
+  threadId?: string;
+  turnId?: string;
+  category?: "modelBuffering";
 }
 
 export type RuntimeNoticeInput = Omit<RuntimeNotice, "id" | "receivedAt">;
@@ -49,6 +52,9 @@ export class RuntimeNoticeStore {
       && entry.title === boundedNotice.title
       && entry.message === boundedNotice.message
       && entry.path === boundedNotice.path
+      && entry.threadId === boundedNotice.threadId
+      && entry.turnId === boundedNotice.turnId
+      && entry.category === boundedNotice.category
     ));
     const entry = { ...boundedNotice, id: this.sequence++, receivedAt: Date.now() };
     const duplicate = duplicateIndex === -1 ? undefined : this.entries[duplicateIndex];
@@ -58,7 +64,7 @@ export class RuntimeNoticeStore {
     nextEntries.slice(0, -MAX_RUNTIME_NOTICES).forEach((oldEntry) => this.clearTimer(oldEntry.id));
     this.entries = nextEntries.slice(-MAX_RUNTIME_NOTICES);
     this.emitChange();
-    if (entry.kind !== "security") {
+    if (entry.kind !== "security" && entry.category !== "modelBuffering") {
       const timer = setTimeout(() => this.dismiss(entry.id), entry.kind === "warning" ? 8_000 : 5_000);
       this.expiryTimers.set(entry.id, timer);
     }
