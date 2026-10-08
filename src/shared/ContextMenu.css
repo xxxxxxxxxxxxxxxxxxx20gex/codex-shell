@@ -2,5 +2,6 @@
 .explorer-context-menu button { display: flex; align-items: center; gap: var(--space-2); width: 100%; min-height: var(--control-height); padding: var(--space-1) var(--space-2); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-secondary); font-size: var(--text-ui); text-align: left; cursor: pointer; }
 .explorer-context-menu button:hover, .explorer-context-menu button:focus-visible { background: var(--surface-selected); color: var(--text-primary); }
 .explorer-context-menu button:focus-visible { outline: 2px solid var(--accent-info); outline-offset: -2px; }
-.explorer-context-menu svg { width: 16px; height: 16px; stroke-width: 1.75; flex: none; }
+.explorer-context-menu svg { width: 16px; height: 16px; stroke-width: 1.75; flex: none; color: var(--text-muted); }
+.explorer-context-menu button:hover svg, .explorer-context-menu button:focus-visible svg { color: currentColor; }
 .explorer-context-menu button:disabled { color: var(--text-disabled); background: transparent; cursor: default; }

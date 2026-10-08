@@ -43,9 +43,9 @@ describe("ThreadHistoryList", () => {
 
     expect(markup).not.toContain("#01");
     expect(markup).not.toContain("#02");
-    expect(markup).toContain('aria-label="复制 Session 路径"');
-    expect(markup).toContain('aria-label="复制 Session ID"');
-    expect(markup).toContain('class="thread-action-button"');
+    expect(markup).toContain('aria-label="置顶"');
+    expect(markup).toContain('aria-label="归档"');
+    expect(markup).toContain("thread-action-button");
     expect(markup).toContain('class="thread-actions');
     expect(markup).toContain('class="thread-title"');
     expect(markup).toContain('class="thread-copy"');

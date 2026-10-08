@@ -54,13 +54,19 @@
   --radius-composer: 16px;
   --radius-code-block: 20px;
   --shadow-popover: 0 14px 32px rgb(0 0 0 / 32%);
+  --scrim: rgb(5 5 4 / 76%);
+  --scrim-blur: 8px;
   --motion-fast: 120ms ease;
+  --motion-popover: 160ms ease;
+  --header-height: 48px;
+  --column-content-width: 760px;
+  --column-gutter: 32px;
 
   /* Transitional aliases are limited to non-color migration roles. */
   --ui-accent-ink: #151812;
   --conversation-font-size: var(--font-size-content);
   --conversation-font-size-secondary: var(--font-size-ui);
-  --conversation-font-size-small: var(--font-size-control);
+  --conversation-font-size-small: var(--text-conversation-small);
   --conversation-font-size-meta: var(--font-size-caption);
   --ui-control-height: var(--control-height-compact);
   --ui-control-radius: var(--radius-control);
@@ -95,6 +101,7 @@
   --accent-danger: #ae423a;
   --accent-success: #317c48;
   --context-marker: #1c211d;
+  --scrim: rgb(28 33 29 / 38%);
   --ui-accent-ink: #f7faf3;
 }
 
@@ -120,6 +127,11 @@
     --accent-danger: #ae423a;
     --accent-success: #317c48;
     --context-marker: #1c211d;
+    --scrim: rgb(28 33 29 / 38%);
     --ui-accent-ink: #f7faf3;
   }
+}
+
+@media (max-width: 899px) {
+  :root { --column-gutter: 16px; }
 }

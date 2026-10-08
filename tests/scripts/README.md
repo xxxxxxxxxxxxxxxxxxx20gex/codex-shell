@@ -44,3 +44,5 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tests/scripts/run-quality-ga
 - `pnpm test:channel-layout <playwright/index.mjs绝对路径> <浏览器可执行文件绝对路径> [端口]`：先启动 `pnpm dev --host 127.0.0.1 --port 1435`；脚本挂载真实的 `PreferencesPanel`（模型渠道分区）与 `ModelSettingsPanel`，检查四尺寸布局、模态框边界、字号下限、键盘焦点、删除二次确认、Escape 关闭和 reduced-motion，截图保存到系统临时目录。
 - `pnpm test:composer-layout <playwright/index.mjs绝对路径> <浏览器可执行文件绝对路径> [端口]`：先启动 `pnpm dev --host 127.0.0.1 --port 1435`；脚本挂载真实目标栏、提示、待发送列表及添加／权限／发送控件，检查四尺寸布局、输入区向上拖拽／底部固定／高度上下限／键盘调整、行与按钮尺寸、缩略图、长文截断、滚动上限、菜单边界、Escape 焦点返回、外部关闭、文字下限与 reduced-motion，截图保存到系统临时目录。使用模拟回调，不代表真实 Runtime 或 WebView2 链路验收。
 - `pnpm test:markdown-code-layout <playwright/index.mjs绝对路径> <浏览器可执行文件绝对路径> [端口]`：先启动 `pnpm dev --host 127.0.0.1 --port 1435`；脚本挂载真实 Markdown 回复，检查代码块整列宽度、长行滚动与换行切换、复制按钮焦点和四尺寸边界，截图保存到系统临时目录。
+
+- `pnpm test:workbench-layout <playwright/index.mjs绝对路径> <浏览器可执行文件绝对路径> [端口]`：Vite 默认端口 1435；使用实际历史列表、菜单和 Markdown 组件与模拟工作台，检查四尺寸深浅主题、历史标题 hover 稳定、截断、消息列与 Composer 对齐、菜单焦点、Tab、Shift+F10、Escape、外部点击与 reduced-motion。截图写入临时目录，不代表真实 WebView2 人工验收。

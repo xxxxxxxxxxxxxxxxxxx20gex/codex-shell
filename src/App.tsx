@@ -47,6 +47,7 @@ import { WorkspaceSelector } from "./features/workspaces/WorkspaceSelector";
 import { WindowTitleBar } from "./features/window/WindowTitleBar";
 import { ContextMenuPolicy } from "./features/window/ContextMenuPolicy";
 import { ProductMark } from "./shared/ProductMark";
+import { CompactIconButton } from "./shared/CompactIconButton";
 import { TransientNotice } from "./shared/TransientNotice";
 import { QueuedMessageList } from "./features/composer/QueuedMessageList";
 import { ComposerResizeHandle } from "./features/composer/ComposerResizeHandle";
@@ -290,15 +291,10 @@ function App() {
         />
 
         <section className="conversation panel">
-          <header className="conversation-header" title={session.thread?.id}>
-            <button type="button" className="drawer-toggle drawer-toggle-left" onClick={() => setSidebarOpen((open) => !open)} aria-label={sidebarOpen ? "隐藏左侧会话区" : "显示左侧会话区"} title={sidebarOpen ? "隐藏左侧会话区" : "显示左侧会话区"}>
-              <PanelLeft aria-hidden="true" />
-            </button>
+          <header className="conversation-header" title={session.thread ? `Session ID：${session.thread.id}` : undefined}>
+            <CompactIconButton className="drawer-toggle-left" onClick={() => setSidebarOpen((open) => !open)} label={sidebarOpen ? "隐藏左侧会话区" : "显示左侧会话区"} icon={<PanelLeft aria-hidden="true" />} />
             <strong title={session.thread ? threadFullTitle(session.thread) : undefined}>{session.thread ? threadTitle(session.thread) : "新对话"}</strong>
-            {session.thread && <span>{session.thread.id.slice(0, 8)}…{session.thread.id.slice(-4)}</span>}
-            <button type="button" className="drawer-toggle drawer-toggle-right" onClick={() => setInspectorOpen((open) => !open)} aria-label={inspectorOpen ? "隐藏右侧功能区" : "显示右侧功能区"} title={inspectorOpen ? "隐藏右侧功能区" : "显示右侧功能区"}>
-              <PanelRight aria-hidden="true" />
-            </button>
+            <CompactIconButton className="drawer-toggle-right" onClick={() => setInspectorOpen((open) => !open)} label={inspectorOpen ? "隐藏右侧功能区" : "显示右侧功能区"} icon={<PanelRight aria-hidden="true" />} />
           </header>
           {mainView === "skills" ? <SkillManagementPage loadSkills={session.listSkills} revision={session.skillsRevision} codexHome={session.codexHome} setEnabled={setSkillEnabled} readSkillContent={session.extensions.readSkillContent} onOpenSkillPath={openResourceInExplorer} onChanged={session.extensionsChanged} onClose={() => setMainView("conversation")} /> : <>
           {session.turns.length > 0 ? (
@@ -418,7 +414,7 @@ function App() {
 
         <aside className={`inspector panel ${inspectorView !== "home" ? "inspector-detail" : ""} ${inspectorView === "chat" ? "inspector-chat" : ""}`}>
           {inspectorView === "home" && <>
-            <div className="inspector-heading"><div><span className="eyebrow">WORKSPACE TOOLS</span><strong>功能区</strong></div></div>
+            <div className="inspector-heading"><strong>功能区</strong></div>
             <div className="inspector-home" aria-label="右侧功能入口">
               <button type="button" className="inspector-feature-entry" onClick={() => {
                 if (currentProjectPath) {
@@ -446,7 +442,7 @@ function App() {
               onAddToConversation={(path) => { addDroppedPaths([path]); setMainView("conversation"); setSideChatMaximized(false); setCommandNotice("文件已加入草稿，请确认后发送。"); }}
             />
           ) : inspectorView === "files" && <>
-            <div className="inspector-heading inspector-detail-heading"><button type="button" className="inspector-back" onClick={() => setInspectorView("home")} aria-label="返回功能区"><ChevronLeft aria-hidden="true" /></button><div><span className="eyebrow">WORKSPACE</span><strong>项目文件</strong></div></div>
+            <div className="inspector-heading inspector-detail-heading"><CompactIconButton onClick={() => setInspectorView("home")} label="返回功能区" icon={<ChevronLeft aria-hidden="true" />} /><strong>项目文件</strong></div>
             <div className="inspector-project-empty">项目路径尚未准备好。选择项目或等待默认工作区加载后，再从功能区打开项目文件。</div>
           </>}
           {inspectorView === "chat" && <SideChatPanel chat={session.sideChat} maximized={sideChatMaximized} onToggleMaximize={toggleInspectorMaximized} onBack={() => setInspectorView("home")} onClose={() => { setSideChatMaximized(false); void session.sideChat.close(); setInspectorView("home"); }} />}

@@ -1,7 +1,7 @@
 # Codex Shell Design Standard
 
 > Status: Target contract v1. Production UI may still contain legacy values until the UI refresh is implemented.
-> Last updated: 2026-10-01.
+> Last updated: 2026-10-08.
 
 ## Product Character
 
@@ -54,6 +54,9 @@ Rules:
 
 - Never render meaningful text below `11px`.
 - Do not create component-local font sizes when one of the six roles fits.
+- Primary labels in menus, lists, dialogs, and preview headers use `--text-ui`; `--text-label` is for descriptions and toolbar text, never the only readable title of a row.
+- Command output, file previews, and text attachment previews use the mono family at `--text-conversation-small` with a 20px line height.
+- Transitional size aliases may remain while referenced, but each must resolve to the scale role it names (for example, conversation-small resolves to `--text-conversation-small`).
 - Use tabular numbers for durations, timestamps, token counts, line numbers, and progress values.
 - Truncate dense single-line labels; wrap conversation content naturally.
 - Keep Chinese and Latin text on the same visual baseline; do not compensate with arbitrary vertical offsets.
@@ -136,8 +139,8 @@ Stable dimensions:
 - composer toolbar: `32px` high;
 - icon: `16px`, stroke `1.75px`;
 - sidebar target width: `248px`, inspector target width: `288px`; project files and previews open at `400px`;
-- conversation readable width: `760px` to `820px`;
-- composer maximum width: `860px`.
+- region header: `48px` high (`--header-height`) for the conversation, inspector home, project files, and side chat so their bottom borders align; secondary bars inside a region (such as the file preview path bar) use `32px`;
+- conversation column: one shared `--column-content-width` (`760px`) maximum content width with `--column-gutter` side padding (`32px`, `16px` below `900px`). Timeline turns, code blocks, notices, queue, goal strip, and composer all center on this column and shrink with the viewport; `760px` is a maximum, never a minimum;
 - queued messages are a sibling panel immediately above the composer; queue rows must not be nested inside the composer input surface;
 
 Radii:
@@ -179,8 +182,8 @@ Radii:
 ### Focus And Motion
 
 - Keyboard focus uses a 2px `--accent-info` ring with 2px offset.
-- Hover feedback: `120ms`; popover entry: `160ms`; no interaction exceeds `200ms`.
-- Animate only opacity and transform for transient overlays.
+- Hover feedback: `120ms` (`--motion-fast`); popover entry: `160ms` (`--motion-popover`); no interaction exceeds `200ms`.
+- Animate only opacity and transform for transient overlays. Panel width changes (sidebar/inspector open, close, and resize) apply immediately; do not transition grid columns or other layout properties.
 - Respect `prefers-reduced-motion`. The active Turn indicator is the only documented exception: its fixed 5px dot may continue a slow opacity-only status pulse because it has no movement, scaling, or layout effect.
 - Hover must not move, resize, or reflow controls.
 
@@ -188,6 +191,8 @@ Radii:
 
 - Lists are unframed and separated by spacing or subtle dividers, not individual cards.
 - History rows use a fixed `56px` height with a stable right-side action slot; the stacked title and timestamp stay readable without allowing row actions to cover text.
+- The history action slot is always reserved at `60px` (two 28px `CompactIconButton`s). Its buttons appear on row hover or keyboard focus by opacity only, so the title truncation point never moves. Active rows show Pin and Archive; archived rows show Restore. Secondary actions (copy reference, rename, delete) live in the shared context menu, opened by right-click, the ContextMenu key, or Shift+F10 on the row. Copy feedback temporarily replaces the timestamp line.
+- Row action hover uses the neutral `CompactIconButton` treatment; lime is reserved for the selected-row indicator and running status.
 - Selected rows use `--surface-selected` plus a 2px action-accent indicator on the left.
 - The project file tree keeps the file shown in the preview marked as the current item, including when it was opened from a conversation link; path separator and casing differences must not remove the highlight, and opening a nested file scrolls its row into view.
 - Hover actions occupy the stable right action slot and never change row height, push the title, or cover its text.
@@ -206,9 +211,13 @@ Radii:
 ## Panels, Menus, And Dialogs
 
 - Sidebar and inspector are full-height structural regions, not floating cards.
+- Region headers show the title in `--text-title`/`--text-ui` without decorative English eyebrow labels; identifiers such as the Session ID belong in a tooltip or copy action, not in the header text. Panel toggles, back, maximize, and close in headers use the ghost `CompactIconButton`.
 - Use one border between regions; avoid nested panel borders.
-- Popovers use `--surface-panel`, `--border-default`, 8px radius, and a single restrained shadow.
-- Menu rows are at least `32px` high, with icon, label, optional description, and shortcut in stable columns.
+- Popovers use `--surface-panel`, `--border-default`, 8px radius, 4px inner padding, and a single restrained shadow.
+- Menu rows have a `32px` minimum for a single label and a `40px` minimum when a description is present; two-line rows normally occupy `44px` to preserve 20px/16px line heights and 4px vertical padding, with icon, label, optional description, and shortcut in stable columns. Rows use the 4px row radius, `--text-ui` labels, `--text-label` descriptions, `--text-meta` mono shortcuts, and 16px icons in `--text-muted`. Hover, keyboard focus, and the current choice use `--surface-selected` with `--text-primary`; menus do not tint rows or icons with lime. Group separators are spacing or one subtle divider, not a border under every row.
+- This geometry applies to the composer add, permission, send-mode, slash-command, and model menus, the history menu, and the shared context menu. Selectors with different semantics (radio choice, checkbox, listbox) keep their own roles; they share geometry, not behavior.
+- Elements with `role="menu"` move focus to the current choice or first enabled item on open, support Up/Down (wrapping), Home, End, and Escape, close on Tab or outside click, and return focus to the trigger after Escape or selection.
+- Full-screen modal scrims use `--scrim` and `--scrim-blur`; feature CSS does not introduce its own backdrop color or blur.
 - Dialogs use a clear title, short explanation only when necessary, and right-aligned actions.
 - Settings use a 1040px by 760px preferred surface constrained to the viewport, with a fixed navigation column and one scrolling content region. The header offers only close, with no maximize, minimize, or restore mode. Channel editing replaces the list in the content region instead of appending a nested form below it.
 - Clicking outside closes non-modal popovers; destructive confirmation remains modal.
@@ -240,7 +249,8 @@ Radii:
 
 ## Composer
 
-- Composer is the dominant bounded tool surface and uses the dedicated 16px composer radius, with a quiet neutral background and a 32px action toolbar.
+- Composer is the dominant bounded tool surface and uses the dedicated 16px composer radius, with a quiet neutral background and a 32px action toolbar. It shares the conversation column width so its edges align with timeline turn frames; assistant content retains its 16px marker indent. The main timeline measures column width outside the scrollbar gutter.
+- Notices and queue panels stack above the composer with an `8px` gap. The goal strip joins the composer directly as described below.
 - The text area has no inner card border; toolbar and input share one surface.
 - Composer height is adjusted from a compact handle at the upper right, with space reserved so it never covers text. Dragging upward expands the input upward while the bottom toolbar stays anchored; dragging downward shrinks it. Preserve the 64–320px input range, support Up/Down keys, and let Escape cancel an active drag. Disable the native bottom-right textarea resizer.
 - An active goal uses a single compact status strip immediately above the composer. Its icon and readable objective lead; status and elapsed time are secondary metadata; a separate right-side icon button owns the clear action. Long objectives truncate with their full text available on hover. The strip and composer meet without a double border.
@@ -249,7 +259,7 @@ Radii:
 - Left group: add, permission, mode, activity. Right group: model, effort, send.
 - Goal and Plan share one mutually exclusive mode slot.
 - The send button is a stable 32px square and changes function without moving.
-- Queued messages appear in one inset sibling panel immediately above the input. Use continuous 40px rows, 13px single-line previews, optional 32px image thumbnails, and stable right-aligned actions. The labeled Steer action precedes 28px delete and more buttons; edit lives in the shared menu. Running queues omit repeated waiting labels and headings; idle queues retain the resume action. Long queues scroll within a four-row viewport, and menus render outside that scroll region.
+- Queued messages appear in one sibling panel immediately above the input, sharing the composer's left and right edges. Use continuous 40px rows, 13px single-line previews, optional 32px image thumbnails, and stable right-aligned actions. The labeled Steer action precedes 28px delete and more buttons; edit lives in the shared menu. Running queues omit repeated waiting labels and headings; idle queues retain the resume action. Long queues scroll within a four-row viewport, and menus render outside that scroll region.
 
 ## Sketch Workspace
 

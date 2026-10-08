@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Check,
   ChevronDown,
@@ -14,6 +14,7 @@ import {
   type PermissionMode,
 } from "./permissionModes";
 import { useDismissiblePopover } from "../../shared/useDismissiblePopover";
+import { moveMenuFocus } from "../../shared/menuNavigation";
 
 interface Props {
   value: PermissionMode;
@@ -31,17 +32,27 @@ function PermissionIcon({ mode }: { mode: PermissionMode }) {
 
 export function PermissionModeSelector({ value, reviewer, disabled, onChange, onReviewerChange }: Props) {
   const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const rootRef = useDismissiblePopover<HTMLDivElement>({ open, onClose: () => setOpen(false) });
   const selected = getPermissionMode(value);
 
+  useEffect(() => {
+    // Runs after the dismissible hook has captured the trigger for focus return.
+    const menu = menuRef.current;
+    if (open && menu) (menu.querySelector<HTMLButtonElement>('[role="menuitemradio"][aria-checked="true"]') ?? menu.querySelector<HTMLButtonElement>("button:not(:disabled)"))?.focus();
+  }, [open]);
+
   function select(mode: PermissionMode) {
     onChange(mode);
+    triggerRef.current?.focus();
     setOpen(false);
   }
 
   return (
     <div ref={rootRef} className="permission-selector">
       <button
+        ref={triggerRef}
         className={`permission-trigger ${value === "full" ? "danger" : ""}`}
         type="button"
         disabled={disabled}
@@ -55,7 +66,16 @@ export function PermissionModeSelector({ value, reviewer, disabled, onChange, on
         <ChevronDown className="chevron-icon" aria-hidden="true" />
       </button>
       {open && (
-        <div className="permission-menu" role="menu" aria-label="权限模式">
+        <div
+          ref={menuRef}
+          className="permission-menu"
+          role="menu"
+          aria-label="权限模式"
+          onKeyDown={(event) => {
+            if (event.key === "Tab") setOpen(false);
+            else moveMenuFocus(event, event.currentTarget);
+          }}
+        >
           {PERMISSION_MODES.map((mode) => (
             <button
               key={mode.id}

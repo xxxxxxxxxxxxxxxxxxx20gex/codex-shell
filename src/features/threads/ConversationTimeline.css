@@ -1,6 +1,10 @@
 .timeline-shell { position: relative; min-width: 0; min-height: 0; }
 .timeline { min-height: 0; height: 100%; overflow-y: auto; overflow-anchor: none; overscroll-behavior: contain; scrollbar-gutter: stable; }
-.conversation-turn-frame { position: relative; width: min(100%, 820px); margin: 0 auto; padding-right: 32px; padding-left: 32px; }
+.conversation-turn-frame { position: relative; width: min(100%, calc(var(--column-content-width) + 2 * var(--column-gutter))); margin: 0 auto; padding-right: var(--column-gutter); padding-left: var(--column-gutter); }
+/* Measure the main column outside its scrollbar gutter so both edges match the composer. */
+.conversation > .timeline-shell { container-type: inline-size; }
+.conversation > .timeline-shell > .timeline { overflow-x: hidden; }
+.conversation > .timeline-shell .conversation-turn-frame { width: min(100cqw, calc(var(--column-content-width) + 2 * var(--column-gutter))); margin-left: max(0px, calc((100cqw - var(--column-content-width) - 2 * var(--column-gutter)) / 2)); margin-right: 0; }
 .conversation-turn-frame.first { padding-top: 28px; }
 .conversation-turn-frame.last { padding-bottom: 80px; }
 .conversation-turn-frame.separated { padding-top: 62px; }
@@ -14,13 +18,8 @@
 .user-message-navigation button:hover span, .user-message-navigation button:focus-visible span { width: 11px; background: var(--text-secondary); outline: none; }
 .user-message-navigation button:focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; }
 .timeline-scroll-controls { position: absolute; z-index: 3; top: 50%; right: 10px; display: flex; align-items: center; flex-direction: column; gap: 5px; transform: translateY(-50%); }
-.timeline-scroll-button { display: grid; width: 30px; height: 30px; place-items: center; padding: 0; border: 1px solid var(--border-default); border-radius: 50%; color: var(--text-secondary); background: var(--surface-raised); box-shadow: none; cursor: pointer; transition: color var(--motion-fast), border-color var(--motion-fast), background-color var(--motion-fast); }
+.timeline-scroll-button { display: grid; width: var(--control-height-compact); height: var(--control-height-compact); place-items: center; padding: 0; border: 1px solid var(--border-default); border-radius: 50%; color: var(--text-secondary); background: var(--surface-raised); box-shadow: none; cursor: pointer; transition: color var(--motion-fast), border-color var(--motion-fast), background-color var(--motion-fast); }
 .timeline-scroll-button:hover:not(:disabled) { border-color: var(--border-strong); color: var(--text-primary); background: var(--surface-selected); }
 .timeline-scroll-button:disabled { color: var(--text-disabled); background: var(--surface-panel); cursor: default; opacity: .55; }
 .timeline-scroll-button:focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; }
-.timeline-scroll-button svg { width: 16px; height: 16px; stroke-width: 1.8; }
-.timeline-latest-button svg { width: 17px; height: 17px; }
-
-@media (max-width: 720px) {
-  .conversation-turn-frame { padding-right: 18px; padding-left: 18px; }
-}
+.timeline-scroll-button svg { width: 16px; height: 16px; stroke-width: 1.75; }

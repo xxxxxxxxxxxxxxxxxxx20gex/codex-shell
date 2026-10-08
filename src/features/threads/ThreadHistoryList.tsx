@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties, type MouseEvent } from "react";
 import {
   Archive,
   ArchiveRestore,
@@ -9,6 +9,8 @@ import {
   Trash2,
 } from "lucide-react";
 import type { Thread } from "../../generated/app-server/v2/Thread";
+import { CompactIconButton } from "../../shared/CompactIconButton";
+import { ContextMenu, type ContextMenuAction } from "../../shared/ContextMenu";
 import { writeClipboardText } from "./clipboard";
 import { SessionActionConfirmDialog } from "./SessionActionConfirmDialog";
 import {
@@ -48,46 +50,25 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
   minute: "2-digit",
 });
 
-interface ThreadActionButtonProps {
-  label: string;
-  disabled?: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}
-
-function ThreadActionButton({ label, disabled = false, onClick, children }: ThreadActionButtonProps) {
-  return (
-    <button
-      type="button"
-      className="thread-action-button"
-      disabled={disabled}
-      onClick={onClick}
-      aria-label={label}
-      data-tooltip={label}
-    >
-      {children}
-    </button>
-  );
+interface ThreadMenuState {
+  threadId: string;
+  x: number;
+  y: number;
+  anchor: HTMLElement;
 }
 
 export function ThreadHistoryList(props: Props) {
   const orderedThreads = useMemo(() => orderThreadsByBranch(props.threads), [props.threads]);
   const [copyFeedback, setCopyFeedback] = useState<{ threadId: string; label: string } | null>(null);
-  const [openActionThreadId, setOpenActionThreadId] = useState<string | null>(null);
+  const [menu, setMenu] = useState<ThreadMenuState | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Thread | null>(null);
+  const closeMenu = useCallback(() => setMenu(null), []);
 
   useEffect(() => {
     if (!copyFeedback) return;
     const timeout = window.setTimeout(() => setCopyFeedback(null), 1_800);
     return () => window.clearTimeout(timeout);
   }, [copyFeedback]);
-
-  useEffect(() => {
-    if (!openActionThreadId) return;
-    const close = () => setOpenActionThreadId(null);
-    document.addEventListener("pointerdown", close);
-    return () => document.removeEventListener("pointerdown", close);
-  }, [openActionThreadId]);
 
   function rename(thread: Thread) {
     const name = window.prompt("重命名会话", threadFullTitle(thread));
@@ -110,6 +91,35 @@ export function ThreadHistoryList(props: Props) {
     }
   }
 
+  function openMenu(event: MouseEvent<HTMLDivElement>, threadId: string) {
+    event.preventDefault();
+    const row = event.currentTarget;
+    // The ContextMenu key and Shift+F10 can report 0,0; anchor those menus to the row instead.
+    const bounds = row.getBoundingClientRect();
+    const fromKeyboard = event.clientX === 0 && event.clientY === 0;
+    const focused = document.activeElement instanceof HTMLElement && row.contains(document.activeElement) ? document.activeElement : null;
+    setMenu({
+      threadId,
+      x: fromKeyboard ? bounds.right - 8 : event.clientX,
+      y: fromKeyboard ? bounds.bottom - 4 : event.clientY,
+      anchor: focused ?? row.querySelector<HTMLElement>("button:not(:disabled)") ?? row,
+    });
+  }
+
+  function menuActions(thread: Thread): ContextMenuAction[] {
+    const busy = props.disabled || props.actionThreadId === thread.id;
+    const running = props.runningThreadIds.has(thread.id);
+    return [
+      { label: threadReferenceKind(thread) === "路径" ? "复制 Session 路径" : "复制 Session ID", icon: <Copy aria-hidden="true" />, run: () => copyReference(thread) },
+      props.archived
+        ? { label: "恢复 Session", icon: <ArchiveRestore aria-hidden="true" />, disabled: busy, run: () => props.onUnarchive(thread.id) }
+        : { label: "重命名", icon: <FilePenLine aria-hidden="true" />, disabled: busy, run: () => rename(thread) },
+      { label: "永久删除", icon: <Trash2 aria-hidden="true" />, disabled: busy || running, run: () => setPendingDelete(thread) },
+    ];
+  }
+
+  const menuThread = menu ? props.threads.find((thread) => thread.id === menu.threadId) : undefined;
+
   return (
     <>
       <div className="section-heading">
@@ -123,12 +133,10 @@ export function ThreadHistoryList(props: Props) {
         {orderedThreads.map((thread) => {
           const busy = props.disabled || props.actionThreadId === thread.id;
           const running = props.runningThreadIds.has(thread.id);
-          const referenceKind = threadReferenceKind(thread);
-          const copyLabel = copyFeedback?.threadId === thread.id
-            ? copyFeedback.label
-            : `复制 Session ${referenceKind}`;
+          const menuOpen = menu?.threadId === thread.id;
+          const feedback = copyFeedback?.threadId === thread.id ? copyFeedback.label : null;
           return (
-            <div className={`thread-row ${thread.id === props.activeThreadId ? "active" : ""} ${running ? "running" : ""} ${thread.forkedFromId ? "branched" : ""} ${openActionThreadId === thread.id ? "action-open" : ""}`} style={{ "--thread-depth": threadBranchDepth(thread, props.threads) } as CSSProperties} key={thread.id} onContextMenu={(event) => { event.preventDefault(); setOpenActionThreadId(thread.id); }}>
+            <div className={`thread-row ${thread.id === props.activeThreadId ? "active" : ""} ${running ? "running" : ""} ${thread.forkedFromId ? "branched" : ""} ${menuOpen ? "action-open" : ""}`} style={{ "--thread-depth": threadBranchDepth(thread, props.threads) } as CSSProperties} key={thread.id} onContextMenu={(event) => openMenu(event, thread.id)}>
               <button
                 className="thread-main"
                 disabled={busy || props.archived}
@@ -139,29 +147,23 @@ export function ThreadHistoryList(props: Props) {
               >
                 <span className="thread-copy">
                   <span className="thread-title">{isThreadPinned(thread) && <Pin className="thread-pin-indicator" aria-hidden="true" fill="currentColor" />}{threadTitle(thread)}</span>
-                  <small>{running ? "运行中" : dateFormatter.format(new Date(thread.updatedAt * 1000))}</small>
+                  <small className={feedback ? "thread-feedback" : undefined}>{feedback ?? (running ? "运行中" : dateFormatter.format(new Date(thread.updatedAt * 1000)))}</small>
                 </span>
               </button>
-              <div className={`thread-actions ${openActionThreadId === thread.id ? "menu-open" : ""}`} onPointerDown={(event) => event.stopPropagation()}>
-                {!props.archived && <>
-                  <ThreadActionButton disabled={busy} onClick={() => props.onTogglePin(thread)} label={isThreadPinned(thread) ? "取消置顶" : "置顶"}><Pin aria-hidden="true" fill={isThreadPinned(thread) ? "currentColor" : "none"} /></ThreadActionButton>
-                  <ThreadActionButton disabled={busy || running} onClick={() => props.onArchive(thread.id)} label={running ? "运行中无法归档" : "归档"}><Archive aria-hidden="true" /></ThreadActionButton>
+              <div className={`thread-actions ${menuOpen ? "menu-open" : ""}`}>
+                {props.archived ? (
+                  <CompactIconButton className="thread-action-button" disabled={busy} onClick={() => props.onUnarchive(thread.id)} label="恢复 Session" icon={<ArchiveRestore aria-hidden="true" />} />
+                ) : <>
+                  <CompactIconButton className="thread-action-button" disabled={busy} onClick={() => props.onTogglePin(thread)} label={isThreadPinned(thread) ? "取消置顶" : "置顶"} icon={<Pin aria-hidden="true" fill={isThreadPinned(thread) ? "currentColor" : "none"} />} />
+                  <CompactIconButton className="thread-action-button" disabled={busy || running} onClick={() => props.onArchive(thread.id)} label={running ? "运行中无法归档" : "归档"} icon={<Archive aria-hidden="true" />} />
                 </>}
-                <div className={`thread-action-menu ${openActionThreadId === thread.id ? "open" : ""}`} role="menu">
-                  <ThreadActionButton onClick={() => { setOpenActionThreadId(null); void copyReference(thread); }} label={copyLabel}><Copy aria-hidden="true" /><b className="thread-action-label">复制 {referenceKind === "路径" ? "Session 路径" : "Session ID"}</b></ThreadActionButton>
-                  {props.archived ? (
-                    <ThreadActionButton disabled={busy} onClick={() => { setOpenActionThreadId(null); props.onUnarchive(thread.id); }} label="恢复 Session"><ArchiveRestore aria-hidden="true" /><b className="thread-action-label">恢复 Session</b></ThreadActionButton>
-                  ) : <>
-                    <ThreadActionButton disabled={busy} onClick={() => { setOpenActionThreadId(null); rename(thread); }} label="重命名"><FilePenLine aria-hidden="true" /><b className="thread-action-label">重命名</b></ThreadActionButton>
-                  </>}
-                  <ThreadActionButton disabled={busy || running} onClick={() => { setOpenActionThreadId(null); setPendingDelete(thread); }} label={running ? "运行中无法删除" : "永久删除"}><Trash2 aria-hidden="true" /><b className="thread-action-label">永久删除</b></ThreadActionButton>
-                </div>
               </div>
             </div>
           );
         })}
         {props.hasMore && <button className="load-more" disabled={props.loading} onClick={props.onLoadMore}>{props.loading ? "加载中…" : "加载更多"}</button>}
       </nav>
+      {menu && menuThread && <ContextMenu label="会话操作" x={menu.x} y={menu.y} anchor={menu.anchor} actions={menuActions(menuThread)} onClose={closeMenu} onError={() => setCopyFeedback({ threadId: menuThread.id, label: "操作失败" })} />}
       {pendingDelete && (
         <SessionActionConfirmDialog
           thread={pendingDelete}

@@ -1,3 +1,4 @@
+import { File, Folder } from "lucide-react";
 import type { FuzzyFileSearchResult } from "../../generated/app-server/FuzzyFileSearchResult";
 
 interface Props {
@@ -14,7 +15,8 @@ export function FileMentionMenu({ query, results, loading, onSelect }: Props) {
       {!loading && results.length === 0 && <p>{query ? "没有找到匹配文件。" : "当前项目为空，请先在左侧选择项目目录。"}</p>}
       {results.map((result) => (
         <button key={`${result.root}:${result.path}`} onMouseDown={(event) => event.preventDefault()} onClick={() => onSelect(result)}>
-          <strong>{result.match_type === "directory" ? "▸ " : ""}{result.file_name}</strong><small>{result.match_type === "directory" ? "目录" : result.path}</small>
+          {result.match_type === "directory" ? <Folder aria-hidden="true" /> : <File aria-hidden="true" />}
+          <span><strong>{result.file_name}</strong><small>{result.match_type === "directory" ? "目录" : result.path}</small></span>
         </button>
       ))}
     </div>

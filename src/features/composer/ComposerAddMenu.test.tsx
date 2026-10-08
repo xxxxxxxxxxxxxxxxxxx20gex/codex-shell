@@ -63,6 +63,39 @@ describe("ComposerAddMenu", () => {
     expect(document.activeElement).toBe(trigger);
   });
 
+  it("moves focus through enabled items with arrow, Home and End keys", () => {
+    renderMenu({ hasThread: false });
+    const trigger = screen.getByRole("button", { name: "添加与命令" });
+    act(() => trigger.focus());
+    fireEvent.click(trigger);
+    const menu = screen.getByRole("menu");
+    const enabled = screen.getAllByRole("menuitem").filter((item) => !(item as HTMLButtonElement).disabled);
+    expect(document.activeElement).toBe(enabled[0]);
+
+    fireEvent.keyDown(menu, { key: "ArrowDown" });
+    expect(document.activeElement).toBe(enabled[1]);
+    fireEvent.keyDown(menu, { key: "End" });
+    expect(document.activeElement).toBe(enabled[enabled.length - 1]);
+    fireEvent.keyDown(menu, { key: "ArrowDown" });
+    expect(document.activeElement).toBe(enabled[0]);
+    fireEvent.keyDown(menu, { key: "ArrowUp" });
+    expect(document.activeElement).toBe(enabled[enabled.length - 1]);
+    fireEvent.keyDown(menu, { key: "Home" });
+    expect(document.activeElement).toBe(enabled[0]);
+
+    fireEvent.keyDown(document.activeElement!, { key: "Escape" });
+    expect(screen.queryByRole("menu")).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it("returns focus to the trigger after choosing a command", () => {
+    renderMenu();
+    const trigger = screen.getByRole("button", { name: "添加与命令" });
+    fireEvent.click(trigger);
+    fireEvent.click(screen.getByRole("menuitem", { name: /Skills/ }));
+    expect(document.activeElement).toBe(trigger);
+  });
+
   it("routes every selected path through the unified callback", async () => {
     vi.mocked(open).mockResolvedValue(["C:\\work\\screen.png"]);
     const onSelectPaths = vi.fn();

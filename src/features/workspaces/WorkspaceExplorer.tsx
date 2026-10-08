@@ -18,6 +18,7 @@ import {
   Paperclip,
 } from "lucide-react";
 import { ContextMenu, type ContextMenuAction } from "../../shared/ContextMenu";
+import { CompactIconButton } from "../../shared/CompactIconButton";
 import { writeClipboardText } from "../threads/clipboard";
 import type { FsReadDirectoryEntry } from "../../generated/app-server/v2/FsReadDirectoryEntry";
 import { errorMessage } from "../../shared/errors";
@@ -326,12 +327,11 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
     <div className="workspace-explorer-layer" role="dialog" aria-modal="true" aria-label="项目文件浏览器">
       <section className="workspace-explorer-drawer">
         <header className="explorer-header">
-          <div><span className="eyebrow">Project Explorer</span><strong>{projectName(rootPath)}</strong><small>{rootPath}</small>{watchError && <i className="explorer-watch-warning" title={watchError}>自动刷新不可用</i>}</div>
+          <div><strong>{projectName(rootPath)}</strong><small title={rootPath}>{rootPath}</small></div>
           <div className="explorer-actions" aria-label="项目文件浏览器操作">
-            <button className="explorer-size-button" onClick={(event) => { event.preventDefault(); event.stopPropagation(); onToggleMaximize(); }} aria-label={maximized ? "恢复右侧功能区宽度" : "扩大右侧功能区"} title={maximized ? "恢复右侧功能区宽度" : "扩大右侧功能区"}>
-              {maximized ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />}
-            </button>
-            <button className="explorer-close" onClick={onClose} aria-label="关闭文件浏览器" title="关闭"><X aria-hidden="true" /></button>
+            {watchError && <i className="explorer-watch-warning" title={watchError}>自动刷新不可用</i>}
+            <CompactIconButton onClick={(event) => { event.preventDefault(); event.stopPropagation(); onToggleMaximize(); }} label={maximized ? "恢复右侧功能区宽度" : "扩大右侧功能区"} icon={maximized ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />} />
+            <CompactIconButton onClick={onClose} label="关闭文件浏览器" title="关闭" icon={<X aria-hidden="true" />} />
           </div>
         </header>
         <div className="explorer-body" style={{ "--explorer-tree-width": `${treeWidth}px` } as CSSProperties}>

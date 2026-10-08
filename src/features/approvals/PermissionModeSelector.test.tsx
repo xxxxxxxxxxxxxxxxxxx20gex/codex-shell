@@ -39,6 +39,23 @@ describe("PermissionModeSelector", () => {
     expect(onChange).toHaveBeenCalledWith("read");
   });
 
+  it("focuses the current mode and supports arrow navigation and focus return", () => {
+    const { onChange } = renderSelector();
+    const trigger = screen.getByRole("button", { name: /工作区写入/ });
+    const menu = screen.getByRole("menu");
+    expect(document.activeElement).toBe(screen.getByRole("menuitemradio", { name: /工作区写入/ }));
+
+    fireEvent.keyDown(menu, { key: "Home" });
+    expect(document.activeElement).toBe(screen.getAllByRole("menuitemradio")[0]);
+    fireEvent.keyDown(menu, { key: "End" });
+    expect(document.activeElement).toBe(screen.getByRole("menuitemcheckbox", { name: /自动风险审查/ }));
+
+    fireEvent.click(screen.getByRole("menuitemradio", { name: /只读/ }));
+    expect(onChange).toHaveBeenCalledWith("read");
+    expect(screen.queryByRole("menu")).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  });
+
   it("offers automatic review only when approvals can occur", () => {
     const { onReviewerChange } = renderSelector();
 

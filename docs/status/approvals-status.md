@@ -7,4 +7,5 @@
 - 已知问题：自动审批只作为 Turn 中间过程摘要展示，不作为可审计的持久化审批记录；队列暂不显示每项来源 Session 的跳转入口。
 - 下一步：增加来源 Session 定位和更友好的日期、日期时间等专用输入控件。
 - 验证证据：Store、订阅和 reducer 测试覆盖非当前 Session 隔离、重复 started 去重、completed 合并及缺失 started 的容错。
-- 最后更新：2026-10-01
+- 权限菜单：复用工作台菜单几何与键盘导航，打开时聚焦当前模式，支持上下循环、Home/End、Tab 关闭、Escape／选择后返回触发按钮；保留 menuitemradio 和自动审查 menuitemcheckbox 语义。2026-10-08 定向测试及四尺寸 Composer／工作台探针通过，具体视觉契约见 [DESIGN.md](../../DESIGN.md)。
+- 最后更新：2026-10-08

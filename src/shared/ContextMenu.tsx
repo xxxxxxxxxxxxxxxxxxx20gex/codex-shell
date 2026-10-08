@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import "./ContextMenu.css";
+import { moveMenuFocus } from "./menuNavigation";
 
 export interface ContextMenuAction {
   label: string;
@@ -46,12 +47,7 @@ export function ContextMenu({ x, y, actions, anchor, onClose, onError, label }: 
       onClose();
       return;
     }
-    const buttons = Array.from(ref.current!.querySelectorAll<HTMLButtonElement>("button:not(:disabled)"));
-    const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
-    const next = event.key === "ArrowDown" ? (index + 1) % buttons.length
-      : event.key === "ArrowUp" ? (index - 1 + buttons.length) % buttons.length
-        : event.key === "Home" ? 0 : event.key === "End" ? buttons.length - 1 : -1;
-    if (next >= 0) { event.preventDefault(); buttons[next].focus(); }
+    moveMenuFocus(event, ref.current!);
   }}>
     {actions.map((action) => <button type="button" role="menuitem" key={action.label} disabled={action.disabled} onClick={async () => {
       anchor.focus();

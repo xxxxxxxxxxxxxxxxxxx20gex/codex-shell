@@ -1,6 +1,7 @@
 import { ChevronLeft, Maximize2, Minimize2, Send, Square, X } from "lucide-react";
 import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { ConversationTimeline } from "../threads/ConversationTimeline";
+import { CompactIconButton } from "../../shared/CompactIconButton";
 import type { SideChat } from "./useSideChat";
 import "./SideChatPanel.css";
 
@@ -33,17 +34,12 @@ export function SideChatPanel({ chat, maximized, onToggleMaximize, onClose, onBa
     <section className="side-chat-panel" aria-label="侧边聊天">
       <header className="side-chat-header">
         <div className="side-chat-title-group">
-          {onBack && <button type="button" className="side-chat-icon side-chat-back" onClick={onBack} title="返回功能区" aria-label="返回功能区"><ChevronLeft aria-hidden="true" /></button>}
-          <div>
-          <span className="eyebrow">SIDE CHAT</span>
+          {onBack && <CompactIconButton className="side-chat-back" onClick={onBack} label="返回功能区" icon={<ChevronLeft aria-hidden="true" />} />}
           <strong>侧边聊天</strong>
-          </div>
         </div>
         <div className="side-chat-actions">
-          <button type="button" className="side-chat-icon" onClick={onToggleMaximize} title={maximized ? "恢复侧边栏宽度" : "最大化侧边栏"} aria-label={maximized ? "恢复侧边栏宽度" : "最大化侧边栏"}>
-            {maximized ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />}
-          </button>
-          <button type="button" className="side-chat-icon" onClick={onClose} title="关闭侧边聊天" aria-label="关闭侧边聊天"><X aria-hidden="true" /></button>
+          <CompactIconButton onClick={onToggleMaximize} label={maximized ? "恢复侧边栏宽度" : "最大化侧边栏"} icon={maximized ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />} />
+          <CompactIconButton onClick={onClose} label="关闭侧边聊天" icon={<X aria-hidden="true" />} />
         </div>
       </header>
       {chat.error && <div className="side-chat-error" role="alert">{chat.error}</div>}

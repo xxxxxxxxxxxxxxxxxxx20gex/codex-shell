@@ -43,7 +43,7 @@ try {
     assert((await row.getAttribute('class')).includes('current-file'));
     assert.notEqual(await row.evaluate(el=>getComputedStyle(el).backgroundColor),await page.locator('.explorer-tree-pane').evaluate(el=>getComputedStyle(el).backgroundColor));
     await page.getByRole('region',{name:'回复中的图片'}).waitFor();
-    assert.equal(await page.getByText('SKILL.md',{exact:true}).count(),0);
+    assert.equal(await page.getByText('SKILL.md',{exact:true}).count(),1);
     assert.equal(await page.getByText('result.png',{exact:true}).count(),1);
     await row.evaluate((el, point) => el.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, clientX: point.x, clientY: point.y })), { x: width-2, y: height-2 });
     await page.getByText("二进制文件",{exact:true}).waitFor();

@@ -9,6 +9,8 @@
 
 ## 当前验证基线
 
+2026-10-08，工作台 UI 一致性调整后：74 个文件／427 项 Vitest、TypeScript、ESLint、Knip、Cargo check、production build 与 Debug 构建通过，Core 0.160.1 主程序及所有辅助程序哈希校验通过。工作台、Composer、代码块、文件菜单、渠道、MCP、草图、终端交互八组 Edge 探针均覆盖 1440×900、1280×780、1024×720、900×700。新增工作台探针覆盖深浅主题、历史行 hover 几何稳定、列对齐、菜单键盘和关闭交互；宽窄截图已复核。文件菜单探针的 Markdown 资源断言已按既有文档预览行为修正。真实 WebView2 人工验收未完成。本次未改 Rust 实现，Rust 单测／Clippy 和高德测试沿用下述前一基线，未重跑。
+
 2026-10-08，MCP 边界修复后质量门禁通过；补齐失败路径测试后全量 Vitest 为 74 个文件／421 项通过。34 项高德离线测试、51 项 Rust 单测（1 项交互测试忽略），以及 TypeScript、ESLint、production build、Knip、Cargo check、严格 Clippy 和 diff 检查通过。MCP 四尺寸 Edge 布局探针通过；Debug 重建及 Core 0.160.1 主程序／辅助程序哈希检查通过。
 
 MCP 新增 16 项回归覆盖 HTTPS／回环地址与旧配置禁用删除、提交中卸载的 Token 保留、配置版本冲突、配置和凭据失败、重载失败、上层覆盖、单次刷新及迟到响应。测试使用模拟配置与凭据调用，不修改真实用户凭据，也不代表第三方 MCP 服务已验收。

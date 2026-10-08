@@ -5,8 +5,11 @@ import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Thread } from "../../generated/app-server/v2/Thread";
 import { ThreadHistoryList } from "./ThreadHistoryList";
+import { writeClipboardText } from "./clipboard";
 
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+vi.mock("./clipboard", () => ({ writeClipboardText: vi.fn(async () => undefined) }));
+
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
 function thread(id: string): Thread {
   return {
@@ -55,7 +58,7 @@ describe("ThreadHistoryList behavior", () => {
     expect(main.title).toContain(name);
     expect(main.querySelector(".thread-title")?.textContent).toBe(name.slice(0, 59) + "…");
     fireEvent.contextMenu(main.closest(".thread-row")!);
-    fireEvent.click(screen.getByRole("button", { name: "重命名" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "重命名" }));
     expect(prompt).toHaveBeenCalledWith("重命名会话", name);
     expect(values.onRename).not.toHaveBeenCalled();
   });
@@ -98,7 +101,46 @@ describe("ThreadHistoryList behavior", () => {
     expect(row?.classList.contains("action-open")).toBe(true);
     expect(row?.querySelector(".thread-actions")?.classList.contains("menu-open")).toBe(true);
     expect(screen.getByRole("menu")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "复制 Session ID" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "重命名" })).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "复制 Session ID" })).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "重命名" })).toBeTruthy();
+    expect(document.activeElement).toBe(screen.getByRole("menuitem", { name: "复制 Session ID" }));
+
+    fireEvent.keyDown(screen.getByRole("menu"), { key: "End" });
+    expect(document.activeElement).toBe(screen.getByRole("menuitem", { name: "永久删除" }));
+    fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
+    expect(screen.queryByRole("menu")).toBeNull();
+    expect(row?.classList.contains("action-open")).toBe(false);
+  });
+
+  it("reserves a stable action slot and keeps the row actions available without opening the menu", () => {
+    render(<ThreadHistoryList {...props()} />);
+
+    const row = screen.getByRole("button", { name: /thread-1/ }).closest(".thread-row")!;
+    expect(row.querySelectorAll(".thread-actions .compact-icon-button")).toHaveLength(2);
+    expect(screen.getByRole("button", { name: "置顶" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "归档" })).toBeTruthy();
+    expect(screen.queryByRole("menu")).toBeNull();
+  });
+
+  it("anchors the keyboard context menu to the row instead of the viewport origin", () => {
+    render(<ThreadHistoryList {...props()} />);
+
+    const row = screen.getByRole("button", { name: /thread-1/ }).closest(".thread-row") as HTMLElement;
+    vi.spyOn(row, "getBoundingClientRect").mockReturnValue({ left: 10, top: 100, right: 240, bottom: 156, width: 230, height: 56, x: 10, y: 100, toJSON: () => ({}) });
+    fireEvent.contextMenu(row, { clientX: 0, clientY: 0 });
+
+    const menu = screen.getByRole("menu") as HTMLElement;
+    expect(menu.style.top).toBe("152px");
+  });
+
+  it("reports copy feedback in the row timestamp slot", async () => {
+    render(<ThreadHistoryList {...props({ threads: [{ ...thread("thread-1"), path: "C:\\sessions\\1.jsonl" }] })} />);
+
+    fireEvent.contextMenu(screen.getByRole("button", { name: /thread-1/ }).closest(".thread-row")!);
+    fireEvent.click(screen.getByRole("menuitem", { name: "复制 Session 路径" }));
+
+    expect(await screen.findByText("已复制 Session 路径")).toBeTruthy();
+    expect(writeClipboardText).toHaveBeenCalledWith("C:\\sessions\\1.jsonl");
+    expect(screen.getByText("已复制 Session 路径").classList.contains("thread-feedback")).toBe(true);
   });
 });

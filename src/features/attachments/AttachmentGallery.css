@@ -17,14 +17,14 @@
 .attachment-image-preview:focus-visible, .attachment-file-preview:focus-visible, .attachment-remove:focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; }
 .attachment-loading { display: inline-block; width: 15px; height: 15px; margin: auto; border: 2px solid var(--border-strong); border-top-color: var(--accent-action); border-radius: 50%; animation: attachment-spin .75s linear infinite; }
 .attachment-preview-layer { position: fixed; z-index: 80; inset: 0; display: grid; place-items: center; padding: 28px; }
-.attachment-preview-scrim { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: rgba(5,5,4,.78); cursor: default; backdrop-filter: blur(5px); }
+.attachment-preview-scrim { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: var(--scrim); cursor: default; backdrop-filter: blur(var(--scrim-blur)); }
 .attachment-preview-dialog { position: relative; z-index: 1; display: grid; width: min(1120px, 94vw); height: min(820px, 92vh); grid-template-rows: auto minmax(0,1fr); overflow: hidden; border: 1px solid var(--border-default); border-radius: var(--radius-panel); background: var(--surface-panel); box-shadow: var(--shadow-popover); }
 .attachment-preview-dialog.is-direct-sketch { grid-template-rows: minmax(0, 1fr); }
 .attachment-preview-dialog.is-direct-sketch > header { display: none; }
 .attachment-preview-dialog header { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 13px; border-bottom: 1px solid var(--border-subtle); }
 .attachment-preview-dialog header > div:first-child { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
 .attachment-preview-dialog header strong, .attachment-preview-dialog header small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.attachment-preview-dialog header strong { font-size: 11px; }
+.attachment-preview-dialog header strong { font-size: var(--text-ui); font-weight: 600; }
 .attachment-preview-dialog header small { color: var(--text-muted); font-size: var(--text-meta); }
 .attachment-preview-actions { display: flex; flex: none; align-items: center; gap: 4px; }
 .attachment-preview-actions button { display: grid; width: 28px; height: 28px; place-items: center; padding: 0; border: 0; border-radius: var(--radius-control); color: var(--text-secondary); background: transparent; cursor: pointer; }
@@ -50,9 +50,9 @@
 .image-annotation-editor button:hover { color: var(--text-primary); background: var(--surface-raised); }
 .image-annotation-editor .image-annotation-apply { color: var(--ui-accent-ink); background: var(--accent-action); border-color: var(--accent-action); }
 .image-annotation-editor button:disabled { opacity: .5; cursor: not-allowed; }
-.attachment-preview-content > pre { box-sizing: border-box; width: 100%; min-height: 100%; margin: 0; padding: 15px; overflow: auto; color: var(--text-primary); background: var(--surface-canvas); font: var(--text-meta)/16px var(--font-mono); white-space: pre-wrap; word-break: break-word; }
+.attachment-preview-content > pre { box-sizing: border-box; width: 100%; min-height: 100%; margin: 0; padding: 15px; overflow: auto; color: var(--text-primary); background: var(--surface-canvas); font: var(--text-conversation-small)/20px var(--font-mono); white-space: pre-wrap; word-break: break-word; }
 .attachment-preview-state { display: flex; align-items: center; flex-direction: column; gap: 9px; color: var(--text-secondary); text-align: center; }
-.attachment-preview-state strong { color: var(--text-primary); font-size: 12px; }
+.attachment-preview-state strong { color: var(--text-primary); font-size: var(--text-ui); font-weight: 600; }
 .attachment-preview-state p { margin: 0; color: var(--text-muted); font-size: var(--text-meta); }
 .attachment-preview-state.error strong { color: var(--accent-danger); }
 @keyframes attachment-spin { to { transform: rotate(360deg); } }
@@ -67,7 +67,7 @@
 @media (prefers-reduced-motion: reduce) { .attachment-loading { animation: none; } }
 .attachment-pdf-preview { width: 100%; min-height: 560px; border: 0; background: var(--surface-panel); }
 .attachment-preview-content.is-sketching { display: block; padding: 0; }
-.attachment-annotation-dot { display: grid; width: 16px; height: 16px; place-items: center; border: 1px solid currentColor; border-radius: 50%; font-size: 10px; font-weight: 600; }
+.attachment-annotation-dot { display: grid; width: 16px; height: 16px; place-items: center; border: 1px solid currentColor; border-radius: 50%; font-size: var(--text-meta); font-weight: 600; }
 .image-sketch-editor { display: grid; width: 100%; height: 100%; grid-template-rows: auto minmax(0, 1fr) auto; color: var(--text-primary); background: var(--surface-panel); }
 .image-sketch-header, .image-sketch-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--border-subtle); background: var(--surface-panel); }
 .image-sketch-footer { justify-content: flex-end; border-top: 1px solid var(--border-subtle); border-bottom: 0; }
@@ -102,7 +102,7 @@
 .image-sketch-palette { position: absolute; z-index: 2; bottom: 14px; left: 50%; display: flex; align-items: center; max-width: calc(100% - 32px); gap: 8px; padding: 5px 8px; overflow-x: auto; border: 1px solid var(--border-default); border-radius: 999px; background: color-mix(in srgb, var(--surface-panel) 94%, transparent); box-shadow: var(--shadow-popover); transform: translateX(-50%); }
 .image-sketch-palette > svg { flex: 0 0 auto; color: var(--text-muted); }
 .image-sketch-palette button, .image-sketch-custom-color { width: 24px; height: 24px; flex: 0 0 auto; padding: 0; border: 2px solid transparent; border-radius: 50%; background: var(--swatch); cursor: pointer; }
-.image-sketch-palette button:hover, .image-sketch-custom-color:hover { transform: scale(1.08); }
+.image-sketch-palette button:hover, .image-sketch-custom-color:hover { border-color: var(--border-strong); }
 .image-sketch-palette button.active { border-color: var(--accent-info); box-shadow: 0 0 0 2px var(--surface-panel); }
 .image-sketch-custom-color { position: relative; display: block; overflow: hidden; border-color: var(--border-strong); background: var(--surface-raised); }
 .image-sketch-custom-color input { position: absolute; width: 100%; height: 100%; padding: 0; border: 0; opacity: 0; cursor: pointer; }

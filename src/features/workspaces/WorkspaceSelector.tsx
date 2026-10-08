@@ -1,4 +1,6 @@
 import { open } from "@tauri-apps/plugin-dialog";
+import { Folder, X } from "lucide-react";
+import { CompactIconButton } from "../../shared/CompactIconButton";
 import { errorMessage } from "../../shared/errors";
 import { projectName } from "./workspaceState";
 
@@ -29,21 +31,17 @@ export function WorkspaceSelector({ path, disabled, onChange, onError }: Props) 
         aria-label={path ? `当前项目：${projectName(path)}` : "选择项目"}
         title={path ? `${path}（点击切换项目）` : "选择项目（可选）"}
       >
-        <svg aria-hidden="true" viewBox="0 0 20 20">
-          <path d="M2.75 6.25v8.5a2 2 0 0 0 2 2h10.5a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2H10L8.25 3.5h-3.5a2 2 0 0 0-2 2z" />
-        </svg>
+        <Folder aria-hidden="true" />
         <span>{path ? projectName(path) : "选择项目"}</span>
       </button>
-      {path && <button
-        type="button"
+      {path && <CompactIconButton
         className="clear-workspace-button"
         disabled={disabled}
         onClick={() => onChange(null)}
-        aria-label="取消自定义项目"
+        label="取消自定义项目"
         title="取消自定义项目，使用默认工作区"
-      >
-        <svg aria-hidden="true" viewBox="0 0 12 12"><path d="m3 3 6 6m0-6L3 9" /></svg>
-      </button>}
+        icon={<X aria-hidden="true" />}
+      />}
     </div>
   );
 }

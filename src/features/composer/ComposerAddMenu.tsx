@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { Paperclip, Plus } from "lucide-react";
 import { commandDisabled } from "../commands/SlashCommandMenu";
@@ -6,6 +6,7 @@ import { matchingSlashCommands, type SlashCommandId } from "../commands/slashCom
 import { errorMessage } from "../../shared/errors";
 import { useDismissiblePopover } from "../../shared/useDismissiblePopover";
 import { CompactIconButton } from "../../shared/CompactIconButton";
+import { moveMenuFocus } from "../../shared/menuNavigation";
 
 interface Props {
   hasThread: boolean;
@@ -18,18 +19,28 @@ interface Props {
 
 export function ComposerAddMenu({ hasThread, running, onSelectPaths, onCommand, onError, onOpen }: Props) {
   const [openState, setOpenState] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const rootRef = useDismissiblePopover<HTMLDivElement>({
     open: openState,
     onClose: () => setOpenState(false),
   });
   const commands = matchingSlashCommands("");
 
+  useEffect(() => {
+    if (openState) menuRef.current?.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus();
+  }, [openState]);
+
+  function closeAndRestoreFocus() {
+    rootRef.current?.querySelector<HTMLButtonElement>(".composer-add-button")?.focus();
+    setOpenState(false);
+  }
+
   async function choosePaths() {
     try {
       const selected = await open({ multiple: true, directory: false, title: "添加文件和文件夹" });
       if (Array.isArray(selected)) onSelectPaths(selected);
       else if (typeof selected === "string") onSelectPaths([selected]);
-      setOpenState(false);
+      closeAndRestoreFocus();
     } catch (error) {
       onError(errorMessage(error));
     }
@@ -41,14 +52,19 @@ export function ComposerAddMenu({ hasThread, running, onSelectPaths, onCommand, 
   }
 
   function selectCommand(id: SlashCommandId) {
-    setOpenState(false);
+    closeAndRestoreFocus();
     onCommand(id);
+  }
+
+  function handleMenuKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Tab") setOpenState(false);
+    else moveMenuFocus(event, event.currentTarget);
   }
 
   return (
     <div ref={rootRef} className="composer-add-menu-anchor">
       <CompactIconButton className={`composer-add-button${openState ? " active" : ""}`} label="添加与命令" title="添加文件或使用 Codex 命令" icon={<Plus aria-hidden="true" />} onClick={toggleMenu} aria-expanded={openState} aria-haspopup="menu" />
-      {openState && <div className="composer-add-menu" role="menu" aria-label="添加与命令">
+      {openState && <div ref={menuRef} className="composer-add-menu" role="menu" aria-label="添加与命令" onKeyDown={handleMenuKeyDown}>
         <strong>添加</strong>
         <button type="button" role="menuitem" onClick={() => void choosePaths()}>
           <i><Paperclip aria-hidden="true" /></i>

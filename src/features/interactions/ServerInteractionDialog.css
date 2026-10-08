@@ -5,8 +5,8 @@
   display: grid;
   place-items: center;
   padding: 24px;
-  background: rgb(0 0 0 / 78%);
-  backdrop-filter: blur(9px);
+  background: var(--scrim);
+  backdrop-filter: blur(var(--scrim-blur));
 }
 
 .interaction-dialog {
@@ -21,7 +21,7 @@
   box-shadow: var(--shadow-popover);
 }
 
-.interaction-dialog h2 { margin: 7px 0 5px; font-size: 18px; }
+.interaction-dialog h2 { margin: 7px 0 5px; color: var(--text-primary); font-size: var(--text-title); font-weight: 600; }
 .interaction-dialog > p { margin: 0; color: var(--text-secondary); font-size: var(--text-meta); line-height: 16px; }
 .interaction-dialog footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
 .interaction-dialog footer button { padding: 8px 13px; }
@@ -43,5 +43,5 @@
 .interaction-multiselect button { padding: 6px 9px; border: 1px solid var(--border-default); border-radius: var(--radius-control); color: var(--text-secondary); background: var(--surface-canvas); cursor: pointer; }
 .interaction-multiselect button.selected { border-color: var(--accent-action); color: var(--text-primary); background: var(--surface-selected); }
 .interaction-json { min-height: 150px; resize: vertical; margin-top: 16px; }
-.interaction-url { display: block; overflow-wrap: anywhere; margin-top: 16px; padding: 11px; border: 1px solid var(--border-default); border-radius: var(--radius-panel); color: var(--accent-info); background: var(--surface-canvas); font: var(--text-meta)/16px var(--font-mono); }
+.interaction-url { display: block; overflow-wrap: anywhere; margin-top: 16px; padding: 11px; border: 1px solid var(--border-default); border-radius: var(--radius-panel); color: var(--accent-info); background: var(--surface-canvas); font: var(--text-label)/20px var(--font-mono); }
 .interaction-error { color: var(--accent-danger) !important; }
