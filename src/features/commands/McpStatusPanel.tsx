@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { RefreshCw, Server, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { ChevronRight, RefreshCw, Server, X } from "lucide-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import type { McpServerStatus } from "../../generated/app-server/v2/McpServerStatus";
 import type { ResourceContent } from "../../generated/app-server/ResourceContent";
@@ -7,6 +7,7 @@ import { errorMessage } from "../../shared/errors";
 import { safeHttpUrl } from "../../shared/externalUrl";
 import { McpConfigPanel } from "./McpConfigPanel";
 import "./ExtensionManagement.css";
+import "./McpManagement.css";
 import type { UserMcpConfig, McpConfig } from "../extensions/mcpConfig";
 
 interface Props {
@@ -55,6 +56,7 @@ export function McpStatusPanel({ loadServers, loginServer, reloadServers, readRe
   const [actionServer, setActionServer] = useState<string | null>(null);
   const [authorizationUrl, setAuthorizationUrl] = useState("");
   const [resourcePreview, setResourcePreview] = useState("");
+  const [configRevision, setConfigRevision] = useState(0);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -93,6 +95,7 @@ export function McpStatusPanel({ loadServers, loginServer, reloadServers, readRe
     try {
       await reloadServers();
       await refresh();
+      setConfigRevision((value) => value + 1);
     } catch (value) {
       setError(errorMessage(value));
     } finally {
@@ -112,24 +115,30 @@ export function McpStatusPanel({ loadServers, loginServer, reloadServers, readRe
     }
   }
 
-  return <div ref={panelRef} className="agent-command-panel mcp-panel">
-    <header><div><strong>MCP</strong><small>服务器、OAuth、工具与资源</small></div><span><button className="mcp-refresh" disabled={actionServer !== null} onClick={() => void reload()}><RefreshCw aria-hidden="true" />刷新配置</button><button onClick={onClose} aria-label="关闭 MCP"><X aria-hidden="true" /></button></span></header>
-    <div className="command-panel-list">{readConfig && writeConfig && <McpConfigPanel read={readConfig} write={writeConfig} onChanged={onChanged} />}
+  function renderServer(name: string, actions?: ReactNode, description?: string) {
+    const server = servers.find((entry) => entry.name === name);
+    const tools = Object.keys(server?.tools ?? {});
+    const status = server?.runtimeStatus ?? (server?.serverInfo ? "connected" : "notStarted");
+    const statusLabel = ({ notStarted: "未启动", starting: "连接中", connected: "已连接", authenticationRequired: "需要认证", failed: "连接失败", cancelled: "已取消", disabled: "已禁用" })[status];
+    return <div className="mcp-server-entry" key={name}>
+      <div className="mcp-server-heading"><Server aria-hidden="true" /><div><strong title={name}>{name}</strong><small>{description ?? "由其他配置提供"}{server ? ` · ${AUTH_LABELS[server.authStatus]}` : ""}</small></div><span className="mcp-connection-state" data-state={status}>{statusLabel}</span>{actions}</div>
+      {server && <details className="mcp-server-details"><summary><ChevronRight aria-hidden="true" />工具与资源 <span>{tools.length} 个工具 · {server.resources.length} 个资源</span></summary>
+        <div className="mcp-tool-list">{tools.length ? tools.map((tool) => <code key={tool}>{tool}</code>) : <small>暂无可用工具</small>}</div>
+        {server.toolsError && <p className="error">{server.toolsError}</p>}
+        {server.resources.length > 0 && <div className="mcp-resource-list">{server.resources.map((resource) => <button key={resource.uri} title={resource.uri} disabled={actionServer !== null} onClick={() => void previewResource(name, resource.uri)}>{resource.title ?? resource.name}</button>)}</div>}
+      </details>}
+      {server?.authStatus === "notLoggedIn" && <button className="secondary-button" disabled={actionServer !== null} onClick={() => void login(name)}>{actionServer === name ? "正在登录…" : "OAuth 登录"}</button>}
+    </div>;
+  }
+
+  return <div ref={panelRef} className="agent-command-panel mcp-panel" role="dialog" aria-label="MCP 服务器">
+    <header><div><strong>MCP 服务器</strong><small>连接外部工具，扩展智能体能力</small></div><span><button className="mcp-refresh" title="刷新连接状态和配置" disabled={actionServer !== null} onClick={() => void reload()}><RefreshCw aria-hidden="true" />刷新</button><button className="mcp-close" onClick={onClose} aria-label="关闭 MCP" title="关闭"><X aria-hidden="true" /></button></span></header>
+    <div className="command-panel-list">
       {loading && <p>正在读取 MCP 状态…</p>}{error && <p className="error">{error}</p>}
-      {!loading && !error && servers.length === 0 && <p>当前没有配置 MCP 服务器。</p>}
+      {!readConfig && !loading && !error && servers.length === 0 && <p>当前没有配置 MCP 服务器。</p>}
       {authorizationUrl && <p className="mcp-auth-link">浏览器未打开？<a href={authorizationUrl} target="_blank" rel="noreferrer" onClick={(event) => { event.preventDefault(); void openUrl(authorizationUrl).catch((value) => setError(errorMessage(value))); }}>继续 OAuth 登录</a></p>}
       {resourcePreview && <div className="mcp-resource-preview"><button onClick={() => setResourcePreview("")}>关闭预览</button><pre>{resourcePreview}</pre></div>}
-      {servers.map((server) => {
-        const tools = Object.keys(server.tools);
-        return <details className="mcp-server" key={server.name}>
-          <summary><i><Server aria-hidden="true" /></i><span><strong>{server.name}</strong><small>{tools.length} 个工具 · {AUTH_LABELS[server.authStatus]}{server.pluginId ? " · 来自插件" : ""}</small></span><em>{server.runtimeStatus ? ({ notStarted: "未启动", starting: "启动中", connected: "已连接", authenticationRequired: "需要认证", failed: "启动失败", cancelled: "已取消", disabled: "已禁用" })[server.runtimeStatus] : server.serverInfo ? "已连接" : "等待状态"}</em></summary>
-          <div className="mcp-server-actions">
-            {server.authStatus === "notLoggedIn" && <button className="secondary-button" disabled={actionServer !== null} onClick={() => void login(server.name)}>{actionServer === server.name ? "正在登录…" : "OAuth 登录"}</button>}
-          </div>
-          <div className="mcp-tool-list">{tools.length > 0 ? tools.map((tool) => <code key={tool}>{tool}</code>) : <small>该服务器没有公开工具。</small>}</div>
-          {server.resources.length > 0 && <div className="mcp-resource-list"><small>资源</small>{server.resources.map((resource) => <button key={resource.uri} title={resource.uri} disabled={actionServer !== null} onClick={() => void previewResource(server.name, resource.uri)}>{resource.title ?? resource.name}</button>)}</div>}
-        </details>;
-      })}
+      {readConfig && writeConfig ? <McpConfigPanel refreshRevision={configRevision} read={readConfig} write={writeConfig} onChanged={() => { onChanged?.(); void refresh(); }} serverNames={servers.map((server) => server.name)} renderServer={renderServer} /> : servers.map((server) => renderServer(server.name))}
     </div>
   </div>;
 }

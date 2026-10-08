@@ -21,6 +21,7 @@
     "runtime:probe-upgrade": "node tests/scripts/probe-runtime-upgrade.mjs",
     "test:protocol-surface": "node --test tests/scripts/check-protocol-surface.mjs",
     "test:extension-layout": "node tests/scripts/check-extension-layout.mjs",
+    "test:mcp-layout": "node tests/scripts/check-mcp-layout.mjs",
     "test:channel-layout": "node tests/scripts/check-channel-layout.mjs",
     "test:image-annotation-layout": "node tests/scripts/check-image-annotation-layout.mjs",
     "test:terminal-layout": "node tests/scripts/check-terminal-interaction-layout.mjs",

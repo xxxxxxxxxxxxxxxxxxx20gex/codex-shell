@@ -9,7 +9,7 @@
 
 ## 当前验证基线
 
-2026-10-08，v0.1.10 版本配置下重新执行完整质量门禁：73 个 Vitest 文件／403 项前端测试、34 项高德离线测试、51 项 Rust 单测（1 项交互测试忽略），以及 TypeScript、ESLint、production build、Knip、Cargo check、严格 Clippy 和 diff 检查通过。Knip 未报告未引用文件、导出或依赖。
+2026-10-08，v0.1.10 版本配置下执行质量检查：73 个 Vitest 文件／405 项前端测试、34 项高德离线测试、51 项 Rust 单测（1 项交互测试忽略），以及 TypeScript、ESLint、production build、Knip、Cargo check、严格 Clippy 和 diff 检查通过。MCP 四尺寸 Edge 布局探针通过；MCP 表单收尾调整后定向组件测试与布局探针再次通过。Debug 重建及 Core 0.160.1 主程序／辅助程序哈希检查通过。
 
 模型提示回归覆盖跨会话同文案隔离、切换会话可见性、长时间缓冲及解除、回合结束、可重试／终止错误、Thread 关闭和进程停止。Edge 四尺寸 Composer／提示检查通过。既有安全回归覆盖官方目录隔离、凭据失败补偿、MCP 环境变量保护、渠道 URL 和图片输入校验。
 

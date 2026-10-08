@@ -84,14 +84,8 @@
 .extension-page .error, .mcp-config-panel .error, .skill-management-page .error { color: var(--accent-danger); }
 .mcp-config-form fieldset { display: grid; min-width: 0; border: 0; padding: 0; gap: var(--space-2); }
 .mcp-config-panel { padding: var(--space-3); font-size: var(--text-ui); }
-.mcp-config-panel > header { display: grid; gap: var(--space-1); }
-.mcp-config-panel > header small { color: var(--text-muted); font-size: var(--text-meta); }
 .mcp-config-form { margin: var(--space-2) 0; }
-.mcp-config-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-2) 0; border-top: 1px solid var(--border-subtle); }
-.mcp-config-row > span { display: grid; min-width: 0; }
-.mcp-config-row small { color: var(--text-muted); font-size: var(--text-meta); }
 .mcp-config-panel p { overflow-wrap: anywhere; font-size: var(--text-label); }
-.mcp-panel { width: min(680px, calc(100vw - 48px)); max-height: min(760px, 82vh); }
 .mcp-panel .command-panel-list { min-height: 0; }
 .mcp-config-form fieldset { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .mcp-config-form fieldset label:nth-child(3), .mcp-config-form fieldset label:nth-child(4), .mcp-config-form fieldset label:nth-child(5), .mcp-config-form fieldset .extension-actions { grid-column: 1 / -1; }

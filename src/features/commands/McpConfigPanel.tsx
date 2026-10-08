@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { errorMessage } from "../../shared/errors";
 import { bearerEnv, mcpKey, type McpConfig, type UserMcpConfig } from "../extensions/mcpConfig";
@@ -7,11 +8,16 @@ interface Props {
   read: () => Promise<UserMcpConfig>;
   write: (name: string, value: McpConfig | null, version: string) => Promise<void>;
   onChanged?: () => void;
+  serverNames: string[];
+  refreshRevision: number;
+  renderServer: (name: string, actions?: ReactNode, endpoint?: string) => ReactNode;
 }
 
-export function McpConfigPanel({ read, write, onChanged }: Props) {
+export function McpConfigPanel({ read, write, onChanged, serverNames, renderServer, refreshRevision }: Props) {
   const [config, setConfig] = useState<UserMcpConfig | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [transport, setTransport] = useState("stdio");
   const [endpoint, setEndpoint] = useState("");
@@ -22,14 +28,27 @@ export function McpConfigPanel({ read, write, onChanged }: Props) {
   const [busy, setBusy] = useState(false);
   const [revision, setRevision] = useState(0);
   const tokenRef = useRef<HTMLInputElement>(null);
+  const deleteDialog = useRef<HTMLDialogElement>(null);
+  const addButton = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (confirmDelete) deleteDialog.current?.showModal();
+    else deleteDialog.current?.close();
+  }, [confirmDelete]);
 
   useEffect(() => {
     let active = true;
     void read().then((value) => { if (active) setConfig(value); }).catch((value) => { if (active) setError(errorMessage(value)); });
     return () => { active = false; };
-  }, [read, revision]);
+  }, [read, revision, refreshRevision]);
+
+  function closeEditor() {
+    setEditorOpen(false); setError("");
+    requestAnimationFrame(() => addButton.current?.focus());
+  }
 
   function edit(server: string | null) {
+    setEditorOpen(true); setError(""); setNotice(""); setConfirmDelete(null);
     const value = server ? config?.servers[server] : undefined;
     setEditing(server); setName(server ?? "");
     setTransport(value?.url ? "http" : "stdio");
@@ -70,7 +89,7 @@ export function McpConfigPanel({ read, write, onChanged }: Props) {
         await invoke("save_mcp_secret", { name: server, secret: tokenRef.current.value });
         setNotice("配置与凭据已保存。请等待任务结束后，在设置 → 运行环境重启，使新 Token 生效。");
       } else setNotice("配置已保存并请求重新加载。查看下方实际连接状态；已有会话建议重新创建。");
-      edit(null);
+      closeEditor();
     } catch (value) {
       setError(configSaved ? "配置已保存，但凭据保存失败。请重新编辑并输入 Token。" : errorMessage(value));
     } finally {
@@ -81,35 +100,49 @@ export function McpConfigPanel({ read, write, onChanged }: Props) {
 
   async function change(server: string, value: McpConfig | null) {
     if (!config) return;
-    setBusy(true); setError("");
+    setBusy(true); setError(""); setNotice("");
     let saved = false;
     try {
       await write(server, value, config.version); saved = true;
       if (value === null) {
         await invoke("save_mcp_secret", { name: server, secret: null });
         setNotice("MCP 配置与 CS 保存的 Token 已删除；运行中进程的旧环境变量在下次重启时清除。OAuth 授权由服务端管理。");
-        if (editing === server) edit(null);
+        setConfirmDelete(null);
+        if (editing === server) setEditorOpen(false);
       }
     } catch (failure) { setError(saved ? "配置已删除，但凭据清理失败，请重新保存同名配置后重试删除。" : errorMessage(failure)); }
     finally { onChanged?.(); setRevision((current) => current + 1); setBusy(false); }
   }
 
   return <section className="mcp-config-panel">
-    <header><strong>用户级 MCP 配置</strong><small>仅修改 CS 用户配置。HTTP Token 保存到 Windows Credential Manager；stdio 可引用系统环境变量。</small></header>
-    <form className="mcp-config-form" onSubmit={(event) => { event.preventDefault(); void save(); }}>
+    <header className="mcp-config-toolbar">{editorOpen ? <><button type="button" disabled={busy} onClick={closeEditor}><ArrowLeft aria-hidden="true" />返回列表</button><strong>{editing ? `编辑 ${editing}` : "添加服务器"}</strong></> : <><span>管理连接与工具访问</span><button ref={addButton} className="mcp-primary" type="button" disabled={busy || !config} onClick={() => edit(null)}><Plus aria-hidden="true" />添加服务器</button></>}</header>
+    {editorOpen && <form className="mcp-config-form" onSubmit={(event) => { event.preventDefault(); void save(); }}>
       <fieldset disabled={busy || !config}>
-        <label>服务器名称<input required value={name} disabled={editing !== null} onChange={(event) => setName(event.target.value)} /></label>
+        <label>服务器名称<input autoFocus={editing === null} required value={name} disabled={editing !== null} placeholder="例如：browser-tools" onChange={(event) => setName(event.target.value)} /></label>
         <label>连接方式<select value={transport} onChange={(event) => { setTransport(event.target.value); setEndpoint(""); }}><option value="stdio">本地命令（stdio）</option><option value="http">HTTP</option></select></label>
-        <label>{transport === "http" ? "HTTP 地址" : "可执行命令"}<input required value={endpoint} onChange={(event) => setEndpoint(event.target.value)} /></label>
+        <label>{transport === "http" ? "HTTP 地址" : "可执行命令"}<input autoFocus={editing !== null} required value={endpoint} placeholder={transport === "http" ? "https://example.com/mcp" : "例如：npx、uvx 或程序完整路径"} onChange={(event) => setEndpoint(event.target.value)} /></label>
         {transport === "stdio" ? <><label>参数（JSON 数组）<input value={args} onChange={(event) => setArgs(event.target.value)} /></label><label>传入的环境变量名（逗号分隔）<input value={envVars} onChange={(event) => setEnvVars(event.target.value)} /></label></> : <label>Bearer Token（留空保留现有凭据）<input type="password" ref={tokenRef} autoComplete="new-password" /></label>}
-        <div className="extension-actions"><button type="submit">{editing ? "保存修改" : "添加 MCP"}</button>{editing && <button type="button" onClick={() => edit(null)}>取消编辑</button>}</div>
+        <p className="mcp-form-hint">{transport === "http" ? "Token 存入 Windows 凭据管理器，留空保留现有凭据。" : "参数使用 JSON 字符串数组；环境变量填写名称，不在这里输入密钥。"}</p>
       </fieldset>
-    </form>
+      <div className="extension-actions"><button type="button" disabled={busy} onClick={closeEditor}>取消</button><button className="mcp-primary" disabled={busy || !config} type="submit">{busy ? "正在保存…" : editing ? "保存修改" : "添加服务器"}</button></div>
+    </form>}
     {error && <p className="error" role="alert">{error}</p>}{notice && <p role="status">{notice}</p>}
-    <button type="button" disabled={busy} onClick={() => { setError(""); setRevision((value) => value + 1); }}>重新读取配置</button>
-    {config && Object.entries(config.servers).map(([server, value]) => <div className="mcp-config-row" key={server}>
-      <span><strong>{server}</strong><small>{value.enabled === false ? "已禁用" : "已启用"}</small></span>
-      <div className="extension-actions"><button type="button" disabled={busy} onClick={() => edit(server)}>编辑</button><button type="button" disabled={busy} onClick={() => void change(server, { ...value, enabled: value.enabled === false })}>{value.enabled === false ? "启用" : "禁用"}</button><button type="button" disabled={busy} onClick={() => void change(server, null)}>删除</button></div>
-    </div>)}
+    {!config && !error && <p role="status">正在读取配置…</p>}
+    {error && <button type="button" disabled={busy} onClick={() => { setError(""); setRevision((value) => value + 1); }}>重新读取配置</button>}
+    {!editorOpen && [...new Set([...Object.keys(config?.servers ?? {}), ...serverNames])].sort((a, b) => a.localeCompare(b)).map((server) => {
+      const value = config?.servers[server];
+      return <div key={server} className="mcp-managed-server">{renderServer(server, value && <div className="mcp-row-actions">
+        <button type="button" title="编辑" aria-label={`编辑 ${server}`} disabled={busy} onClick={() => edit(server)}><Pencil aria-hidden="true" /></button>
+        <button type="button" title="删除" aria-label={`删除 ${server}`} disabled={busy} onClick={() => setConfirmDelete(server)}><Trash2 aria-hidden="true" /></button>
+        <button className="skill-enable-switch" type="button" role="switch" aria-label={`启用 ${server}`} aria-checked={value.enabled !== false} disabled={busy} onClick={() => void change(server, { ...value, enabled: value.enabled === false })}><span /></button>
+      </div>, value ? (value.enabled === false ? "已禁用 · " : "") + (value.url ? "HTTP" : "本地命令") : undefined)}
+      </div>;
+    })}
+    <dialog ref={deleteDialog} className="mcp-delete-confirm" aria-labelledby="mcp-delete-title" onKeyDown={(event) => event.stopPropagation()} onCancel={(event) => { event.preventDefault(); if (!busy) setConfirmDelete(null); }}>
+      <h2 id="mcp-delete-title">删除 {confirmDelete}？</h2><p>将移除此服务器配置和 CS 保存的 Token，OAuth 授权仍由服务端管理。</p>
+      {error && <p className="error" role="alert">{error}</p>}
+      <footer><button autoFocus disabled={busy} onClick={() => setConfirmDelete(null)}>取消</button><button className="mcp-delete-action" disabled={busy} onClick={() => { if (confirmDelete) void change(confirmDelete, null); }}>确认删除</button></footer>
+    </dialog>
+    {!editorOpen && config && Object.keys(config.servers).length === 0 && serverNames.length === 0 && <div className="mcp-empty">尚未添加服务器。点击“添加服务器”连接本地工具或 HTTP 服务。</div>}
   </section>;
 }
