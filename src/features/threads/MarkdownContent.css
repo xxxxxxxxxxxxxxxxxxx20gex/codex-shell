@@ -1,11 +1,12 @@
 .markdown-code-block {
-  width: fit-content;
-  min-width: min(100%, 160px);
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
   max-width: 100%;
   overflow: hidden;
   margin: 10px 0 14px;
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-panel);
+  border-radius: var(--radius-code-block);
   background: var(--surface-raised);
 }
 
@@ -14,23 +15,22 @@
   min-height: var(--control-height-compact);
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--space-1) 0 var(--space-3);
-  border-bottom: 1px solid var(--border-subtle);
-  color: var(--text-muted);
+  padding: var(--space-2) var(--space-4);
+  color: var(--text-secondary);
   background: var(--surface-raised);
-  font-size: var(--text-meta);
+  font-size: var(--text-ui);
   line-height: 16px;
 }
 
 .markdown-code-block > header button {
   display: grid;
-  width: var(--space-6);
-  height: var(--space-6);
+  width: var(--control-height-compact);
+  height: var(--control-height-compact);
   place-items: center;
   padding: 0;
   border: 0;
   border-radius: var(--radius-control);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   background: transparent;
   cursor: pointer;
 }
@@ -42,8 +42,8 @@
 }
 
 .markdown-code-block > header svg {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   stroke-width: 1.75;
 }
 
@@ -52,12 +52,12 @@
   max-height: 440px;
   overflow: auto;
   margin: 0;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-4) var(--space-4);
   border: 0;
   border-radius: 0;
   color: var(--text-conversation-primary);
-  background: var(--surface-selected);
-  font: var(--conversation-font-size-small)/20px var(--font-mono);
+  background: transparent;
+  font: var(--text-conversation-small)/20px var(--font-mono);
   tab-size: 2;
 }
 
@@ -65,4 +65,14 @@
 .turn-commentary .markdown-code-block pre code {
   color: inherit;
   white-space: pre;
+  font-weight: 400;
 }
+
+.markdown-code-language, .markdown-code-actions { display: flex; align-items: center; gap: var(--space-2); }
+.markdown-code-language { min-width: 0; overflow: hidden; white-space: nowrap; }
+.markdown-code-language svg { flex: none; }
+.markdown-code-actions { flex: none; gap: var(--space-1); }
+.markdown-code-actions button[aria-pressed="true"] { color: var(--text-primary); background: var(--surface-selected); }
+.markdown-code-block > header button:focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; }
+.agent-response .markdown-code-block.is-wrapped pre code,
+.turn-commentary .markdown-code-block.is-wrapped pre code { white-space: pre-wrap; overflow-wrap: anywhere; font-weight: 400; }

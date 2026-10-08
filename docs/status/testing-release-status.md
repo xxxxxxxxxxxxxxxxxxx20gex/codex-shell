@@ -29,3 +29,5 @@ image-gen 最近专项证据为 2026-10-05 的 14 项 Python 测试，覆盖预�
 v0.1.10 使用 Core 0.160.1，发布资产为 NSIS 安装器、`.sig` 和 `latest.json`，入口为 [GitHub Release](https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/releases/tag/v0.1.10)。2026-10-08 本机生产打包及 Debug 构建通过；独立校验安装器 minisign 签名、可信注释签名、manifest 版本／下载地址、主 Runtime 和三个 helper 哈希通过，公钥与 v0.1.9 一致。Release 输出的内置 rg 探针通过；上传资产及精确校验和以 GitHub Release 为准。这不代表干净机器安装或真实用户数据升级已经验收。
 
 从 v0.1.9 或更早版本升级前，关闭 CS 并备份独立 CODEX_HOME。新版 Core 会迁移 legacy 历史，降级安装包不能代替数据恢复。v0.1.9 的 tag、发布分支和资产保留不变。
+
+2026-10-08，回复代码块四尺寸 Edge 检查通过，覆盖整列宽度、长行滚动、换行切换、图标与按钮尺寸、焦点、文字下限及 reduced-motion；6 项 Markdown 定向测试通过。此为浏览器组件验证，未替代真实 WebView2 人工验收。

@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactElement, type ReactNode } from "react";
-import { Check, Copy } from "lucide-react";
+import { Check, Code2, Copy, WrapText } from "lucide-react";
 import { writeClipboardText } from "./clipboard";
 
 interface CodeElementProps {
@@ -45,6 +45,7 @@ function codeLanguage(className?: string) {
 }
 
 export function MarkdownCodeBlock({ codeElement }: Props) {
+  const [wrapped, setWrapped] = useState(false);
   const [copied, setCopied] = useState(false);
   const code = String(codeElement.props.children ?? "").replace(/\n$/, "");
 
@@ -64,9 +65,11 @@ export function MarkdownCodeBlock({ codeElement }: Props) {
   }
 
   return (
-    <section className="markdown-code-block">
+    <section className={`markdown-code-block${wrapped ? " is-wrapped" : ""}`}>
       <header>
-        <span>{codeLanguage(codeElement.props.className)}</span>
+        <span className="markdown-code-language"><Code2 aria-hidden="true" />{codeLanguage(codeElement.props.className)}</span>
+        <div className="markdown-code-actions">
+        <button type="button" onClick={() => setWrapped((value) => !value)} aria-pressed={wrapped} aria-label="自动换行" title={wrapped ? "关闭自动换行" : "开启自动换行"}><WrapText aria-hidden="true" /></button>
         <button
           type="button"
           onClick={() => void copyCode()}
@@ -75,6 +78,7 @@ export function MarkdownCodeBlock({ codeElement }: Props) {
         >
           {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
         </button>
+        </div>
       </header>
       <pre><code className={codeElement.props.className}>{code}</code></pre>
     </section>
