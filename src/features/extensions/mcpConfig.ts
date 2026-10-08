@@ -4,6 +4,14 @@ import type { ConfigReadResponse } from "../../generated/app-server/v2/ConfigRea
 export type McpConfig = { [key: string]: JsonValue | undefined };
 export interface UserMcpConfig { version: string; servers: Record<string, McpConfig>; }
 
+export function mcpHttpUrl(endpoint: string) {
+  const url = new URL(endpoint.trim());
+  if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) throw new Error("请输入不含账号密码的 HTTP/HTTPS 地址。");
+  const loopback = url.hostname === "localhost" || url.hostname === "[::1]" || /^127\.\d+\.\d+\.\d+$/.test(url.hostname);
+  if (url.protocol === "http:" && !loopback) throw new Error("远程 MCP 服务必须使用 HTTPS；HTTP 仅允许本机回环地址。");
+  return url.href;
+}
+
 export function userMcpConfig(response: ConfigReadResponse): UserMcpConfig {
   const layer = response.layers?.find((item) => item.name.type === "user" && !item.name.profile);
   if (!layer) throw new Error("未找到 CS 用户配置层，无法安全编辑 MCP。");

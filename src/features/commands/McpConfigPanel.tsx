@@ -2,21 +2,24 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { errorMessage } from "../../shared/errors";
-import { bearerEnv, mcpKey, type McpConfig, type UserMcpConfig } from "../extensions/mcpConfig";
+import { bearerEnv, mcpHttpUrl, mcpKey, type McpConfig, type UserMcpConfig } from "../extensions/mcpConfig";
 
 interface Props {
   read: () => Promise<UserMcpConfig>;
-  write: (name: string, value: McpConfig | null, version: string) => Promise<void>;
+  write: (name: string, value: McpConfig | null, version: string) => Promise<void | { warning: string | null }>;
+  reload: () => Promise<void>;
+  onBusyChange: (busy: boolean) => void;
   onChanged?: () => void;
   serverNames: string[];
   refreshRevision: number;
   renderServer: (name: string, actions?: ReactNode, endpoint?: string) => ReactNode;
 }
 
-export function McpConfigPanel({ read, write, onChanged, serverNames, renderServer, refreshRevision }: Props) {
+export function McpConfigPanel({ read, write, reload, onBusyChange, onChanged, serverNames, renderServer, refreshRevision }: Props) {
   const [config, setConfig] = useState<UserMcpConfig | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [editSnapshot, setEditSnapshot] = useState<UserMcpConfig | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [transport, setTransport] = useState("stdio");
@@ -30,6 +33,9 @@ export function McpConfigPanel({ read, write, onChanged, serverNames, renderServ
   const tokenRef = useRef<HTMLInputElement>(null);
   const deleteDialog = useRef<HTMLDialogElement>(null);
   const addButton = useRef<HTMLButtonElement>(null);
+  const saving = useRef(false);
+
+  useEffect(() => { onBusyChange(busy); }, [busy, onBusyChange]);
 
   useEffect(() => {
     if (confirmDelete) deleteDialog.current?.showModal();
@@ -48,6 +54,7 @@ export function McpConfigPanel({ read, write, onChanged, serverNames, renderServ
   }
 
   function edit(server: string | null) {
+    setEditSnapshot(config);
     setEditorOpen(true); setError(""); setNotice(""); setConfirmDelete(null);
     const value = server ? config?.servers[server] : undefined;
     setEditing(server); setName(server ?? "");
@@ -59,7 +66,9 @@ export function McpConfigPanel({ read, write, onChanged, serverNames, renderServ
   }
 
   async function save() {
-    if (!config) return;
+    if (!config || !editSnapshot || saving.current) return;
+    saving.current = true;
+    const secret = transport === "http" ? tokenRef.current?.value : undefined;
     setBusy(true); setError(""); setNotice("");
     let configSaved = false;
     try {
@@ -67,14 +76,13 @@ export function McpConfigPanel({ read, write, onChanged, serverNames, renderServ
       mcpKey(server);
       if (!editing && Object.prototype.hasOwnProperty.call(config.servers, server)) throw new Error("同名服务器已存在，请点击编辑。");
       if (!endpoint.trim()) throw new Error("请输入命令或 HTTP 地址。");
-      const value: McpConfig = { ...(editing ? config.servers[editing] : { enabled: true }) };
+      const value: McpConfig = { ...(editing ? editSnapshot.servers[editing] : { enabled: true }) };
       delete value.command; delete value.args; delete value.url;
       if (transport === "http") {
-        const url = new URL(endpoint.trim());
-        if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) throw new Error("请输入不含账号密码的 HTTP/HTTPS 地址。");
-        value.url = url.href;
+        if (secret && /[\r\n\0]/.test(secret)) throw new Error("Token 不能包含换行符或空字符。");
+        value.url = mcpHttpUrl(endpoint);
         delete value.env_vars; delete value.env; delete value.cwd;
-        if (tokenRef.current?.value) value.bearer_token_env_var = bearerEnv(server);
+        if (secret) value.bearer_token_env_var = bearerEnv(server);
       } else {
         const parsed: unknown = JSON.parse(args);
         if (!Array.isArray(parsed) || !parsed.every((item) => typeof item === "string")) throw new Error("参数必须是 JSON 字符串数组。");
@@ -83,35 +91,46 @@ export function McpConfigPanel({ read, write, onChanged, serverNames, renderServ
         value.command = endpoint.trim(); value.args = parsed; value.env_vars = variables;
         delete value.bearer_token_env_var; delete value.http_headers; delete value.env_http_headers;
       }
-      await write(server, value, config.version);
+      const result = await write(server, value, editSnapshot.version);
       configSaved = true;
-      if (transport === "http" && tokenRef.current?.value) {
-        await invoke("save_mcp_secret", { name: server, secret: tokenRef.current.value });
+      if (secret) {
+        await invoke("save_mcp_secret", { name: server, secret });
         setNotice("配置与凭据已保存。请等待任务结束后，在设置 → 运行环境重启，使新 Token 生效。");
-      } else setNotice("配置已保存并请求重新加载。查看下方实际连接状态；已有会话建议重新创建。");
+      } else {
+        setNotice("配置已保存。已有会话建议重新创建。");
+      }
       closeEditor();
+      try { await reload(); }
+      catch { setError("配置与凭据处理已完成，但 MCP 重新加载失败。请点击刷新重试，或重启运行环境。"); }
+      if (result?.warning) setNotice(result.warning + (secret ? " 新 Token 需重启运行环境后生效。" : ""));
     } catch (value) {
+      if (configSaved) setEditorOpen(false);
       setError(configSaved ? "配置已保存，但凭据保存失败。请重新编辑并输入 Token。" : errorMessage(value));
     } finally {
       if (tokenRef.current) tokenRef.current.value = "";
-      onChanged?.(); setRevision((value) => value + 1); setBusy(false);
+      if (configSaved) onChanged?.();
+      setRevision((value) => value + 1); setBusy(false); saving.current = false;
     }
   }
 
   async function change(server: string, value: McpConfig | null) {
-    if (!config) return;
+    if (!config || saving.current) return;
+    saving.current = true;
     setBusy(true); setError(""); setNotice("");
     let saved = false;
     try {
-      await write(server, value, config.version); saved = true;
+      const result = await write(server, value, config.version); saved = true;
       if (value === null) {
         await invoke("save_mcp_secret", { name: server, secret: null });
         setNotice("MCP 配置与 CS 保存的 Token 已删除；运行中进程的旧环境变量在下次重启时清除。OAuth 授权由服务端管理。");
         setConfirmDelete(null);
         if (editing === server) setEditorOpen(false);
       }
+      try { await reload(); }
+      catch { setError("配置与凭据处理已完成，但 MCP 重新加载失败。请点击刷新重试，或重启运行环境。"); }
+      if (result?.warning) setNotice(result.warning);
     } catch (failure) { setError(saved ? "配置已删除，但凭据清理失败，请重新保存同名配置后重试删除。" : errorMessage(failure)); }
-    finally { onChanged?.(); setRevision((current) => current + 1); setBusy(false); }
+    finally { if (saved) onChanged?.(); setRevision((current) => current + 1); setBusy(false); saving.current = false; }
   }
 
   return <section className="mcp-config-panel">
