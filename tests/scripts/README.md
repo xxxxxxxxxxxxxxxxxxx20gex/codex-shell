@@ -37,7 +37,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tests/scripts/run-quality-ga
 - `python -B -X utf8 tests/scripts/test-amap-travel-map.py`：需要 Pillow 和中文字体；离线验证高德底图缓存参数、旧缓存拒绝、错误脱敏、公交与其他路线线型、示例四类产物及拒绝覆盖。合成底图测试不代表真实地图对齐验收；此专项不在通用 `test:quality` 中。
 
 - `python -X utf8 tests/scripts/test-office-helpers.py`：使用具备 PyMuPDF、python-docx、python-pptx、openpyxl 和 PyYAML 的 Python 环境验证办公渲染与模板边界。PDF 渲染为真实调用，LibreOffice 分支使用模拟转换；此独立检查不在通用 `test:quality` 中。
-- `pnpm test:extension-layout <playwright/index.mjs绝对路径> <浏览器可执行文件绝对路径>`：先启动 `pnpm dev --host 127.0.0.1 --port 1435`；脚本在浏览器中挂载真实组件及模拟回调，检查四尺寸布局、字号、焦点和 reduced-motion，截图保存到系统临时目录。
 
 ## 模型渠道检查
 
@@ -45,4 +44,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tests/scripts/run-quality-ga
 - `pnpm test:composer-layout <playwright/index.mjs绝对路径> <浏览器可执行文件绝对路径> [端口]`：先启动 `pnpm dev --host 127.0.0.1 --port 1435`；脚本挂载真实目标栏、提示、待发送列表及添加／权限／发送控件，检查四尺寸布局、输入区向上拖拽／底部固定／高度上下限／键盘调整、行与按钮尺寸、缩略图、长文截断、滚动上限、菜单边界、Escape 焦点返回、外部关闭、文字下限与 reduced-motion，截图保存到系统临时目录。使用模拟回调，不代表真实 Runtime 或 WebView2 链路验收。
 - `pnpm test:markdown-code-layout <playwright/index.mjs绝对路径> <浏览器可执行文件绝对路径> [端口]`：先启动 `pnpm dev --host 127.0.0.1 --port 1435`；脚本挂载真实 Markdown 回复，检查代码块整列宽度、长行滚动与换行切换、复制按钮焦点和四尺寸边界，截图保存到系统临时目录。
 
-- `pnpm test:workbench-layout <playwright/index.mjs绝对路径> <浏览器可执行文件绝对路径> [端口]`：Vite 默认端口 1435；使用实际历史列表、菜单和 Markdown 组件与模拟工作台，检查四尺寸深浅主题、历史标题 hover 稳定、截断、消息列与 Composer 对齐、菜单焦点、Tab、Shift+F10、Escape、外部点击与 reduced-motion。截图写入临时目录，不代表真实 WebView2 人工验收。
+- `pnpm test:workbench-layout <playwright/index.mjs绝对路径> <浏览器可执行文件绝对路径> [端口]`：Vite 默认端口 1435；使用实际历史列表、菜单和 Markdown 组件与模拟工作台，检查四尺寸深浅主题、历史标题 hover 稳定、截断、消息列与 Composer 对齐、菜单焦点、Tab、Shift+F10、Escape、外部点击；在 reduced-motion 模式截图（不单独断言动效计算值）。截图写入临时目录，不代表真实 WebView2 人工验收。
