@@ -9,6 +9,8 @@
 
 ## 当前验证基线
 
+2026-10-09 MCP 启动提示专项：14 项通知存储／协议订阅测试、TypeScript、ESLint、production build、Cargo check、51 项 Rust 测试（1 项忽略）和 Clippy 通过。覆盖重复就绪静默、失败按服务器／会话隔离、恢复清理及重复可见失败不延长计时；未连接用户的真实 MCP 服务。
+
 2026-10-09 表格复制专项：9 项 Markdown 组件测试、TypeScript、ESLint、四尺寸 Edge 代码块／表格探针及 Rust 检查通过（51 项通过、1 项忽略）。探针模拟剪贴板验证 TSV 内容，未进行 Excel 人工粘贴验收。
 
 2026-10-08，工作台 UI 一致性调整后：74 个文件／427 项 Vitest、TypeScript、ESLint、Knip、Cargo check、production build 与 Debug 构建通过，Core 0.160.1 主程序及所有辅助程序哈希校验通过。工作台、Composer、代码块、文件菜单、渠道、MCP、草图、终端交互八组 Edge 探针均覆盖 1440×900、1280×780、1024×720、900×700。新增工作台探针使用真实子组件与模拟工作台壳，覆盖深浅主题、历史行 hover 几何稳定、列对齐及添加／权限／历史菜单键盘和关闭交互；不覆盖完整 App、全部菜单或真实 Runtime。reduced-motion 下的计算样式断言由 Composer 探针提供，工作台探针仅截图；宽窄截图已复核。文件菜单探针的 Markdown 资源断言已按既有文档预览行为修正。真实 WebView2 人工验收未完成。本次未改 Rust 实现，Rust 单测／Clippy 和高德测试沿用下述前一基线，未重跑。

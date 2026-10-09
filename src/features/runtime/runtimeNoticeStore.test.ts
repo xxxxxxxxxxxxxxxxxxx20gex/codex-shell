@@ -2,6 +2,35 @@ import { describe, expect, it, vi } from "vitest";
 import { RuntimeNoticeStore } from "./runtimeNoticeStore";
 
 describe("RuntimeNoticeStore", () => {
+  it("keeps routine MCP startup events silent even when repeated", () => {
+    const store = new RuntimeNoticeStore();
+    for (const status of ["starting", "ready", "ready", "cancelled"] as const) {
+      store.updateMcpStartup({ name: "demo", threadId: "a", status, error: null, failureReason: null });
+    }
+    expect(store.getSnapshot()).toEqual([]);
+    store.dispose();
+  });
+
+  it("scopes MCP failures and clears only the recovered server and thread", () => {
+    const store = new RuntimeNoticeStore();
+    for (const threadId of ["a", "b", null]) store.updateMcpStartup({ name: "demo", threadId, status: "failed", error: "offline", failureReason: null });
+    store.updateMcpStartup({ name: "other", threadId: "a", status: "failed", error: null, failureReason: null });
+    store.updateMcpStartup({ name: "demo", threadId: "a", status: "ready", error: null, failureReason: null });
+    expect(store.getSnapshot().map(n => [n.serverName, n.threadId])).toEqual([["demo", "b"], ["demo", undefined], ["other", "a"]]);
+    store.dispose();
+  });
+
+  it("does not extend a visible MCP warning on identical failure events", () => {
+    vi.useFakeTimers();
+    const store = new RuntimeNoticeStore();
+    const failure = { name: "demo", threadId: null, status: "failed" as const, error: "offline", failureReason: null };
+    store.updateMcpStartup(failure);
+    vi.advanceTimersByTime(7000);
+    store.updateMcpStartup(failure);
+    vi.advanceTimersByTime(1001);
+    expect(store.getSnapshot()).toEqual([]);
+    store.dispose(); vi.useRealTimers();
+  });
   it("deduplicates repeated warnings and refreshes their recency", () => {
     vi.spyOn(Date, "now").mockReturnValueOnce(10).mockReturnValueOnce(20);
     const store = new RuntimeNoticeStore();

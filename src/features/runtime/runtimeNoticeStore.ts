@@ -1,3 +1,5 @@
+import type { McpServerStatusUpdatedNotification } from "../../generated/app-server/v2/McpServerStatusUpdatedNotification";
+
 type RuntimeNoticeKind = "info" | "warning" | "security" | "deprecation";
 export type RuntimeNoticeDestination = "runtime" | "diagnostics";
 
@@ -11,7 +13,8 @@ export interface RuntimeNotice {
   receivedAt: number;
   threadId?: string;
   turnId?: string;
-  category?: "modelBuffering";
+  category?: "modelBuffering" | "mcpStartup";
+  serverName?: string;
 }
 
 export type RuntimeNoticeInput = Omit<RuntimeNotice, "id" | "receivedAt">;
@@ -40,6 +43,21 @@ export class RuntimeNoticeStore {
     };
   };
 
+  updateMcpStartup = (notification: McpServerStatusUpdatedNotification) => {
+    const threadId = notification.threadId ?? undefined;
+    const matches = (notice: RuntimeNotice) => notice.category === "mcpStartup"
+      && notice.serverName === notification.name && notice.threadId === threadId;
+    if (notification.status !== "failed") {
+      this.dismissWhere(matches);
+      return;
+    }
+    const message = notification.error ?? "请在 MCP 面板检查服务器配置并重试。";
+    if (this.entries.find(matches)?.message === boundedText(message, MAX_NOTICE_MESSAGE_CHARS)) return;
+    this.dismissWhere(matches);
+    this.push({ category: "mcpStartup", serverName: notification.name, threadId,
+      kind: "warning", destination: "diagnostics", title: `MCP ${notification.name} 启动失败`, message });
+  };
+
   push = (notice: RuntimeNoticeInput) => {
     const boundedNotice = {
       ...notice,
@@ -55,6 +73,7 @@ export class RuntimeNoticeStore {
       && entry.threadId === boundedNotice.threadId
       && entry.turnId === boundedNotice.turnId
       && entry.category === boundedNotice.category
+      && entry.serverName === boundedNotice.serverName
     ));
     const entry = { ...boundedNotice, id: this.sequence++, receivedAt: Date.now() };
     const duplicate = duplicateIndex === -1 ? undefined : this.entries[duplicateIndex];

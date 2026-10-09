@@ -349,14 +349,12 @@ export function useAgentSession(
         title: notification.success ? `MCP ${notification.name} 登录成功` : `MCP ${notification.name} 登录失败`,
         message: notification.error ?? (notification.success ? "app-server 已完成 OAuth 登录。" : "请重新发起 OAuth 登录。"),
       }); },
-      onMcpServerStatusUpdated: (notification) => { setSkillsRevision((value) => value + 1); runtimeNoticeStore.push({
-        kind: notification.status === "failed" ? "warning" : "info",
-        destination: "diagnostics",
-        title: `MCP ${notification.name} · ${notification.status}`,
-        message: notification.error ?? (notification.status === "ready" ? "服务器已就绪。" : "服务器启动状态已更新。"),
-      }); },
+      onMcpServerStatusUpdated: (notification) => {
+        setSkillsRevision((value) => value + 1);
+        runtimeNoticeStore.updateMcpStartup(notification);
+      },
       onStopped: () => {
-        runtimeNoticeStore.dismissWhere((notice) => Boolean(notice.threadId));
+        runtimeNoticeStore.dismissWhere((notice) => Boolean(notice.threadId) || notice.category === "mcpStartup");
         dispatchRetryingError({ type: "clear" });
         setCodexHome("");
         setWindowsSandboxReadiness(null);

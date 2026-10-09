@@ -1,5 +1,7 @@
 # 智能体命令与扩展能力状态
 
+- MCP 启动提示：2026-10-09，`starting`／`ready`／`cancelled` 仅刷新管理面板，不弹出顶部通知；启动失败按服务器与 Thread 隔离为 8 秒警告，同一可见失败不延长计时，后续非失败状态清除对应警告，Runtime 停止清除全局 MCP 启动警告。OAuth 登录结果仍提供反馈。
+
 - 模块职责：把 app-server 的 Skill、MCP、上下文压缩、目标、计划和 Review 映射为 Composer `+` 菜单与 `/` 快捷命令体验。
 - 当前状态：CS 只提供 Skill 管理和 MCP 配置。内置目录提供兔子生图 `image-gen`、高德地图 `amap` 和 `cs-docs`；支持用户本地 Skill 安装、Core 启停、可恢复卸载、MCP 配置与 OAuth。插件市场、插件安装／卸载及详情不属于 CS 产品功能；Core 插件协议类型仅为运行时兼容保留，不由壳子调用。
 - Skill 行为：列表进入页面、扩展 revision 变化及安装／卸载后自动读取；启停写入 `skills/config/write`，以服务端 `effectiveEnabled` 为准。内置 Skill 固定排序为兔子生图→高德，系统组 `cs-docs` 置前，其余按 name/path 排序；安装状态、启停状态和 Core 返回顺序不参与排序。
