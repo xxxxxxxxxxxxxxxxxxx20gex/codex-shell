@@ -146,7 +146,7 @@ export function ThreadHistoryList(props: Props) {
                   : `${threadFullTitle(thread)}\n${thread.cwd}`}
               >
                 <span className="thread-copy">
-                  <span className="thread-title">{isThreadPinned(thread) && <Pin className="thread-pin-indicator" aria-hidden="true" fill="currentColor" />}{threadTitle(thread)}</span>
+                  <span className="thread-title">{isThreadPinned(thread) && <Pin className="thread-pin-indicator" aria-hidden="true" fill="currentColor" />}<span className="thread-title-text">{threadTitle(thread)}</span></span>
                   <small className={feedback ? "thread-feedback" : undefined}>{feedback ?? (running ? "运行中" : dateFormatter.format(new Date(thread.updatedAt * 1000)))}</small>
                 </span>
               </button>

@@ -190,12 +190,12 @@ Radii:
 ## Lists And Navigation
 
 - Lists are unframed and separated by spacing or subtle dividers, not individual cards.
-- History rows use a fixed `56px` height with a stable right-side action slot; the stacked title and timestamp stay readable without allowing row actions to cover text.
-- The history action slot is always reserved at `60px` (two 28px `CompactIconButton`s). Its buttons appear on row hover or keyboard focus by opacity only, so the title truncation point never moves. Active rows show Pin and Archive; archived rows show Restore. Secondary actions (copy reference, rename, delete) live in the shared context menu, opened by right-click, the ContextMenu key, or Shift+F10 on the row. Copy feedback temporarily replaces the timestamp line.
+- History rows use a fixed `56px` height. Idle titles use the full row width and truncate with an ellipsis; do not reserve a blank action column while buttons are hidden.
+- The history action group occupies `60px` (two 28px `CompactIconButton`s) at the right edge. On row hover, keyboard focus, or an open context menu, the title and timestamp reserve this space without changing row height; buttons appear by opacity and have no group background or mask. Active rows show Pin and Archive; archived rows show Restore. Secondary actions (copy reference, rename, delete) live in the shared context menu, opened by right-click, the ContextMenu key, or Shift+F10 on the row. Copy feedback temporarily replaces the timestamp line.
 - Row action hover uses the neutral `CompactIconButton` treatment; lime is reserved for the selected-row indicator and running status.
 - Selected rows use `--surface-selected` plus a 2px action-accent indicator on the left.
 - The project file tree keeps the file shown in the preview marked as the current item, including when it was opened from a conversation link; path separator and casing differences must not remove the highlight, and opening a nested file scrolls its row into view.
-- Hover actions occupy the stable right action slot and never change row height, push the title, or cover its text.
+- Hover actions stay at the right edge and never change row height or cover text; the title start position stays fixed while its ellipsis boundary adjusts.
 - Primary label is `--text-ui`; metadata is `--text-meta`; both align to the same 16px icon grid.
 - Long labels fade or truncate before actions. Do not place actions on a second row.
 - The history viewport keeps scrolling available without rendering a native scrollbar gutter; the action slot keeps its own inner padding.

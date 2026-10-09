@@ -9,6 +9,8 @@
 
 ## 当前验证基线
 
+2026-10-09 历史行空白列修复专项：10 项历史列表测试、TypeScript、ESLint、production build、Cargo check、51 项 Rust 测试（1 项忽略）与 Clippy 通过。四尺寸 Edge 探针覆盖隐藏操作不占标题列、hover／键盘聚焦让位、移出后宽度恢复、行高稳定和省略号；深浅主题截图已生成。探针挂载真实历史列表组件，不代表用户机器上的完整 WebView2 验收。
+
 2026-10-09 用户消息操作尺寸专项：工作台四尺寸 Edge 探针验证 24px 点击区、14px 图标、无悬停描边与键盘焦点；TypeScript、production build、Cargo check、51 项 Rust 测试（1 项忽略）与 Clippy 通过。探针使用用户消息结构夹具，不代表完整 WebView2 人工验收。
 
 2026-10-09 MCP 启动提示专项：14 项通知存储／协议订阅测试、TypeScript、ESLint、production build、Cargo check、51 项 Rust 测试（1 项忽略）和 Clippy 通过。覆盖重复就绪静默、失败按服务器／会话隔离、恢复清理及重复可见失败不延长计时；未连接用户的真实 MCP 服务。

@@ -309,7 +309,7 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .composer-workspace-button:disabled { cursor: default; opacity: .5; }
 .composer-workspace-button svg { width: 16px; height: 16px; flex: 0 0 16px; stroke-width: 1.75; }
 .composer-workspace-button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.thread-row { position: relative; display: grid; min-height: 56px; grid-template-columns: minmax(0, 1fr) 60px; align-items: stretch; margin-left: calc(var(--thread-depth, 0) * 14px); border-radius: var(--radius-sm); transition: background-color var(--motion-fast), box-shadow var(--motion-fast); }
+.thread-row { position: relative; display: grid; min-height: 56px; grid-template-columns: minmax(0, 1fr); align-items: stretch; margin-left: calc(var(--thread-depth, 0) * 14px); border-radius: var(--radius-sm); transition: background-color var(--motion-fast), box-shadow var(--motion-fast); }
 .thread-row.branched::before { position: absolute; top: 0; bottom: 0; left: -8px; width: 1px; background: var(--border-default); content: ""; }
 .thread-row.branched::after { position: absolute; top: 18px; left: -8px; width: 8px; height: 1px; background: var(--border-default); content: ""; }
 .thread-row.active { background: var(--surface-selected); box-shadow: inset 2px 0 0 var(--accent-action); }
@@ -320,13 +320,15 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .thread-list .thread-main { display: flex; width: 100%; min-width: 0; min-height: 56px; align-items: center; justify-content: flex-start; padding: 9px 10px; transition: color var(--motion-fast), background-color var(--motion-fast); }
 .thread-list .thread-copy { display: grid; min-width: 0; width: 100%; grid-template-rows: 20px 16px; gap: 2px; overflow: hidden; }
 .thread-list .thread-title { display: flex; min-width: 0; align-items: center; overflow: hidden; color: var(--text-primary); font-size: var(--text-title); font-weight: 500; line-height: 20px; text-overflow: ellipsis; white-space: nowrap; }
+.thread-title-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.thread-row:hover .thread-main, .thread-row:focus-within .thread-main, .thread-row.action-open .thread-main { padding-right: 60px; }
 .thread-list .thread-main small { display: block; min-width: 0; overflow: hidden; color: var(--text-muted); font: var(--text-meta)/16px var(--font-mono); text-overflow: ellipsis; white-space: nowrap; }
 .thread-list .thread-main small.thread-feedback { color: var(--accent-success); font-family: var(--font-ui); }
 .thread-list .thread-main:hover .thread-title, .thread-list .thread-main:focus-visible .thread-title { color: var(--text-primary); }
 .thread-row:hover .thread-main, .thread-row:focus-within .thread-main { color: var(--text-primary); }
 .thread-pin-indicator { width: 13px; height: 13px; flex: 0 0 13px; margin-right: 5px; color: var(--accent-action); stroke-width: 1.75; }
-/* The action slot keeps its width so the title truncation point never moves on hover; buttons stay focusable while hidden. */
-.thread-actions { z-index: 4; display: flex; min-width: 60px; align-items: center; justify-content: flex-end; gap: 2px; padding-right: 2px; opacity: 0; pointer-events: none; transition: opacity var(--motion-fast); }
+/* Hidden actions remain keyboard reachable without reserving a blank title column. */
+.thread-actions { position: absolute; top: 0; right: 0; bottom: 0; display: flex; width: 60px; align-items: center; justify-content: flex-end; gap: 2px; padding-right: 2px; opacity: 0; pointer-events: none; transition: opacity var(--motion-fast); }
 .thread-row:hover .thread-actions, .thread-row:focus-within .thread-actions, .thread-actions.menu-open { opacity: 1; pointer-events: auto; }
 .thread-list .thread-actions .thread-action-button { display: grid; width: var(--control-height-compact); height: var(--control-height-compact); min-height: 0; place-items: center; padding: 0; color: var(--text-muted); }
 .thread-list .thread-actions .thread-action-button:hover, .thread-list .thread-actions .thread-action-button:focus-visible { color: var(--text-primary); background: var(--surface-selected); }

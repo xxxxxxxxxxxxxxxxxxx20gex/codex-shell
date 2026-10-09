@@ -112,7 +112,7 @@ describe("ThreadHistoryList behavior", () => {
     expect(row?.classList.contains("action-open")).toBe(false);
   });
 
-  it("reserves a stable action slot and keeps the row actions available without opening the menu", () => {
+  it("keeps the row actions available without opening the menu", () => {
     render(<ThreadHistoryList {...props()} />);
 
     const row = screen.getByRole("button", { name: /thread-1/ }).closest(".thread-row")!;
