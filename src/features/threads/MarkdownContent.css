@@ -69,6 +69,12 @@
 }
 
 .markdown-code-language, .markdown-code-actions { display: flex; align-items: center; gap: var(--space-2); }
+.markdown-table-block { max-width: 100%; min-width: 0; margin: var(--space-3) 0; }
+.markdown-table-actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-2); min-height: var(--control-height-compact); margin-bottom: var(--space-1); }
+.markdown-table-actions > span { font: var(--text-label)/16px var(--font-ui); color: var(--text-muted); }
+.markdown-table-actions button:focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; }
+.markdown-table-scroll { max-width: 100%; overflow-x: auto; }
+.markdown-table-block .markdown-table-scroll > table { display: table; margin: 0; border-collapse: collapse; }
 .markdown-code-language { min-width: 0; overflow: hidden; white-space: nowrap; }
 .markdown-code-language svg { flex: none; }
 .markdown-code-actions { flex: none; gap: var(--space-1); }

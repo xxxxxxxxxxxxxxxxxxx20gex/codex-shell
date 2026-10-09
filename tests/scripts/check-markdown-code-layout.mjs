@@ -30,7 +30,9 @@ try {
     const {MarkdownContent} = await import("/src/features/threads/MarkdownContent.tsx");
     const fence = String.fromCharCode(96).repeat(3);
     const content = ["PowerShell 安装命令：",fence+"powershell","irm https://claude.ai/install.ps1 | iex",fence,"短命令：",fence+"bash","git status",fence,"长输出：",fence+"text","x".repeat(240),fence].join("\\n");
-    ReactDOM.createRoot(document.getElementById("root")).render(React.createElement("main",{className:"fixture-column"},React.createElement(MarkdownContent,{className:"agent-response"},content)));
+    Object.defineProperty(navigator,"clipboard",{configurable:true,value:{writeText:async text=>{window.copiedTable=text;}}});
+    const table="| 设置 | 内容 |\\n| --- | --- |\\n| 模型 | gpt-test |\\n| 长内容 | "+"x".repeat(180)+" |";
+    ReactDOM.createRoot(document.getElementById("root")).render(React.createElement("main",{className:"fixture-column"},React.createElement(MarkdownContent,{className:"agent-response"},content+"\\n\\n"+table)));
   </script></body></html>` }));
 
   for (const [width, height] of [[1440, 900], [1280, 780], [1024, 720], [900, 700]]) {
@@ -62,6 +64,15 @@ try {
     assert(await blocks.nth(2).locator("pre").evaluate(el => el.scrollWidth <= el.clientWidth));
     await wrap.click();
     await page.emulateMedia({ reducedMotion: "reduce" });
+    const tableCopy = page.getByRole("button", {name:"复制表格"});
+    await page.keyboard.press("Tab");
+    await tableCopy.focus();
+    assert.equal(await tableCopy.evaluate(el=>getComputedStyle(el).outlineStyle),"solid");
+    assert.equal(await tableCopy.evaluate(el=>el.getBoundingClientRect().width),28);
+    await page.keyboard.press("Enter");
+    await page.waitForFunction(()=>window.copiedTable?.startsWith("设置\t内容\r\n模型\tgpt-test"));
+    assert(await page.locator(".markdown-table-scroll").evaluate(el=>el.clientWidth<=el.closest('.fixture-column').clientWidth));
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
     await page.screenshot({ path: join(output, `markdown-code-${width}.png`) });
     assert.deepEqual(errors, []);
     console.log(`${width}x${height} passed`);

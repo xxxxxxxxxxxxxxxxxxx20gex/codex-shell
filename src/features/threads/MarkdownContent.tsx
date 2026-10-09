@@ -4,6 +4,7 @@ import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { errorMessage } from "../../shared/errors";
 import { MarkdownCodeBlock } from "./MarkdownCodeBlock";
+import { MarkdownTable } from "./MarkdownTable";
 import "./MarkdownContent.css";
 
 interface Props {
@@ -92,6 +93,7 @@ export function MarkdownContent({ children, className, onOpenPath, onOpenError }
         skipHtml
         urlTransform={safeUrlTransform}
         components={{
+          table: ({ children: cells }) => <MarkdownTable>{cells}</MarkdownTable>,
           img: ({ src, alt }) => {
             const target = src ? markdownLinkTarget(src) : null;
             return src ? <button type="button" data-local-path={target?.type === "localPath" ? target.value : undefined} className="markdown-image-open" onClick={() => void openLink(src)} aria-label={`打开图片 ${alt || src}`} title="打开图片"><img src={src} alt={alt ?? "图片"} /></button> : null;

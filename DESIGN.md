@@ -236,6 +236,8 @@ Radii:
 
 ## Conversation Timeline
 
+- Markdown tables provide a top-right 28px ghost copy button with a 16px Lucide icon, outside the horizontally scrolling table. Copy exports visible cell text as tab-separated rows, including headers; success and failure use a compact status label. The action remains keyboard accessible and never overlays cell content.
+
 - User messages are compact right-aligned bubbles sized to content, with a sensible maximum width.
 - User bubbles use the borderless raised surface, 8px vertical and 16px horizontal padding, and the shared 8px panel radius. Metadata follows after 8px, with local HH:mm time and 28px icon controls on one right-aligned row; the full date and time remain available on hover. User text preserves line breaks and wraps long unbroken strings.
 - Assistant responses are unframed and use one subtle 2px action marker at the first answer line; completed responses do not carry a full-height rail.
