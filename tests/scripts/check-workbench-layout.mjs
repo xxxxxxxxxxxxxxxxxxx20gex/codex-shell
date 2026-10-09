@@ -41,6 +41,17 @@ try {
   await page.setViewportSize({width,height});
   await page.goto(`http://127.0.0.1:${process.argv[4] ?? 1435}/workbench-review`);
   const title=page.locator('.thread-title').first(); await title.waitFor();
+  await page.evaluate(()=>{
+    const meta=document.createElement('div'); meta.className='user-message-meta';
+    meta.innerHTML='<span class="user-message-timing">2026/10/09 10:22</span><div class="message-actions user-message-actions"><button aria-label="复制消息"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V4H4v12h4"/></svg></button><button aria-label="编辑后再次发送"><svg viewBox="0 0 24 24"><path d="M4 16 16 4l4 4L8 20H4Z"/></svg></button></div>';
+    document.querySelector('.user-message-group').append(meta);
+  });
+  const userCopy=page.getByRole('button',{name:'复制消息',exact:true});
+  assert.equal(await userCopy.evaluate(el=>el.getBoundingClientRect().width),24);
+  assert.equal(await userCopy.locator('svg').evaluate(el=>el.getBoundingClientRect().width),14);
+  await userCopy.hover(); assert.equal(await userCopy.evaluate(el=>getComputedStyle(el).borderTopWidth),'0px');
+  await page.keyboard.press('Tab'); await userCopy.focus();
+  assert.equal(await userCopy.evaluate(el=>getComputedStyle(el).outlineStyle),'solid');
   await page.mouse.move(width-1,height-1);
   const before=await title.boundingBox(); await title.hover(); const after=await title.boundingBox();
   assert.equal(after.width,before.width,'history hover changes title width');

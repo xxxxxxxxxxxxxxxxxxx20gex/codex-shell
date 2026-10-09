@@ -95,6 +95,9 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .message-actions button { display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center; padding: 0; border: 1px solid transparent; border-radius: var(--radius-control); color: var(--text-muted); background: transparent; cursor: pointer; }
 .message-actions button:hover, .message-actions button:focus-visible { border-color: var(--border-default); color: var(--text-primary); background: var(--surface-raised); }
 .message-actions svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.75; }
+.user-message-actions button { width: var(--control-height-inline); height: var(--control-height-inline); border: 0; border-radius: var(--radius-sm); }
+.user-message-actions svg { width: var(--icon-size-inline); height: var(--icon-size-inline); }
+.user-message-actions button:focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; }
 .turn-error { margin: 12px 0 0 16px; color: var(--accent-danger); font-size: var(--text-meta); line-height: 16px; }
 code { color: var(--text-secondary); font-family: var(--font-mono); }
 .composer-wrap { position: relative; z-index: 4; width: min(100%, calc(var(--column-content-width) + 2 * var(--column-gutter))); margin: 0 auto; padding: 0 var(--column-gutter) var(--space-4); background: var(--surface-canvas); }
