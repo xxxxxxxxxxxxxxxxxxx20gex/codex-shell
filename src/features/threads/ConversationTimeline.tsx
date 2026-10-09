@@ -12,6 +12,7 @@ interface Props {
   turns: Turn[];
   running: boolean;
   onEditMessage?: (item: Extract<ThreadItem, { type: "userMessage" }>) => void;
+  onAnswerQuestions?: (text: string) => Promise<boolean> | boolean;
   retryingMessage?: string | null;
   threadId?: string | null;
   forkDisabled?: boolean;
@@ -56,6 +57,7 @@ export function ConversationTimeline({
   turns,
   running,
   onEditMessage,
+  onAnswerQuestions,
   retryingMessage = null,
   threadId = null,
   forkDisabled = false,
@@ -279,6 +281,7 @@ export function ConversationTimeline({
               canFork={Boolean(onFork && threadId && !forkDisabled && turn.status !== "inProgress" && !(running && turnIndex === turns.length - 1))}
               onFork={threadId && onFork ? () => onFork(threadId, turn.id) : undefined}
               onEditMessage={!running && !forkDisabled && turn.status !== "inProgress" && turnIndex === turns.length - 1 ? onEditMessage : undefined}
+              onAnswerQuestions={onAnswerQuestions}
               plan={plansByTurnId[turn.id]}
               activeItemTurnIds={activeItemTurnIds}
               mcpProgressByItemId={mcpProgressByItemId}

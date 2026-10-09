@@ -40,6 +40,7 @@ function renderTurn(turn: Turn, active = false) {
       active={active}
       canFork={!active}
       onFork={vi.fn()}
+      onAnswerQuestions={vi.fn()}
       activeItemTurnIds={{}}
       mcpProgressByItemId={{}}
       readFile={vi.fn()}
@@ -48,6 +49,22 @@ function renderTurn(turn: Turn, active = false) {
 }
 
 describe("conversation timing", () => {
+  it("renders asynchronous model questions as an answer card", () => {
+    const turn = completedTurn();
+    const answer = turn.items[1];
+    if (answer.type !== "agentMessage") throw new Error("expected agent message");
+    answer.questions = [
+      { title: "你想查哪类项目？", options: ["成品工具", "开源项目"] },
+      { title: "还有补充吗？", options: null },
+    ];
+    const markup = renderTurn(turn);
+
+    expect(markup).toContain('class="async-question-card"');
+    expect(markup).toContain("成品工具");
+    expect(markup).toContain('placeholder="输入回答"');
+    expect(markup).toContain("发送回答");
+  });
+
   it("formats timestamps in local time", () => {
     const timestamp = new Date(2026, 7, 7, 10, 20, 30).getTime() / 1000;
 

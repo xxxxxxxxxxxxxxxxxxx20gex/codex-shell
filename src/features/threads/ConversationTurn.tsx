@@ -14,6 +14,8 @@ import { AttachmentGallery } from "../attachments/AttachmentGallery";
 import { userMessagePresentation } from "../runtime/userMessagePresentation";
 import type { ThreadProcessEvent } from "../runtime/sessionState";
 import { TurnResourceOutputs } from "./TurnResourceOutputs";
+import type { AsyncUserInputQuestion } from "../../generated/app-server/v2/AsyncUserInputQuestion";
+import { assertModelVisibleInput, MAX_MODEL_VISIBLE_INPUT_BYTES } from "../../shared/modelVisibleInput";
 
 interface Props {
   turn: Turn;
@@ -21,6 +23,7 @@ interface Props {
   retryingMessage?: string | null;
   canFork: boolean;
   onEditMessage?: (item: Extract<ThreadItem, { type: "userMessage" }>) => void;
+  onAnswerQuestions?: (text: string) => Promise<boolean> | boolean;
   onFork?: () => void;
   plan?: TurnPlanUpdatedNotification;
   activeItemTurnIds: Record<string, string>;
@@ -39,6 +42,46 @@ type TurnBlock =
   | { type: "user"; item: UserMessageItem }
   | { type: "answer"; item: AgentMessageItem }
   | { type: "activity"; items: ThreadItem[] };
+
+function AsyncQuestionCard({ questions, onSubmit }: { questions: AsyncUserInputQuestion[]; onSubmit?: (text: string) => Promise<boolean> | boolean }) {
+  const [answers, setAnswers] = useState<string[]>(() => questions.map(() => ""));
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
+  const complete = answers.every((answer) => answer.trim().length > 0);
+
+  async function submit() {
+    if (!onSubmit || !complete || submitted) return;
+    const text = questions.map((question, index) => `${question.title}\n${answers[index].trim()}`).join("\n\n");
+    try {
+      assertModelVisibleInput(text, "问答回答");
+      if (await onSubmit(text)) {
+        setSubmitted(true);
+        setError("");
+      }
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "回答发送失败");
+    }
+  }
+
+  return (
+    <div className="async-question-card" aria-label="Codex 的问题">
+      <div className="async-question-heading"><strong>继续前请回答</strong><span>选择一项或输入你的回答</span></div>
+      {questions.map((question, index) => (
+        <fieldset key={`${question.title}:${index}`} className="async-question">
+          <legend>{question.title}</legend>
+          {question.options?.map((option) => (
+            <button type="button" key={option} className={answers[index] === option ? "selected" : ""} disabled={submitted} onClick={() => setAnswers((current) => current.map((value, answerIndex) => answerIndex === index ? option : value))}>{option}</button>
+          ))}
+          {(!question.options || question.options.length === 0) && (
+            <input type="text" value={answers[index]} disabled={submitted} maxLength={MAX_MODEL_VISIBLE_INPUT_BYTES} placeholder="输入回答" onChange={(event) => setAnswers((current) => current.map((value, answerIndex) => answerIndex === index ? event.target.value : value))} />
+          )}
+        </fieldset>
+      ))}
+      {error && <p className="async-question-error" role="alert">{error}</p>}
+      {onSubmit && <button type="button" className="async-question-submit" disabled={!complete || submitted} onClick={() => void submit()}>{submitted ? "已发送回答" : "发送回答"}</button>}
+    </div>
+  );
+}
 
 function hasVisibleContent(item: ThreadItem) {
   if (item.type === "reasoning") {
@@ -117,6 +160,7 @@ export function ConversationTurn({
   retryingMessage = null,
   canFork,
   onEditMessage,
+  onAnswerQuestions,
   onFork,
   plan,
   activeItemTurnIds,
@@ -284,6 +328,9 @@ export function ConversationTurn({
                 <MarkdownContent className="agent-response" onOpenPath={onOpenPath} onOpenError={onOpenError}>
                   {block.item.text}
                 </MarkdownContent>
+                {block.item.questions && block.item.questions.length > 0 && (
+                  <AsyncQuestionCard questions={block.item.questions} onSubmit={onAnswerQuestions} />
+                )}
                 {block.item.id === lastAgentMessageId && answerTiming && (
                   <div className="message-timing agent-message-timing">{answerTiming}</div>
                 )}

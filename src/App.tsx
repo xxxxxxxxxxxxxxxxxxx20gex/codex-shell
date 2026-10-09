@@ -307,6 +307,7 @@ function App() {
               forkDisabled={session.submitting || session.openingThreadId !== null || session.threadActionId !== null}
               onFork={(threadId, lastTurnId) => void session.forkThread(threadId, lastTurnId)}
               onEditMessage={editLastMessage}
+              onAnswerQuestions={(text) => session.running ? session.steer(text) : session.send(text)}
               plansByTurnId={session.plansByTurnId}
               activeItemTurnIds={session.activeItemTurnIds}
               mcpProgressByItemId={session.mcpProgressByItemId}

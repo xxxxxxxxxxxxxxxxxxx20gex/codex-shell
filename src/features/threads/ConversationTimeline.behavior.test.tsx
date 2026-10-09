@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import type { Turn } from "../../generated/app-server/v2/Turn";
 import { ConversationTimeline } from "./ConversationTimeline";
+import { ConversationTurn } from "./ConversationTurn";
 
 function turn(id: string, text: string, answered = false): Turn {
   const message: ThreadItem = {
@@ -182,5 +183,29 @@ describe("ConversationTimeline native scroll controller", () => {
     fireEvent.scroll(scroller);
 
     expect(screen.getByRole("button", { name: "跳到消息：第二问" }).className).toBe("active");
+  });
+});
+
+describe("async model questions", () => {
+  it("submits selected and free-form answers once", async () => {
+    const onAnswerQuestions = vi.fn(async () => true);
+    const turn: Turn = {
+      id: "question-turn",
+      items: [
+        { type: "userMessage", id: "question-user", clientId: null, content: [{ type: "text", text: "搜索项目", text_elements: [] }] },
+        {
+          type: "agentMessage", id: "question-agent", text: "我需要一点方向。", phase: "final_answer", memoryCitation: null, delivery: "async",
+          questions: [{ title: "查哪类项目？", options: ["成品工具", "开源项目"] }, { title: "补充说明", options: null }],
+        },
+      ],
+      itemsView: "full", status: "completed", error: null, startedAt: null, completedAt: null, durationMs: null,
+    };
+    render(<ConversationTurn turn={turn} active={false} canFork={false} activeItemTurnIds={{}} mcpProgressByItemId={{}} onAnswerQuestions={onAnswerQuestions} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "开源项目" }));
+    fireEvent.input(screen.getByPlaceholderText("输入回答"), { target: { value: "优先中文项目" } });
+    fireEvent.click(screen.getByRole("button", { name: "发送回答" }));
+    await vi.waitFor(() => expect(onAnswerQuestions).toHaveBeenCalledWith("查哪类项目？\n开源项目\n\n补充说明\n优先中文项目"));
+    await vi.waitFor(() => expect(screen.getByRole("button", { name: "已发送回答" })).toBeTruthy());
   });
 });
