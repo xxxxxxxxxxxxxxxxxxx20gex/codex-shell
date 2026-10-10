@@ -1,15 +1,15 @@
 # 项目总状态
 
-- 当前阶段：Milestone 2 - P0 桌面编程工作台；公开稳定版 `v0.1.10` 使用 Core 0.160.1，包含草图画布、侧边聊天、历史／队列适配和模型提示修复。
+- 当前阶段：Milestone 2 - P0 桌面编程工作台；公开稳定版 `v0.1.11` 使用 Core 0.160.1，包含草图画布、侧边聊天、历史／队列适配和模型提示修复。
 - 总体状态：核心对话、Session、工具活动、审批、文件、Diff 和模型配置可用；已发布带 minisign 更新签名的 NSIS Windows 安装包，Windows Authenticode 代码签名、CI 与 Runtime 恢复能力尚未完成。
 - 文档边界：本文件只记录跨模块当前快照、项目级风险、下一里程碑和完整验证基线。模块行为和定向证据以 [模块状态索引](../README.md#当前状态) 为准，历史由 Git 保留。
-- 最后更新：2026-10-08
+- 最后更新：2026-10-10
 
 ## 跨模块当前快照
 
 - 图片附件已贯通历史附件、生成/工具图片与项目文件预览，支持坐标批注和本地草图编辑原型；自由画笔与橡皮擦使用合并指针采样逐段绘制平滑曲线，草图导出复用 Tauri 附件保存与原生 `localImage` 输入，托管 `fileId` 图片仍只读。剪贴板图片在 Tauri 边界限制格式和单张大小后保存到独立 CODEX_HOME，再以原生 `localImage` 输入发送。终端空轮询不进入时间线，真实终端输入收纳到折叠过程组。验证边界见时间线、客户端和测试状态。
 
-- 产品使用 Tauri 2、React、TypeScript 与 Rust 构建，以原版 `codex app-server` 为唯一执行核心，通过 stdio JSON-RPC 通信；公开 `v0.1.10` 已发布安装器、minisign 签名和 updater manifest，使用 0.160.1。main 的 Runtime 已升级至 `codex-cli 0.160.1`，生成协议比对保持一致，通过同源兼容门禁与隔离升级探针；具体能力和限制见 [协议状态](protocol-status.md)。升级遵循 [ADR-003](../decisions/ADR-003-compatible-runtime-updates.md)，历史迁移使用 [ADR-005](../decisions/ADR-005-native-history-migration.md) 的原生方案。
+- 产品使用 Tauri 2、React、TypeScript 与 Rust 构建，以原版 `codex app-server` 为唯一执行核心，通过 stdio JSON-RPC 通信；公开 `v0.1.11` 已发布安装器、minisign 签名和 updater manifest，使用 0.160.1。main 的 Runtime 已升级至 `codex-cli 0.160.1`，生成协议比对保持一致，通过同源兼容门禁与隔离升级探针；具体能力和限制见 [协议状态](protocol-status.md)。升级遵循 [ADR-003](../decisions/ADR-003-compatible-runtime-updates.md)，历史迁移使用 [ADR-005](../decisions/ADR-005-native-history-migration.md) 的原生方案。
 - 核心工作流已形成闭环：用户可以选择项目、创建和恢复多个 Session、发送文本/文件/图片、查看结构化执行时间线、处理审批、审查实时与历史 Diff，并按完成 Turn 分叉会话。
 - Composer 已统一模型、推理强度、权限、Goal、Plan、Review、Skills、MCP 和压缩入口；Thread 的模型、权限、审批者和 Goal 状态以 Core 权威通知及查询结果为准，不在 Shell 维护第二套执行状态。
 - 模型配置已改为「厂商分组 + 渠道列表」（[ADR-004](../decisions/ADR-004-model-provider-channels.md)）：设置中维护 OpenAI / DeepSeek 渠道的 Base URL、密钥、模型目录和该渠道自己的对话参数，对话高级设置只选择渠道；同一时刻只有一个激活渠道，切换渠道会重启 app-server，全部运行 Thread、主会话和侧聊提交期间禁止切换。DeepSeek 渠道注入随应用编译的官方模型目录，连接测试只验证路由、密钥与目录。
@@ -27,7 +27,7 @@
 - 多渠道审查缺陷已修复并补回归；真实系统凭据与 API 对话尚需人工验收。配置与凭据只能提供失败补偿，不能承诺跨存储崩溃原子性，详见 [模型配置](model-config-status.md) 和 [凭据安全](credentials-status.md)。
 
 - app-server 自动断线恢复尚未完成；代际隔离可以阻止旧进程事件污染新连接，但不会主动重启崩溃进程或恢复进行中的 Turn。
-- Runtime 二进制不进入 Git；个人发布通过本机脚本暂存同源 Runtime、运行兼容门禁并生成安装器、minisign 签名和 updater manifest，再手动上传 Release。v0.1.10 已完成该发布流程；Windows Authenticode 代码签名仍未完成。MSI 不是默认发布目标。
+- Runtime 二进制不进入 Git；个人发布通过本机脚本暂存同源 Runtime、运行兼容门禁并生成安装器、minisign 签名和 updater manifest，再手动上传 Release。v0.1.11 已完成该发布流程；Windows Authenticode 代码签名仍未完成。MSI 不是默认发布目标。
 - 模型路由同一时刻只能有一个 provider：并行多厂商会话需要按 provider 启动第二个 app-server 并重构前端单连接假设，尚未排期。内置的第三方模型目录需要跟随上游维护。
 - 渠道切换依赖重启共享 app-server；运行或提交中拒绝切换，切换事务期间拒绝新的执行 RPC。失败时保留已保存配置并提供重试，不实现自动故障转移或并行 Provider。
 - Skills 独立安装/启停/可恢复卸载、MCP 用户配置与安全 Token 输入、CS 内置目录已接入。CS 不提供插件市场或插件生命周期管理；Core 插件协议仅作为运行时兼容面保留。内置目录与依赖边界见 [扩展能力](agent-capabilities-status.md)；扩展变化刷新状态，不自动中断任务。
@@ -45,6 +45,7 @@
 
 ## 完整验证基线
 
+- 2026-10-10 v0.1.11：442 项前端、34 项高德离线、51 项 Rust 测试（1 项交互测试忽略）、TypeScript、ESLint、Knip、Cargo check、严格 Clippy、前端／Debug／生产构建通过；Rust 临时 target 缓存失败后在默认 target 完整复跑。异步问答真实 Core 探针和协议／历史回归、问答与工作台四尺寸 Edge 检查通过；具体边界见测试与发布状态。
 - 2026-10-08 工作台 UI 一致性调整后，427 项前端测试、TypeScript、ESLint、Knip、Cargo check、前端及 Debug 构建通过；八组 UI 四尺寸 Edge 探针通过。Rust 单测／Clippy 和高德离线测试沿用本次 UI 调整前基线；真实 WebView2、网关通知与 MCP 外部服务尚未验收，明细见测试与发布状态。
 - 当前验证、发布资产和未覆盖边界统一见 [测试与发布状态](testing-release-status.md)；历史发布基线由 Git 保留。当前仍不把模拟探针、局部浏览器检查或用户未枚举的手工检查宣称为全量桌面、真实外部 API 或干净机器验收。
-- 当前发布基线：发布冻结分支 `release/v0.1.10` 和 Tag `v0.1.10` 应与本次发布提交保持一致；后续功能直接在 `main` 开发，发布时按新的版本号重新建立发布分支和 Tag。
+- 当前发布基线：发布冻结分支 `release/v0.1.11` 和 Tag `v0.1.11` 应与本次发布提交保持一致；后续功能直接在 `main` 开发，发布时按新的版本号重新建立发布分支和 Tag。

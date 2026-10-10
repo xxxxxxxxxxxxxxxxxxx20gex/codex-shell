@@ -1,13 +1,15 @@
 # 测试与发布状态
 
 - 模块职责：维护质量门禁、Runtime 兼容验证、Windows 发布证据及未覆盖边界；模块行为由对应状态文档维护，历史由 Git 保留。
-- 当前状态：v0.1.10 使用官方 Core 0.160.1，沿用既有 Updater minisign 公钥。Windows Authenticode 尚未配置，SmartScreen 仍可能提示未知发布者。
+- 当前状态：v0.1.11 使用官方 Core 0.160.1，沿用既有 Updater minisign 公钥。Windows Authenticode 尚未配置，SmartScreen 仍可能提示未知发布者。
 - 当前接口：`pnpm test:quality` 执行 TypeScript、ESLint、Vitest、高德离线测试、production build、Knip、Cargo check、Rust 单测、严格 Clippy 和 diff 检查。专项入口见 [测试脚本说明](../../tests/scripts/README.md)。
 - 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；`package.json` 遗留的 `test:extension-layout` 指向不存在的脚本，MCP 管理可使用现有 `test:mcp-layout`（不等价于全部扩展管理验证），不能把失效入口作为验证证据；Vite 主 chunk 超过 500 kB；Rust 既有格式差异尚未整理，`cargo fmt --check` 未纳入门禁。
 - 下一步：真实系统凭据、多渠道对话、第三方 MCP OAuth、干净 Windows 安装升级和大型历史迁移验收。
-- 最后更新：2026-10-08
+- 最后更新：2026-10-10
 
 ## 当前验证基线
+
+2026-10-10 v0.1.11 发布验收：442 项前端测试、34 项高德离线测试、51 项 Rust 测试（1 项交互测试忽略）、TypeScript、ESLint、Knip、Cargo check、严格 Clippy、前端及 Debug 构建通过。`test:quality` 首轮在未注册探针入口处停止，注册后 Knip 通过；Rust 独立临时 target 因 serde 生成文件缺失失败，默认 target 的 check／test／Clippy 全部复跑通过。问答和工作台 Edge 四尺寸检查通过，问答包含深浅主题；Vite 未启动导致的一次布局超时在服务启动后复跑通过。新增真实 Core 问答探针覆盖结构化问题事件、回答封装到达本机网关、冷恢复问题／答复、运行中 steer 接收；既有协议、历史恢复及 release 输出的内置 rg 探针通过。均使用隔离数据与模拟网关，不代表真实收费渠道或完整 WebView2 端到端验收。
 
 2026-10-10 异步问答审查修复：全量 Vitest 76 文件／442 项、TypeScript、ESLint、Knip、production build、默认 target 的 Cargo check、Debug 构建及 Runtime／辅助程序哈希验证通过。41 项定向时间线测试中新增覆盖选项题自定义答案、同名问题 ID 区分、发送期间重复点击与冻结、false／异常失败后重试、UTF-8 封装上限、只读与未完成表单、Core 确认历史恢复和乐观输入排除。`check-async-question-layout.mjs` 在四尺寸深浅主题挂载真实卡片，检查自由输入、焦点、Escape／外部点击保留草稿、发送中锁定与完成状态，截图已复核；此为模拟发送回调，不等于真实网关或 WebView2 端到端验证。未修改 Rust，未重跑 Rust 单测／Clippy；不更新完整跨语言质量基线。
 
@@ -46,7 +48,7 @@ image-gen 最近专项证据为 2026-10-05 的 14 项 Python 测试，覆盖预�
 
 ## 最近发布
 
-v0.1.10 使用 Core 0.160.1，发布资产为 NSIS 安装器、`.sig` 和 `latest.json`，入口为 [GitHub Release](https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/releases/tag/v0.1.10)。2026-10-08 本机生产打包及 Debug 构建通过；独立校验安装器 minisign 签名、可信注释签名、manifest 版本／下载地址、主 Runtime 和三个 helper 哈希通过，公钥与 v0.1.9 一致。Release 输出的内置 rg 探针通过；上传资产及精确校验和以 GitHub Release 为准。这不代表干净机器安装或真实用户数据升级已经验收。
+v0.1.11 使用 Core 0.160.1，发布资产为 NSIS 安装器、`.sig` 和 `latest.json`，入口为 [GitHub Release](https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/releases/tag/v0.1.11)。2026-10-10 本机生产打包及 Debug 构建通过；独立验证安装器 minisign 签名、可信注释签名、manifest 版本／签名／下载文件名、主 Runtime 和三个 helper 哈希通过，Updater 公钥保持不变。安装器 SHA-256：`39d57c69e79620cf3ae76f5f519ca20360ca207cee95e699cfd748f0b8fd2be1`。Release 输出的内置 rg 探针通过。这不代表干净机器安装或真实用户数据升级已经验收。
 
 从 v0.1.9 或更早版本升级前，关闭 CS 并备份独立 CODEX_HOME。新版 Core 会迁移 legacy 历史，降级安装包不能代替数据恢复。v0.1.9 的 tag、发布分支和资产保留不变。
 

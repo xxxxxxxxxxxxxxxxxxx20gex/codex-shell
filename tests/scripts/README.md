@@ -4,6 +4,8 @@
 
 ## 脚本
 
+- `pnpm release:verify [资产目录]`：独立校验安装器 minisign 签名、可信注释签名、Updater 版本／签名／下载文件名，以及 release 目录中 Core 与三个 companion 的 SHA-256；不读取私钥。
+- `pnpm runtime:probe-async-question [Runtime exe]`：隔离 CODEX_HOME 和本机模拟 Responses 网关，验证真实 Core 发出异步问题、回答封装回传、冷恢复及运行中 steer 接收，不使用真实凭据或用户数据。
 - `check-async-question-layout.mjs <playwright/index.mjs绝对路径> <浏览器exe绝对路径> [Vite端口=1436]`：挂载真实异步问答卡片，验证四尺寸深浅主题、选项题自由输入、键盘焦点、非模态草稿保留、发送中锁定和完成状态。只模拟发送回调，不访问模型或用户历史。
 - `check-rust.ps1`：加载 Windows C++ 编译环境，在独立临时 target 目录中依次执行 `src-tauri` 的 `cargo check`、`cargo test --lib` 和严格 Clippy（警告视为错误）。
 - `run-quality-gates.ps1`：依次运行类型检查、ESLint、Vitest、高德 Bun 离线测试、生产构建、Knip、完整 Rust 质量检查和 `git diff --check`。完整门禁需要 Bun，高德测试不访问真实 API。

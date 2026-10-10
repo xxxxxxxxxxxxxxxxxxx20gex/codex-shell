@@ -1,7 +1,7 @@
 {
   "name": "codex-shell",
   "private": true,
-  "version": "0.1.10",
+  "version": "0.1.11",
   "packageManager": "pnpm@11.20.0",
   "type": "module",
   "scripts": {
@@ -19,6 +19,9 @@
     "runtime:probe-goal": "node tests/scripts/probe-goal-runtime.mjs",
     "runtime:probe-protocol": "node tests/scripts/probe-protocol-runtime.mjs",
     "runtime:probe-upgrade": "node tests/scripts/probe-runtime-upgrade.mjs",
+    "runtime:probe-async-question": "node tests/scripts/probe-async-question-runtime.mjs",
+    "release:verify": "node tests/scripts/verify-release-assets.mjs",
+    "test:async-question-layout": "node tests/scripts/check-async-question-layout.mjs",
     "test:protocol-surface": "node --test tests/scripts/check-protocol-surface.mjs",
     "test:extension-layout": "node tests/scripts/check-extension-layout.mjs",
     "test:mcp-layout": "node tests/scripts/check-mcp-layout.mjs",

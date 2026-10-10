@@ -1,0 +1,40 @@
+import assert from 'node:assert/strict';
+import {createHash, createPublicKey, verify} from 'node:crypto';
+import {readFile, readdir} from 'node:fs/promises';
+import {join, resolve} from 'node:path';
+
+const root=resolve(import.meta.dirname,'../..');
+const config=JSON.parse(await readFile(join(root,'src-tauri/tauri.conf.json'),'utf8'));
+const folder=resolve(process.argv[2]??join(root,`release-artifacts/v${config.version}`));
+const manifest=JSON.parse(await readFile(join(folder,'latest.json'),'utf8'));
+assert.equal(manifest.version,config.version);
+const assets=await readdir(folder);
+const installers=assets.filter(name=>name.endsWith('-setup.exe'));
+assert.equal(installers.length,1);
+const installer=installers[0];
+const content=await readFile(join(folder,installer));
+const signature=(await readFile(join(folder,`${installer}.sig`),'utf8')).trim();
+const signatureLines=Buffer.from(signature,'base64').toString('utf8').trim().split(/\r?\n/);
+const publicLines=Buffer.from(config.plugins.updater.pubkey,'base64').toString('utf8').trim().split(/\r?\n/);
+const publicPacket=Buffer.from(publicLines[1],'base64');
+const packet=Buffer.from(signatureLines[1],'base64');
+assert.equal(publicPacket.length,42);
+assert.equal(packet.length,74);
+assert(packet.subarray(2,10).equals(publicPacket.subarray(2,10)),'signature key ID mismatch');
+const publicKey=createPublicKey({key:Buffer.concat([Buffer.from('302a300506032b6570032100','hex'),publicPacket.subarray(10)]),format:'der',type:'spki'});
+const algorithm=packet.subarray(0,2).toString();
+assert(['Ed','ED'].includes(algorithm),'unknown minisign algorithm');
+const message=algorithm==='ED'?createHash('blake2b512').update(content).digest():content;
+assert(verify(null,message,publicKey,packet.subarray(10)),'installer signature invalid');
+assert(signatureLines[2].startsWith('trusted comment: '));
+assert(verify(null,Buffer.concat([packet.subarray(10),Buffer.from(signatureLines[2].slice(17))]),publicKey,Buffer.from(signatureLines[3],'base64')),'trusted comment signature invalid');
+const platform=manifest.platforms['windows-x86_64'];
+assert.equal(platform.signature.trim(),signature);
+assert(platform.url.endsWith(`/v${config.version}/${installer}`));
+const runtime=JSON.parse((await readFile(join(root,'bundled/runtime-manifest.json'),'utf8')).replace(/^\uFEFF/,''));
+for(const entry of [runtime,...runtime.helpers]) {
+  const name=entry.fileName.replace(`-${runtime.target}`,'');
+  const bytes=await readFile(join(root,'src-tauri/target/release',name));
+  assert.equal(createHash('sha256').update(bytes).digest('hex'),entry.sha256,`${name} hash mismatch`);
+}
+console.log(JSON.stringify({version:manifest.version,installer,sha256:createHash('sha256').update(content).digest('hex'),signature:'verified',runtime:runtime.version,helpers:'verified'}));
