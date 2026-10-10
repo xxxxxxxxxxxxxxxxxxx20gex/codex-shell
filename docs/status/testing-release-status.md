@@ -9,9 +9,11 @@
 
 ## 当前验证基线
 
+2026-10-10 异步问答审查修复：全量 Vitest 76 文件／442 项、TypeScript、ESLint、Knip、production build、默认 target 的 Cargo check、Debug 构建及 Runtime／辅助程序哈希验证通过。41 项定向时间线测试中新增覆盖选项题自定义答案、同名问题 ID 区分、发送期间重复点击与冻结、false／异常失败后重试、UTF-8 封装上限、只读与未完成表单、Core 确认历史恢复和乐观输入排除。`check-async-question-layout.mjs` 在四尺寸深浅主题挂载真实卡片，检查自由输入、焦点、Escape／外部点击保留草稿、发送中锁定与完成状态，截图已复核；此为模拟发送回调，不等于真实网关或 WebView2 端到端验证。未修改 Rust，未重跑 Rust 单测／Clippy；不更新完整跨语言质量基线。
+
 2026-10-10 提问面板视觉调整：34 项时间线定向测试、TypeScript、ESLint、前端构建、Debug 及 Runtime 哈希检查通过；Cargo check 首次因运行中 Debug 的文件占用失败，构建脚本解除项目进程占用后复跑通过。Edge 四尺寸深浅主题检查覆盖选中、焦点、发送后只读、边界与 reduced-motion；本次未重跑全量测试，未人工验收 WebView2。
 
-2026-10-10 异步问答专项：34 项时间线／问答交互测试、TypeScript、ESLint、production build、Debug 构建和直接 Cargo check 通过。覆盖 Core `agentMessage.questions` 的选项选择、自由输入、组合提交、单次发送和输入上限校验；`pnpm rust:check` 的独立临时目标目录在本机出现 Cargo 生成文件缺失，改用默认目标目录的 Cargo check 验证通过。
+2026-10-10 异步问答初版的 34 项测试只覆盖渲染、选项与无选项输入及一次成功提交；原记录中的重复提交和输入上限覆盖不成立。审查修复后的证据见下述专项。
 
 2026-10-09 历史行空白列修复专项：10 项历史列表测试、TypeScript、ESLint、production build、Cargo check、51 项 Rust 测试（1 项忽略）与 Clippy 通过。四尺寸 Edge 探针覆盖隐藏操作不占标题列、hover／键盘聚焦让位、移出后宽度恢复、行高稳定和省略号；深浅主题截图已生成。探针挂载真实历史列表组件，不代表用户机器上的完整 WebView2 验收。
 

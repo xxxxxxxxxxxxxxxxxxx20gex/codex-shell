@@ -4,6 +4,7 @@
 
 ## 脚本
 
+- `check-async-question-layout.mjs <playwright/index.mjs绝对路径> <浏览器exe绝对路径> [Vite端口=1436]`：挂载真实异步问答卡片，验证四尺寸深浅主题、选项题自由输入、键盘焦点、非模态草稿保留、发送中锁定和完成状态。只模拟发送回调，不访问模型或用户历史。
 - `check-rust.ps1`：加载 Windows C++ 编译环境，在独立临时 target 目录中依次执行 `src-tauri` 的 `cargo check`、`cargo test --lib` 和严格 Clippy（警告视为错误）。
 - `run-quality-gates.ps1`：依次运行类型检查、ESLint、Vitest、高德 Bun 离线测试、生产构建、Knip、完整 Rust 质量检查和 `git diff --check`。完整门禁需要 Bun，高德测试不访问真实 API。
 - `probe-runtime-upgrade.mjs [候选 exe] [旧版 exe]`：默认验证暂存 Runtime 的分页、回退替换、分叉、归档、设置、队列和冷恢复；提供旧版 exe 时在隔离目录生成 legacy 历史，验证官方 CLI 及启动后台迁移。仅调用本机模拟 Responses 网关，不访问用户会话或真实模型服务。

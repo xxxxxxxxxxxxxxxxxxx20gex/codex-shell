@@ -1,6 +1,7 @@
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import type { TextElement } from "../../generated/app-server/v2/TextElement";
 import { ATTACHED_FILES_HEADING, type FileMention, type ImageAttachment } from "./sessionInput";
+import { parseQuestionReply } from "../threads/asyncQuestionReply";
 
 export interface UserMessagePresentation {
   text: string;
@@ -18,6 +19,8 @@ function isAbsoluteLocalPath(path: string) {
 }
 
 function textPresentation(text: string, elements: TextElement[]) {
+  const replies = parseQuestionReply(text);
+  if (replies) return { text: replies.map((reply) => `${reply.question}\n${reply.answer}`).join("\n\n"), files: [] as FileMention[] };
   const marker = `${ATTACHED_FILES_HEADING}\n`;
   const markerIndex = text.lastIndexOf(marker);
   if (markerIndex < 0 || elements.length === 0) return { text, files: [] as FileMention[] };

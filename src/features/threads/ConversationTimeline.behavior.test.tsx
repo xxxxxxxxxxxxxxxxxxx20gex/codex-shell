@@ -6,6 +6,7 @@ import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import type { Turn } from "../../generated/app-server/v2/Turn";
 import { ConversationTimeline } from "./ConversationTimeline";
 import { ConversationTurn } from "./ConversationTurn";
+import { parseQuestionReply } from "./asyncQuestionReply";
 
 function turn(id: string, text: string, answered = false): Turn {
   const message: ThreadItem = {
@@ -188,7 +189,7 @@ describe("ConversationTimeline native scroll controller", () => {
 
 describe("async model questions", () => {
   it("submits selected and free-form answers once", async () => {
-    const onAnswerQuestions = vi.fn(async () => true);
+    const onAnswerQuestions = vi.fn<(text: string) => Promise<boolean>>().mockResolvedValue(true);
     const turn: Turn = {
       id: "question-turn",
       items: [
@@ -205,7 +206,11 @@ describe("async model questions", () => {
     fireEvent.click(screen.getByRole("button", { name: "开源项目" }));
     fireEvent.input(screen.getByPlaceholderText("输入回答"), { target: { value: "优先中文项目" } });
     fireEvent.click(screen.getByRole("button", { name: "发送回答" }));
-    await vi.waitFor(() => expect(onAnswerQuestions).toHaveBeenCalledWith("查哪类项目？\n开源项目\n\n补充说明\n优先中文项目"));
+    await vi.waitFor(() => expect(onAnswerQuestions).toHaveBeenCalledTimes(1));
+    expect(parseQuestionReply(onAnswerQuestions.mock.calls[0][0])).toEqual([
+      { questionItemId: '["request_user_input_async","question-agent",0]', question: "查哪类项目？", answer: "开源项目" },
+      { questionItemId: '["request_user_input_async","question-agent",1]', question: "补充说明", answer: "优先中文项目" },
+    ]);
     await vi.waitFor(() => expect(screen.getByRole("button", { name: "已发送回答" })).toBeTruthy());
   });
 });

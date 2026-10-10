@@ -6,6 +6,7 @@ import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import type { TurnPlanUpdatedNotification } from "../../generated/app-server/v2/TurnPlanUpdatedNotification";
 import { userMessageText, type ThreadProcessEvent } from "../runtime/sessionState";
 import { ConversationTurn } from "./ConversationTurn";
+import { parseQuestionReply } from "./asyncQuestionReply";
 import "./ConversationTimeline.css";
 
 interface Props {
@@ -86,6 +87,18 @@ export function ConversationTimeline({
   const [visibleStartIndex, setVisibleStartIndex] = useState(Math.max(0, turns.length - 1));
   const previousActivityRef = useRef({ running, turns, processEventsByTurnId });
   const links = useMemo(() => userTurnLinks(turns), [turns]);
+  const questionReplies = useMemo(() => {
+    const replies = new Map<string, string>();
+    for (const turn of turns) for (const item of turn.items) {
+      // Optimistic input may survive a rejected RPC; only Core-confirmed messages restore answers.
+      if (item.type !== "userMessage" || item.id.startsWith("local-user:")) continue;
+      for (const input of item.content) {
+        if (input.type !== "text") continue;
+        for (const reply of parseQuestionReply(input.text) ?? []) replies.set(reply.questionItemId, reply.answer);
+      }
+    }
+    return replies;
+  }, [turns]);
 
   const setProgrammaticScroll = useCallback((callback: () => void) => {
     const scroller = scrollerRef.current;
@@ -282,6 +295,7 @@ export function ConversationTimeline({
               onFork={threadId && onFork ? () => onFork(threadId, turn.id) : undefined}
               onEditMessage={!running && !forkDisabled && turn.status !== "inProgress" && turnIndex === turns.length - 1 ? onEditMessage : undefined}
               onAnswerQuestions={onAnswerQuestions}
+              questionReplies={questionReplies}
               plan={plansByTurnId[turn.id]}
               activeItemTurnIds={activeItemTurnIds}
               mcpProgressByItemId={mcpProgressByItemId}
