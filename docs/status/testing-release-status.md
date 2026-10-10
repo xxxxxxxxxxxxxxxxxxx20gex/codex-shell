@@ -9,6 +9,8 @@
 
 ## 当前验证基线
 
+2026-10-10 提问面板视觉调整：34 项时间线定向测试、TypeScript、ESLint、前端构建、Debug 及 Runtime 哈希检查通过；Cargo check 首次因运行中 Debug 的文件占用失败，构建脚本解除项目进程占用后复跑通过。Edge 四尺寸深浅主题检查覆盖选中、焦点、发送后只读、边界与 reduced-motion；本次未重跑全量测试，未人工验收 WebView2。
+
 2026-10-10 异步问答专项：34 项时间线／问答交互测试、TypeScript、ESLint、production build、Debug 构建和直接 Cargo check 通过。覆盖 Core `agentMessage.questions` 的选项选择、自由输入、组合提交、单次发送和输入上限校验；`pnpm rust:check` 的独立临时目标目录在本机出现 Cargo 生成文件缺失，改用默认目标目录的 Cargo check 验证通过。
 
 2026-10-09 历史行空白列修复专项：10 项历史列表测试、TypeScript、ESLint、production build、Cargo check、51 项 Rust 测试（1 项忽略）与 Clippy 通过。四尺寸 Edge 探针覆盖隐藏操作不占标题列、hover／键盘聚焦让位、移出后宽度恢复、行高稳定和省略号；深浅主题截图已生成。探针挂载真实历史列表组件，不代表用户机器上的完整 WebView2 验收。

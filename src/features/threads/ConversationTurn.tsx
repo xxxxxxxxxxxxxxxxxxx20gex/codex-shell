@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from "react";
-import { ChevronDown, Copy, FilePenLine, Pencil, Terminal, Wrench } from "lucide-react";
+import { ArrowUp, Check, Circle, MessageCircleQuestion, ChevronDown, Copy, FilePenLine, Pencil, Terminal, Wrench } from "lucide-react";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import type { McpToolCallProgressNotification } from "../../generated/app-server/v2/McpToolCallProgressNotification";
 import type { Turn } from "../../generated/app-server/v2/Turn";
@@ -65,20 +65,20 @@ function AsyncQuestionCard({ questions, onSubmit }: { questions: AsyncUserInputQ
 
   return (
     <div className="async-question-card" aria-label="Codex 的问题">
-      <div className="async-question-heading"><strong>继续前请回答</strong><span>选择一项或输入你的回答</span></div>
+      <div className="async-question-heading"><MessageCircleQuestion aria-hidden="true" /><strong>请回答</strong><span>{submitted ? "已回答" : questions.length > 1 ? `${questions.length} 个问题` : "等待回答"}</span></div>
       {questions.map((question, index) => (
         <fieldset key={`${question.title}:${index}`} className="async-question">
           <legend>{question.title}</legend>
           {question.options?.map((option) => (
-            <button type="button" key={option} className={answers[index] === option ? "selected" : ""} disabled={submitted} onClick={() => setAnswers((current) => current.map((value, answerIndex) => answerIndex === index ? option : value))}>{option}</button>
+            <button type="button" key={option} className={answers[index] === option ? "selected" : ""} aria-pressed={answers[index] === option} disabled={submitted} onClick={() => setAnswers((current) => current.map((value, answerIndex) => answerIndex === index ? option : value))}>{answers[index] === option ? <Check aria-hidden="true" /> : <Circle aria-hidden="true" />}<span>{option}</span></button>
           ))}
           {(!question.options || question.options.length === 0) && (
-            <input type="text" value={answers[index]} disabled={submitted} maxLength={MAX_MODEL_VISIBLE_INPUT_BYTES} placeholder="输入回答" onChange={(event) => setAnswers((current) => current.map((value, answerIndex) => answerIndex === index ? event.target.value : value))} />
+            <input type="text" aria-label={question.title} value={answers[index]} disabled={submitted} maxLength={MAX_MODEL_VISIBLE_INPUT_BYTES} placeholder="输入回答" onChange={(event) => setAnswers((current) => current.map((value, answerIndex) => answerIndex === index ? event.target.value : value))} />
           )}
         </fieldset>
       ))}
       {error && <p className="async-question-error" role="alert">{error}</p>}
-      {onSubmit && <button type="button" className="async-question-submit" disabled={!complete || submitted} onClick={() => void submit()}>{submitted ? "已发送回答" : "发送回答"}</button>}
+      <div className="async-question-footer"><span>{submitted ? "回答已发送" : "确认后发送回答"}</span>{onSubmit && <button type="button" className="async-question-submit" disabled={!complete || submitted} onClick={() => void submit()}>{submitted ? <Check aria-hidden="true" /> : <ArrowUp aria-hidden="true" />}{submitted ? "已发送回答" : "发送回答"}</button>}</div>
     </div>
   );
 }

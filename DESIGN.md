@@ -1,7 +1,7 @@
 # Codex Shell Design Standard
 
 > Status: Target contract v1. Production UI may still contain legacy values until the UI refresh is implemented.
-> Last updated: 2026-10-08.
+> Last updated: 2026-10-10.
 
 ## Product Character
 
@@ -242,7 +242,7 @@ Radii:
 - User-message copy/edit actions are a compact inline exception: 24px hit targets (`--control-height-inline`), 14px icons (`--icon-size-inline`) with 1.75px stroke, borderless neutral hover and the standard keyboard focus ring. Other message and toolbar controls retain their existing sizes.
 - User bubbles use the borderless raised surface, 8px vertical and 16px horizontal padding, and the shared 8px panel radius. Metadata follows after 8px, with time and compact inline icon controls on one right-aligned row; the full date and time remain available on hover. User text preserves line breaks and wraps long unbroken strings.
 - Assistant responses are unframed and use one subtle 2px action marker at the first answer line; completed responses do not carry a full-height rail.
-- Async model questions render below the related answer as one compact bordered prompt with a blue information marker, selectable options or a text field, and one right-aligned send action. Selecting an option does not submit immediately; all questions are answered together and the card becomes read-only after successful send.
+- Async model questions render below the related answer as one compact prompt with a subtle neutral border and no accent rail. Use a 16px question icon, 12px secondary heading, 13px/20px question and option text, borderless option rows with a circle/check selection indicator, and one 28px right-aligned send action. Selected options use a neutral raised surface; the send action alone uses the action accent. Long questions and options wrap; free-text fields have an accessible question label. Selecting an option does not submit immediately; all questions are answered together and the card becomes read-only after successful send.
 - Reasoning, commands, MCP calls, and file work collapse into one process group after completion.
 - Process summaries are low-contrast, unframed rows. Their verbs come only from structured Core events: tool calls are described as calls rather than loads, and command text may be shown inline when exactly one command is represented.
 - Command output and diffs use the mono family and conversation-small size.
