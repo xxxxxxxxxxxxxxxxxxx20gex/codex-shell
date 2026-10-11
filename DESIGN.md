@@ -263,7 +263,7 @@ Radii:
 - Permission triggers are borderless 28px ghost controls with regular 12px labels. Full access retains an amber shield only; do not tint the entire control. Running status uses a small semantic dot and muted 12px text, without a badge border or tinted fill.
 - Left group: add, permission, mode, activity. Right group: model, effort, send.
 - Goal and Plan share one mutually exclusive mode slot.
-- The send button is a stable 32px square and changes function without moving.
+- Send and stop use stable 32px squares with the shared 8px panel radius and centered 16px icons. Send uses an upward arrow and the action accent when available; disabled send uses a quiet raised surface. Stop uses a filled square on a neutral surface, with danger color on hover or keyboard focus; no persistent red outline or tinted block.
 - Queued messages appear in one sibling panel immediately above the input, sharing the composer's left and right edges. Use continuous 40px rows, 13px single-line previews, optional 32px image thumbnails, and stable right-aligned actions. The labeled Steer action precedes 28px delete and more buttons; edit lives in the shared menu. Running queues omit repeated waiting labels and headings; idle queues retain the resume action. Long queues scroll within a four-row viewport, and menus render outside that scroll region.
 
 ## Sketch Workspace

@@ -1,4 +1,4 @@
-import { Send } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 
 export type ComposerSubmitAction = "queue" | "steer" | "steerUnavailable";
 
@@ -41,7 +41,7 @@ export function SendModeControl(props: SendModeControlProps) {
           </div>
         </div>
       )}
-      <button className="send-button" disabled={!props.hasDraft} onClick={props.onQueue} aria-label={props.running ? "排队发送" : "发送任务"} title={props.running ? "排队发送" : "发送任务"}><Send aria-hidden="true" /></button>
+      <button className="send-button" disabled={!props.hasDraft} onClick={props.onQueue} aria-label={props.running ? "排队发送" : "发送任务"} title={props.running ? "排队发送" : "发送任务"}><ArrowUp aria-hidden="true" /></button>
     </div>
   );
 }

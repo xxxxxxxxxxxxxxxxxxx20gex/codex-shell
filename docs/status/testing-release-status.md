@@ -55,3 +55,5 @@ v0.1.11 使用 Core 0.160.1，发布资产为 NSIS 安装器、`.sig` 和 `lates
 2026-10-08，回复代码块四尺寸 Edge 检查通过，覆盖整列宽度、长行滚动、换行切换、图标与按钮尺寸、焦点、文字下限及 reduced-motion；6 项 Markdown 定向测试通过。此为浏览器组件验证，未替代真实 WebView2 人工验收。
 
 2026-10-11，Composer 权限／执行状态视觉调整：4 项权限测试、TypeScript、ESLint、Cargo check、前端和 Debug 构建通过，Runtime 辅助程序哈希检查通过；四尺寸 Edge 探针覆盖完全访问与执行状态布局、焦点、弹层关闭和 reduced-motion。未重跑全量测试或真实 WebView2 人工验收。
+
+2026-10-11，发送／停止按钮视觉调整：4 项发送测试、TypeScript、ESLint、前端构建及最终 Debug 构建通过，Runtime 哈希校验通过。Cargo check 首次被运行中 Debug 文件占用阻塞，解除占用后复跑通过。含停止按钮的 Composer 四尺寸 Edge 探针通过并复核截图；未重跑全量测试或 WebView2 人工验收。

@@ -173,7 +173,7 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .model-picker-advanced:hover { color: var(--text-primary); background: var(--surface-selected); }
 .model-picker-advanced svg { width: 16px; height: 16px; stroke-width: 1.75; }
 .model-picker-close { position: absolute; top: var(--space-1); right: var(--space-1); }
-.send-button, .stop-button { display: grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: var(--radius-control); cursor: pointer; font-weight: 600; }
+.send-button, .stop-button { display: grid; place-items: center; width: var(--control-height); height: var(--control-height); flex: 0 0 var(--control-height); padding: 0; border: 0; border-radius: var(--radius-panel); cursor: pointer; transition: color var(--motion-fast), background-color var(--motion-fast); }
 .send-mode-anchor { position: relative; }
 .send-mode-menu-bridge { position: absolute; z-index: 16; right: 0; bottom: 100%; width: 240px; padding-bottom: 8px; opacity: 0; pointer-events: none; transform: translateY(4px); transition: opacity var(--motion-popover), transform var(--motion-popover), visibility 0s linear .16s; visibility: hidden; }
 .send-mode-anchor:hover .send-mode-menu-bridge, .send-mode-anchor:focus-within .send-mode-menu-bridge { opacity: 1; pointer-events: auto; transform: translateY(0); transition-delay: 0s; visibility: visible; }
@@ -189,10 +189,11 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .send-mode-menu button:disabled kbd { color: var(--text-disabled); }
 .send-button { color: var(--ui-accent-ink); background: var(--accent-action); }
 .send-button svg { width: 16px; height: 16px; stroke-width: 1.75; }
-.stop-button { color: var(--accent-danger); background: color-mix(in srgb, var(--accent-danger) 16%, var(--surface-raised)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-danger) 20%, transparent); transition: background-color var(--motion-fast), box-shadow var(--motion-fast); }
-.stop-button svg { display: block; width: 10px; height: 10px; fill: currentColor; stroke: none; }
-.stop-button:hover { background: color-mix(in srgb, var(--accent-danger) 23%, var(--surface-raised)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-danger) 32%, transparent); }
-.send-button:disabled { color: var(--text-disabled); background: var(--surface-selected); cursor: default; }
+.send-button:hover:not(:disabled) { background: color-mix(in srgb, var(--accent-action) 88%, var(--text-primary)); }
+.stop-button { color: var(--text-secondary); background: var(--surface-raised); }
+.stop-button svg { display: block; width: 16px; height: 16px; fill: currentColor; stroke: none; padding: 3px; }
+.stop-button:hover, .stop-button:focus-visible { color: var(--accent-danger); background: var(--surface-selected); }
+.send-button:disabled { color: var(--text-disabled); background: var(--surface-raised); cursor: default; }
 .permission-selector { position: relative; }
 .permission-trigger { display: flex; height: var(--control-height-compact); min-height: var(--control-height-compact); align-items: center; gap: var(--space-1); padding: 0 var(--space-2); border: 0; border-radius: var(--radius-control); color: var(--text-secondary); background: transparent; cursor: pointer; transition: color var(--motion-fast), background-color var(--motion-fast); }
 .permission-trigger strong { font: 400 var(--text-label)/16px var(--font-ui); }.permission-trigger .chevron-icon { color: var(--text-muted); }
