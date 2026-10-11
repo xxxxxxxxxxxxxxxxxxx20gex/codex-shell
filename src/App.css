@@ -141,9 +141,9 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .composer-add-menu button kbd { color: var(--text-muted); font: var(--text-meta)/16px var(--font-mono); }
 .composer-add-menu button:disabled > i, .composer-add-menu button:disabled small, .composer-add-menu button:disabled kbd { color: var(--text-disabled); }
 .image-chip { color: var(--accent-success); }
-.steer-mode-indicator { display: inline-flex; height: 28px; align-items: center; gap: 6px; padding: 0 8px; border: 1px solid var(--border-default); border-radius: var(--radius-control); color: var(--text-secondary); background: var(--surface-panel); font-size: var(--text-label); white-space: nowrap; }
+.steer-mode-indicator { display: inline-flex; min-height: var(--control-height-compact); align-items: center; gap: var(--space-2); padding: 0 var(--space-2); border: 0; color: var(--text-muted); background: transparent; font: 400 var(--text-label)/16px var(--font-ui); white-space: nowrap; }
 .steer-mode-indicator i { width: 5px; height: 5px; border-radius: 50%; background: var(--text-muted); animation: activity-pulse 1.4s ease-in-out infinite; }
-.steer-mode-indicator.steerable { border-color: color-mix(in srgb, var(--accent-action) 30%, var(--border-default)); color: var(--text-secondary); background: color-mix(in srgb, var(--accent-action) 8%, var(--surface-panel)); }
+.steer-mode-indicator.steerable { color: var(--text-muted); }
 .steer-mode-indicator.steerable i { background: var(--accent-action); }
 .composer-intent-button { display: flex; height: 28px; align-items: center; gap: 5px; padding: 0 9px; border: 1px solid color-mix(in srgb, var(--accent-action) 42%, var(--border-default)); border-radius: var(--radius-control); color: var(--text-secondary); background: color-mix(in srgb, var(--accent-action) 10%, var(--surface-panel)); font-size: var(--text-label); cursor: pointer; }
 .composer-intent-button:hover { border-color: var(--accent-action); color: var(--text-primary); background: color-mix(in srgb, var(--accent-action) 14%, var(--surface-raised)); }
@@ -194,11 +194,11 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .stop-button:hover { background: color-mix(in srgb, var(--accent-danger) 23%, var(--surface-raised)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-danger) 32%, transparent); }
 .send-button:disabled { color: var(--text-disabled); background: var(--surface-selected); cursor: default; }
 .permission-selector { position: relative; }
-.permission-trigger { display: flex; height: 28px; min-height: 28px; align-items: center; gap: 6px; padding: 5px 8px; border: 1px solid var(--border-subtle); border-radius: var(--radius-control); color: var(--text-secondary); background: var(--surface-panel); cursor: pointer; }
-.permission-trigger strong { font-size: var(--text-label); font-weight: 600; }.permission-trigger .chevron-icon { color: var(--text-muted); }
-.permission-trigger:hover, .permission-trigger:focus-visible { border-color: var(--border-default); background: var(--surface-raised); }
-.permission-trigger.danger { border-color: color-mix(in srgb, var(--accent-warning) 30%, var(--border-subtle)); color: var(--accent-warning); background: color-mix(in srgb, var(--accent-warning) 8%, var(--surface-panel)); }
-.permission-trigger.danger:hover, .permission-trigger.danger:focus-visible { background: color-mix(in srgb, var(--accent-warning) 12%, var(--surface-raised)); }
+.permission-trigger { display: flex; height: var(--control-height-compact); min-height: var(--control-height-compact); align-items: center; gap: var(--space-1); padding: 0 var(--space-2); border: 0; border-radius: var(--radius-control); color: var(--text-secondary); background: transparent; cursor: pointer; transition: color var(--motion-fast), background-color var(--motion-fast); }
+.permission-trigger strong { font: 400 var(--text-label)/16px var(--font-ui); }.permission-trigger .chevron-icon { color: var(--text-muted); }
+.permission-trigger:hover, .permission-trigger:focus-visible { color: var(--text-primary); background: var(--surface-raised); }
+.permission-trigger.danger .permission-icon { color: var(--accent-warning); }
+.permission-trigger:disabled { color: var(--text-disabled); background: transparent; cursor: default; }.permission-trigger:disabled .permission-icon { color: var(--text-disabled); }
 .permission-menu { position: absolute; z-index: 12; bottom: calc(100% + 8px); left: 0; display: grid; width: 330px; padding: var(--space-1); overflow: hidden; border: 1px solid var(--border-default); border-radius: var(--radius-panel); background: var(--surface-panel); box-shadow: var(--shadow-popover); }
 .permission-menu button { display: grid; width: 100%; min-height: var(--control-height-large); grid-template-columns: 16px 1fr 32px; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-2); border: 0; border-radius: var(--radius-sm); color: var(--text-secondary); text-align: left; background: transparent; cursor: pointer; }
 .permission-menu button:hover, .permission-menu button:focus-visible, .permission-menu button.active { color: var(--text-primary); background: var(--surface-selected); }

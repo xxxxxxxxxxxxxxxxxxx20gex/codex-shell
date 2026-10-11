@@ -1,7 +1,7 @@
 # Codex Shell Design Standard
 
 > Status: Target contract v1. Production UI may still contain legacy values until the UI refresh is implemented.
-> Last updated: 2026-10-10.
+> Last updated: 2026-10-11.
 
 ## Product Character
 
@@ -260,6 +260,7 @@ Radii:
 - An active goal uses a single compact status strip immediately above the composer. Its icon and readable objective lead; status and elapsed time are secondary metadata; a separate right-side icon button owns the clear action. Long objectives truncate with their full text available on hover. The strip and composer meet without a double border.
 - Nearby runtime, error, success, and queue notices use `--text-label` for actionable text; reserve `--text-meta` for counts, elapsed time, and secondary state. Notices keep their main message readable and truncate only when space is constrained.
 - Repeated icon-only actions around the composer share the 28px compact-button geometry, 16px Lucide icon, focus ring, and descriptive hover title. Status text itself does not trigger destructive or dismiss actions.
+- Permission triggers are borderless 28px ghost controls with regular 12px labels. Full access retains an amber shield only; do not tint the entire control. Running status uses a small semantic dot and muted 12px text, without a badge border or tinted fill.
 - Left group: add, permission, mode, activity. Right group: model, effort, send.
 - Goal and Plan share one mutually exclusive mode slot.
 - The send button is a stable 32px square and changes function without moving.
