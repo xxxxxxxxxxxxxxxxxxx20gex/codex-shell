@@ -1,13 +1,17 @@
 # 测试与发布状态
 
 - 模块职责：维护质量门禁、Runtime 兼容验证、Windows 发布证据及未覆盖边界；模块行为由对应状态文档维护，历史由 Git 保留。
-- 当前状态：v0.1.11 使用官方 Core 0.160.1，沿用既有 Updater minisign 公钥。Windows Authenticode 尚未配置，SmartScreen 仍可能提示未知发布者。
+- 当前状态：v0.1.12 使用官方 Core 0.160.1，沿用既有 Updater minisign 公钥。GitHub Release 和更新元数据均提供本版更新说明；当前客户端检查更新后直接下载安装，不展示更新正文。Windows Authenticode 尚未配置，SmartScreen 仍可能提示未知发布者。
 - 当前接口：`pnpm test:quality` 执行 TypeScript、ESLint、Vitest、高德离线测试、production build、Knip、Cargo check、Rust 单测、严格 Clippy 和 diff 检查。专项入口见 [测试脚本说明](../../tests/scripts/README.md)。
 - 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；`package.json` 遗留的 `test:extension-layout` 指向不存在的脚本，MCP 管理可使用现有 `test:mcp-layout`（不等价于全部扩展管理验证），不能把失效入口作为验证证据；Vite 主 chunk 超过 500 kB；Rust 既有格式差异尚未整理，`cargo fmt --check` 未纳入门禁。
 - 下一步：真实系统凭据、多渠道对话、第三方 MCP OAuth、干净 Windows 安装升级和大型历史迁移验收。
 - 最后更新：2026-10-12
 
 ## 当前验证基线
+
+v0.1.12 生产资产：NSIS 安装器、`.sig` 和带中文更新说明的 `latest.json` 已生成；独立 Ed25519／BLAKE2b 验签、可信注释签名、版本／下载地址／manifest 签名一致性与 release Runtime／辅助程序哈希校验通过。安装器 SHA-256：`363182bd1c5d7b258f49160892ac569778551afee92c83acf9785fd1f19bfa5e`。
+
+2026-10-12 v0.1.12 发布验收：版本同步后复跑 459 项前端、34 项高德离线、51 项 Rust 测试（1 项交互测试忽略）、TypeScript、ESLint、Knip 和严格 Clippy 均通过；生产前端及 Debug 构建通过，Core 0.160.1 同源门禁及哈希校验通过。原生协议、异步问答、冷恢复、连续侧聊使用真实 Core 与本机模拟网关；release 输出内置 rg 探针通过（首次误传可执行文件而非目录造成 ENOENT，纠正参数后通过）。未验证真实收费渠道、干净 Windows 安装或完整 WebView2。更新说明同时写入 GitHub Release 和 `latest.json`。
 
 2026-10-12 侧聊提交边界补充：76 文件／459 项前端测试、TypeScript、ESLint、Knip、production build、Cargo check、Debug 构建及同源 Runtime 哈希校验通过。新增 7 项测试覆盖完成／失败／中断通知先于提交响应（同批处理）、下一轮正常发送，以及未改动／改动／改回原文／失败后的草稿保留。真实 Core 隔离模拟网关连续两轮探针、共享问答卡片四尺寸深浅主题检查复跑通过。时序竞态由模拟测试验证，不代表真实渠道发生频率；未重跑 Rust 单测／Clippy 和高德测试，未做完整 WebView2 人工验收。
 
