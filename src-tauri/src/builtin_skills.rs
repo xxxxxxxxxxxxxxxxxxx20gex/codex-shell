@@ -89,6 +89,11 @@ pub fn install_builtin_amap(app: AppHandle) -> Result<String, String> {
     install(app, "amap", "高德地图")
 }
 
+#[tauri::command]
+pub fn install_builtin_project_docs(app: AppHandle) -> Result<String, String> {
+    install(app, "project-management-docs", "项目文档管理")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -96,7 +101,7 @@ mod tests {
     #[test]
     fn packaged_skills_install_without_development_source() {
         let root = tempfile::tempdir().unwrap();
-        for name in ["amap", "image-gen", "cs-docs"] {
+        for name in ["amap", "image-gen", "cs-docs", "project-management-docs"] {
             let packaged = root.path().join("_up_/bundled/skills").join(name);
             fs::create_dir_all(packaged.join("scripts")).unwrap();
             fs::write(packaged.join("SKILL.md"), "packaged skill").unwrap();

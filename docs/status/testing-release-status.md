@@ -9,6 +9,8 @@
 
 ## 当前验证基线
 
+2026-10-12 可选内置项目文档 Skill：77 文件／470 项前端测试、TypeScript、ESLint、Knip、production build、Cargo check、51 项 Rust 测试（1 项交互测试忽略）、严格 Clippy、Debug 构建与 Core 0.160.1 哈希校验通过。新 Skill 的格式及打包资源哈希验证通过；格式校验首次受 Windows GBK 默认编码影响失败，指定 UTF-8 后通过。Edge 四尺寸挂载真实管理组件，模拟安装 IPC，验证默认关闭、详情关闭和布局。未重跑高德／生图专项，未执行真实模型文档任务、干净 Windows 安装或生产发布；不替换上一版完整发布基线。
+
 2026-10-12 更新网络提示（v0.1.12 发布后的 main）：15 项设置组件测试、TypeScript、ESLint、production build、Cargo check、Debug 构建及 Runtime 哈希校验通过。覆盖字符串／Error 网络故障、下载失败、非网络错误原文保留和重试清理；真实 RuntimePreferences 组件在 Edge 四尺寸显示长提示无溢出，IPC 网络错误为模拟注入。未做真实断网升级安装，未重跑全量测试或 Rust 单测。
 
 v0.1.12 生产资产：NSIS 安装器、`.sig` 和带中文更新说明的 `latest.json` 已生成；独立 Ed25519／BLAKE2b 验签、可信注释签名、版本／下载地址／manifest 签名一致性与 release Runtime／辅助程序哈希校验通过。安装器 SHA-256：`363182bd1c5d7b258f49160892ac569778551afee92c83acf9785fd1f19bfa5e`。

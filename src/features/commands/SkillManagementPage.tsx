@@ -8,6 +8,8 @@ import "./CommandPanels.css";
 import "./ExtensionManagement.css";
 import { SkillDetailDialog } from "./SkillDetailDialog";
 
+const PROJECT_DOCS_DESCRIPTION = "维护项目文档与索引，清理重复内容，对齐代码和当前状态。";
+
 const AMAP_DESCRIPTION = "查询地点、路线和天气，绘制带时间表的真实地图行程图。";
 
 interface Props {
@@ -68,7 +70,7 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
     catch (value) { setError(errorMessage(value)); }
     finally { setBusy(false); }
   }
-  async function installBuiltin(command: "install_builtin_skill" | "install_builtin_cs_docs" | "install_builtin_amap") {
+  async function installBuiltin(command: "install_builtin_skill" | "install_builtin_cs_docs" | "install_builtin_amap" | "install_builtin_project_docs") {
     setBusy(true); setError("");
     try {
       const path = await invoke<string>(command);
@@ -95,13 +97,15 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
   const builtinImage = (skill: SkillMetadata) => Boolean(codexHome) && !skill.pluginId && skill.scope === "user" && skill.path.split("\\").join("/").toLowerCase() === root + "image-gen/skill.md";
   const builtinDocs = (skill: SkillMetadata) => Boolean(codexHome) && !skill.pluginId && skill.scope === "user" && skill.path.split("\\").join("/").toLowerCase() === root + "cs-docs/skill.md";
   const builtinAmap = (skill: SkillMetadata) => Boolean(codexHome) && !skill.pluginId && skill.scope === "user" && skill.path.split("\\").join("/").toLowerCase() === root + "amap/skill.md";
+  const builtinProjectDocs = (skill: SkillMetadata) => Boolean(codexHome) && !skill.pluginId && skill.scope === "user" && skill.path.split("\\").join("/").toLowerCase() === root + "project-management-docs/skill.md";
   const officialDocs = (skill: SkillMetadata) => skill.name === "openai-docs";
-  const groupOf = (skill: SkillMetadata) => builtinDocs(skill) ? "系统" : builtinImage(skill) || builtinAmap(skill) ? "CS 内置" : skill.scope === "user" ? "个人" : "系统";
+  const groupOf = (skill: SkillMetadata) => builtinDocs(skill) ? "系统" : builtinImage(skill) || builtinAmap(skill) || builtinProjectDocs(skill) ? "CS 内置" : skill.scope === "user" ? "个人" : "系统";
   const normalized = query.trim().toLocaleLowerCase();
-  const filtered = normalized ? skills.filter((skill) => `${builtinImage(skill) ? "兔子生图" : ""} ${builtinAmap(skill) ? `高德地图 amap 测量距离 ${AMAP_DESCRIPTION}` : ""} ${builtinDocs(skill) ? "CS 文档 Codex Shell 文档" : ""} ${officialDocs(skill) ? "OpenAI 官方文档" : ""} ${skill.name} ${skill.interface?.displayName || ""} ${skill.interface?.shortDescription || ""} ${skill.description}`.toLocaleLowerCase().includes(normalized)) : skills;
+  const filtered = normalized ? skills.filter((skill) => `${builtinProjectDocs(skill) ? `项目文档管理 project-management-docs ${PROJECT_DOCS_DESCRIPTION}` : ""} ${builtinImage(skill) ? "兔子生图" : ""} ${builtinAmap(skill) ? `高德地图 amap 测量距离 ${AMAP_DESCRIPTION}` : ""} ${builtinDocs(skill) ? "CS 文档 Codex Shell 文档" : ""} ${officialDocs(skill) ? "OpenAI 官方文档" : ""} ${skill.name} ${skill.interface?.displayName || ""} ${skill.interface?.shortDescription || ""} ${skill.description}`.toLocaleLowerCase().includes(normalized)) : skills;
   const showBuiltinImage = !skills.some(builtinImage) && (!query.trim() || "兔子生图 image-gen 通过兔子渠道生成商品图、海报和场景图片。".toLowerCase().includes(query.trim().toLowerCase()));
   const showBuiltinDocs = !skills.some(builtinDocs) && (!query.trim() || "CS 文档 cs-docs Codex Shell 文档 实现 开发".toLowerCase().includes(query.trim().toLowerCase()));
   const showBuiltinAmap = !skills.some(builtinAmap) && (!normalized || `高德地图 amap 测量距离 ${AMAP_DESCRIPTION}`.toLowerCase().includes(normalized));
+  const showBuiltinProjectDocs = !skills.some(builtinProjectDocs) && (!normalized || `项目文档管理 project-management-docs ${PROJECT_DOCS_DESCRIPTION}`.toLowerCase().includes(normalized));
   const selectedState = skills.find((skill) => skill.path === selected?.path) || selected;
   return <div className="skill-management-page extension-catalog">
     <header className="skill-management-header"><div><h1>技能</h1></div><div><button type="button" disabled={busy} onClick={() => void install()}>从目录安装</button><button type="button" onClick={onClose}>返回会话</button></div></header>
@@ -110,27 +114,28 @@ export function SkillManagementPage({ loadSkills, revision, codexHome, setEnable
     {loadError && <p className="error" role="alert">{loadError}</p>}
     {["CS 内置", "个人", "系统"].map((group) => {
       const items = filtered.filter((skill) => !skill.pluginId && groupOf(skill) === group).sort((a, b) => a.name.localeCompare(b.name, "zh-CN") || a.path.localeCompare(b.path, "en"));
-      const rows: (SkillMetadata | "image-gen" | "amap" | "cs-docs")[] = group === "CS 内置"
-        ? [items.find(builtinImage) ?? (showBuiltinImage ? "image-gen" : null), items.find(builtinAmap) ?? (showBuiltinAmap ? "amap" : null)].filter((item): item is SkillMetadata | "image-gen" | "amap" => item !== null)
+      const rows: (SkillMetadata | "image-gen" | "amap" | "cs-docs" | "project-management-docs")[] = group === "CS 内置"
+        ? [items.find(builtinImage) ?? (showBuiltinImage ? "image-gen" : null), items.find(builtinAmap) ?? (showBuiltinAmap ? "amap" : null), items.find(builtinProjectDocs) ?? (showBuiltinProjectDocs ? "project-management-docs" : null)].filter((item): item is SkillMetadata | "image-gen" | "amap" | "project-management-docs" => item !== null)
         : group === "系统"
           ? [...(items.find(builtinDocs) ? [items.find(builtinDocs)!] : showBuiltinDocs ? ["cs-docs" as const] : []), ...items.filter((skill) => !builtinDocs(skill))]
           : items;
-      if (!items.length && !(group === "CS 内置" && (showBuiltinImage || showBuiltinAmap)) && !(group === "系统" && showBuiltinDocs)) return null;
+      if (!items.length && !(group === "CS 内置" && (showBuiltinImage || showBuiltinAmap || showBuiltinProjectDocs)) && !(group === "系统" && showBuiltinDocs)) return null;
       return <section className="skill-management-section" aria-label={group} key={group}><h2>{group}</h2>
         {rows.map((skill) => {
           if (skill === "image-gen") return <article key="image-gen" className="skill-management-card"><span className="skill-management-icon"><Sparkles aria-hidden="true" /></span><div><strong>兔子生图</strong><p>通过兔子渠道生成商品图、海报和场景图片。</p></div><span className="skill-management-actions"><button type="button" className="skill-management-toggle" disabled={busy} onClick={() => void installBuiltin("install_builtin_skill")}>安装</button></span></article>;
           if (skill === "amap") return <article key="amap" className="skill-management-card"><span className="skill-management-icon"><MapPin aria-hidden="true" /></span><div><strong>高德地图</strong><p>{AMAP_DESCRIPTION}</p></div><span className="skill-management-actions"><button type="button" className="skill-management-toggle" disabled={busy} onClick={() => void installBuiltin("install_builtin_amap")}>安装</button></span></article>;
+          if (skill === "project-management-docs") return <article key="project-management-docs" className="skill-management-card"><span className="skill-management-icon"><BookOpen aria-hidden="true" /></span><div><strong>项目文档管理</strong><p>{PROJECT_DOCS_DESCRIPTION}</p></div><span className="skill-management-actions"><button type="button" className="skill-management-toggle" disabled={busy} onClick={() => void installBuiltin("install_builtin_project_docs")}>安装</button></span></article>;
           if (skill === "cs-docs") return <article key="cs-docs" className="skill-management-card"><span className="skill-management-icon"><BookOpen aria-hidden="true" /></span><div><strong>CS 文档</strong><p>说明 Codex Shell 当前实现、配置、开发流程和能力边界。</p></div><span className="skill-management-actions"><button type="button" className="skill-management-toggle" disabled={busy} onClick={() => void installBuiltin("install_builtin_cs_docs")}>安装</button></span></article>;
           const relative = skill.path.split("\\").join("/").toLowerCase();
           const owned = codexHome && relative.startsWith(root) && /^[^/.][^/]*\/skill\.md$/.test(relative.slice(root.length));
           const scopeLabel = skill.scope === "repo" ? "项目" : skill.scope === "admin" ? "管理员" : null;
           return <article className={`skill-management-card ${!skill.enabled ? "disabled" : ""}`} key={skill.path}>
-            <button type="button" className="skill-management-main" disabled={!readSkillContent} onClick={() => setSelected(skill)}><span className="skill-management-icon">{builtinDocs(skill) || officialDocs(skill) ? <BookOpen aria-hidden="true" /> : builtinAmap(skill) ? <MapPin aria-hidden="true" /> : <Sparkles aria-hidden="true" />}</span><span><strong>{builtinImage(skill) ? "兔子生图" : builtinDocs(skill) ? "CS 文档" : builtinAmap(skill) ? "高德地图" : officialDocs(skill) ? "OpenAI 官方文档" : skill.interface?.displayName || skill.name}{scopeLabel && <em className="skill-scope-badge">{scopeLabel}</em>}</strong><p>{builtinImage(skill) ? "通过兔子渠道生成商品图、海报和场景图片。" : builtinDocs(skill) ? "说明 Codex Shell 当前实现、配置、开发流程和能力边界。" : builtinAmap(skill) ? AMAP_DESCRIPTION : officialDocs(skill) ? "查询官方 OpenAI、Codex 和 API 文档，不代表 CS 当前实现。" : skill.interface?.shortDescription || skill.shortDescription || skill.description}</p></span></button>
+            <button type="button" className="skill-management-main" disabled={!readSkillContent} onClick={() => setSelected(skill)}><span className="skill-management-icon">{builtinDocs(skill) || builtinProjectDocs(skill) || officialDocs(skill) ? <BookOpen aria-hidden="true" /> : builtinAmap(skill) ? <MapPin aria-hidden="true" /> : <Sparkles aria-hidden="true" />}</span><span><strong>{builtinProjectDocs(skill) ? "项目文档管理" : builtinImage(skill) ? "兔子生图" : builtinDocs(skill) ? "CS 文档" : builtinAmap(skill) ? "高德地图" : officialDocs(skill) ? "OpenAI 官方文档" : skill.interface?.displayName || skill.name}{scopeLabel && <em className="skill-scope-badge">{scopeLabel}</em>}</strong><p>{builtinProjectDocs(skill) ? PROJECT_DOCS_DESCRIPTION : builtinImage(skill) ? "通过兔子渠道生成商品图、海报和场景图片。" : builtinDocs(skill) ? "说明 Codex Shell 当前实现、配置、开发流程和能力边界。" : builtinAmap(skill) ? AMAP_DESCRIPTION : officialDocs(skill) ? "查询官方 OpenAI、Codex 和 API 文档，不代表 CS 当前实现。" : skill.interface?.shortDescription || skill.shortDescription || skill.description}</p></span></button>
             <span className="skill-management-actions">{owned && skill.scope === "user" && !skill.pluginId && <button type="button" className="skill-management-remove" title="移到 CS 的 uninstalled-skills 目录，可恢复" disabled={busy} onClick={() => void uninstall(skill)}>卸载</button>}<button type="button" className="skill-enable-switch" role="switch" aria-label={`${skill.name} 启用状态`} title={skill.enabled ? "关闭技能" : "启用技能"} aria-checked={skill.enabled} disabled={busy} onClick={() => void toggle(skill)}><span /></button></span>
           </article>;
         })}
       </section>;
     })}
-    {selectedState && <SkillDetailDialog title={builtinDocs(selectedState) ? "CS 文档" : builtinAmap(selectedState) ? "高德地图" : selectedState.interface?.displayName || selectedState.name} description={builtinDocs(selectedState) ? "说明 Codex Shell 当前实现、配置、开发流程和能力边界。" : builtinAmap(selectedState) ? AMAP_DESCRIPTION : selectedState.interface?.shortDescription || selectedState.shortDescription || selectedState.description} path={selectedState.path} icon={builtinDocs(selectedState) || officialDocs(selectedState) ? <BookOpen /> : builtinAmap(selectedState) ? <MapPin /> : <Sparkles />} toolbarAction={<button type="button" className="skill-enable-switch" role="switch" aria-label={`${selectedState.name} 启用状态`} title={selectedState.enabled ? "关闭技能" : "启用技能"} aria-checked={selectedState.enabled} disabled={busy} onClick={() => void toggle(selectedState)}><span /></button>} content={content} loading={contentLoading} contentError={contentError} onOpenPath={onOpenSkillPath} onClose={() => setSelected(null)} />}
+    {selectedState && <SkillDetailDialog title={builtinProjectDocs(selectedState) ? "项目文档管理" : builtinDocs(selectedState) ? "CS 文档" : builtinAmap(selectedState) ? "高德地图" : selectedState.interface?.displayName || selectedState.name} description={builtinProjectDocs(selectedState) ? PROJECT_DOCS_DESCRIPTION : builtinDocs(selectedState) ? "说明 Codex Shell 当前实现、配置、开发流程和能力边界。" : builtinAmap(selectedState) ? AMAP_DESCRIPTION : selectedState.interface?.shortDescription || selectedState.shortDescription || selectedState.description} path={selectedState.path} icon={builtinProjectDocs(selectedState) || builtinDocs(selectedState) || officialDocs(selectedState) ? <BookOpen /> : builtinAmap(selectedState) ? <MapPin /> : <Sparkles />} toolbarAction={<button type="button" className="skill-enable-switch" role="switch" aria-label={`${selectedState.name} 启用状态`} title={selectedState.enabled ? "关闭技能" : "启用技能"} aria-checked={selectedState.enabled} disabled={busy} onClick={() => void toggle(selectedState)}><span /></button>} content={content} loading={contentLoading} contentError={contentError} onOpenPath={onOpenSkillPath} onClose={() => setSelected(null)} />}
   </div>;
 }

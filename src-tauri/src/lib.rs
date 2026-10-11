@@ -49,6 +49,7 @@ pub fn run() {
             builtin_skills::install_builtin_skill,
             builtin_skills::install_builtin_cs_docs,
             builtin_skills::install_builtin_amap,
+            builtin_skills::install_builtin_project_docs,
             workspace::get_default_project_directory,
             workspace::reveal_path_in_explorer,
         ])
