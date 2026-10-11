@@ -107,6 +107,64 @@ it("forks paginated side chat without requesting copied history", async () => {
 });
 
 describe("useSideChat", () => {
+  it.each(["switch", "reset", "close", "unmount"])("discards late creation after %s", async (action) => {
+    let finish!: (value: { thread: Thread }) => void;
+    const client = { connectionStatus: "ready", startThread: vi.fn(() => new Promise<{ thread: Thread }>(r => { finish = r; })), unsubscribeThread: vi.fn(async () => ({})) };
+    const hook = renderHook(({ mainThread }: { mainThread: Thread | null }) => useSideChat({
+      clientRef: { current: client as unknown as AppServerClient }, ensureConnected: async () => client as unknown as AppServerClient,
+      mainThread, mainTurns: [], settings, markThreadRunning: vi.fn(), markThreadStopped: vi.fn(),
+    }), { initialProps: { mainThread: null as Thread | null } });
+    let opening!: Promise<boolean>;
+    await act(async () => { opening = hook.result.current.openChat(); });
+    await act(async () => {
+      if (action === "switch") hook.rerender({ mainThread: { ...fakeThread(), id: "new-main" } });
+      if (action === "reset") hook.result.current.reset();
+      if (action === "close") await hook.result.current.close();
+      if (action === "unmount") hook.unmount();
+    });
+    await act(async () => { finish({ thread: fakeThread() }); expect(await opening).toBe(false); });
+    expect(client.unsubscribeThread).toHaveBeenCalledWith({ threadId: "side-thread" });
+    expect(hook.result.current.thread).toBeNull();
+  });
+
+  it("does not let old cleanup clear a reopened thread", async () => {
+    const { client, result } = setup();
+    await act(async () => { await result.current.openChat(); });
+    let finish!: () => void;
+    vi.mocked(client.unsubscribeThread).mockImplementationOnce(() => new Promise(r => { finish = () => r({ status: "unsubscribed" }); }));
+    let closing!: Promise<void>;
+    act(() => { closing = result.current.close(); });
+    await act(async () => { await result.current.openChat(); });
+    await act(async () => { finish(); await closing; });
+    expect(result.current.thread?.id).toBe("side-thread");
+  });
+
+  it("interrupts a late submitted turn without restoring closed state", async () => {
+    const { client, result } = setup();
+    let finish!: (value: { turn: Turn }) => void;
+    client.startTurn = vi.fn(() => new Promise<{ turn: Turn }>(r => { finish = r; }));
+    await act(async () => { await result.current.openChat(); });
+    let sending!: Promise<boolean>;
+    await act(async () => { sending = result.current.send("hello"); });
+    await act(async () => { await result.current.close(); });
+    await act(async () => { finish({ turn: fakeTurn("inProgress") }); expect(await sending).toBe(false); });
+    expect(result.current.turns).toEqual([]);
+    expect(client.interruptTurn).toHaveBeenCalledWith({ threadId: "side-thread", turnId: "turn-1" });
+  });
+
+  it("sends answers via steer while active and start when idle, allowing retry after failure", async () => {
+    const { client, result } = setup();
+    client.steerTurn = vi.fn().mockRejectedValueOnce(new Error("offline")).mockResolvedValue({ turnId: "turn-1" });
+    client.startTurn = vi.fn(async () => ({ turn: fakeTurn("inProgress") }));
+    await act(async () => { await result.current.openChat(); });
+    act(() => result.current.subscriptionHandlers.onTurnStarted({ threadId: "side-thread", turn: fakeTurn("inProgress") }));
+    await act(async () => { await expect(result.current.answerQuestions("answer")).rejects.toThrow("offline"); });
+    await act(async () => { expect(await result.current.answerQuestions("answer")).toBe(true); });
+    expect(client.steerTurn).toHaveBeenLastCalledWith(expect.objectContaining({ threadId: "side-thread", expectedTurnId: "turn-1" }));
+    act(() => result.current.subscriptionHandlers.onTurnCompleted({ threadId: "side-thread", turn: fakeTurn("completed") }));
+    await act(async () => { expect(await result.current.answerQuestions("next answer")).toBe(true); });
+    expect(client.startTurn).toHaveBeenCalledWith(expect.objectContaining({ threadId: "side-thread", sandboxPolicy: { type: "readOnly", networkAccess: false } }));
+  });
   it("provides host context when creating a side chat without personalization", async () => {
     const { client, result } = setup();
     await act(async () => { await result.current.openChat(); });

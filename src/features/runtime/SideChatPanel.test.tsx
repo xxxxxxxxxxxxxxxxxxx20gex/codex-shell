@@ -32,6 +32,23 @@ function fakeChat(overrides: Partial<SideChat> = {}) {
 }
 
 describe("SideChatPanel", () => {
+  it("wires model questions to the side-chat answer handler", async () => {
+    const answerQuestions = vi.fn(async () => true);
+    const chat = fakeChat({ answerQuestions, turns: [{ id: "turn", itemsView: "full", status: "completed", error: null, startedAt: 1, completedAt: 2, durationMs: 1000, items: [{ type: "agentMessage", id: "question", text: "请选择", phase: "final_answer", memoryCitation: null, delivery: null, questions: [{ title: "方向", options: ["方案 A", "方案 B"] }] }] }] });
+    render(<SideChatPanel chat={chat} maximized={false} onToggleMaximize={vi.fn()} onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: "方案 A" }));
+    fireEvent.click(screen.getByRole("button", { name: "发送回答" }));
+    await waitFor(() => expect(answerQuestions).toHaveBeenCalledWith(expect.stringContaining("<send_user_message_question_reply>")));
+  });
+  it("does not send Enter used to confirm IME composition", async () => {
+    const chat = fakeChat();
+    render(<SideChatPanel chat={chat} maximized={false} onToggleMaximize={vi.fn()} onClose={vi.fn()} />);
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "中文" } });
+    fireEvent.keyDown(screen.getByRole("textbox"), { key: "Enter", isComposing: true });
+    expect(chat.send).not.toHaveBeenCalled();
+    fireEvent.keyDown(screen.getByRole("textbox"), { key: "Enter" });
+    await waitFor(() => expect(chat.send).toHaveBeenCalledWith("中文"));
+  });
   it("submits text through the isolated side-chat session", async () => {
     const chat = fakeChat();
     render(<SideChatPanel chat={chat} maximized={false} onToggleMaximize={vi.fn()} onClose={vi.fn()} />);

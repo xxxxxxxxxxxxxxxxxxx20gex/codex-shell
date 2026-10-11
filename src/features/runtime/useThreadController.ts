@@ -375,7 +375,8 @@ export function useThreadController(props: Props) {
   }, [dispatch, renameInHistory]);
 
   const onThreadStarted = useCallback((notification: ThreadStartedNotification) => {
-    subscribedThreadIdsRef.current.add(notification.thread.id);
+    // Ephemeral side chats own their subscription until their panel closes.
+    if (notification.thread.threadSource !== "codex-shell-side-chat") subscribedThreadIdsRef.current.add(notification.thread.id);
     applyThreadRuntimeState(notification.thread);
     if (!historyArchived && !notification.thread.ephemeral) {
       upsertHistory(notification.thread);

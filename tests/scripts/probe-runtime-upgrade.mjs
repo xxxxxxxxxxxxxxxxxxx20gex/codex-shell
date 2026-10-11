@@ -177,6 +177,7 @@ try {
   assert.equal(side.thread.ephemeral, true);
   assert.deepEqual(side.thread.turns, []);
   await turn(side.thread.id, "Side chat input");
+  await turn(side.thread.id, "Side chat second input");
   await client.rpc("thread/unsubscribe", { threadId: side.thread.id });
   console.log("PASS ephemeral paginated side-chat fork and turn");
   await client.rpc("thread/archive", { threadId: fork.thread.id });

@@ -27,6 +27,16 @@ function lastForkableTurn(turns: Turn[]) {
   return [...turns].reverse().find((turn) => turn.status !== "inProgress")?.id ?? null;
 }
 
+async function releaseSideThread(client: AppServerClient | null, threadId: string, turnId?: string) {
+  if (client?.connectionStatus !== "ready") return;
+  if (turnId) {
+    try { await client.interruptTurn({ threadId, turnId }); }
+    catch { /* Completion or shutdown may race with interruption. */ }
+  }
+  try { await client.unsubscribeThread({ threadId }); }
+  catch { /* Cleanup must not restart Runtime or affect the main conversation. */ }
+}
+
 function sideTurnStart(client: AppServerClient, threadId: string, input: UserInput[], settings: ModelSettings) {
   return client.startTurn({
     threadId,
@@ -61,10 +71,15 @@ export function useSideChat({
   turnsRef.current = state.turns;
   const currentThreadId = useCallback(() => threadIdRef.current, []);
   const operationRef = useRef(false);
+  const generationRef = useRef(0);
   const previousMainThreadIdRef = useRef<string | null>(mainThread?.id ?? null);
 
   const resetState = useCallback(() => {
+    generationRef.current += 1;
+    operationRef.current = false;
     threadIdRef.current = null;
+    turnsRef.current = [];
+    setOpen(false);
     setSubmitting(false);
     setRunning(false);
     setError("");
@@ -74,39 +89,12 @@ export function useSideChat({
   const close = useCallback(async () => {
     const threadId = threadIdRef.current;
     const activeTurn = [...turnsRef.current].reverse().find((turn) => turn.status === "inProgress");
-    threadIdRef.current = null;
-    setOpen(false);
-    setSubmitting(false);
-    setRunning(false);
+    resetState();
     if (threadId) {
       markThreadStopped(threadId);
-      try {
-        // Closing a side chat must not restart a stopped Runtime just to send
-        // cleanup requests. If the existing connection is ready, stop the
-        // active turn before releasing the ephemeral subscription.
-        const client = clientRef.current;
-        if (client?.connectionStatus === "ready") {
-          if (activeTurn) {
-            try {
-              await client.interruptTurn({ threadId, turnId: activeTurn.id });
-            } catch {
-              // Still release the subscription when an interrupt races with
-              // completion or the Runtime is shutting down.
-            }
-          }
-          try {
-            await client.unsubscribeThread({ threadId });
-          } catch {
-            // The side chat is ephemeral; cleanup failure must not surface in
-            // the main conversation.
-          }
-        }
-      } catch {
-        // Reading the client state can race with Runtime shutdown.
-      }
+      await releaseSideThread(clientRef.current, threadId, activeTurn?.id);
     }
-    dispatch({ type: "clear" });
-  }, [clientRef, markThreadStopped]);
+  }, [clientRef, markThreadStopped, resetState]);
 
   const openChat = useCallback(async () => {
     if (operationRef.current) return false;
@@ -115,6 +103,7 @@ export function useSideChat({
       return true;
     }
     operationRef.current = true;
+    const generation = generationRef.current;
     // Keep the feature entry disabled while the ephemeral thread is being
     // created. Otherwise the panel can render a Composer before it has a
     // thread id and a first send is silently rejected.
@@ -122,6 +111,7 @@ export function useSideChat({
     setError("");
     try {
       const client = await ensureConnected();
+      if (generation !== generationRef.current) return false;
       const permissions = { approvalPolicy: "never" as const, sandbox: "read-only" as const };
       const response = mainThread && lastForkableTurn(mainTurns)
         ? await client.forkThread({
@@ -145,6 +135,10 @@ export function useSideChat({
             ephemeral: true,
             threadSource: "codex-shell-side-chat",
           });
+      if (generation !== generationRef.current) {
+        await releaseSideThread(client, response.thread.id);
+        return false;
+      }
       threadIdRef.current = response.thread.id;
       // A fork carries the parent turns for model context. They are not new
       // side-chat messages and must not be rendered a second time in the
@@ -153,11 +147,13 @@ export function useSideChat({
       setOpen(true);
       return true;
     } catch (openError) {
-      setError(errorMessage(openError));
+      if (generation === generationRef.current) setError(errorMessage(openError));
       return false;
     } finally {
-      operationRef.current = false;
-      setSubmitting(false);
+      if (generation === generationRef.current) {
+        operationRef.current = false;
+        setSubmitting(false);
+      }
     }
   }, [ensureConnected, mainThread, mainTurns, personalization?.customInstructions, settings.modelId, settings.serviceTier]);
 
@@ -171,23 +167,55 @@ export function useSideChat({
     const threadId = threadIdRef.current;
     if (!threadId || (!message && mentions.length === 0 && images.length === 0) || submitting || running || operationRef.current) return false;
     operationRef.current = true;
+    const generation = generationRef.current;
     setSubmitting(true);
     setError("");
     try {
       const input = buildUserInput(message, mentions, skills, images);
       const client = await ensureConnected();
+      if (generation !== generationRef.current) return false;
       const response = await sideTurnStart(client, threadId, input, settings);
+      if (generation !== generationRef.current) {
+        await releaseSideThread(client, threadId, response.turn.id);
+        return false;
+      }
       markThreadRunning(threadId, response.turn.id, "regular");
       dispatch({ type: "turnSubmitted", turn: response.turn, userInput: input, submittedAt: Date.now() / 1_000 });
       return true;
     } catch (sendError) {
-      setError(errorMessage(sendError));
+      if (generation === generationRef.current) setError(errorMessage(sendError));
       return false;
     } finally {
-      operationRef.current = false;
-      setSubmitting(false);
+      if (generation === generationRef.current) {
+        operationRef.current = false;
+        setSubmitting(false);
+      }
     }
   }, [ensureConnected, markThreadRunning, running, settings, submitting]);
+
+  const answerQuestions = useCallback(async (text: string) => {
+    const turn = [...turnsRef.current].reverse().find((item) => item.status === "inProgress");
+    if (!turn) return send(text);
+    const threadId = threadIdRef.current;
+    if (!threadId || operationRef.current) return false;
+    const generation = generationRef.current;
+    operationRef.current = true;
+    setSubmitting(true);
+    try {
+      const client = await ensureConnected();
+      if (generation !== generationRef.current) return false;
+      const input = buildUserInput(text, [], [], []);
+      await client.steerTurn({ threadId, expectedTurnId: turn.id, input });
+      if (generation !== generationRef.current) return false;
+      dispatch({ type: "optimisticSteer", threadId, userInput: input });
+      return true;
+    } finally {
+      if (generation === generationRef.current) {
+        operationRef.current = false;
+        setSubmitting(false);
+      }
+    }
+  }, [ensureConnected, send]);
 
   const interrupt = useCallback(async () => {
     const threadId = threadIdRef.current;
@@ -197,7 +225,7 @@ export function useSideChat({
     try {
       await clientRef.current.interruptTurn({ threadId, turnId: turn.id });
     } catch (interruptError) {
-      setError(errorMessage(interruptError));
+      if (threadId === threadIdRef.current) setError(errorMessage(interruptError));
     }
   }, [clientRef, state.turns]);
 
@@ -230,8 +258,12 @@ export function useSideChat({
     const previous = previousMainThreadIdRef.current;
     const next = mainThread?.id ?? null;
     previousMainThreadIdRef.current = next;
-    if (open && previous !== next) void close();
-  }, [close, mainThread?.id, open]);
+    if (previous !== next) void close();
+  }, [close, mainThread?.id]);
+
+  const closeRef = useRef(close);
+  closeRef.current = close;
+  useEffect(() => () => { void closeRef.current(); }, []);
 
   const subscriptionHandlers = useMemo(() => ({
     currentThreadId,
@@ -257,6 +289,7 @@ export function useSideChat({
     openChat,
     close,
     send,
+    answerQuestions,
     interrupt,
     reset: resetState,
     subscriptionHandlers,

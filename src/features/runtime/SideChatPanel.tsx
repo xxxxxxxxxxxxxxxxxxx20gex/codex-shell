@@ -24,6 +24,7 @@ export function SideChatPanel({ chat, maximized, onToggleMaximize, onClose, onBa
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.nativeEvent.isComposing) return;
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       void submit();
@@ -49,6 +50,7 @@ export function SideChatPanel({ chat, maximized, onToggleMaximize, onClose, onBa
             turns={chat.turns}
             running={chat.running}
             threadId={chat.thread?.id}
+            onAnswerQuestions={chat.answerQuestions}
             forkDisabled
             plansByTurnId={chat.plansByTurnId}
             activeItemTurnIds={chat.activeItemTurnIds}

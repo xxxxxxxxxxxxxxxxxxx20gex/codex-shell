@@ -166,6 +166,15 @@ function setup() {
 }
 
 describe("useThreadController", () => {
+  it("does not release a side-chat subscription when its turn completes", async () => {
+    const { client, props } = setup();
+    const { result } = renderHook(() => useThreadController(props));
+    await act(async () => {
+      result.current.onThreadStarted({ thread: thread("side", { ephemeral: true, threadSource: "codex-shell-side-chat" }) });
+      result.current.onTurnCompleted({ threadId: "side", turn: turn("side-turn", "completed") });
+    });
+    expect(client.unsubscribeThread).not.toHaveBeenCalled();
+  });
   it("blocks thread switching while a queue cancellation is awaiting Core", async () => {
     const { client, props } = setup();
     const { result } = renderHook(() => useThreadController(props));

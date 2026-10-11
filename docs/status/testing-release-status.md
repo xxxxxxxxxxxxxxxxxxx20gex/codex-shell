@@ -5,9 +5,11 @@
 - 当前接口：`pnpm test:quality` 执行 TypeScript、ESLint、Vitest、高德离线测试、production build、Knip、Cargo check、Rust 单测、严格 Clippy 和 diff 检查。专项入口见 [测试脚本说明](../../tests/scripts/README.md)。
 - 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；`package.json` 遗留的 `test:extension-layout` 指向不存在的脚本，MCP 管理可使用现有 `test:mcp-layout`（不等价于全部扩展管理验证），不能把失效入口作为验证证据；Vite 主 chunk 超过 500 kB；Rust 既有格式差异尚未整理，`cargo fmt --check` 未纳入门禁。
 - 下一步：真实系统凭据、多渠道对话、第三方 MCP OAuth、干净 Windows 安装升级和大型历史迁移验收。
-- 最后更新：2026-10-10
+- 最后更新：2026-10-12
 
 ## 当前验证基线
+
+2026-10-12 侧聊生命周期修复：76 文件／452 项前端测试、TypeScript、ESLint、Knip、production build、Cargo check 和 Debug 构建通过，Core 0.160.1 及辅助程序哈希校验通过。真实 Core 历史升级探针增加临时侧聊连续两轮验证，使用隔离目录与本机模拟 Responses 网关；卡片 Edge 四尺寸深浅主题检查通过（共享问答组件，非完整侧聊桌面端）。本次未修改 Rust，未重跑 Rust 单测／Clippy 或高德测试；未验收真实收费渠道与完整 WebView2。
 
 2026-10-10 v0.1.11 发布验收：442 项前端测试、34 项高德离线测试、51 项 Rust 测试（1 项交互测试忽略）、TypeScript、ESLint、Knip、Cargo check、严格 Clippy、前端及 Debug 构建通过。`test:quality` 首轮在未注册探针入口处停止，注册后 Knip 通过；Rust 独立临时 target 因 serde 生成文件缺失失败，默认 target 的 check／test／Clippy 全部复跑通过。问答和工作台 Edge 四尺寸检查通过，问答包含深浅主题；Vite 未启动导致的一次布局超时在服务启动后复跑通过。新增真实 Core 问答探针覆盖结构化问题事件、回答封装到达本机网关、冷恢复问题／答复、运行中 steer 接收；既有协议、历史恢复及 release 输出的内置 rg 探针通过。均使用隔离数据与模拟网关，不代表真实收费渠道或完整 WebView2 端到端验收。
 
