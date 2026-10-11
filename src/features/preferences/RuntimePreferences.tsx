@@ -5,6 +5,7 @@ import { APP_VERSION } from "../../appVersion";
 import type { WindowsSandboxReadiness } from "../../generated/app-server/v2/WindowsSandboxReadiness";
 import type { WindowsSandboxSetupMode } from "../../generated/app-server/v2/WindowsSandboxSetupMode";
 import { CodexHomeCard } from "../runtime/CodexHomeCard";
+import { errorMessage } from "../../shared/errors";
 
 interface Props {
   codexHome: string;
@@ -42,7 +43,12 @@ export function RuntimePreferences({
       setUpdateState("installing");
       await update.downloadAndInstall();
     } catch (error) {
-      setUpdateError(error instanceof Error ? error.message : "更新检查或安装失败");
+      const message = errorMessage(error);
+      // Tauri serializes updater errors as strings, including reqwest failures.
+      const connectionFailed = /error sending request|\b(?:connection (?:refused|reset|closed)|dns error|failed to lookup address|network is unreachable|network request failed|failed to fetch|timed?\s*out|timeout)\b/i.test(message);
+      setUpdateError(connectionFailed
+        ? "无法连接 GitHub 更新服务或下载超时，请检查网络。如当前网络无法访问 GitHub，可开启代理/VPN 后重试。"
+        : message || "更新检查或安装失败");
       setUpdateState("idle");
     }
   }

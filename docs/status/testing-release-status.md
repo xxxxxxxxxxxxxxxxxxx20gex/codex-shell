@@ -9,6 +9,8 @@
 
 ## 当前验证基线
 
+2026-10-12 更新网络提示（v0.1.12 发布后的 main）：15 项设置组件测试、TypeScript、ESLint、production build、Cargo check、Debug 构建及 Runtime 哈希校验通过。覆盖字符串／Error 网络故障、下载失败、非网络错误原文保留和重试清理；真实 RuntimePreferences 组件在 Edge 四尺寸显示长提示无溢出，IPC 网络错误为模拟注入。未做真实断网升级安装，未重跑全量测试或 Rust 单测。
+
 v0.1.12 生产资产：NSIS 安装器、`.sig` 和带中文更新说明的 `latest.json` 已生成；独立 Ed25519／BLAKE2b 验签、可信注释签名、版本／下载地址／manifest 签名一致性与 release Runtime／辅助程序哈希校验通过。安装器 SHA-256：`363182bd1c5d7b258f49160892ac569778551afee92c83acf9785fd1f19bfa5e`。
 
 2026-10-12 v0.1.12 发布验收：版本同步后复跑 459 项前端、34 项高德离线、51 项 Rust 测试（1 项交互测试忽略）、TypeScript、ESLint、Knip 和严格 Clippy 均通过；生产前端及 Debug 构建通过，Core 0.160.1 同源门禁及哈希校验通过。原生协议、异步问答、冷恢复、连续侧聊使用真实 Core 与本机模拟网关；release 输出内置 rg 探针通过（首次误传可执行文件而非目录造成 ENOENT，纠正参数后通过）。未验证真实收费渠道、干净 Windows 安装或完整 WebView2。更新说明同时写入 GitHub Release 和 `latest.json`。

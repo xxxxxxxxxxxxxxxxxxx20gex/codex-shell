@@ -42,6 +42,35 @@ function panelProps() {
 }
 
 describe("PreferencesPanel", () => {
+  it.each([
+    ['error sending request for url (https://github.com/example/latest.json)', true],
+    [new Error('operation timed out'), true],
+    ['dns error: failed to lookup address', true],
+    ['Signature verification failed', false],
+    ['Access is denied. (os error 5)', false],
+    ['Could not fetch a valid release JSON from the remote', false],
+  ])("explains update connection failures without mislabeling other errors: %s", async (error, network) => {
+    vi.mocked(check).mockRejectedValueOnce(error);
+    render(<PreferencesPanel {...panelProps()} initialSection="runtime" onSave={async () => undefined} />);
+    fireEvent.click(screen.getByRole("button", { name: "检查并更新" }));
+    const alert = await screen.findByRole("alert");
+    expect(alert.textContent?.includes("代理/VPN")).toBe(network);
+    if (!network) expect(alert.textContent).toBe(String(error));
+    vi.mocked(check).mockResolvedValueOnce(null);
+    fireEvent.click(screen.getByRole("button", { name: "检查并更新" }));
+    await screen.findByRole("button", { name: "已是最新版本" });
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("explains network failure during installer download", async () => {
+    const downloadAndInstall = vi.fn().mockRejectedValue(new Error("error sending request for url (https://github.com/example/setup.exe)"));
+    vi.mocked(check).mockResolvedValueOnce({ downloadAndInstall } as unknown as Awaited<ReturnType<typeof check>>);
+    render(<PreferencesPanel {...panelProps()} initialSection="runtime" onSave={async () => undefined} />);
+    fireEvent.click(screen.getByRole("button", { name: "检查并更新" }));
+    expect((await screen.findByRole("alert")).textContent).toContain("代理/VPN");
+    expect(downloadAndInstall).toHaveBeenCalledOnce();
+    expect((screen.getByRole("button", { name: "检查并更新" }) as HTMLButtonElement).disabled).toBe(false);
+  });
   it("keeps the default dialog with only a close control and supports channel editing", () => {
     const props = panelProps();
     render(<PreferencesPanel {...props} initialSection="providers" onSave={async () => undefined} />);
