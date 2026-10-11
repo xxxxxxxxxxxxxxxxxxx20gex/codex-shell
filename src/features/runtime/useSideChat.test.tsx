@@ -68,6 +68,7 @@ function fakeTurn(status: Turn["status"]): Turn {
 }
 
 function setup() {
+  const markThreadRunning = vi.fn();
   const interruptTurn = vi.fn(async () => ({}));
   const unsubscribeThread = vi.fn(async () => ({ status: "unsubscribed" }));
   const client = {
@@ -84,10 +85,10 @@ function setup() {
     mainThread: null,
     mainTurns: [],
     settings,
-    markThreadRunning: vi.fn(),
+    markThreadRunning,
     markThreadStopped: vi.fn(),
   }));
-  return { client, ensureConnected, interruptTurn, unsubscribeThread, result };
+  return { client, ensureConnected, interruptTurn, unsubscribeThread, result, markThreadRunning };
 }
 
 it("forks paginated side chat without requesting copied history", async () => {
@@ -107,6 +108,30 @@ it("forks paginated side chat without requesting copied history", async () => {
 });
 
 describe("useSideChat", () => {
+  it.each(["completed", "failed", "interrupted"] as const)("preserves %s when completion precedes the start response in the same batch", async (status) => {
+    const { client, result, markThreadRunning } = setup();
+    let finish!: (value: { turn: Turn }) => void;
+    client.startTurn = vi.fn(() => new Promise<{ turn: Turn }>(r => { finish = r; }));
+    await act(async () => { await result.current.openChat(); });
+    let sending!: Promise<boolean>;
+    await act(async () => { sending = result.current.send("hello"); });
+    act(() => result.current.subscriptionHandlers.onTurnStarted({ threadId: "side-thread", turn: fakeTurn("inProgress") }));
+    expect(result.current.submitting).toBe(true);
+    markThreadRunning.mockClear();
+    await act(async () => {
+      result.current.subscriptionHandlers.onTurnCompleted({ threadId: "side-thread", turn: fakeTurn(status) });
+      finish({ turn: fakeTurn("inProgress") });
+      expect(await sending).toBe(true);
+    });
+    expect(result.current.turns[0].status).toBe(status);
+    expect(result.current.running).toBe(false);
+    expect(result.current.submitting).toBe(false);
+    expect(markThreadRunning).not.toHaveBeenCalled();
+    client.startTurn = vi.fn(async () => ({ turn: { ...fakeTurn("inProgress"), id: "next" } }));
+    await act(async () => { expect(await result.current.send("next input")).toBe(true); });
+    expect(result.current.running).toBe(true);
+    expect(markThreadRunning).toHaveBeenCalledWith("side-thread", "next", "regular");
+  });
   it.each(["switch", "reset", "close", "unmount"])("discards late creation after %s", async (action) => {
     let finish!: (value: { thread: Thread }) => void;
     const client = { connectionStatus: "ready", startThread: vi.fn(() => new Promise<{ thread: Thread }>(r => { finish = r; })), unsubscribeThread: vi.fn(async () => ({})) };

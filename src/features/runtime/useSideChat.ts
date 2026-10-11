@@ -62,7 +62,6 @@ export function useSideChat({
   markThreadStopped,
 }: Props) {
   const [state, dispatch] = useReducer(agentSessionReducer, initialAgentSessionState);
-  const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState("");
@@ -72,6 +71,7 @@ export function useSideChat({
   const currentThreadId = useCallback(() => threadIdRef.current, []);
   const operationRef = useRef(false);
   const generationRef = useRef(0);
+  const completedTurnIdRef = useRef<string | null>(null);
   const previousMainThreadIdRef = useRef<string | null>(mainThread?.id ?? null);
 
   const resetState = useCallback(() => {
@@ -79,7 +79,7 @@ export function useSideChat({
     operationRef.current = false;
     threadIdRef.current = null;
     turnsRef.current = [];
-    setOpen(false);
+    completedTurnIdRef.current = null;
     setSubmitting(false);
     setRunning(false);
     setError("");
@@ -98,10 +98,7 @@ export function useSideChat({
 
   const openChat = useCallback(async () => {
     if (operationRef.current) return false;
-    if (threadIdRef.current) {
-      setOpen(true);
-      return true;
-    }
+    if (threadIdRef.current) return true;
     operationRef.current = true;
     const generation = generationRef.current;
     // Keep the feature entry disabled while the ephemeral thread is being
@@ -113,10 +110,11 @@ export function useSideChat({
       const client = await ensureConnected();
       if (generation !== generationRef.current) return false;
       const permissions = { approvalPolicy: "never" as const, sandbox: "read-only" as const };
-      const response = mainThread && lastForkableTurn(mainTurns)
+      const lastTurnId = lastForkableTurn(mainTurns);
+      const response = mainThread && lastTurnId
         ? await client.forkThread({
             threadId: mainThread.id,
-            lastTurnId: lastForkableTurn(mainTurns),
+            lastTurnId,
             model: settings.modelId,
             serviceTier: settings.serviceTier,
             cwd: String(mainThread.cwd),
@@ -144,7 +142,6 @@ export function useSideChat({
       // side-chat messages and must not be rendered a second time in the
       // inspector; subsequent notifications populate the isolated timeline.
       dispatch({ type: "loadThread", thread: { ...response.thread, turns: [] } });
-      setOpen(true);
       return true;
     } catch (openError) {
       if (generation === generationRef.current) setError(errorMessage(openError));
@@ -179,8 +176,13 @@ export function useSideChat({
         await releaseSideThread(client, threadId, response.turn.id);
         return false;
       }
-      markThreadRunning(threadId, response.turn.id, "regular");
-      dispatch({ type: "turnSubmitted", turn: response.turn, userInput: input, submittedAt: Date.now() / 1_000 });
+      // Notifications may settle a turn before its start response arrives,
+      // including before React has committed the corresponding reducer state.
+      if (completedTurnIdRef.current !== response.turn.id) {
+        markThreadRunning(threadId, response.turn.id, "regular");
+        setRunning(true);
+        dispatch({ type: "turnSubmitted", turn: response.turn, userInput: input, submittedAt: Date.now() / 1_000 });
+      }
       return true;
     } catch (sendError) {
       if (generation === generationRef.current) setError(errorMessage(sendError));
@@ -231,7 +233,6 @@ export function useSideChat({
 
   const onTurnStarted = useCallback((notification: TurnStartedNotification) => {
     if (notification.threadId !== threadIdRef.current) return;
-    setSubmitting(false);
     setRunning(true);
     markThreadRunning(notification.threadId, notification.turn.id, "regular");
     dispatch({ type: "turnStarted", turn: notification.turn, startedAt: Date.now() / 1_000 });
@@ -239,7 +240,7 @@ export function useSideChat({
 
   const onTurnCompleted = useCallback((notification: TurnCompletedNotification) => {
     if (notification.threadId !== threadIdRef.current) return;
-    setSubmitting(false);
+    completedTurnIdRef.current = notification.turn.id;
     setRunning(false);
     markThreadStopped(notification.threadId);
     dispatch({ type: "turnCompleted", notification, completedAt: Date.now() / 1_000 });
@@ -248,7 +249,6 @@ export function useSideChat({
 
   const onError = useCallback((notification: ErrorNotification) => {
     if (notification.threadId !== threadIdRef.current || notification.willRetry) return;
-    setSubmitting(false);
     setRunning(false);
     markThreadStopped(notification.threadId);
     setError(notification.error.message);
@@ -274,7 +274,6 @@ export function useSideChat({
   }), [currentThreadId, onError, onTurnCompleted, onTurnStarted]);
 
   return {
-    open,
     thread: state.thread,
     turns: state.turns,
     running,

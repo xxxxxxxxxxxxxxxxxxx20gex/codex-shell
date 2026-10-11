@@ -9,6 +9,8 @@
 
 ## 当前验证基线
 
+2026-10-12 侧聊提交边界补充：76 文件／459 项前端测试、TypeScript、ESLint、Knip、production build、Cargo check、Debug 构建及同源 Runtime 哈希校验通过。新增 7 项测试覆盖完成／失败／中断通知先于提交响应（同批处理）、下一轮正常发送，以及未改动／改动／改回原文／失败后的草稿保留。真实 Core 隔离模拟网关连续两轮探针、共享问答卡片四尺寸深浅主题检查复跑通过。时序竞态由模拟测试验证，不代表真实渠道发生频率；未重跑 Rust 单测／Clippy 和高德测试，未做完整 WebView2 人工验收。
+
 2026-10-12 侧聊生命周期修复：76 文件／452 项前端测试、TypeScript、ESLint、Knip、production build、Cargo check 和 Debug 构建通过，Core 0.160.1 及辅助程序哈希校验通过。真实 Core 历史升级探针增加临时侧聊连续两轮验证，使用隔离目录与本机模拟 Responses 网关；卡片 Edge 四尺寸深浅主题检查通过（共享问答组件，非完整侧聊桌面端）。本次未修改 Rust，未重跑 Rust 单测／Clippy 或高德测试；未验收真实收费渠道与完整 WebView2。
 
 2026-10-10 v0.1.11 发布验收：442 项前端测试、34 项高德离线测试、51 项 Rust 测试（1 项交互测试忽略）、TypeScript、ESLint、Knip、Cargo check、严格 Clippy、前端及 Debug 构建通过。`test:quality` 首轮在未注册探针入口处停止，注册后 Knip 通过；Rust 独立临时 target 因 serde 生成文件缺失失败，默认 target 的 check／test／Clippy 全部复跑通过。问答和工作台 Edge 四尺寸检查通过，问答包含深浅主题；Vite 未启动导致的一次布局超时在服务启动后复跑通过。新增真实 Core 问答探针覆盖结构化问题事件、回答封装到达本机网关、冷恢复问题／答复、运行中 steer 接收；既有协议、历史恢复及 release 输出的内置 rg 探针通过。均使用隔离数据与模拟网关，不代表真实收费渠道或完整 WebView2 端到端验收。

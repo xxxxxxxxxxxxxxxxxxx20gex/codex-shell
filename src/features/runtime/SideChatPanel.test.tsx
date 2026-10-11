@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SideChatPanel } from "./SideChatPanel";
 import type { SideChat } from "./useSideChat";
@@ -9,7 +9,6 @@ afterEach(cleanup);
 
 function fakeChat(overrides: Partial<SideChat> = {}) {
   return {
-    open: true,
     thread: { id: "side-thread" },
     turns: [],
     running: false,
@@ -32,6 +31,18 @@ function fakeChat(overrides: Partial<SideChat> = {}) {
 }
 
 describe("SideChatPanel", () => {
+  it.each(["unchanged", "edited", "restored", "failed"])("preserves the correct draft after delayed send: %s", async (scenario) => {
+    let finish!: (value: boolean) => void;
+    const chat = fakeChat({ send: vi.fn(() => new Promise<boolean>(r => { finish = r; })) });
+    render(<SideChatPanel chat={chat} maximized={false} onToggleMaximize={vi.fn()} onClose={vi.fn()} />);
+    const input = screen.getByRole("textbox") as HTMLTextAreaElement;
+    fireEvent.change(input, { target: { value: "first" } });
+    fireEvent.click(screen.getByRole("button", { name: "发送" }));
+    if (scenario === "edited" || scenario === "restored") fireEvent.change(input, { target: { value: "next draft" } });
+    if (scenario === "restored") fireEvent.change(input, { target: { value: "first" } });
+    await act(async () => finish(scenario !== "failed"));
+    expect(input.value).toBe(scenario === "unchanged" ? "" : scenario === "edited" ? "next draft" : "first");
+  });
   it("wires model questions to the side-chat answer handler", async () => {
     const answerQuestions = vi.fn(async () => true);
     const chat = fakeChat({ answerQuestions, turns: [{ id: "turn", itemsView: "full", status: "completed", error: null, startedAt: 1, completedAt: 2, durationMs: 1000, items: [{ type: "agentMessage", id: "question", text: "请选择", phase: "final_answer", memoryCitation: null, delivery: null, questions: [{ title: "方向", options: ["方案 A", "方案 B"] }] }] }] });
