@@ -55,7 +55,7 @@ function thread(turns: Turn[] = []): Thread {
   };
 }
 
-function userMessage(id: string, text: string): ThreadItem {
+function userMessage(id: string, text: string): Extract<ThreadItem, { type: "userMessage" }> {
   return {
     type: "userMessage",
     id,
@@ -63,6 +63,43 @@ function userMessage(id: string, text: string): ThreadItem {
     content: [{ type: "text", text, text_elements: [] }],
   };
 }
+
+describe("optimistic steering", () => {
+  const input = buildUserInput("follow up", [], [], []);
+  const start = () => agentSessionReducer(initialAgentSessionState, { type: "loadThread", thread: thread([turn("turn-1", [userMessage("original", "initial")])]) });
+  const submit = (state: ReturnType<typeof start>, clientId = "steer-1") => agentSessionReducer(state, { type: "optimisticSteer", threadId: "thread-1", turnId: "turn-1", clientId, userInput: input });
+  const confirm = (state: ReturnType<typeof start>, clientId = "steer-1") => agentSessionReducer(state, { type: "itemCompleted", notification: { completedAtMs: 1000, threadId: "thread-1", turnId: "turn-1", item: { ...userMessage(`persisted-${clientId}`, "follow up"), clientId } } });
+
+  it("appends immediately to a turn that already contains user input and matches identical sends by client ID", () => {
+    let state = submit(submit(start()), "steer-2");
+    expect(state.turns[0].items.map((i) => i.id)).toEqual(["original", "local-user:steer:steer-1", "local-user:steer:steer-2"]);
+    state = confirm(state);
+    expect(state.turns[0].items.map((i) => i.id)).toEqual(["original", "local-user:steer:steer-2", "persisted-steer-1"]);
+    state = confirm(confirm(state, "steer-2"));
+    expect(state.turns[0].items).toHaveLength(3);
+    expect(state.turns[0].items.some((i) => i.id.startsWith("local-user:"))).toBe(false);
+  });
+
+  it.each(["full", "summary"] as const)("retains unconfirmed input through %s completion and reconciles late confirmation", (itemsView) => {
+    const state = agentSessionReducer(submit(start()), { type: "turnCompleted", completedAt: 10, notification: { threadId: "thread-1", turn: { ...turn("turn-1", [userMessage("original", "initial")]), itemsView, status: "completed" } } });
+    expect(state.turns[0].items[state.turns[0].items.length - 1]?.id).toBe("local-user:steer:steer-1");
+    expect(confirm(state).turns[0].items.map((i) => i.id)).toEqual(["original", "persisted-steer-1"]);
+  });
+
+  it("reconciles a full completion snapshot and does not erase a confirmed message on late failure", () => {
+    let state = agentSessionReducer(submit(start()), { type: "turnCompleted", completedAt: 10, notification: { threadId: "thread-1", turn: { ...turn("turn-1", [userMessage("original", "initial"), { ...userMessage("confirmed", "follow up"), clientId: "steer-1" }]), status: "completed" } } });
+    state = agentSessionReducer(state, { type: "steerFailed", threadId: "thread-1", clientId: "steer-1" });
+    expect(state.turns[0].items.map((i) => i.id)).toEqual(["original", "confirmed"]);
+  });
+
+  it("removes only rejected local input and ignores another thread's late actions", () => {
+    const state = submit(submit(start()), "steer-2");
+    const failed = agentSessionReducer(state, { type: "steerFailed", threadId: "thread-1", clientId: "steer-1" });
+    expect(failed.turns[0].items.map((i) => i.id)).toEqual(["original", "local-user:steer:steer-2"]);
+    expect(agentSessionReducer(state, { type: "steerFailed", threadId: "other", clientId: "steer-1" })).toBe(state);
+    expect(agentSessionReducer(state, { type: "optimisticSteer", threadId: "other", turnId: "turn-1", clientId: "steer-3", userInput: input })).toBe(state);
+  });
+});
 
 describe("agentSessionReducer", () => {
   it("loads persisted multi-turn history", () => {

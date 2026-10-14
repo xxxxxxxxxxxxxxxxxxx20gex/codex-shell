@@ -203,14 +203,18 @@ export function useSideChat({
     const generation = generationRef.current;
     operationRef.current = true;
     setSubmitting(true);
+    const clientId = crypto.randomUUID();
     try {
       const client = await ensureConnected();
       if (generation !== generationRef.current) return false;
       const input = buildUserInput(text, [], [], []);
-      await client.steerTurn({ threadId, expectedTurnId: turn.id, input });
+      dispatch({ type: "optimisticSteer", threadId, turnId: turn.id, clientId, userInput: input });
+      await client.steerTurn({ threadId, expectedTurnId: turn.id, clientUserMessageId: clientId, input });
       if (generation !== generationRef.current) return false;
-      dispatch({ type: "optimisticSteer", threadId, userInput: input });
       return true;
+    } catch (error) {
+      if (generation === generationRef.current) dispatch({ type: "steerFailed", threadId, clientId });
+      throw error;
     } finally {
       if (generation === generationRef.current) {
         operationRef.current = false;

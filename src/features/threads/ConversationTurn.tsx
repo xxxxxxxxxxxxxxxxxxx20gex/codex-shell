@@ -205,8 +205,9 @@ export function ConversationTurn({
                     <AttachmentGallery files={message.files} images={message.images} readFile={readFile} onOpenPath={onOpenPath} align="end" />
                   )}
                   {message.text && <div className="user-message">{message.text}</div>}
-                  {(message.text || (block.item.id === firstUserMessageId && sentTiming)) && (
+                  {(message.text || block.item.id.startsWith("local-user:steer:") || (block.item.id === firstUserMessageId && sentTiming)) && (
                     <div className="user-message-meta">
+                      {block.item.id.startsWith("local-user:steer:") && <span className="message-timing user-message-timing" role="status">{active ? "等待处理" : "尚未确认接收"}</span>}
                       {block.item.id === firstUserMessageId && sentTiming && (
                         <div className="message-timing user-message-timing" title={sentTiming}>{sentTiming.slice(0, -3)}</div>
                       )}
@@ -215,7 +216,7 @@ export function ConversationTurn({
                           <button type="button" onClick={() => void copyUserMessage(block.item.id, message.text)} aria-label={userCopyFeedbackId === block.item.id ? "已复制消息" : "复制消息"} title={userCopyFeedbackId === block.item.id ? "已复制消息" : "复制消息"}>
                             <Copy aria-hidden="true" />
                           </button>
-                          {onEditMessage && block.item.id === [...items].reverse().find((item) => item.type === "userMessage")?.id && <button type="button" title="编辑后再次发送" aria-label="编辑后再次发送" onClick={() => onEditMessage(block.item)}><Pencil aria-hidden="true" /></button>}
+                          {onEditMessage && !block.item.id.startsWith("local-user:") && block.item.id === [...items].reverse().find((item) => item.type === "userMessage")?.id && <button type="button" title="编辑后再次发送" aria-label="编辑后再次发送" onClick={() => onEditMessage(block.item)}><Pencil aria-hidden="true" /></button>}
                         </div>
                       )}
                     </div>

@@ -178,17 +178,20 @@ export function useTurnExecution(props: Props) {
       || props.threadOperationRef.current) return false;
     props.threadOperationRef.current = true;
     props.setError("");
+    const clientId = crypto.randomUUID();
     try {
       const input = validatedUserInput(message, mentions, skills, images, "补充指令和附件路径");
+      props.dispatch({ type: "optimisticSteer", threadId, turnId: runningTurn.turnId, clientId, userInput: input });
       const { client } = await props.ensureActiveThread();
-      props.dispatch({ type: "optimisticSteer", threadId, userInput: input });
       await client.steerTurn({
         threadId,
+        clientUserMessageId: clientId,
         expectedTurnId: runningTurn.turnId,
         input,
       });
       return true;
     } catch (steerError) {
+      props.dispatch({ type: "steerFailed", threadId, clientId });
       props.setError(errorMessage(steerError));
       return false;
     } finally {

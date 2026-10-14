@@ -49,6 +49,16 @@ function renderTurn(turn: Turn, active = false) {
 }
 
 describe("conversation timing", () => {
+  it("renders pending steering immediately without claiming model receipt", () => {
+    const turn = completedTurn();
+    turn.items.push({ type: "userMessage", id: "local-user:steer:test", clientId: "test", content: [{ type: "text", text: "follow up now", text_elements: [] }] });
+    const active = renderTurn({ ...turn, status: "inProgress" }, true);
+    expect(active).toContain("follow up now");
+    expect(active).toContain("等待处理");
+    expect(renderTurn(turn)).toContain("尚未确认接收");
+    turn.items[2] = { ...turn.items[2], id: "confirmed" };
+    expect(renderTurn(turn)).not.toContain("尚未确认接收");
+  });
   it("renders asynchronous model questions as an answer card", () => {
     const turn = completedTurn();
     const answer = turn.items[1];

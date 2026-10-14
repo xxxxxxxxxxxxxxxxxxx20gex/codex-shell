@@ -166,6 +166,22 @@ function setup() {
 }
 
 describe("useThreadController", () => {
+  it("shows steering before the RPC resolves and removes the placeholder on rejection", async () => {
+    const { client, props, dispatch } = setup();
+    const { result } = renderHook(() => useThreadController(props));
+    await act(async () => { await result.current.openThread("thread-a"); await result.current.send("initial"); });
+    let reject!: (error: Error) => void;
+    client.steerTurn.mockImplementationOnce(() => new Promise((_resolve, fail) => { reject = fail; }));
+    let pending!: Promise<boolean>;
+    act(() => { pending = result.current.steer("follow up"); });
+    const action = dispatch.mock.calls.map(([value]) => value).find((value) => value.type === "optimisticSteer");
+    expect(action).toMatchObject({ threadId: "thread-a", turnId: "turn-a", clientId: expect.any(String) });
+    await waitFor(() => expect(client.steerTurn).toHaveBeenCalled());
+    expect(client.steerTurn).toHaveBeenCalledWith(expect.objectContaining({ clientUserMessageId: action.clientId }));
+    await act(async () => { reject(new Error("rejected")); expect(await pending).toBe(false); });
+    expect(dispatch).toHaveBeenCalledWith({ type: "steerFailed", threadId: "thread-a", clientId: action.clientId });
+    expect(props.setError).toHaveBeenCalledWith("rejected");
+  });
   it("does not release a side-chat subscription when its turn completes", async () => {
     const { client, props } = setup();
     const { result } = renderHook(() => useThreadController(props));

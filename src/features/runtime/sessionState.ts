@@ -69,7 +69,8 @@ export type AgentSessionAction =
   | { type: "threadStatusChanged"; threadId: string; status: ThreadStatus }
   | { type: "turnSubmitted"; turn: Turn; userInput: UserInput[]; submittedAt: number }
   | { type: "optimisticTurnSubmitted"; turn: Turn; userInput: UserInput[]; submittedAt: number }
-  | { type: "optimisticSteer"; threadId: string; userInput: UserInput[] }
+  | { type: "optimisticSteer"; threadId: string; turnId: string; clientId: string; userInput: UserInput[] }
+  | { type: "steerFailed"; threadId: string; clientId: string }
   | { type: "turnStarted"; turn: Turn; startedAt: number }
   | { type: "itemStarted"; notification: ItemStartedNotification }
   | { type: "itemCompleted"; notification: ItemCompletedNotification }
@@ -251,7 +252,7 @@ function mergeSubmittedTurn(turns: Turn[], turn: Turn) {
     startedAt: turn.startedAt ?? existing.startedAt,
     completedAt: turn.completedAt ?? existing.completedAt,
     durationMs: turn.durationMs ?? existing.durationMs,
-    items: [...turn.items, ...existing.items.filter((item) => !incomingIds.has(item.id))],
+    items: [...turn.items, ...existing.items.filter((item) => !incomingIds.has(item.id) && !confirmedSteer(item, turn.items))],
   });
 }
 
@@ -265,13 +266,13 @@ function mergeCompletedTurn(turns: Turn[], turn: Turn, completedAt: number) {
   if (!existing) return upsertTurn(turns, completedTurn);
   const includesPersistedUser = completedTurn.items.some((item) => item.type === "userMessage");
   const existingItems = existing.items.filter((item) => {
-    return !(includesPersistedUser && item.id.startsWith(LOCAL_USER_PREFIX));
+    return !confirmedSteer(item, completedTurn.items) && !(includesPersistedUser && item.id.startsWith(LOCAL_USER_PREFIX) && !isPendingSteer(item));
   });
   if (completedTurn.itemsView === "full") {
     const optimisticUser = includesPersistedUser
       ? []
       : existingItems.filter((item) => item.type === "userMessage" && item.id.startsWith(LOCAL_USER_PREFIX));
-    return upsertTurn(turns, { ...completedTurn, items: [...optimisticUser, ...completedTurn.items] });
+    return upsertTurn(turns, { ...completedTurn, items: [...optimisticUser.filter((item) => !isPendingSteer(item)), ...completedTurn.items, ...existingItems.filter(isPendingSteer)] });
   }
   const incomingById = new Map(completedTurn.items.map((item) => [item.id, item]));
   const mergedItems = existingItems.map((item) => incomingById.get(item.id) ?? item);
@@ -296,13 +297,22 @@ function withOptimisticUser(turn: Turn, content: UserInput[]): Turn {
 
 function upsertItem(turn: Turn, item: ThreadItem) {
   const withoutOptimisticUser = item.type === "userMessage"
-    ? turn.items.filter((current) => !current.id.startsWith(LOCAL_USER_PREFIX))
+    ? turn.items.filter((current) => isPendingSteer(current) ? !confirmedSteer(current, [item]) : !current.id.startsWith(LOCAL_USER_PREFIX))
     : turn.items;
   const existingIndex = withoutOptimisticUser.findIndex((current) => current.id === item.id);
   if (existingIndex < 0) return { ...turn, items: [...withoutOptimisticUser, item] };
   const items = [...withoutOptimisticUser];
   items[existingIndex] = item;
   return { ...turn, items };
+}
+
+function isPendingSteer(item: ThreadItem) {
+  return item.type === "userMessage" && item.id.startsWith("local-user:steer:");
+}
+
+function confirmedSteer(item: ThreadItem, incoming: ThreadItem[]) {
+  return isPendingSteer(item) && item.type === "userMessage" && incoming.some((candidate) =>
+    candidate.type === "userMessage" && !isPendingSteer(candidate) && candidate.clientId === item.clientId);
 }
 
 function updateTurnItem(turns: Turn[], turnId: string, item: ThreadItem) {
@@ -452,10 +462,13 @@ export function agentSessionReducer(
     case "optimisticTurnSubmitted":
       return withTurns(state, [...state.turns, withFallbackStartedAt(withOptimisticUser(action.turn, action.userInput), action.submittedAt)]);
     case "optimisticSteer": {
-      const lastTurn = state.turns[state.turns.length - 1];
-      const turn = state.turns.find((item) => item.id === lastTurn?.id && item.status === "inProgress");
-      return turn ? withTurns(state, state.turns.map((item) => item.id === turn.id ? withOptimisticUser(item, action.userInput) : item)) : state;
+      if (state.thread?.id !== action.threadId) return state;
+      const pending: ThreadItem = { type: "userMessage", id: `local-user:steer:${action.clientId}`, clientId: action.clientId, content: action.userInput };
+      return withTurns(state, state.turns.map((turn) => turn.id === action.turnId && !turn.items.some((item) => item.type === "userMessage" && item.clientId === action.clientId)
+        ? { ...turn, items: [...turn.items, pending] } : turn));
     }
+    case "steerFailed":
+      return state.thread?.id === action.threadId ? withTurns(state, state.turns.map((turn) => ({ ...turn, items: turn.items.filter((item) => item.id !== `local-user:steer:${action.clientId}`) }))) : state;
     case "turnStarted":
       return withTurns(
         state,

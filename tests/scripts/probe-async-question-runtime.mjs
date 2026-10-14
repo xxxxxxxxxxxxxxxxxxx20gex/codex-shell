@@ -12,13 +12,19 @@ const runtime = resolve(process.argv[2] ?? join(root, "src-tauri/binaries/codex-
 const home = await mkdtemp(join(tmpdir(), "cs-async-question-probe-"));
 const requests = [];
 let hold = false;
+let releaseHeldResponse;
 const gateway = createServer((request, response) => {
   let body = "";
   request.on("data", (chunk) => { body += chunk; });
   request.on("end", () => {
     if (!request.url.endsWith("/responses")) { response.writeHead(404); response.end(); return; }
     requests.push(JSON.parse(body));
-    if (hold) return;
+    if (hold) {
+      releaseHeldResponse = finishResponse;
+      return;
+    }
+    finishResponse();
+    function finishResponse() {
     const id = `probe-${requests.length}`;
     const item = requests.length === 1
       ? { id: "fc_question", type: "function_call", name: "request_user_input_async", call_id: "question-probe", arguments: JSON.stringify({questions:[{title:"Which project?",options:["Ready-made","Open source"]}]}) }
@@ -31,6 +37,7 @@ const gateway = createServer((request, response) => {
       { type: "response.completed", response: { id, status: "completed", output: [item], usage: { input_tokens: 10, output_tokens: 5, total_tokens: 15 } } },
     ]) response.write(`event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`);
     response.end();
+    }
   });
 });
 await new Promise((done) => gateway.listen(0, "127.0.0.1", done));
@@ -123,10 +130,17 @@ try {
   const active=await client.rpc("turn/start",{threadId:thread.id,input:input("Keep working")});
   const deadline=Date.now()+30000;
   while(requests.length===before&&Date.now()<deadline) await new Promise(r=>setTimeout(r,50));
-  await client.rpc("turn/steer",{threadId:thread.id,expectedTurnId:active.turn.id,input:input(reply)});
-  await client.rpc("turn/interrupt",{threadId:thread.id,turnId:active.turn.id});
+  const clientUserMessageId = "cs-steer-confirmation-probe";
+  await client.rpc("turn/steer",{threadId:thread.id,expectedTurnId:active.turn.id,clientUserMessageId,input:input(reply)});
+  hold=false;
+  assert(releaseHeldResponse, "Gateway must hold the running response until steering is submitted");
+  releaseHeldResponse();
+  const confirmed = await waitEvent("item/completed",p=>p.threadId===thread.id && p.item.type==="userMessage" && p.item.clientId===clientUserMessageId);
+  assert.equal(confirmed.turnId,active.turn.id);
+  assert(confirmed.item.content.some(c=>c.type==="text"&&c.text===reply));
   await waitEvent("turn/completed",p=>p.turn.id===active.turn.id);
-  console.log("PASS real Core async questions, reply envelope forwarding, cold history recovery and running turn/steer acceptance.");
+  assert((await history(thread.id)).flatMap(t=>t.items).some(i=>i.type==="userMessage"&&i.clientId===clientUserMessageId));
+  console.log("PASS real Core async questions, reply forwarding, cold recovery and steer client ID event/history reconciliation.");
 } finally {
   await client?.stop();
   gateway.closeAllConnections();
