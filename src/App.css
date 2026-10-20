@@ -315,6 +315,10 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .thread-row.active { background: var(--surface-selected); box-shadow: inset 2px 0 0 var(--accent-action); }
 .thread-row:hover, .thread-row:focus-within { background: var(--surface-raised); box-shadow: inset 2px 0 0 var(--border-strong); }
 .thread-row.active:hover, .thread-row.active:focus-within, .thread-row.active.action-open { background: var(--surface-selected); box-shadow: inset 2px 0 0 var(--accent-action); }
+.thread-drop-marker { position: absolute; inset-inline: 0; height: 2px; background: var(--accent-info); pointer-events: none; z-index: 1; }
+.thread-drop-marker.before { top: 0; }
+.thread-drop-marker.after { bottom: 0; }
+.thread-main[aria-keyshortcuts] { touch-action: none; user-select: none; }
 .thread-row.running .thread-main small { color: var(--accent-action); }
 .thread-row.running .thread-main small::before { display: inline-block; width: 5px; height: 5px; margin-right: 4px; border-radius: 50%; background: var(--accent-action); content: ""; }
 .thread-list .thread-main { display: flex; width: 100%; min-width: 0; min-height: 56px; align-items: center; justify-content: flex-start; padding: 9px 10px; transition: color var(--motion-fast), background-color var(--motion-fast); }

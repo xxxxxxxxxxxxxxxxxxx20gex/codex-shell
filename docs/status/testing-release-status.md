@@ -9,6 +9,8 @@
 
 ## 当前验证基线
 
+2026-10-20 历史拖动排序：78 文件／486 项前端测试、TypeScript、ESLint、Knip、Cargo check、production build（Debug 构建内运行）、Debug 构建与 Core 0.160.1 哈希校验通过。新增 `test:history-order-layout` 四尺寸 Edge 检查覆盖指针拖动、插入线、持久化、置顶边界、取消、不误打开、键盘与菜单、边缘滚动及长标题；使用模拟会话，不访问真实历史。Knip 首次发现新探针未注册，补 package 入口后通过。未改 Rust，未重跑 Rust 单测／Clippy；未执行真实 WebView2 人工验收，仍有既有 Vite 大 chunk 提示。
+
 2026-10-20 正文资源链接：77 文件／480 项前端测试、TypeScript、ESLint、Knip、production build、Cargo check、Debug 构建及 Core 0.160.1 哈希校验通过。新增本地图片文字跳转、引用图片、外层链接无嵌套、远程打开、非法协议及失败提示覆盖；原时间线测试对 class 完整字符串的两处断言改为类名匹配后全量复跑通过。Edge 四尺寸深浅主题验证蓝色 Token、16px 图标、键盘焦点与 Enter、长标签换行、无正文 img，以及 Escape／外部点击和 reduced-motion；使用真实 Markdown 组件与模拟打开回调，未执行完整 WebView2 文件打开验收。未修改 Rust，未重跑 Rust 单测／Clippy。
 
 2026-10-14 引导消息即时反馈：477 项前端测试通过，新增覆盖已有用户消息时立即追加、相同文本按客户端 ID 区分、确认去重、完整／摘要完成快照、迟到确认与失败、跨会话隔离、RPC 未完成即派发及等待状态展示。真实 Core 0.160.1＋隔离本机模拟网关验证 steer 客户端 ID 在事件和历史中一致；Edge 四尺寸验证等待提示、复制焦点、禁止占位编辑与 Escape／外部点击保持显示。TypeScript 初次发现测试夹具缺少时间字段、错误的 itemsView 值及目标库不支持 `.at`，修正后通过；49 项受影响测试复跑通过。ESLint、Knip、production build、Cargo check、Debug 构建与 Runtime 哈希校验通过；最终提示样式调整后另复跑 23 项时间线测试与四尺寸检查。未修改 Rust，未重跑 Rust 单测／Clippy；未运行真实收费模型或完整 WebView2 人工验收。

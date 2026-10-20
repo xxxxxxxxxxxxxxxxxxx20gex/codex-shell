@@ -9,7 +9,7 @@ import { writeClipboardText } from "./clipboard";
 
 vi.mock("./clipboard", () => ({ writeClipboardText: vi.fn(async () => undefined) }));
 
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+afterEach(() => { cleanup(); localStorage.clear(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
 function thread(id: string): Thread {
   return {
@@ -48,6 +48,20 @@ function props(overrides: Partial<ComponentProps<typeof ThreadHistoryList>> = {}
 }
 
 describe("ThreadHistoryList behavior", () => {
+  it("supports keyboard ordering without opening a session and restores default order from the menu", () => {
+    const values = props({ threads: [thread("a"), thread("b"), thread("c")] });
+    const view = render(<ThreadHistoryList {...values} />);
+    const rows = () => Array.from(view.container.querySelectorAll(".thread-title-text"), (node) => node.textContent);
+    fireEvent.keyDown(view.container.querySelectorAll(".thread-main")[2], { key: "ArrowUp", altKey: true });
+    expect(rows()).toEqual(["a", "c", "b"]);
+    expect(values.onOpen).not.toHaveBeenCalled();
+    fireEvent.contextMenu(view.container.querySelector(".thread-row")!);
+    fireEvent.click(screen.getByRole("menuitem", { name: "重置手动排序" }));
+    expect(rows()).toEqual(["a", "b", "c"]);
+    view.rerender(<ThreadHistoryList {...values} disabled />);
+    fireEvent.keyDown(view.container.querySelectorAll(".thread-main")[2], { key: "ArrowUp", altKey: true });
+    expect(rows()).toEqual(["a", "b", "c"]);
+  });
   it("keeps full long names in the tooltip and rename input", () => {
     const name = "完整名称".repeat(30);
     const values = props({ threads: [{ ...thread("long"), name }] });

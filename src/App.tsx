@@ -254,6 +254,8 @@ function App() {
             </button>
           </nav>
           <ThreadHistoryList
+            key={session.codexHome}
+            orderScope={session.codexHome}
             threads={session.history}
             archived={session.historyArchived}
             activeThreadId={session.thread?.id ?? null}

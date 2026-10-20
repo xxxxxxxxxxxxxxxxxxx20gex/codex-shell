@@ -4,6 +4,8 @@
 
 ## 脚本
 
+- `pnpm test:history-order-layout <playwright/index.mjs绝对路径> <浏览器exe绝对路径>`：先启动端口 1436 的 Vite；真实历史列表与模拟会话验证四尺寸拖动、插入线、持久化、置顶边界、Escape、键盘排序及焦点、菜单重置／外部点击、长标题、边缘滚动和 reduced-motion。截图写入临时目录，不访问用户历史或 Core，不等价于真实 WebView2 人工验收。
+
 - `pnpm release:verify [资产目录]`：独立校验安装器 minisign 签名、可信注释签名、Updater 版本／签名／下载文件名，以及 release 目录中 Core 与三个 companion 的 SHA-256；不读取私钥。
 - `pnpm runtime:probe-async-question [Runtime exe]`：隔离 CODEX_HOME 和本机模拟 Responses 网关，验证真实 Core 发出异步问题、回答封装回传、冷恢复及运行中 steer 接收，不使用真实凭据或用户数据。
 - `check-async-question-layout.mjs <playwright/index.mjs绝对路径> <浏览器exe绝对路径> [Vite端口=1436]`：挂载真实异步问答卡片，验证四尺寸深浅主题、选项题自由输入、键盘焦点、非模态草稿保留、发送中锁定和完成状态。只模拟发送回调，不访问模型或用户历史。

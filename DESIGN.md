@@ -191,6 +191,7 @@ Radii:
 
 - Lists are unframed and separated by spacing or subtle dividers, not individual cards.
 - History rows use a fixed `56px` height. Idle titles use the full row width and truncate with an ellipsis; do not reserve a blank action column while buttons are hidden.
+- History titles support pointer reordering within the pinned or unpinned group, with a 2px information-blue insertion line, edge scrolling, and Escape cancellation. Dragging does not open a conversation or change its pinned state. Alt+Up/Down and context-menu Move up/Move down provide keyboard alternatives; Reset manual order restores the default order. Archived history is not reorderable. Keep row geometry and existing file-drop behavior unchanged.
 - The history action group occupies `60px` (two 28px `CompactIconButton`s) at the right edge. On row hover, keyboard focus, or an open context menu, the title and timestamp reserve this space without changing row height; buttons appear by opacity and have no group background or mask. Active rows show Pin and Archive; archived rows show Restore. Secondary actions (copy reference, rename, delete) live in the shared context menu, opened by right-click, the ContextMenu key, or Shift+F10 on the row. Copy feedback temporarily replaces the timestamp line.
 - Row action hover uses the neutral `CompactIconButton` treatment; lime is reserved for the selected-row indicator and running status.
 - Selected rows use `--surface-selected` plus a 2px action-accent indicator on the left.

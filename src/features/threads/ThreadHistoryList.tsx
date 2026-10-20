@@ -1,11 +1,14 @@
-import { useCallback, useEffect, useMemo, useState, type CSSProperties, type MouseEvent } from "react";
+import { useCallback, useEffect, useState, type CSSProperties, type MouseEvent } from "react";
 import {
   Archive,
   ArchiveRestore,
+  ArrowUp,
+  ArrowDown,
   ChevronDown,
   Copy,
   FilePenLine,
   Pin,
+  RotateCcw,
   Trash2,
 } from "lucide-react";
 import type { Thread } from "../../generated/app-server/v2/Thread";
@@ -13,17 +16,19 @@ import { CompactIconButton } from "../../shared/CompactIconButton";
 import { ContextMenu, type ContextMenuAction } from "../../shared/ContextMenu";
 import { writeClipboardText } from "./clipboard";
 import { SessionActionConfirmDialog } from "./SessionActionConfirmDialog";
+import { useHistoryOrder } from "./useHistoryOrder";
+import { useHistoryDrag } from "./useHistoryDrag";
 import {
   isThreadPinned,
   threadReference,
   threadReferenceKind,
   threadTitle,
   threadFullTitle,
-  orderThreadsByBranch,
   threadBranchDepth,
 } from "./threadPresentation";
 
 interface Props {
+  orderScope?: string;
   threads: Thread[];
   archived: boolean;
   activeThreadId: string | null;
@@ -58,11 +63,19 @@ interface ThreadMenuState {
 }
 
 export function ThreadHistoryList(props: Props) {
-  const orderedThreads = useMemo(() => orderThreadsByBranch(props.threads), [props.threads]);
+  const order = useHistoryOrder(props.threads, props.orderScope ?? "default", props.archived);
+  const orderedThreads = order.ordered;
+  const canReorder = !props.archived && !props.disabled && !props.loading && !props.actionThreadId;
+  const drag = useHistoryDrag(props.threads, canReorder, order.move);
   const [copyFeedback, setCopyFeedback] = useState<{ threadId: string; label: string } | null>(null);
   const [menu, setMenu] = useState<ThreadMenuState | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Thread | null>(null);
   const closeMenu = useCallback(() => setMenu(null), []);
+
+  function neighbor(thread: Thread, direction: number) {
+    const next = orderedThreads[orderedThreads.findIndex((item) => item.id === thread.id) + direction];
+    return next && isThreadPinned(next) === isThreadPinned(thread) ? next : undefined;
+  }
 
   useEffect(() => {
     if (!copyFeedback) return;
@@ -114,6 +127,11 @@ export function ThreadHistoryList(props: Props) {
       props.archived
         ? { label: "恢复 Session", icon: <ArchiveRestore aria-hidden="true" />, disabled: busy, run: () => props.onUnarchive(thread.id) }
         : { label: "重命名", icon: <FilePenLine aria-hidden="true" />, disabled: busy, run: () => rename(thread) },
+      ...(!props.archived ? [
+        { label: "上移", icon: <ArrowUp aria-hidden="true" />, disabled: !canReorder || !neighbor(thread, -1), run: () => { const target = neighbor(thread, -1); if (target) order.move(thread.id, target.id, false); } },
+        { label: "下移", icon: <ArrowDown aria-hidden="true" />, disabled: !canReorder || !neighbor(thread, 1), run: () => { const target = neighbor(thread, 1); if (target) order.move(thread.id, target.id, true); } },
+        ...(order.customized ? [{ label: "重置手动排序", icon: <RotateCcw aria-hidden="true" />, disabled: !canReorder, run: order.reset }] : []),
+      ] : []),
       { label: "永久删除", icon: <Trash2 aria-hidden="true" />, disabled: busy || running, run: () => setPendingDelete(thread) },
     ];
   }
@@ -126,6 +144,7 @@ export function ThreadHistoryList(props: Props) {
         <button className="history-view-toggle" onClick={() => props.onShowArchived(!props.archived)}>{props.archived ? "已归档" : "本地历史"}<ChevronDown aria-hidden="true" className="chevron-icon" /></button>
       </div>
       <nav className="thread-list" aria-label="本地历史会话">
+        {order.error && <p className="sidebar-error" role="alert">{order.error}</p>}
         {props.error && <p className="sidebar-error">{props.error}</p>}
         {!props.error && !props.loading && props.threads.length === 0 && (
           <p className="sidebar-empty">{props.archived ? "当前没有已归档 Session。" : "本机还没有 Codex Shell 历史会话。"}</p>
@@ -136,14 +155,30 @@ export function ThreadHistoryList(props: Props) {
           const menuOpen = menu?.threadId === thread.id;
           const feedback = copyFeedback?.threadId === thread.id ? copyFeedback.label : null;
           return (
-            <div className={`thread-row ${thread.id === props.activeThreadId ? "active" : ""} ${running ? "running" : ""} ${thread.forkedFromId ? "branched" : ""} ${menuOpen ? "action-open" : ""}`} style={{ "--thread-depth": threadBranchDepth(thread, props.threads) } as CSSProperties} key={thread.id} onContextMenu={(event) => openMenu(event, thread.id)}>
+            <div className={`thread-row ${thread.id === props.activeThreadId ? "active" : ""} ${running ? "running" : ""} ${thread.forkedFromId ? "branched" : ""} ${menuOpen ? "action-open" : ""}`} style={{ "--thread-depth": threadBranchDepth(thread, props.threads) } as CSSProperties} key={thread.id} onContextMenu={(event) => openMenu(event, thread.id)}
+              data-history-thread={thread.id}
+            >
+              {drag.target?.id === thread.id && <span aria-hidden="true" className={`thread-drop-marker ${drag.target.after ? "after" : "before"}`} />}
               <button
                 className="thread-main"
+                onPointerDown={(event) => drag.pointerDown(event, thread.id)}
+                onPointerMove={drag.pointerMove}
+                onPointerUp={drag.pointerUp}
+                onPointerCancel={drag.cancel}
+                onLostPointerCapture={drag.cancel}
+                onDragStart={(event) => event.preventDefault()}
+                onKeyDown={(event) => {
+                  if (!canReorder || !event.altKey || (event.key !== "ArrowUp" && event.key !== "ArrowDown")) return;
+                  event.preventDefault();
+                  const target = neighbor(thread, event.key === "ArrowUp" ? -1 : 1);
+                  if (target) order.move(thread.id, target.id, event.key === "ArrowDown");
+                }}
+                aria-keyshortcuts={canReorder ? "Alt+ArrowUp Alt+ArrowDown" : undefined}
                 disabled={busy || props.archived}
-                onClick={() => props.onOpen(thread.id)}
+                onClick={() => { if (!drag.consumeClick()) props.onOpen(thread.id); }}
                 title={props.archived
                   ? `${threadFullTitle(thread)}\n恢复 Session 后可打开`
-                  : `${threadFullTitle(thread)}\n${thread.cwd}`}
+                  : `${threadFullTitle(thread)}\n${thread.cwd}\n拖动调整顺序，或按 Alt+↑ / Alt+↓`}
               >
                 <span className="thread-copy">
                   <span className="thread-title">{isThreadPinned(thread) && <Pin className="thread-pin-indicator" aria-hidden="true" fill="currentColor" />}<span className="thread-title-text">{threadTitle(thread)}</span></span>
