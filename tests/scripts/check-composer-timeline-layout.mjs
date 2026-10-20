@@ -28,6 +28,7 @@ try {
   for(const [width,height] of [[1440,900],[1280,780],[1024,720],[900,700]]) {
     await page.setViewportSize({width,height});await page.goto('http://localhost:1436/composer-timeline-check');
     await page.locator('.user-message-navigation').waitFor();
+    await page.locator('.conversation').evaluate(el=>el.style.width=(innerWidth-(innerWidth>=1180?536:248))+'px');
     await page.waitForFunction(()=>parseFloat(document.querySelector('.timeline').style.getPropertyValue('--composer-clearance'))>0);
     await page.locator('.timeline').evaluate(el=>{el.scrollTop=el.scrollHeight;el.dispatchEvent(new Event('scroll'));});
     await page.waitForTimeout(100);
@@ -52,6 +53,17 @@ try {
     const second=await handle.boundingBox();
     await page.mouse.move(second.x+12,second.y+12);await page.mouse.down();await page.mouse.move(second.x+12,second.y-30,{steps:4});await page.keyboard.press('Escape');await page.mouse.up();
     assert.equal((await geometry()).input.height,original,'Escape restores input height');
+    await page.locator('textarea').evaluate(el=>el.style.height='320px');
+    await page.waitForTimeout(100);
+    for (const selector of ['.user-message-navigation button:last-child','.timeline-latest-button']) {
+      assert(await page.locator(selector).evaluate(el=>{
+        const b=el.getBoundingClientRect();
+        return el.contains(document.elementFromPoint(b.x+b.width/2,b.y+b.height/2));
+      }), selector+' is not covered by the composer');
+    }
+    await page.locator('.timeline-latest-button').click();
+    await page.waitForTimeout(100);
+    assert((await geometry()).last.bottom<=(await geometry()).composer.top+1);
     await page.emulateMedia({reducedMotion:'reduce'});
     await page.mouse.click(width-3,10);
     assert(await page.locator('.timeline-shell').evaluate(el=>el.scrollWidth<=el.clientWidth));

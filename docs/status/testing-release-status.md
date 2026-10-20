@@ -9,6 +9,8 @@
 
 ## 当前验证基线
 
+2026-10-20 导航遮挡修复：78 文件／486 项前端测试、TypeScript、ESLint、Knip、Cargo check、production build、Debug 构建及 Runtime 哈希校验通过。输入框／时间线探针改为扣除左右栏宽度，四尺寸验证 320px 输入框下导航未被覆盖，并实际点击返回最新；此前全宽夹具不能证明工作台窄列可点击。未改 Rust，未重跑 Rust 单测／Clippy，未进行真实 WebView2 人工验收。
+
 2026-10-20 输入框布局修复：78 文件／486 项前端测试、TypeScript、ESLint、Knip、Cargo check、production build、Debug 构建及 Runtime 哈希校验通过。新增 `test:composer-timeline-layout` 与原 `test:composer-layout` 均通过四尺寸 Edge 验证，覆盖轨道／导航固定、最新消息避让、历史阅读位置、键盘与 Escape、输入区边界和 reduced-motion；新探针先发现减少动态效果模式下占位过渡导致贴底丢失，禁用该占位过渡后复跑通过。未修改 Rust；未重跑 Rust 单测／Clippy，未进行真实 WebView2 人工验收。
 
 2026-10-20 历史拖动排序：78 文件／486 项前端测试、TypeScript、ESLint、Knip、Cargo check、production build（Debug 构建内运行）、Debug 构建与 Core 0.160.1 哈希校验通过。新增 `test:history-order-layout` 四尺寸 Edge 检查覆盖指针拖动、插入线、持久化、置顶边界、取消、不误打开、键盘与菜单、边缘滚动及长标题；使用模拟会话，不访问真实历史。Knip 首次发现新探针未注册，补 package 入口后通过。未改 Rust，未重跑 Rust 单测／Clippy；未执行真实 WebView2 人工验收，仍有既有 Vite 大 chunk 提示。

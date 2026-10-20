@@ -3,10 +3,12 @@
 .conversation-turn-frame { position: relative; width: min(100%, calc(var(--column-content-width) + 2 * var(--column-gutter))); margin: 0 auto; padding-right: var(--column-gutter); padding-left: var(--column-gutter); }
 /* Measure the main column outside its scrollbar gutter so both edges match the composer. */
 .conversation > .timeline-shell { container-type: inline-size; grid-column: 1; grid-row: 2 / 4; }
-.conversation > .composer-wrap { grid-column: 1; grid-row: 3; }
+.conversation { --conversation-edge-space: max(var(--column-gutter), calc(var(--control-height-compact) + var(--space-3))); }
+.conversation > .composer-wrap { grid-column: 1; grid-row: 3; width: min(100%, calc(var(--column-content-width) + 2 * var(--conversation-edge-space))); padding-inline: var(--conversation-edge-space); background: transparent; pointer-events: none; }
+.conversation > .composer-wrap > * { pointer-events: auto; }
 .conversation > .timeline-shell > .timeline { overflow-x: hidden; }
 .conversation > .timeline-shell > .timeline::after { display: block; height: var(--composer-clearance, 0px); transition-property: none; content: ""; }
-.conversation > .timeline-shell .conversation-turn-frame { width: min(100cqw, calc(var(--column-content-width) + 2 * var(--column-gutter))); margin-left: max(0px, calc((100cqw - var(--column-content-width) - 2 * var(--column-gutter)) / 2)); margin-right: 0; }
+.conversation > .timeline-shell .conversation-turn-frame { width: min(100cqw, calc(var(--column-content-width) + 2 * var(--conversation-edge-space))); margin-left: max(0px, calc((100cqw - var(--column-content-width) - 2 * var(--conversation-edge-space)) / 2)); margin-right: 0; padding-inline: var(--conversation-edge-space); }
 .conversation-turn-frame.first { padding-top: 28px; }
 .conversation-turn-frame.last { padding-bottom: 80px; }
 .conversation-turn-frame.separated { padding-top: 62px; }
