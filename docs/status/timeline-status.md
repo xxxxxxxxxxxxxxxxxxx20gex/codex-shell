@@ -13,6 +13,7 @@
 - 代码块：Markdown 围栏代码铺满回复列，使用统一底色、20px 圆角、代码图标和语言标题；右上提供自动换行与复制。默认长行内部滚动，换行只影响显示，不改变复制文本。2026-10-08 四尺寸 Edge 探针及 6 项 Markdown 测试通过。
 - 版面：回合内容列与 Composer 共用 `--column-content-width`（760px 上限）和 `--column-gutter`（32px，窄于 900px 时 16px），回合列与输入框左右对齐，代码块和用户气泡右缘对齐；回复保留 16px 标记缩进，窗口变窄时随视口收缩。命令输出、过程事件与终端交互使用 13px/20px（`--text-conversation-small`），消息操作 hover 改为中性高亮；时间线滚动按钮为 28px、16px／1.75 图标。2026-10-08，全量 427 项前端测试、工作台／代码块／终端四尺寸 Edge 探针通过；主时间线按滚动条外侧宽度定位，避免滚动条造成列边缘偏移。
 - 最近变更：2026-10-10，异步问答卡片独立为 `AsyncQuestionCard`，选项题也始终允许自由输入；提交时冻结答案、防止重复调用，失败保留草稿并允许重试。回答沿现有 send／steer 发送官方 `send_user_message_question_reply` 文本封装，`questionItemId` 使用工具名、消息 Item ID 和问题索引。加载历史时仅从 Core 确认的用户消息按 ID 恢复已答状态，忽略乐观输入；用户气泡显示问答正文，不展示协议标签。旧纯文本答案及未加载的历史不推断关联。
+- 输入框与时间线布局：主会话滚动区覆盖标题下方的完整高度，输入区底部叠放，增高时不压缩左右导航及滚动轨道。ResizeObserver 测量完整输入区（含通知、附件与队列），通过末尾占位防止最新回复被遮挡；占位无过渡，减少动态效果模式也即时更新。原本停在底部时继续贴底，浏览旧消息时不主动改变滚动位置；观察器随组件卸载释放。侧聊沿用原布局。
 - 当前接口：`agentSessionReducer`、`ConversationTimeline`、`ConversationTurn`、`TurnActivityGroup`、`TurnActivityItem`、`MarkdownContent`、`TurnFileChanges`、`TurnPlanView`。
 - 已知问题：MCP/动态工具结构化结果仍以安全截断 JSON 展示；自动审批通知只依赖稳定摘要字段；尚未提供活动类型过滤和单个超长命令日志虚拟化。回退替换已有真实 Runtime＋本机模拟网关验证，真实模型和完整 WebView2 操作尚未验收。
 - 下一步：增加活动筛选和超长活动局部截断/虚拟化，补真实模型与 WebView2 编辑链路验收。

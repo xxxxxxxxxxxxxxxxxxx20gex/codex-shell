@@ -215,6 +215,34 @@ export function ConversationTimeline({
     if (manualScrollTimerRef.current !== null) clearTimeout(manualScrollTimerRef.current);
   }, []);
 
+  useLayoutEffect(() => {
+    const scroller = scrollerRef.current;
+    const conversation = scroller?.parentElement?.parentElement;
+    if (!scroller || !conversation?.classList.contains("conversation")) return;
+    const composer = conversation.querySelector<HTMLElement>(":scope > .composer-wrap");
+    if (!composer) return;
+    // The main scroller spans the full conversation; reserve space for the
+    // overlaid composer without moving its scrollbar or navigation controls.
+    const update = () => {
+      const wasAtBottom = isAtBottom(scroller);
+      const height = composer.getBoundingClientRect().height;
+      scroller.style.setProperty("--composer-clearance", `${height}px`);
+      scroller.style.scrollPaddingBottom = `${height}px`;
+      if (wasAtBottom) {
+        scrollToTop(Math.max(0, scroller.scrollHeight - scroller.clientHeight));
+        updateBottomState(true);
+      }
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(composer);
+    return () => {
+      observer.disconnect();
+      scroller.style.removeProperty("--composer-clearance");
+      scroller.style.removeProperty("scroll-padding-bottom");
+    };
+  }, [scrollToTop, updateBottomState]);
+
   // Content is streamed into existing turns and can change height many times.
   // Preserve the user's visual anchor while they browse history; only the
   // follow-latest path is allowed to move the viewport.

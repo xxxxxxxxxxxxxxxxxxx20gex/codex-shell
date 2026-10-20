@@ -9,6 +9,8 @@
 
 ## 当前验证基线
 
+2026-10-20 输入框布局修复：78 文件／486 项前端测试、TypeScript、ESLint、Knip、Cargo check、production build、Debug 构建及 Runtime 哈希校验通过。新增 `test:composer-timeline-layout` 与原 `test:composer-layout` 均通过四尺寸 Edge 验证，覆盖轨道／导航固定、最新消息避让、历史阅读位置、键盘与 Escape、输入区边界和 reduced-motion；新探针先发现减少动态效果模式下占位过渡导致贴底丢失，禁用该占位过渡后复跑通过。未修改 Rust；未重跑 Rust 单测／Clippy，未进行真实 WebView2 人工验收。
+
 2026-10-20 历史拖动排序：78 文件／486 项前端测试、TypeScript、ESLint、Knip、Cargo check、production build（Debug 构建内运行）、Debug 构建与 Core 0.160.1 哈希校验通过。新增 `test:history-order-layout` 四尺寸 Edge 检查覆盖指针拖动、插入线、持久化、置顶边界、取消、不误打开、键盘与菜单、边缘滚动及长标题；使用模拟会话，不访问真实历史。Knip 首次发现新探针未注册，补 package 入口后通过。未改 Rust，未重跑 Rust 单测／Clippy；未执行真实 WebView2 人工验收，仍有既有 Vite 大 chunk 提示。
 
 2026-10-20 正文资源链接：77 文件／480 项前端测试、TypeScript、ESLint、Knip、production build、Cargo check、Debug 构建及 Core 0.160.1 哈希校验通过。新增本地图片文字跳转、引用图片、外层链接无嵌套、远程打开、非法协议及失败提示覆盖；原时间线测试对 class 完整字符串的两处断言改为类名匹配后全量复跑通过。Edge 四尺寸深浅主题验证蓝色 Token、16px 图标、键盘焦点与 Enter、长标签换行、无正文 img，以及 Escape／外部点击和 reduced-motion；使用真实 Markdown 组件与模拟打开回调，未执行完整 WebView2 文件打开验收。未修改 Rust，未重跑 Rust 单测／Clippy。

@@ -31,6 +31,7 @@
     "test:workbench-layout": "node tests/scripts/check-workbench-layout.mjs",
     "test:history-order-layout": "node tests/scripts/check-history-order-layout.mjs",
     "test:composer-layout": "node tests/scripts/check-composer-layout.mjs",
+    "test:composer-timeline-layout": "node tests/scripts/check-composer-timeline-layout.mjs",
     "test:markdown-code-layout": "node tests/scripts/check-markdown-code-layout.mjs",
     "test:explorer-menu-layout": "node tests/scripts/check-explorer-menu-layout.mjs",
     "runtime:probe-model-parameters": "node tests/scripts/probe-model-parameters.mjs",

@@ -4,6 +4,8 @@
 
 ## 脚本
 
+- `pnpm test:composer-timeline-layout <playwright/index.mjs绝对路径> <浏览器exe绝对路径>`：Vite 端口 1436；挂载真实时间线和输入框拖动控件，四尺寸验证输入框向上展开、左右导航／滚动轨道／底部固定、最新回复避让、历史浏览锚点、键盘缩放和 Escape 恢复；覆盖 reduced-motion，使用模拟会话。
+
 - `pnpm test:history-order-layout <playwright/index.mjs绝对路径> <浏览器exe绝对路径>`：先启动端口 1436 的 Vite；真实历史列表与模拟会话验证四尺寸拖动、插入线、持久化、置顶边界、Escape、键盘排序及焦点、菜单重置／外部点击、长标题、边缘滚动和 reduced-motion。截图写入临时目录，不访问用户历史或 Core，不等价于真实 WebView2 人工验收。
 
 - `pnpm release:verify [资产目录]`：独立校验安装器 minisign 签名、可信注释签名、Updater 版本／签名／下载文件名，以及 release 目录中 Core 与三个 companion 的 SHA-256；不读取私钥。
