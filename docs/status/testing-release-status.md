@@ -1,13 +1,15 @@
 # 测试与发布状态
 
 - 模块职责：维护质量门禁、Runtime 兼容验证、Windows 发布证据及未覆盖边界；模块行为由对应状态文档维护，历史由 Git 保留。
-- 当前状态：v0.1.12 使用官方 Core 0.160.1，沿用既有 Updater minisign 公钥。GitHub Release 和更新元数据均提供本版更新说明；当前客户端检查更新后直接下载安装，不展示更新正文。Windows Authenticode 尚未配置，SmartScreen 仍可能提示未知发布者。
+- 当前状态：v0.1.13 使用官方 Core 0.160.1，沿用既有 Updater minisign 公钥，分发 NSIS 安装器、签名与带中文更新说明的更新元数据。当前客户端检查更新后直接下载安装，不展示更新正文。Windows Authenticode 尚未配置，SmartScreen 仍可能提示未知发布者。
 - 当前接口：`pnpm test:quality` 执行 TypeScript、ESLint、Vitest、高德离线测试、production build、Knip、Cargo check、Rust 单测、严格 Clippy 和 diff 检查。专项入口见 [测试脚本说明](../../tests/scripts/README.md)。
 - 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；`package.json` 遗留的 `test:extension-layout` 指向不存在的脚本，MCP 管理可使用现有 `test:mcp-layout`（不等价于全部扩展管理验证），不能把失效入口作为验证证据；Vite 主 chunk 超过 500 kB；Rust 既有格式差异尚未整理，`cargo fmt --check` 未纳入门禁。
 - 下一步：真实系统凭据、多渠道对话、第三方 MCP OAuth、干净 Windows 安装升级和大型历史迁移验收。
-- 最后更新：2026-10-12
+- 最后更新：2026-10-20
 
 ## 当前验证基线
+
+2026-10-20 v0.1.13：78 文件／487 项前端、34 项高德离线、51 项 Rust 测试通过（1 项交互测试忽略），TypeScript、ESLint、Knip、Cargo check、lib 严格 Clippy、production build、Debug 和生产安装器构建通过。真实 Core 协议探针、同源兼容门禁、release 内置 rg 探针通过；资源区四尺寸 Edge 使用模拟文件与回调验证统一附件、PDF／表格／Markdown、折叠过程文件、点击与焦点，不代表真实 WebView2 人工验收。首次附件断言因同名文件名／路径匹配多个元素失败，限定文件名元素后全量通过。安装器及可信注释签名、更新地址和 Runtime/helper 哈希校验通过；SHA-256 `9428b1fb7c0094f35ace92cd374253095808f716c64fe0615dea1b9b9a40df60`。未执行干净 Windows 安装／真实网络升级，仍有既有 Vite 大 chunk 和链接器信息提示。
 
 2026-10-20 导航遮挡修复：78 文件／486 项前端测试、TypeScript、ESLint、Knip、Cargo check、production build、Debug 构建及 Runtime 哈希校验通过。输入框／时间线探针改为扣除左右栏宽度，四尺寸验证 320px 输入框下导航未被覆盖，并实际点击返回最新；此前全宽夹具不能证明工作台窄列可点击。未改 Rust，未重跑 Rust 单测／Clippy，未进行真实 WebView2 人工验收。
 

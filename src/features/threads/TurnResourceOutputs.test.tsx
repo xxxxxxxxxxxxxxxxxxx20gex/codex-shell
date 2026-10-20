@@ -5,6 +5,26 @@ import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import { TurnResourceOutputs } from "./TurnResourceOutputs";
 
 afterEach(cleanup);
+it("keeps distinct previews as compact process entries and preserves document-only process files", () => {
+  const onOpenPath = vi.fn();
+  const items: ThreadItem[] = [
+    { type: "agentMessage", id: "a", text: "[成图](C:/work/image-1.png) [报告](C:/work/report.pdf)", phase: "final_answer", memoryCitation: null, questions: null, delivery: null },
+    { type: "imageView", id: "p", path: "C:/work/preview.jpg" },
+    { type: "imageView", id: "duplicate", path: "C:\\work\\image-1.png" },
+    { type: "fileChange", id: "f", changes: [{ path: "C:/work/notes.md", kind: { type: "add" }, diff: "notes" }], status: "completed" },
+  ];
+  const view = render(<TurnResourceOutputs items={items} onOpenPath={onOpenPath} />);
+  expect(view.getAllByRole("region", { name: "回复附件" })).toHaveLength(1);
+  expect(view.queryByText("preview.jpg")).toBeNull();
+  const details = view.getByText("过程资源 · 2 个").parentElement as HTMLDetailsElement;
+  details.open = true;
+  fireEvent(details, new Event("toggle"));
+  expect(view.getByText("notes.md")).toBeTruthy();
+  expect(details.querySelector(".turn-resource-images")).toBeNull();
+  expect(details.querySelector("header")).toBeNull();
+  fireEvent.click(view.getByRole("button", { name: "打开 C:/work/preview.jpg" }));
+  expect(onOpenPath).toHaveBeenCalledWith("C:/work/preview.jpg");
+});
 it("extracts reply references, ignores code and web links, and lazily retains process images", () => {
   const readFile = vi.fn(async () => "AA==");
   const items: ThreadItem[] = [
@@ -13,13 +33,14 @@ it("extracts reply references, ignores code and web links, and lazily retains pr
     { type: "imageView", id: "p", path: "C:/work/mask.png" },
   ];
   const view = render(<TurnResourceOutputs items={items} readFile={readFile} />);
-  expect(view.getByRole("region", { name: "回复中的图片" })).toBeTruthy();
+  expect(view.getByRole("region", { name: "回复附件" })).toBeTruthy();
   expect(view.queryByLabelText("本轮产出")).toBeNull();
   expect(readFile).toHaveBeenCalledTimes(1);
   const details = view.getByText("过程资源 · 1 个").parentElement as HTMLDetailsElement;
   details.open = true;
   fireEvent(details, new Event("toggle"));
-  expect(readFile).toHaveBeenCalledWith("C:/work/mask.png");
+  expect(readFile).not.toHaveBeenCalledWith("C:/work/mask.png");
+  expect(view.getByText("mask.png")).toBeTruthy();
 });
 
 it("lists Markdown documents from reply links and opens them through the file viewer", () => {
@@ -27,8 +48,8 @@ it("lists Markdown documents from reply links and opens them through the file vi
   const view = render(<TurnResourceOutputs items={[message]} />);
   expect(view.getByText("image.png")).toBeTruthy();
   expect(view.getByText("SKILL.md")).toBeTruthy();
-  expect(view.queryByText("report.pdf")).toBeNull();
-  expect(view.queryByText("data.xlsx")).toBeNull();
+  expect(view.getByText("report.pdf", { selector: "code" })).toBeTruthy();
+  expect(view.getByText("data.xlsx", { selector: "code" })).toBeTruthy();
   const onOpenPath = vi.fn();
   view.rerender(<TurnResourceOutputs items={[{ ...message, text: "[notes](notes.md)" }]} onOpenPath={onOpenPath} />);
   fireEvent.click(view.getByRole("button", { name: "打开 notes.md" }));
@@ -59,7 +80,8 @@ it("resolves Core file URLs before checking and previewing process images", asyn
   const details = view.getByText("过程资源 · 1 个").parentElement as HTMLDetailsElement;
   details.open = true;
   fireEvent(details, new Event("toggle"));
-  await waitFor(() => expect(readFile).toHaveBeenCalledWith("C:/work/My Image.png"));
+  expect(view.getByText("My Image.png")).toBeTruthy();
+  expect(readFile).not.toHaveBeenCalled();
 });
 
 it("does not read or list an invalid Core file URL", () => {

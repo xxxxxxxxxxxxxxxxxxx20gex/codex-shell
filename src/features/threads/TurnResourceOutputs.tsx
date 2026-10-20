@@ -98,30 +98,28 @@ export function TurnResourceOutputs(props: Props) {
   }, [pathExists, replies, process]);
   const visibleReplies = replies.filter((path) => !missing.has(resourceKey(path)));
   const visibleProcess = process.filter((path) => !missing.has(resourceKey(path)));
-  const replyImages = visibleReplies.filter(isImagePath);
-  const replyDocuments = visibleReplies.filter((path) => resourceKind(path) === "document");
-  const processFiles = visibleProcess.filter((path) => resourceKind(path) !== "document");
-  if (!visibleReplies.length && !visibleProcess.length) return null;
+  const replyFiles = visibleReplies.filter((path) => resourceKind(path) !== null);
+  const processFiles = visibleProcess.filter((path) => resourceKind(path) !== null);
+  if (!replyFiles.length && !processFiles.length) return null;
   return <>
-    {replyImages.length > 0 && <ResourceList {...props} title="回复中的图片" resources={replyImages} />}
-    {replyDocuments.length > 0 && <ResourceList {...props} title="回复中的文档" resources={replyDocuments} />}
-    {processFiles.length > 0 && <details className="turn-process-resources" onToggle={(event) => setExpanded(event.currentTarget.open)}><summary>过程资源 · {processFiles.length} 个</summary>{expanded && <ResourceList {...props} title="查看、生成与修改的资源" resources={processFiles} />}</details>}
+    {replyFiles.length > 0 && <ResourceList {...props} title="回复附件" resources={replyFiles} />}
+    {processFiles.length > 0 && <details className="turn-process-resources" onToggle={(event) => setExpanded(event.currentTarget.open)}><summary>过程资源 · {processFiles.length} 个</summary>{expanded && <ResourceList {...props} compact title="查看、生成与修改的资源" resources={processFiles} />}</details>}
   </>;
 }
 
-function ResourceList({ resources, title, readFile, onOpenPath, onOpenInExplorer }: Omit<Props, "items"> & { resources: string[]; title: string }) {
+function ResourceList({ resources, title, compact = false, readFile, onOpenPath, onOpenInExplorer }: Omit<Props, "items"> & { resources: string[]; title: string; compact?: boolean }) {
   const paths = new Set<string>();
   const images: string[] = [];
   const files: string[] = [];
   resources.forEach((path) => {
     if (paths.has(path)) return;
     paths.add(path);
-    if (isImagePath(path)) images.push(path);
+    if (!compact && isImagePath(path)) images.push(path);
     else files.push(path);
   });
   if (images.length === 0 && files.length === 0) return null;
   return <section className="turn-resource-outputs" aria-label={title}>
-    <header><strong>{title}</strong><small>{images.length + files.length} 个资源</small></header>
+    {!compact && <header><strong>{title}</strong><small>{images.length + files.length} 个资源</small></header>}
     {images.length > 0 && <div className="turn-resource-images">
       {images.map((path) => readFile && /^(?:[a-z]:[\\/]|\\\\|\/)/i.test(path)
         ? <ImageAttachmentPreview key={path} path={path} name={baseName(path)} readFile={readFile} onOpenPath={onOpenPath} onOpenInExplorer={onOpenInExplorer} />
@@ -129,7 +127,7 @@ function ResourceList({ resources, title, readFile, onOpenPath, onOpenInExplorer
     </div>}
     {files.length > 0 && <ul className="turn-resource-files">
       {files.map((path) => <li key={path} data-local-path={path}>
-        {resourceKind(path) === "spreadsheet" ? <FileSpreadsheet aria-hidden="true" /> : <FileText aria-hidden="true" />}<code title={path}>{baseName(path)}</code><small title={path}>{path}</small>
+        {isImagePath(path) ? <ImageIcon aria-hidden="true" /> : resourceKind(path) === "spreadsheet" ? <FileSpreadsheet aria-hidden="true" /> : <FileText aria-hidden="true" />}<code title={path}>{baseName(path)}</code><small title={path}>{path}</small>
         {(onOpenPath || onOpenInExplorer) && <div className="turn-resource-file-actions">
           {onOpenPath && <button type="button" onClick={() => void onOpenPath(path)} title="打开文件" aria-label={`打开 ${path}`}><FileSearch aria-hidden="true" /></button>}
           {onOpenInExplorer && <button type="button" onClick={() => void onOpenInExplorer(path)} title="在资源管理器中显示" aria-label={`在资源管理器中显示 ${path}`}><FolderOpen aria-hidden="true" /></button>}

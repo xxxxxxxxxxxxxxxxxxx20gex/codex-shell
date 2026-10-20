@@ -414,6 +414,7 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .turn-resource-outputs header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 9px; }
 .turn-resource-outputs header strong { font-size: var(--text-label); font-weight: 600; }
 .turn-resource-outputs header small { color: var(--text-muted); font-size: var(--text-meta); }
+.turn-process-resources .turn-resource-outputs { margin-top: var(--space-2); padding-top: 0; border-top: 0; }
 .turn-resource-images { display: flex; flex-wrap: wrap; gap: 7px; }
 .turn-resource-images .attachment-image-preview { width: 132px; height: 88px; }
 .turn-process-resources { margin-top: var(--space-3); color: var(--text-secondary); font-size: var(--text-ui); }
