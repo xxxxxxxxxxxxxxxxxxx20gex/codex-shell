@@ -1,4 +1,5 @@
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { File } from "lucide-react";
 import { isValidElement, type ReactElement, type ReactNode } from "react";
 import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -73,6 +74,24 @@ function safeUrlTransform(url: string) {
   return target.type === "localPath" ? url : defaultUrlTransform(url);
 }
 
+// Convert image syntax before rendering so linked images do not produce nested links.
+function remarkImageLinks() {
+  type Node = { type: string; url?: string; alt?: string; children?: Node[]; value?: string };
+  return (tree: Node) => {
+    function visit(node: Node, inLink = false) {
+      node.children = node.children?.map((child) => {
+        if (child.type === "image" || child.type === "imageReference") {
+          const label = { type: "text", value: child.alt || "打开图片" };
+          return inLink ? label : { ...child, type: child.type === "image" ? "link" : "linkReference", children: [label] };
+        }
+        visit(child, inLink || child.type === "link" || child.type === "linkReference");
+        return child;
+      });
+    }
+    visit(tree);
+  };
+}
+
 export function MarkdownContent({ children, className, onOpenPath, onOpenError }: Props) {
   async function openLink(href: string) {
     const target = markdownLinkTarget(href);
@@ -87,17 +106,14 @@ export function MarkdownContent({ children, className, onOpenPath, onOpenError }
   }
 
   return (
-    <div className={className}>
+    <div className={["markdown-content", className].filter(Boolean).join(" ")}>
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkImageLinks]}
         skipHtml
         urlTransform={safeUrlTransform}
         components={{
           table: ({ children: cells }) => <MarkdownTable>{cells}</MarkdownTable>,
-          img: ({ src, alt }) => {
-            const target = src ? markdownLinkTarget(src) : null;
-            return src ? <button type="button" data-local-path={target?.type === "localPath" ? target.value : undefined} className="markdown-image-open" onClick={() => void openLink(src)} aria-label={`打开图片 ${alt || src}`} title="打开图片"><img src={src} alt={alt ?? "图片"} /></button> : null;
-          },
+          img: ({ alt }) => <span>{alt || "图片"}</span>,
           pre: ({ children: codeElement }) => {
             if (!isValidElement(codeElement)) return <pre>{codeElement}</pre>;
             return <MarkdownCodeBlock codeElement={codeElement as ReactElement<{ children?: ReactNode; className?: string }>} />;
@@ -118,6 +134,7 @@ export function MarkdownContent({ children, className, onOpenPath, onOpenError }
                   void openLink(href);
                 }}
               >
+                {target.type === "localPath" && <File className="markdown-file-icon" aria-hidden="true" />}
                 {label}
               </a>
             );

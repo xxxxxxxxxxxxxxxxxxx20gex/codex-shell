@@ -7,6 +7,34 @@ import { MarkdownContent, markdownLinkTarget } from "./MarkdownContent";
 vi.mock("@tauri-apps/plugin-opener", () => ({ openUrl: vi.fn() }));
 
 describe("MarkdownContent links", () => {
+  it("renders local image syntax as a file link without loading a browser image", async () => {
+    const onOpenPath = vi.fn();
+    const view = render(<MarkdownContent onOpenPath={onOpenPath}>{"![沙滩写实人物](/D:/output/image-1.png)"}</MarkdownContent>);
+    expect(view.container.querySelector("img")).toBeNull();
+    const link = view.getByRole("link", { name: "沙滩写实人物" });
+    expect(link.getAttribute("data-local-path")).toBe("D:/output/image-1.png");
+    expect(link.querySelector("svg")).toBeTruthy();
+    fireEvent.click(link);
+    await waitFor(() => expect(onOpenPath).toHaveBeenCalledWith("D:/output/image-1.png"));
+  });
+
+  it("keeps linked images and reference images accessible without nested links", () => {
+    const view = render(<MarkdownContent>{"[![预览](thumb.png)](full.png)\n\n![参考图片][photo]\n\n[photo]: output/photo.png"}</MarkdownContent>);
+    expect(view.container.querySelector("a a, a button, img")).toBeNull();
+    expect(view.getByRole("link", { name: "预览" }).getAttribute("href")).toBe("full.png");
+    expect(view.getByRole("link", { name: "参考图片" }).getAttribute("href")).toBe("output/photo.png");
+  });
+
+  it("opens remote image references only on click and reports local open failures", async () => {
+    const onOpenError = vi.fn();
+    const view = render(<MarkdownContent onOpenPath={async () => { throw new Error("文件不存在"); }} onOpenError={onOpenError}>{"![网络图片](https://example.test/image.png)\n\n![缺失图片](missing.png)\n\n![危险](javascript:alert)"}</MarkdownContent>);
+    expect(view.container.querySelector("img")).toBeNull();
+    expect(view.queryByRole("link", { name: "危险" })).toBeNull();
+    fireEvent.click(view.getByRole("link", { name: "网络图片" }));
+    await waitFor(() => expect(openUrl).toHaveBeenCalledWith("https://example.test/image.png"));
+    fireEvent.click(view.getByRole("link", { name: "缺失图片" }));
+    await waitFor(() => expect(onOpenError).toHaveBeenCalledWith("文件不存在"));
+  });
   it("opens web links with the system opener", async () => {
     const view = render(<MarkdownContent>[OpenAI](https://openai.com/docs)</MarkdownContent>);
 

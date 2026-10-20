@@ -1,3 +1,8 @@
+.markdown-content a { color: var(--accent-info); text-decoration: none; overflow-wrap: anywhere; }
+.markdown-content a:hover { text-decoration: underline; text-underline-offset: 2px; }
+.markdown-content a:focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; border-radius: var(--radius-control); }
+.markdown-content .markdown-file-icon { display: inline; width: 16px; height: 16px; stroke-width: 1.75; vertical-align: text-bottom; margin-right: var(--space-1); }
+
 .markdown-code-block {
   width: 100%;
   box-sizing: border-box;

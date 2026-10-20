@@ -9,6 +9,8 @@
 
 ## 当前验证基线
 
+2026-10-20 正文资源链接：77 文件／480 项前端测试、TypeScript、ESLint、Knip、production build、Cargo check、Debug 构建及 Core 0.160.1 哈希校验通过。新增本地图片文字跳转、引用图片、外层链接无嵌套、远程打开、非法协议及失败提示覆盖；原时间线测试对 class 完整字符串的两处断言改为类名匹配后全量复跑通过。Edge 四尺寸深浅主题验证蓝色 Token、16px 图标、键盘焦点与 Enter、长标签换行、无正文 img，以及 Escape／外部点击和 reduced-motion；使用真实 Markdown 组件与模拟打开回调，未执行完整 WebView2 文件打开验收。未修改 Rust，未重跑 Rust 单测／Clippy。
+
 2026-10-14 引导消息即时反馈：477 项前端测试通过，新增覆盖已有用户消息时立即追加、相同文本按客户端 ID 区分、确认去重、完整／摘要完成快照、迟到确认与失败、跨会话隔离、RPC 未完成即派发及等待状态展示。真实 Core 0.160.1＋隔离本机模拟网关验证 steer 客户端 ID 在事件和历史中一致；Edge 四尺寸验证等待提示、复制焦点、禁止占位编辑与 Escape／外部点击保持显示。TypeScript 初次发现测试夹具缺少时间字段、错误的 itemsView 值及目标库不支持 `.at`，修正后通过；49 项受影响测试复跑通过。ESLint、Knip、production build、Cargo check、Debug 构建与 Runtime 哈希校验通过；最终提示样式调整后另复跑 23 项时间线测试与四尺寸检查。未修改 Rust，未重跑 Rust 单测／Clippy；未运行真实收费模型或完整 WebView2 人工验收。
 
 2026-10-12 可选内置项目文档 Skill：77 文件／470 项前端测试、TypeScript、ESLint、Knip、production build、Cargo check、51 项 Rust 测试（1 项交互测试忽略）、严格 Clippy、Debug 构建与 Core 0.160.1 哈希校验通过。新 Skill 的格式及打包资源哈希验证通过；格式校验首次受 Windows GBK 默认编码影响失败，指定 UTF-8 后通过。Edge 四尺寸挂载真实管理组件，模拟安装 IPC，验证默认关闭、详情关闭和布局。未重跑高德／生图专项，未执行真实模型文档任务、干净 Windows 安装或生产发布；不替换上一版完整发布基线。

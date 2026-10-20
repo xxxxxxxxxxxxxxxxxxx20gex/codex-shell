@@ -425,11 +425,11 @@ describe("conversation timing", () => {
     const markup = renderTurn({ ...completedTurn(), items: [commentary, reasoning, answer] });
 
     expect(markup).toContain("已处理 · 8s");
-    expect(markup).toContain('class="turn-commentary"');
+    expect(markup).toMatch(/class="[^"]*\bturn-commentary\b[^"]*"/);
     expect(markup).toContain("我先检查项目结构。");
     expect(markup).toContain('class="activity-reasoning-note"');
     expect(markup.indexOf("我先检查项目结构。")).toBeLessThan(markup.indexOf("定位核心模块"));
-    expect(markup).toContain('class="agent-response"');
+    expect(markup).toMatch(/class="[^"]*\bagent-response\b[^"]*"/);
     expect(markup).toContain("检查完成。");
     expect((markup.match(/class="agent-accent"/g) ?? []).length).toBe(1);
   });

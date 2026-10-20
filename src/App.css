@@ -81,7 +81,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .agent-response pre, .turn-commentary pre { overflow-x: auto; margin: 10px 0 14px; padding: 11px 12px; border: 1px solid var(--border-subtle); border-radius: var(--radius-control); background: var(--surface-sidebar); }
 .agent-response pre code, .turn-commentary pre code { color: var(--text-secondary); white-space: pre; }
 .agent-response :not(pre) > code, .turn-commentary :not(pre) > code { padding: 1px 4px; border-radius: var(--radius-sm); background: var(--surface-selected); }
-.agent-response a, .turn-commentary a { color: var(--accent-info); text-decoration: underline; text-underline-offset: 2px; }
 .agent-response table { display: block; max-width: 100%; overflow-x: auto; margin: 10px 0 14px; border-collapse: collapse; }
 .agent-response th, .agent-response td { padding: 6px 9px; border: 1px solid var(--border-subtle); text-align: left; }
 .agent-response th { background: var(--surface-raised); }

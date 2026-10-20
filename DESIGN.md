@@ -236,6 +236,8 @@ Radii:
 
 ## Conversation Timeline
 
+- Markdown links use the blue `--accent-info` token with an underline on hover and a keyboard focus ring. Local file references include a 16px Lucide file icon. Inline image references render as text links instead of browser image elements; local image previews remain in the reply resource gallery. Long labels wrap within the conversation column.
+
 - Markdown tables provide a top-right 28px ghost copy button with a 16px Lucide icon, outside the horizontally scrolling table. Copy exports visible cell text as tab-separated rows, including headers; success and failure use a compact status label. The action remains keyboard accessible and never overlays cell content.
 
 - User messages are compact right-aligned bubbles sized to content, with a sensible maximum width.
