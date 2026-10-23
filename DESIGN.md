@@ -14,7 +14,7 @@ The design direction is **Soft Notebook**:
 - lavender accent for active text and selection; a separate yellow primary fill with dark ink; blue, amber, and red retain semantic meaning;
 - dark appearance keeps neutral black and gray layers;
 - small 16px icons without decorative tiles; borderless actions and lists with stable 28px hit targets;
-- subtle rounded writing surfaces; a tiny line-drawn floppy-eared dog is allowed only in an empty state, never in settings or approvals;
+- subtle rounded writing surfaces; the user-provided two-dog illustration is allowed only in an empty state, never in settings or approvals; preserve the original image, both characters, colors and background without redrawing, cropping or theme filters; display at its native 162×132 size or proportionally smaller;
 - assistant output integrated into the timeline instead of boxed into repeated cards.
 - assistant responses use one 2px action marker at the first answer line; completed responses do not carry a full-height gray rail, and continuation blocks do not repeat the marker.
 - elapsed durations use compact `s`/`m s` units, and transient reconnect notices stay inside the active process status instead of occupying the Composer error slot.

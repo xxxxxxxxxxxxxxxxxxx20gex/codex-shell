@@ -9,7 +9,9 @@
 
 ## 当前验证基线
 
-2026-10-23 图标重心校正：GPT 重做构图后，SVG 母版改为等高同粗的并排 CS，去除角落黄点，按图形像素重心校正整体横向位置。512px 资源的紫色图形重心约为 (256.2, 256.0)，复核 16–160px 前后对照及 ICO 多尺寸，平台图标由 Tauri icon 统一生成。TypeScript、3 项标题栏测试、Cargo check、52 项 Rust 测试（1 项忽略）、严格 Clippy、production build、Debug 构建和四尺寸工作台探针通过。未改交互逻辑，未重跑完整前端测试；未进行真实 Windows 任务栏缓存刷新或 WebView2 人工验收。空会话继续使用垂耳小狗线稿。
+2026-10-23 双小狗原图替换：空会话直接使用用户提供的 162×132 PNG，原文件与仓库资源 SHA-256 一致，完整保留两只小狗及背景。TypeScript、ESLint、四尺寸深浅主题 Soft Notebook 探针、Cargo check、52 项 Rust 测试（1 项忽略）、严格 Clippy、production build 与 Debug 构建通过；已复核浏览器空状态截图，构建产物包含图片资源。未重跑全量前端单测，未进行真实 WebView2 人工验收。
+
+2026-10-23 图标重心校正：GPT 重做构图后，SVG 母版改为等高同粗的并排 CS，去除角落黄点，按图形像素重心校正整体横向位置。512px 资源的紫色图形重心约为 (256.2, 256.0)，复核 16–160px 前后对照及 ICO 多尺寸，平台图标由 Tauri icon 统一生成。TypeScript、3 项标题栏测试、Cargo check、52 项 Rust 测试（1 项忽略）、严格 Clippy、production build、Debug 构建和四尺寸工作台探针通过。未改交互逻辑，未重跑完整前端测试；未进行真实 Windows 任务栏缓存刷新或 WebView2 人工验收。空会话插图以 UI 壳当前状态为准。
 
 2026-10-23 主题校正：浅色按批准稿的实际纸面取色，补新建对话主动作、淡化输入框聚焦边线和代码标题栏层次，暗色及系统暗色恢复中性黑灰；主题预览缩小且保持对应配色。487 项前端测试、TypeScript、ESLint、Knip、production build、Cargo check、52 项 Rust 测试（1 项忽略）、严格 Clippy 和 Debug 构建通过；复跑四尺寸 `soft-notebook`、`workbench`、`composer`、`markdown-code` 探针。新增暗色中性约束和系统配色检查，深浅文字对比度通过。工作台截图等待主题文字计算样式完成后采集，避免切换瞬间旧色被截图；已复核深浅截图。未验证真实 WebView2，保留既有 Vite 大 chunk 警告。
 
