@@ -30,7 +30,7 @@ pnpm test:amap
 pnpm test:quality
 ```
 
-直接调用脚本时也不要求当前目录是项目根目录：
+下面的相对路径命令从仓库根目录执行；从其他目录调用时，将 `-File` 改为脚本的绝对路径。脚本自身会定位仓库根目录：
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File tests/scripts/run-quality-gates.ps1
@@ -64,3 +64,7 @@ pnpm test:soft-notebook-layout <playwright/index.mjs绝对路径> <浏览器可�
 ```
 
 使用真实组件和模拟数据，覆盖1440×900、1280×780、1024×720、900×700下的技能列表/详情、斜杠菜单、设置、空状态、Portal、深浅主题与系统实时切换；检查文字对比度、字号下限、图标、无框行、焦点、Escape及外部点击。截图输出在脚本报告的临时目录。不会读写真实渠道凭据或连接Runtime；主工作台/输入/渠道/MCP/草图另用对应专项探针。
+
+设置共有五个分类；本探针覆盖个性化、外观、运行环境和诊断，模型渠道由 `test:channel-layout` 单独覆盖。空状态检查两种 motion 偏好下 SVG 小狗均播放且布局稳定，不等价于原视频逐帧动作或真实 WebView2 长期性能验收。
+
+`package.json` 中的 `test:extension-layout` 仍指向缺失文件，不能用作验证入口；技能使用上述 `test:soft-notebook-layout`，MCP 使用 `test:mcp-layout`。两者覆盖范围不同，均不证明真实在线扩展服务可用。

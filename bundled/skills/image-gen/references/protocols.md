@@ -28,6 +28,14 @@ gpt-image-2.5 与 gpt-image-2.5-vip 自动使用该协议。Chat 尺寸/质量�
 POST /v1/images/generations，JSON 参数 model、prompt、size、quality、n=1。
 gpt-image-2 已实测。支持 data[0].url 和 data[0].b64_json，保存真实尺寸，不自动缩放。
 
+## Images 参考图编辑
+
+脚本已实现 `POST /v1/images/edits`：使用 `multipart/form-data` 上传参考图及 model、prompt、size、quality、n 字段。单图字段为 `image`，多图字段为 `image[]`；多图和编辑型号的真实服务效果尚未验收。
+
+自动路由以 `scripts/image_gen.py` 中的型号集合为准：Chat 型号使用 `/chat/completions`；Images 编辑型号无参考图时使用 generations、有图时使用 edits；只登记 Images 文生图的型号（例如 `gpt-image-2.5-flare`）在有参考图时拒绝调用。未知型号要求显式选择经核实的协议，不自动探测或切换。
+
+当前 `--mask` 仅被解析并记录路径，未加入 multipart 请求，遮罩局部编辑暂不可用。不得以参数存在或 JSON 中有 mask 路径宣称遮罩已生效。
+
 ## 网络与结果
 
 API 不自动跳转、不自动重试。CDN 下载不带密钥。
@@ -35,7 +43,7 @@ API 不自动跳转、不自动重试。CDN 下载不带密钥。
 超时或下载失败记录为 failed_or_unknown，不能据此认为未计费。
 当前只解析已经验证的响应结构，不保证未知渠道变体都兼容。
 
-## 官方 Apifox 图片接口（已核对文档，尚未纳入默认脚本）
+## 渠道 Apifox 图片接口依据
 
 兔子官方兼容格式文档明确列出两个独立接口：
 
@@ -46,4 +54,4 @@ API 不自动跳转、不自动重试。CDN 下载不带密钥。
 - [创建图像（文生图）](https://tuzi-api.apifox.cn/448333992e0)
 - [编辑图片（图生图）](https://tuzi-api.apifox.cn/448333922e0)
 
-这说明兔子渠道在协议层提供独立编辑接口，之前“未验证”指的是当前插件脚本尚未针对该接口完成真实调用验证，而不是接口不存在。文档示例中的模型和字段不能自动推广到 `gpt-image-2.5` 或 `gpt-image-2.5-vip`；应先用低成本请求核对实际支持的模型、图片字段名、返回结构、尺寸和质量参数，再把通过验证的部分加入脚本。
+以上为渠道接口文档依据。2026-10-23 对照仓库脚本确认 generations 和 edits 请求路径均已实现；这次只做静态复核，未调用收费服务。文档示例中的模型和字段不能自动推广到 `gpt-image-2.5` 或 `gpt-image-2.5-vip`；真实型号、权限、返回结构、尺寸和质量支持需在用户授权的任务中单独验证。

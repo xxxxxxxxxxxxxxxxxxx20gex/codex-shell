@@ -24,15 +24,17 @@
 | --- | --- | --- |
 | prompt | 文本或 UTF-8 文件 | Chat 转为 messages 中的 text |
 | model | 原样传入 | 自动路由基于已整理的型号集合，未知型号报错 |
-| size | Images 文生图支持，默认1024x1024 | Chat拒绝此参数；实际像素需查看结果 |
+| size | Images 文生图与编辑请求均发送，默认1024x1024 | Chat拒绝此参数；实际支持与像素需按型号核实 |
 | quality | Images 支持low/medium/high/auto，默认low | Chat不做推测性映射 |
 | n | Images固定为1 | 不提供多张数量参数；Chat提示词也应要求一张 |
 | 图片输入 | Chat image_url 中的真实文件Base64 | 单参考图已实测，多图未实测 |
+| Images 编辑输入 | multipart 单图 `image`、多图 `image[]` | 请求路径已实现；真实编辑与多图效果未验收 |
+| mask | CLI 可解析并记录路径，但未上传 | 暂不可用，不构成局部编辑能力 |
 | 返回编码 | Images URL/Base64；Chat单个Markdown图片链接 | 不保证能解析所有服务商变体 |
 | output_format / compression | 未暴露 | 当前验证并保存PNG，不宣称支持JPEG/WebP参数 |
 | background / moderation等 | 未暴露 | 源文档的参数不能直接作为当前脚本选项 |
 
-源文件中的保真控制、遮罩、透明输出和批量配置不属于当前技能工作流，不迁入操作示例。普通PNG也不代表具有透明通道。
+源文件中的保真控制、遮罩生效、透明输出和批量配置不属于已验证的当前技能工作流，不迁入操作示例。普通PNG也不代表具有透明通道。2026-10-23 静态复核确认 Images 编辑请求路径已进入脚本，但 `--mask` 尚未接通；该复核不增加真实模型实测记录。
 
 ## 尺寸参考
 

@@ -38,7 +38,7 @@ CS 将模型回答、执行过程、文件变更、回复文件和折叠过程�
 
 ![Codex Shell 产品界面](docs/assets/product-showcase.png)
 
-> 产品界面示例：执行过程可折叠，生成的图片支持在会话中预览；实际布局会随窗口尺寸、主题和运行状态自适应。
+> 公开版本界面示例：执行过程可折叠，生成的图片支持在会话中预览。源码开发版已采用上文说明的 Soft Notebook 主题；实际布局随窗口尺寸、主题和运行状态自适应。
 
 回复中的本地文件链接、资源缩略图和文件变更条目可右键选择“复制绝对路径”；相对链接按当前会话项目解析，复制结果不包含行号。
 
@@ -56,7 +56,7 @@ CS 将模型回答、执行过程、文件变更、回复文件和折叠过程�
 - 在 Composer 的 **MCP** 面板添加、编辑、启停或删除用户级服务器，支持 stdio 命令、JSON 参数数组、环境变量引用及 HTTP。原配置中未编辑的工具策略等字段会保留；项目或管理员层配置不会被此表单删除。
 - HTTP 接入使用 Streamable HTTP：远程地址要求 HTTPS，仅本机回环地址允许 HTTP；旧的远程 HTTP 配置仍可禁用或删除，启用前需改为 HTTPS。Bearer Token 输入后保存到 Windows Credential Manager，普通配置只写环境变量名。新增或更换 Token 后，等待任务结束，在“设置 → 运行环境”重启使其生效；不会自动中断当前任务。stdio 服务的密钥可通过系统环境变量引用。
 - 保存期间 MCP 面板暂时禁止关闭；刷新保留草稿及原编辑版本，出现配置冲突时需返回列表重新编辑。配置／凭据处理完成但重载失败时，可点击“刷新”重试；凭据保存失败需重新编辑输入 Token，删除凭据失败可在确认框重试。
-- Skill 列表和内容弹窗统一使用滑动开关，蓝色为启用、灰色为关闭。点击 Skill 可阅读指令正文，开关写入 Core 配置，以服务端返回的有效状态为准。内容弹窗支持关闭按钮、Escape 和点击外部关闭。
+- Skill 列表和内容弹窗统一使用滑动开关表示启用／关闭，源码开发版的启用态在浅色下为淡紫、深色下为中性灰。点击 Skill 可阅读指令正文，开关写入 Core 配置，以服务端返回的有效状态为准。内容弹窗支持关闭按钮、Escape 和点击外部关闭。
 
 MCP 的 reload、OAuth 和已配置服务器可能主动连接各自服务端；这些通信独立于模型请求。
 
@@ -183,7 +183,7 @@ SmartScreen 提示。Tauri 更新签名与 Windows 代码签名是两套独立�
 
 CS 不强制绑定某一家模型服务，也不提供内置模型网关、公共 API 配额或代运营的中转服务。
 用户需要自行准备并配置官方 API、OpenAI 兼容的自建网关或其他可信模型服务，并自行承担
-该服务的费用、可用性和数据处理责任。模型 ID 手动填写，能力和可用参数优先读取 app-server
+该服务的费用、可用性和数据处理责任。模型可从目录选择或手动填写 ID，能力和可用参数优先读取 app-server
 的模型目录。OpenAI 使用 Core 内置目录，DeepSeek 使用应用内置目录；尚无通用第三方专属参数编辑器。目录外自定义模型 ID 保留原值，可用性由服务端决定；文件模型目录配置暂不支持，详见 [模型配置状态](docs/status/model-config-status.md)。
 
 ### 权限策略
@@ -243,7 +243,7 @@ CS 采用“代码实现 + 仓库文档 Wiki”协同的开发方式。文档不
 - `main`：个人项目的日常开发与稳定主线；
 - `release/vX.Y.Z`：对应版本的冻结维护分支，并与同名 Git tag 对齐；当前版本为 `release/v0.1.13`。Updater 已生效。
 
-日常改动直接提交到 `main`，通过质量门禁后正式发布。发布时从 `main` 创建版本分支
+日常改动在 `main` 完成并通过质量门禁，默认只构建 Debug。明确发布时才从 `main` 创建版本分支
 和 tag，安装包与该 tag 保持一致。
 
 环境要求：Windows、Node.js、pnpm、Rust、Visual Studio C++ Build Tools，以及可用的 `codex.exe` Runtime。
@@ -259,26 +259,28 @@ Node.js、pnpm、Rust、Visual Studio C++ Build Tools 和 WebView2 运行环境�
 git clone https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell.git
 cd codex-shell
 pnpm install
+pnpm runtime:stage
 pnpm desktop:build
 ```
 
-日常 Debug 开发不需要 signing key，也不需要 GitHub PAT。`pnpm runtime:stage` 会从
-当前机器安装的 Codex 桌面端同目录或 PATH 查找 Runtime；如果 Runtime 在其他位置，先
+日常 Debug 开发不需要 signing key，也不需要 GitHub PAT。首次构建前必须运行 `pnpm runtime:stage`；
+`desktop:build` 只自动准备 ripgrep，不会暂存缺失的 Runtime。暂存脚本按环境变量、官方 Codex
+本地安装候选、PATH 和已暂存文件依次查找；如果 Runtime 在其他位置，先
 设置 `CODEX_SHELL_RUNTIME` 指向 `codex.exe` 或其目录。Runtime 和 companion binaries
 被 Git 忽略，不要从旧电脑直接提交到仓库。
 
 只有在新电脑需要正式发布时，才通过安全介质复制无密码私钥到
-`%USERPROFILE%\\.tauri\\codex-shell.key`（或使用 `-SigningKeyPath` 指定路径）。私钥是
+`%USERPROFILE%\.tauri\codex-shell.key`（或使用 `-SigningKeyPath` 指定路径）。私钥是
 Updater 的发布根凭证，不能上传到 GitHub、聊天记录或网盘公开链接；公钥已经写入
 `src-tauri/tauri.conf.json`，不需要重新生成。发布权限使用 GitHub CLI 单独登录或配置
 受控凭证，不要把 PAT 写进 remote URL、脚本或提交记录：
 
 ```powershell
 gh auth login
-pnpm release:package -- -Repository "xxxxxxxxxxxxxxxxxxx20gex/codex-shell" -Tag "vX.Y.Z"
+pnpm release:package -Repository "xxxxxxxxxxxxxxxxxxx20gex/codex-shell" -Tag "vX.Y.Z"
 ```
 
-如果还要保留本机的历史会话和设置，可另外备份 `%USERPROFILE%\\.codex-shell`；这属于
+如果还要保留本机的历史会话和设置，可另外备份 `%USERPROFILE%\.codex-shell`；这属于
 运行数据，不是构建依赖，也不应作为项目源码提交。新机首次开发只需重新安装依赖、准备
 可用 Runtime 并运行 Debug 构建即可。
 
@@ -294,7 +296,7 @@ pnpm tauri dev
 
 如果需要指定 Runtime，可以设置 `CODEX_SHELL_RUNTIME` 为 `codex.exe` 文件或其所在目录。相对路径按启动目录解析；未设置时，CS 会依次检查桌面端同目录的 sidecar 和系统 PATH，并验证为规范化绝对路径。
 
-CS 开发构建内置 ripgrep 15.2.0（`rg.exe`）；后续安装包也会携带，无需用户另装。
+CS 开发构建和当前安装包均内置 ripgrep 15.2.0（`rg.exe`），无需用户另装。
 CS 只为 app-server 及其子进程前置应用目录到 PATH，不修改系统 PATH，不依赖官方 Codex 的工具目录。
 Tauri 开发和构建入口会自动准备并校验该工具，首次需要下载官方 Windows x64 包，之后使用已校验的本地副本。
 网络受限时可先执行 `pnpm tools:stage -Proxy http://127.0.0.1:7897`；离线可用
@@ -314,7 +316,7 @@ pnpm rust:check
 pnpm desktop:build
 ```
 
-生成可分发的 Windows 安装包：
+只有明确发布时才生成生产安装包；日常调试使用上面的 `pnpm desktop:build`。底层 bundle 入口为：
 
 ```powershell
 pnpm desktop:package
@@ -366,10 +368,10 @@ Runtime 不要求与上一次 manifest 的完整版本号相同。暂存时会�
 pnpm release:package -Repository "OWNER/REPOSITORY"
 ```
 
-私钥位于默认路径 `%USERPROFILE%\\.tauri\\codex-shell.key` 时无需额外参数；也可以显式指定：
+私钥位于默认路径 `%USERPROFILE%\.tauri\codex-shell.key` 时无需额外参数；也可以显式指定：
 
 ```powershell
-pnpm release:package -SigningKeyPath "C:\\secure\\codex-shell.key" -Repository "OWNER/REPOSITORY"
+pnpm release:package -SigningKeyPath "C:\secure\codex-shell.key" -Repository "OWNER/REPOSITORY"
 ```
 
 未传 `-Tag` 时，脚本从 `src-tauri/tauri.conf.json` 读取版本并生成 `vX.Y.Z`；显式传入的 Tag 必须与配置版本一致。发布前同步 package.json、Cargo.toml 与 Tauri 配置版本。

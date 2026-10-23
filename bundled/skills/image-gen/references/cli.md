@@ -9,7 +9,7 @@ python ./scripts/image_gen.py --model gpt-image-2.5 --image ./reference.png --pr
 ```
 
 --prompt 与 --prompt-file 必选其一。--image 读取实际本地图片。--api 默认 auto，gpt-image-2.5 和 gpt-image-2.5-vip 自动选择 Chat。多图未实测。
-Chat 不接受 --size 或 --quality。Images 文生图可使用，默认 1024x1024 和 low。
+Chat 不接受 --size 或 --quality。Images 文生图与参考图编辑均发送这些参数，默认 1024x1024 和 low；服务是否接受需按型号核实，不能把脚本发送参数当成真实调用验证。
 脚本默认型号为 gpt-image-2.5，不设置模型环境变量；--model 可指定其他型号。默认值不会自动追踪渠道最新型号。
 --timeout 默认 300 秒，是网络操作超时，不是严格的总耗时上限。
 --out 必须是新 PNG 路径，同名 JSON 也不能存在。不自动重试，不自动替换模型。
@@ -47,7 +47,7 @@ python $imageScript @common --image ./sketch.png --prompt-file ./reference-promp
 本脚本一次生成一张；没有 generate、generate-batch 子命令，也没有 --n、--concurrency、--force、--dry-run、--out-dir、--downscale-max-dim。
 多张任务按已授权数量逐张调用，失败后不要自动重发。不从源文档复制 JSONL 批量命令。
 
-## Images 文生图参数
+## Images 文生图与编辑参数
 
 ```powershell
 python $imageScript --model gpt-image-2 --size 1024x1024 --quality low --prompt-file ./product.txt --out ./results/product.png
@@ -55,6 +55,16 @@ python $imageScript --model gpt-image-2 --size 1024x1024 --quality low --prompt-
 
 low 可用于草稿；medium/high/auto 可在用户需要时指定，但本渠道实测范围见 image-api.md。不要把其他文档的 auto/medium 默认值套用到本脚本。
 场景、风格、构图和约束都是提示词内容，不是 --style、--composition 等 CLI 参数。
+
+对自动路由表中的 Images 编辑型号，传入参考图会使用 `POST /images/edits` 和 multipart 上传；单图字段为 `image`，多图为 `image[]`：
+
+```powershell
+python $imageScript --model gpt-image-2 --image ./reference.png --prompt-file ./edit.txt --out ./results/edit.png
+```
+
+上例说明脚本语法，未据此保证当前账号、型号或编辑效果可用；多图编辑尚无真实验收记录。`gpt-image-2.5-flare` 等只登记 Images 文生图的型号在自动路由下拒绝参考图；未知型号需先核实协议，不能自动切换路由试错。
+
+`--mask` 是尚未接通上传的参数：目前只解析并记录路径，实际请求不包含遮罩。暂勿使用，不要把参数被接受误认为完成局部编辑。
 
 ## 保存与检查
 
