@@ -54,7 +54,7 @@ try {
     const copy = blocks.first().getByRole("button", { name: "复制代码" });
     await copy.focus();
     assert.equal(await copy.evaluate((element) => getComputedStyle(element).outlineStyle), "solid");
-    assert.equal(await blocks.first().locator("header").evaluate((element) => element.getBoundingClientRect().height), 44);
+    assert.equal(await blocks.first().locator("header").evaluate((element) => element.getBoundingClientRect().height), 32);
     assert.equal(await copy.evaluate((element) => element.getBoundingClientRect().width), 28);
     assert.equal(await copy.locator("svg").evaluate((element) => element.getBoundingClientRect().width), 16);
     assert.equal(await blocks.first().locator("header span").evaluate((element) => parseFloat(getComputedStyle(element).fontSize) >= 11), true);

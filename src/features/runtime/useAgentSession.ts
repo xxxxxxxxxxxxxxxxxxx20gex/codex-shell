@@ -91,7 +91,7 @@ export function useAgentSession(
   permissionMode: PermissionMode,
   approvalReviewer: ApprovalReviewerMode,
   projectCwd: string | null,
-  personalization: PersonalizationSettings = { customInstructions: "", theme: "dark" },
+  personalization: PersonalizationSettings = { customInstructions: "", theme: "light" },
   settingsReady = true,
 ) {
   const clientRef = useRef<AppServerClient | null>(null);

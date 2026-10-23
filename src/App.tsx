@@ -46,7 +46,7 @@ import { SideChatPanel } from "./features/runtime/SideChatPanel";
 import { WorkspaceSelector } from "./features/workspaces/WorkspaceSelector";
 import { WindowTitleBar } from "./features/window/WindowTitleBar";
 import { ContextMenuPolicy } from "./features/window/ContextMenuPolicy";
-import { ProductMark } from "./shared/ProductMark";
+import { EmptyWorkspace } from "./features/layout/EmptyWorkspace";
 import { CompactIconButton } from "./shared/CompactIconButton";
 import { TransientNotice } from "./shared/TransientNotice";
 import { QueuedMessageList } from "./features/composer/QueuedMessageList";
@@ -140,6 +140,16 @@ function App() {
     setSkillEnabled,
     clearActiveGoal,
   } = useAppController({ onOpenSketch: () => setSketchOpen(true) });
+
+  useLayoutEffect(() => {
+    // Body portals (context menus and previews) must inherit the selected theme too.
+    const previous = document.documentElement.dataset.theme;
+    document.documentElement.dataset.theme = personalization.theme;
+    return () => {
+      if (previous === undefined) delete document.documentElement.dataset.theme;
+      else document.documentElement.dataset.theme = previous;
+    };
+  }, [personalization.theme]);
   const openSideChat = session.sideChat.openChat;
   const listModels = session.listModels;
   const loadModels = useCallback(async () => {
@@ -248,9 +258,9 @@ function App() {
               <MessageSquarePlus aria-hidden="true" />
               <span>新建对话</span>
             </button>
-            <button className={`sidebar-action ${mainView === "skills" ? "active" : ""}`} type="button" onClick={() => { setMainView("skills"); setCommandPanel(null); }} title="管理 Skills">
+            <button className={`sidebar-action ${mainView === "skills" ? "active" : ""}`} type="button" onClick={() => { setMainView("skills"); setCommandPanel(null); }} title="管理技能">
               <Sparkles aria-hidden="true" />
-              <span>Skills</span>
+              <span>技能</span>
             </button>
           </nav>
           <ThreadHistoryList
@@ -321,7 +331,7 @@ function App() {
               onOpenError={setUiError}
             />
           ) : (
-            <div className="timeline"><div className="conversation-empty"><ProductMark className="conversation-empty-mark" /><h2>Codex Shell</h2><p>原生 Codex app-server 工作台</p></div></div>
+            <div className="timeline"><EmptyWorkspace /></div>
           )}
           <div className="composer-wrap">
             <RuntimeNoticeBanner

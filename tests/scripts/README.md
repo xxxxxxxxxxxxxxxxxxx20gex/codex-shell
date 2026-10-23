@@ -52,3 +52,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tests/scripts/run-quality-ga
 - `pnpm test:markdown-code-layout <playwright/index.mjs绝对路径> <浏览器可执行文件绝对路径> [端口]`：先启动 `pnpm dev --host 127.0.0.1 --port 1435`；脚本挂载真实 Markdown 回复，检查代码块整列宽度、长行滚动与换行切换、复制按钮焦点和四尺寸边界，截图保存到系统临时目录。
 
 - `pnpm test:workbench-layout <playwright/index.mjs绝对路径> <浏览器可执行文件绝对路径> [端口]`：Vite 默认端口 1435；使用实际历史列表、菜单和 Markdown 组件与模拟工作台，检查四尺寸深浅主题、历史标题 hover 稳定、截断、消息列与 Composer 对齐、菜单焦点、Tab、Shift+F10、Escape、外部点击；在 reduced-motion 模式截图（不单独断言动效计算值）。截图写入临时目录，不代表真实 WebView2 人工验收。
+
+## Soft Notebook 界面
+
+启动 `pnpm dev --host 127.0.0.1 --port 1435` 后运行：
+
+```powershell
+pnpm test:soft-notebook-layout <playwright/index.mjs绝对路径> <浏览器可执行文件绝对路径> 1435
+```
+
+使用真实组件和模拟数据，覆盖1440×900、1280×780、1024×720、900×700下的技能列表/详情、斜杠菜单、设置、空状态、Portal、深浅主题与系统实时切换；检查文字对比度、字号下限、图标、无框行、焦点、Escape及外部点击。截图输出在脚本报告的临时目录。不会读写真实渠道凭据或连接Runtime；主工作台/输入/渠道/MCP/草图另用对应专项探针。

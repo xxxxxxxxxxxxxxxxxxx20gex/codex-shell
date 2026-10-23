@@ -62,7 +62,7 @@ const initialProviderSettings: ProviderSettings = {
 
 const initialPersonalization: PersonalizationSettings = {
   customInstructions: "",
-  theme: "dark",
+  theme: "light",
 };
 
 export function useAppController(options: { onOpenSketch?: () => void } = {}) {

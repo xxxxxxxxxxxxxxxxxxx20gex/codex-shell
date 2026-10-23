@@ -201,7 +201,22 @@ fn normalizes_personalization_without_inventing_instructions() {
         }),
         super::PersonalizationSettings {
             custom_instructions: "Lead with the outcome.".to_string(),
-            theme: "dark".to_string(),
+            theme: "light".to_string(),
         }
     );
+}
+
+#[test]
+fn personalization_defaults_to_light_and_preserves_saved_themes() {
+    let missing: super::PersonalizationSettings = serde_json::from_str("{}").unwrap();
+    assert_eq!(missing.theme, "light");
+    assert_eq!(super::PersonalizationSettings::default().theme, "light");
+    for theme in ["dark", "light", "system"] {
+        let saved: super::PersonalizationSettings = serde_json::from_value(
+            serde_json::json!({"theme": theme, "customInstructions": "Keep my instructions"})
+        ).unwrap();
+        let normalized = super::normalize_preferences(saved);
+        assert_eq!(normalized.theme, theme);
+        assert_eq!(normalized.custom_instructions, "Keep my instructions");
+    }
 }

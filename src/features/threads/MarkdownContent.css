@@ -10,9 +10,9 @@
   max-width: 100%;
   overflow: hidden;
   margin: 10px 0 14px;
-  border: 1px solid var(--border-subtle);
+  border: 0;
   border-radius: var(--radius-code-block);
-  background: var(--surface-raised);
+  background: var(--surface-panel);
 }
 
 .markdown-code-block > header {
@@ -20,12 +20,12 @@
   min-height: var(--control-height-compact);
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-2) var(--space-4);
+  padding: 0 var(--space-4);
   color: var(--text-secondary);
-  background: var(--surface-raised);
-  font-size: var(--text-ui);
+  background: transparent;
+  font-size: var(--text-label);
   line-height: 16px;
-}
+ height: var(--control-height); }
 
 .markdown-code-block > header button {
   display: grid;

@@ -80,7 +80,7 @@ export function useThreadController(props: Props) {
     setError,
     setSubmitting,
     settings,
-    personalization = { customInstructions: "", theme: "dark" },
+    personalization = { customInstructions: "", theme: "light" },
     submitting,
   } = props;
   const threadIdRef = useRef<string | null>(null);

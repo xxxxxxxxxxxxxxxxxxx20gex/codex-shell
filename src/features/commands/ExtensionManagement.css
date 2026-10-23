@@ -1,14 +1,14 @@
 .extension-page, .skill-management-page { box-sizing: border-box; width: 100%; padding: var(--space-6); gap: var(--space-4); }
 .skill-management-header { flex-wrap: wrap; gap: var(--space-3); }
-.extension-page .skill-management-header h1, .extension-catalog .skill-management-header h1 { font-size: var(--text-title); }
-.extension-page .skill-management-header button, .extension-catalog .skill-management-header button { min-height: var(--control-height-compact); padding: var(--space-1) var(--space-2); border: 1px solid var(--border-default); color: var(--text-secondary); background: transparent; }
+.extension-page .skill-management-header h1, .extension-catalog .skill-management-header h1 { font-size: var(--text-page-title); }
+.extension-page .skill-management-header button, .extension-catalog .skill-management-header button { min-height: var(--control-height-compact); padding: var(--space-1) var(--space-2); border: 0; color: var(--text-secondary); background: transparent; }
 .extension-page .skill-management-header button:hover, .extension-catalog .skill-management-header button:hover { border-color: var(--border-default); background: var(--surface-raised); }
 .extension-page > h2 { margin: var(--space-2) 0; font-size: var(--text-title); font-weight: 600; }
 .skill-management-header > div:last-child, .extension-actions, .skill-management-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.extension-page button, .skill-management-remove, .mcp-config-panel button { min-height: var(--control-height-compact); padding: var(--space-1) var(--space-2); border: 1px solid var(--border-default); border-radius: var(--radius-control); color: var(--text-secondary); background: var(--surface-panel); font-size: var(--text-label); cursor: pointer; }
+.extension-page button, .skill-management-remove, .mcp-config-panel button { min-height: var(--control-height-compact); padding: var(--space-1) var(--space-2); border: 0; border-radius: var(--radius-control); color: var(--text-secondary); background: transparent; font-size: var(--text-label); cursor: pointer; }
 .extension-page button:disabled, .mcp-config-panel button:disabled { color: var(--text-disabled); cursor: default; }
 .extension-page button:hover:enabled, .mcp-config-panel button:hover:enabled { background: var(--surface-raised); }
-.extension-page input, .mcp-config-form input, .mcp-config-form select { box-sizing: border-box; width: 100%; min-width: 0; min-height: var(--control-height); padding: var(--space-1) var(--space-2); border: 1px solid var(--border-default); border-radius: var(--radius-control); color: var(--text-primary); background: var(--surface-canvas); font: inherit; }
+.extension-page input, .mcp-config-form input, .mcp-config-form select { box-sizing: border-box; width: 100%; min-width: 0; min-height: var(--control-height); padding: var(--space-1) var(--space-2); border: 1px solid var(--border-input); border-radius: var(--radius-control); color: var(--text-primary); background: var(--surface-input); font: inherit; }
 .mcp-config-form label { display: grid; gap: var(--space-2); font-size: var(--text-ui); }
 .extension-page [role], .skill-management-section [role] { overflow-wrap: anywhere; }
 .extension-page.plugin-detail-page { width: 100%; padding: var(--space-6); }
@@ -22,8 +22,8 @@
 .plugin-detail-heading > div { flex: 1; min-width: 0; }
 .plugin-detail-heading p { margin: var(--space-1) 0 0; color: var(--text-muted); }
 .plugin-detail-icon { display: grid; place-items: center; width: var(--control-height-large); height: var(--control-height-large); flex-shrink: 0; border: 1px solid var(--border-subtle); border-radius: var(--radius-panel); background: var(--surface-raised); color: var(--text-secondary); }
-.plugin-detail-view .plugin-install { flex-shrink: 0; color: var(--surface-canvas); background: var(--accent-action); border-color: transparent; }
-.plugin-detail-view .plugin-install:hover:enabled { background: var(--accent-action); }
+.plugin-detail-view .plugin-install { flex-shrink: 0; color: var(--text-on-action); background: var(--surface-action); border-color: transparent; }
+.plugin-detail-view .plugin-install:hover:enabled { background: var(--surface-action); }
 .plugin-detail-view .plugin-install-hint { font-size: var(--text-label); color: var(--text-muted); margin: var(--space-2) 0; }
 .plugin-detail-view svg { width: 16px; height: 16px; stroke-width: 1.75; flex-shrink: 0; }
 .plugin-skill-row { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-1) 0; }
@@ -40,25 +40,25 @@
 .skill-enable-switch { display: flex; align-items: center; box-sizing: border-box; width: var(--control-height); height: var(--space-5); min-height: 0; padding: 2px; border: 0; border-radius: var(--space-5); background: var(--surface-selected); flex: 0 0 auto; cursor: pointer; }
 .extension-page .skill-enable-switch { min-height: 0; width: var(--control-height); height: var(--space-5); padding: 2px; border: 0; border-radius: var(--space-5); background: var(--surface-selected); color: inherit; font: inherit; }
 .skill-enable-switch > span { width: var(--space-4); height: var(--space-4); border-radius: 50%; background: var(--text-secondary); transition: transform var(--motion-fast); }
-.skill-enable-switch[aria-checked="true"] { background: var(--accent-info); }
-.extension-page .skill-enable-switch[aria-checked="true"] { background: var(--accent-info); }
-.skill-enable-switch[aria-checked="true"] > span { transform: translateX(var(--space-3)); background: var(--text-primary); }
+.skill-enable-switch[aria-checked="true"] { background: var(--accent-action); }
+.extension-page .skill-enable-switch[aria-checked="true"] { background: var(--accent-action); }
+.skill-enable-switch[aria-checked="true"] > span { transform: translateX(var(--space-3)); background: var(--surface-panel); }
 .skill-enable-switch:disabled { opacity: .5; cursor: default; }
 .extension-page .skill-enable-switch:hover:enabled { background: var(--surface-selected); }
-.extension-page .skill-enable-switch[aria-checked="true"]:hover:enabled { background: var(--accent-info); }
+.extension-page .skill-enable-switch[aria-checked="true"]:hover:enabled { background: var(--accent-action); }
 .skill-management-actions { align-items: center; flex-wrap: nowrap; }
 @media (prefers-reduced-motion: reduce) { .skill-enable-switch > span { transition: none; } }
-.plugin-skill-dialog { box-sizing: border-box; width: min(760px, calc(100vw - 48px)); max-height: calc(100vh - 48px); padding: var(--space-6); border: 1px solid var(--border-default); border-radius: var(--radius-panel); background: var(--surface-panel); color: var(--text-primary); box-shadow: var(--shadow-popover); }
+.plugin-skill-dialog { box-sizing: border-box; width: min(760px, calc(100vw - 48px)); max-height: calc(100vh - 48px); padding: var(--space-6); border: 1px solid var(--border-subtle); border-radius: var(--radius-dialog); background: var(--surface-panel); color: var(--text-primary); box-shadow: var(--shadow-popover); }
 .plugin-skill-dialog[open] { display: flex; flex-direction: column; gap: var(--space-3); }
-.plugin-skill-dialog::backdrop { background: color-mix(in srgb, var(--surface-canvas) 75%, transparent); }
+.plugin-skill-dialog::backdrop { background: var(--scrim); }
 .plugin-skill-dialog header, .plugin-skill-dialog header > div { display: flex; align-items: center; gap: var(--space-3); }
 .plugin-skill-dialog header { justify-content: space-between; }
 .plugin-skill-dialog h2, .plugin-skill-dialog p { margin: 0; }
 .skill-detail-dialog { width: min(900px, calc(100vw - 48px)); height: min(760px, calc(100vh - 48px)); padding: var(--space-6); }
 .skill-detail-dialog header { align-items: center; }
 .skill-detail-toolbar { min-height: var(--control-height-large); }
-.skill-detail-icon { display: grid; place-items: center; width: var(--control-height-large); height: var(--control-height-large); border: 1px solid var(--border-default); border-radius: var(--radius-panel); background: var(--surface-raised); color: var(--accent-info); }
-.skill-detail-icon svg { width: 18px; height: 18px; }
+.skill-detail-icon { display: grid; place-items: center; width: var(--control-height-compact); height: var(--control-height-compact); border: 0; border-radius: var(--radius-panel); background: transparent; color: var(--accent-action); }
+.skill-detail-icon svg { width: var(--icon-size); height: var(--icon-size); }
 .plugin-skill-dialog .skill-detail-heading { display: grid; min-width: 0; gap: var(--space-1); }
 .skill-detail-heading h2 { color: var(--text-primary); font-size: var(--text-title); line-height: var(--space-5); overflow-wrap: anywhere; }
 .skill-detail-heading h2 span { color: var(--text-muted); font-weight: 400; }
@@ -72,11 +72,11 @@
 .skill-detail-menu button { display: flex; align-items: center; width: 100%; gap: var(--space-2); min-height: var(--control-height); padding: var(--space-1) var(--space-2); border: 0; background: transparent; color: var(--text-secondary); font-size: var(--text-label); line-height: 16px; text-align: left; white-space: nowrap; }
 .skill-detail-menu button:hover { background: var(--surface-raised); color: var(--text-primary); }
 .skill-detail-menu svg { width: 16px; height: 16px; }
-.plugin-skill-content { overflow: auto; min-height: 0; padding: var(--space-4); border-radius: var(--radius-panel); background: var(--surface-canvas); color: var(--text-secondary); overflow-wrap: anywhere; line-height: var(--space-6); }
-.skill-detail-dialog .plugin-skill-content { font-size: var(--text-ui); line-height: 1.65; }
+.plugin-skill-content { overflow: auto; min-height: 0; padding: var(--space-4) 0; border-radius: var(--radius-panel); background: transparent; color: var(--text-secondary); overflow-wrap: anywhere; line-height: var(--space-6); }
+.skill-detail-dialog .plugin-skill-content { font-size: var(--text-ui); line-height: 1.65;  padding: var(--space-4) 0;  background: transparent; }
 .skill-detail-dialog .plugin-skill-content h1, .skill-detail-dialog .plugin-skill-content h2, .skill-detail-dialog .plugin-skill-content h3 { margin: 0 0 var(--space-3); color: var(--text-primary); font-size: var(--text-title); line-height: var(--space-5); }
 .skill-detail-dialog .plugin-skill-content p, .skill-detail-dialog .plugin-skill-content ul, .skill-detail-dialog .plugin-skill-content ol { margin: 0 0 var(--space-3); }
-.skill-detail-dialog .plugin-skill-content code { font-family: var(--font-code); font-size: .92em; color: var(--accent-info); }
+.skill-detail-dialog .plugin-skill-content code { font-family: var(--font-mono); font-size: var(--text-label); color: var(--accent-info); }
 .skill-detail-dialog .plugin-skill-content pre { padding: var(--space-3); border-radius: var(--radius-control); background: var(--surface-raised); }
 .plugin-detail-view .plugin-skill-content > * + * { margin-top: var(--space-3); }
 .plugin-skill-content pre { overflow: auto; }
@@ -92,17 +92,19 @@
 @media (max-width: 640px) { .mcp-panel { width: calc(100vw - 24px); } .mcp-config-form fieldset { grid-template-columns: 1fr; } .mcp-config-form fieldset label, .mcp-config-form fieldset .extension-actions { grid-column: 1; } }
 .skill-management-search { border-radius: var(--radius-control); }
 .skill-management-search input { min-width: 0; }
-.skill-management-card { grid-template-columns: var(--control-height) minmax(0, 1fr) auto; }
-.skill-management-main { display: grid; grid-column: 1 / 3; grid-template-columns: var(--control-height) minmax(0, 1fr); align-items: center; justify-self: stretch; width: 100%; min-width: 0; min-height: 0; gap: var(--space-4); padding: 0; border: 0; border-radius: 0; background: transparent; color: inherit; font: inherit; text-align: left; }
-.extension-page .skill-management-main { min-height: 0; padding: 0; border: 0; border-radius: 0; background: transparent; color: inherit; font: inherit; }
+.skill-management-card { grid-template-columns: var(--icon-size) minmax(0, 1fr) auto; }
+.skill-management-main { display: grid; grid-column: 1 / 3; grid-template-columns: var(--icon-size) minmax(0, 1fr); align-items: center; justify-self: stretch; width: 100%; min-width: 0; min-height: 0; gap: var(--space-3); padding: 0; border: 0; border-radius: 0; background: transparent; color: inherit; font: inherit; text-align: left; }
+.extension-page .skill-management-main { min-height: 0; padding: 0; border: 0; border-radius: 0; background: transparent; color: inherit; font: inherit;  grid-template-columns: var(--icon-size) minmax(0, 1fr);  gap: var(--space-3); }
 .skill-management-main:not(:disabled) { cursor: pointer; }
 .extension-page .skill-management-main:hover:enabled { background: transparent; }
 .skill-management-main:focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; border-radius: var(--radius-control); }
 .skill-management-main > span:last-child { min-width: 0; }
 .skill-management-card strong { flex-wrap: wrap; overflow-wrap: anywhere; }
 .skill-management-icon, .skill-management-toggle svg, .skill-management-search svg { width: 16px; height: 16px; stroke-width: 1.75; }
-.skill-management-card .skill-management-icon { width: var(--control-height); height: var(--control-height); border-radius: var(--radius-control); }
+.skill-management-card .skill-management-icon { width: var(--icon-size); height: var(--icon-size); border-radius: var(--radius-control); }
 .skill-management-icon svg { width: 16px; height: 16px; stroke-width: 1.75; }
 .extension-page :focus-visible, .mcp-config-panel :focus-visible, .skill-management-page :focus-visible { outline: 2px solid var(--accent-info); outline-offset: 2px; }
 @media (max-width: 1024px) { .skill-management-page { padding: var(--space-3); } }
 @media (prefers-reduced-motion: reduce) { .skill-management-page button { transition: none; } }
+
+.skill-management-card:hover, .skill-management-card:focus-within { background: var(--surface-raised); }

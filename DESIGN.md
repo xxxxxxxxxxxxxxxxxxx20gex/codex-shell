@@ -1,18 +1,19 @@
 # Codex Shell Design Standard
 
-> Status: Target contract v1. Production UI may still contain legacy values until the UI refresh is implemented.
-> Last updated: 2026-10-11.
+> Status: Soft Notebook contract v2. Applies to all workbench surfaces and both appearance modes.
+> Last updated: 2026-10-23.
 
 ## Product Character
 
 Codex Shell is a personal Windows AI development workstation. The interface must feel quiet, precise, and operational: optimized for long sessions, scanning, comparison, and repeated action. It is not a marketing surface, a dashboard of decorative cards, or a showcase for visual effects.
 
-The design direction is **Quiet Graphite Workbench**:
+The design direction is **Soft Notebook**:
 
-- neutral graphite surfaces rather than blue-black or brown monochrome;
+- warm ivory writing surfaces, lavender selection and butter-yellow primary actions;
 - high legibility with restrained contrast between structural layers;
-- one lime action accent, with blue, amber, and red reserved for semantic states;
-- compact controls with stable geometry and predictable alignment;
+- lavender accent for active text and selection; a separate yellow primary fill with dark ink; blue, amber, and red retain semantic meaning;
+- small 16px icons without decorative tiles; borderless actions and lists with stable 28px hit targets;
+- subtle rounded writing surfaces; a tiny decorative cat is allowed only in an empty state, never in settings or approvals;
 - assistant output integrated into the timeline instead of boxed into repeated cards.
 - assistant responses use one 2px action marker at the first answer line; completed responses do not carry a full-height gray rail, and continuation blocks do not repeat the marker.
 - elapsed durations use compact `s`/`m s` units, and transient reconnect notices stay inside the active process status instead of occupying the Composer error slot.
@@ -63,33 +64,37 @@ Rules:
 
 ## Color
 
+### Light appearance (default)
+
+Primary action fills use `--surface-action: #FAE1A0` and `--text-on-action: #34333A`. `--accent-action` is lavender foreground, not a filled-button background. Small accent markers use `--text-on-accent` (light: #FFFCF7; dark: #26222E). Editing surfaces use `--surface-input`, with a transparent resting border and a visible focus ring. The black drawing field uses `--surface-sketch: #000000` independently of the theme.
+
 ### Neutral surfaces
 
 | Token | Value | Role |
 | --- | --- | --- |
-| `--surface-canvas` | `#101112` | application canvas |
-| `--surface-sidebar` | `#141617` | navigation and inspector base |
-| `--surface-panel` | `#191B1C` | composer, menus, bounded tools |
-| `--surface-raised` | `#202324` | hover rows, elevated controls |
-| `--surface-selected` | `#292D2E` | selected rows and pressed controls |
-| `--border-subtle` | `#272A2B` | structural separators |
-| `--border-default` | `#35393A` | controls and popovers |
-| `--border-strong` | `#484D4E` | focused or emphasized boundaries |
+| `--surface-canvas` | `#FAF7F0` | application canvas |
+| `--surface-sidebar` | `#F7F3ED` | navigation and inspector base |
+| `--surface-panel` | `#FFFCF7` | composer, menus, bounded tools |
+| `--surface-raised` | `#F1ECF3` | hover rows, elevated controls |
+| `--surface-selected` | `#EDE6F5` | selected rows and pressed controls |
+| `--border-subtle` | `#EAE4E9` | structural separators |
+| `--border-default` | `#D7CEDF` | controls and popovers |
+| `--border-strong` | `#8873B5` | focused or emphasized boundaries |
 
 ### Text and semantics
 
 | Token | Value | Role |
 | --- | --- | --- |
-| `--text-primary` | `#F1F3F1` | primary content |
-| `--text-conversation-primary` | `#F6F7F5` | long-form assistant output with slightly higher reading contrast |
-| `--text-secondary` | `#C5CAC6` | labels and supporting content |
-| `--text-muted` | `#909691` | metadata and inactive content |
-| `--text-disabled` | `#606561` | disabled content |
-| `--accent-action` | `#B8D957` | primary action and active mode |
-| `--accent-info` | `#73B7E8` | links, information, file references |
-| `--accent-warning` | `#DDB45E` | warnings and approval attention |
-| `--accent-danger` | `#E17972` | destructive actions and errors |
-| `--accent-success` | `#74BF83` | completed state |
+| `--text-primary` | `#34333A` | primary content |
+| `--text-conversation-primary` | `#302C38` | long-form assistant output with slightly higher reading contrast |
+| `--text-secondary` | `#565060` | labels and supporting content |
+| `--text-muted` | `#6B6478` | metadata and inactive content |
+| `--text-disabled` | `#A39AAE` | disabled content |
+| `--accent-action` | `#735997` | primary action and active mode |
+| `--accent-info` | `#526FA6` | links, information, file references |
+| `--accent-warning` | `#896317` | warnings and approval attention |
+| `--accent-danger` | `#AC4359` | destructive actions and errors |
+| `--accent-success` | `#32745B` | completed state |
 
 Context usage uses a dedicated continuous scale because it encodes a quantitative value rather than an action state:
 
@@ -99,12 +104,12 @@ Context usage uses a dedicated continuous scale because it encodes a quantitativ
 | `--context-balanced` | `#48CBD2` | moderate context usage |
 | `--context-warm` | `#E2AA45` | elevated context usage |
 | `--context-hot` | `#ED5B4F` | near-limit context usage |
-| `--context-marker` | `#F1F3F1` | current usage marker |
+| `--context-marker` | `#34333A` | current usage marker |
 
 Rules:
 
 - Accent colors communicate action or state; they are not decoration.
-- The lime accent appears once per local action group, not on every icon.
+- The yellow fill appears once per local action group. Lavender active text and selected surfaces do not become filled primary buttons.
 - Text contrast must meet WCAG AA against its actual surface.
 - Avoid pure white, pure black, gradients, glow decoration, and large tinted backgrounds.
 - Destructive controls stay neutral until hover or confirmation, then use danger semantics.
@@ -112,7 +117,7 @@ Rules:
 ### Appearance modes
 
 - The application offers dark, light, and Windows-system appearance preferences.
-- Dark remains the default and follows the Quiet Graphite Workbench palette above.
+- New installations default to light Soft Notebook. Existing explicit dark/light/system preferences remain unchanged. Dark uses plum-charcoal surfaces, lavender selection and the same butter-yellow primary action; system follows Windows live. Dark canvas/sidebar/panel are #19171F / #1E1B25 / #26222E; primary/muted text are #F4EFF8 / #B4A9C0. Palette details live in tokens.css.
 - Light mode uses the same semantic surface, border, text, and accent roles; feature CSS must never branch on a theme name.
 - System mode resolves through `prefers-color-scheme` and must remain live when Windows changes its appearance.
 - Theme preview colors are tokens owned by `src/styles/tokens.css`; feature styles do not introduce literal colors.
@@ -147,7 +152,7 @@ Radii:
 
 - row and inline highlight: `4px`;
 - button, input, compact control: `6px`;
-- menu and dialog: `8px`; composer: `16px` to distinguish the primary writing surface;
+- menu: `12px`; dialog and composer: `16px` to distinguish the primary writing surface;
 - do not use pills unless the value is a short status or removable selection.
 
 ## Icons
@@ -162,7 +167,7 @@ Radii:
 ### Product mark
 
 - The Codex Shell application mark is the negative-core `CS` monogram defined in `assets/branding/cs-app-icon.svg`.
-- The white outer `C`, lime inner `S`, and lime terminal dot sit on the graphite raised surface; the mark uses the same neutral and action colors as the product UI.
+- The white outer `C`, lime inner `S`, and lime terminal dot sit on the graphite raised surface; the installed application mark retains its original branding colors independently of the Soft Notebook interface.
 - Platform icons are generated from the SVG master through the Tauri icon generator. Do not hand-edit individual PNG, ICO, or ICNS derivatives.
 - Keep the transparent outer margin and rounded-square silhouette intact so the mark remains legible in Windows taskbar, shortcut, and installer sizes.
 
@@ -170,13 +175,13 @@ Radii:
 
 ### Buttons
 
-- `primary`: filled action accent, one per action group.
-- `secondary`: neutral surface with subtle border.
+- `primary`: butter-yellow `--surface-action` with `--text-on-action`, one per action group.
+- `secondary`: borderless text action with a neutral hover surface.
 - `ghost`: transparent until hover; default for toolbar and row actions.
 - `danger`: neutral by default, danger color on hover and in confirmation.
 - All variants share the same typography, icon geometry, focus ring, and disabled behavior.
 - Text buttons use sentence-case action labels. Icon buttons use familiar symbols without redundant visible text.
-- Binary switches use a compact 32px by 20px rounded track and a 16px circular thumb; blue (`--accent-info`) denotes enabled, neutral denotes disabled. An unavailable feature must not show an enabled-looking switch; provide its prerequisite action or explain its availability instead.
+- Binary switches use a compact 32px by 20px rounded track and a 16px circular thumb; lavender (`--accent-action`) denotes enabled, neutral denotes disabled. An unavailable feature must not show an enabled-looking switch; provide its prerequisite action or explain its availability instead.
 - In Skill lists and detail dialogs, place the enable switch at the far right of its action group; other buttons precede it. Preserve this horizontal order at narrow widths and in keyboard navigation.
 
 ### Focus And Motion
@@ -193,7 +198,7 @@ Radii:
 - History rows use a fixed `56px` height. Idle titles use the full row width and truncate with an ellipsis; do not reserve a blank action column while buttons are hidden.
 - History titles support pointer reordering within the pinned or unpinned group, with a 2px information-blue insertion line, edge scrolling, and Escape cancellation. Dragging does not open a conversation or change its pinned state. Alt+Up/Down and context-menu Move up/Move down provide keyboard alternatives; Reset manual order restores the default order. Archived history is not reorderable. Keep row geometry and existing file-drop behavior unchanged.
 - The history action group occupies `60px` (two 28px `CompactIconButton`s) at the right edge. On row hover, keyboard focus, or an open context menu, the title and timestamp reserve this space without changing row height; buttons appear by opacity and have no group background or mask. Active rows show Pin and Archive; archived rows show Restore. Secondary actions (copy reference, rename, delete) live in the shared context menu, opened by right-click, the ContextMenu key, or Shift+F10 on the row. Copy feedback temporarily replaces the timestamp line.
-- Row action hover uses the neutral `CompactIconButton` treatment; lime is reserved for the selected-row indicator and running status.
+- Row action hover uses the neutral `CompactIconButton` treatment; lavender is reserved for the selected-row indicator and running status.
 - Selected rows use `--surface-selected` plus a 2px action-accent indicator on the left.
 - The project file tree keeps the file shown in the preview marked as the current item, including when it was opened from a conversation link; path separator and casing differences must not remove the highlight, and opening a nested file scrolls its row into view.
 - Hover actions stay at the right edge and never change row height or cover text; the title start position stays fixed while its ellipsis boundary adjusts.
@@ -214,8 +219,8 @@ Radii:
 - Sidebar and inspector are full-height structural regions, not floating cards.
 - Region headers show the title in `--text-title`/`--text-ui` without decorative English eyebrow labels; identifiers such as the Session ID belong in a tooltip or copy action, not in the header text. Panel toggles, back, maximize, and close in headers use the ghost `CompactIconButton`.
 - Use one border between regions; avoid nested panel borders.
-- Popovers use `--surface-panel`, `--border-default`, 8px radius, 4px inner padding, and a single restrained shadow.
-- Menu rows have a `32px` minimum for a single label and a `40px` minimum when a description is present; two-line rows normally occupy `44px` to preserve 20px/16px line heights and 4px vertical padding, with icon, label, optional description, and shortcut in stable columns. Rows use the 4px row radius, `--text-ui` labels, `--text-label` descriptions, `--text-meta` mono shortcuts, and 16px icons in `--text-muted`. Hover, keyboard focus, and the current choice use `--surface-selected` with `--text-primary`; menus do not tint rows or icons with lime. Group separators are spacing or one subtle divider, not a border under every row.
+- Popovers use `--surface-panel`, `--border-default`, 12px radius, 4px inner padding, and a single restrained shadow.
+- Menu rows have a `32px` minimum for a single label and a `40px` minimum when a description is present; two-line rows normally occupy `44px` to preserve 20px/16px line heights and 4px vertical padding, with icon, label, optional description, and shortcut in stable columns. Rows use the 4px row radius, `--text-ui` labels, `--text-label` descriptions, `--text-meta` mono shortcuts, and 16px icons in `--text-muted`. Hover, keyboard focus, and the current choice use `--surface-selected` with `--text-primary`; menus use lavender selected surfaces without yellow fills. Group separators are spacing or one subtle divider, not a border under every row.
 - This geometry applies to the composer add, permission, send-mode, slash-command, and model menus, the history menu, and the shared context menu. Selectors with different semantics (radio choice, checkbox, listbox) keep their own roles; they share geometry, not behavior.
 - Elements with `role="menu"` move focus to the current choice or first enabled item on open, support Up/Down (wrapping), Home, End, and Escape, close on Tab or outside click, and return focus to the trigger after Escape or selection.
 - Full-screen modal scrims use `--scrim` and `--scrim-blur`; feature CSS does not introduce its own backdrop color or blur.
@@ -245,33 +250,33 @@ Radii:
 
 - User messages are compact right-aligned bubbles sized to content, with a sensible maximum width.
 - User-message copy/edit actions are a compact inline exception: 24px hit targets (`--control-height-inline`), 14px icons (`--icon-size-inline`) with 1.75px stroke, borderless neutral hover and the standard keyboard focus ring. Other message and toolbar controls retain their existing sizes.
-- User bubbles use the borderless raised surface, 8px vertical and 16px horizontal padding, and the shared 8px panel radius. Metadata follows after 8px, with time and compact inline icon controls on one right-aligned row; the full date and time remain available on hover. User text preserves line breaks and wraps long unbroken strings.
+- User bubbles use the borderless raised surface, 8px vertical and 16px horizontal padding, and the shared 12px panel radius. Metadata follows after 8px, with time and compact inline icon controls on one right-aligned row; the full date and time remain available on hover. User text preserves line breaks and wraps long unbroken strings.
 - Assistant responses are unframed and use one subtle 2px action marker at the first answer line; completed responses do not carry a full-height rail.
-- Async model questions render below the related answer as one compact prompt with a subtle neutral border and no accent rail. Use a 16px question icon, 12px secondary heading, 13px/20px question and option text, borderless option rows with a circle/check selection indicator, and one 28px right-aligned send action. Selected options use a neutral raised surface; the send action alone uses the action accent. Long questions and options wrap; free-text fields have an accessible question label. Selecting an option does not submit immediately; every question also allows free-text input. All answers are sent together; controls freeze while pending, remain read-only after success, and unlock with the draft preserved after failure. Confirmed native replies restore answered state by question identity.
+- Async model questions render below the related answer as one compact unframed prompt with no accent rail. Use a 16px question icon, 12px secondary heading, 13px/20px question and option text, borderless option rows with a circle/check selection indicator, and one 28px right-aligned send action. Selected options use a neutral raised surface; the send action alone uses the yellow action fill. Long questions and options wrap; free-text fields have an accessible question label. Selecting an option does not submit immediately; every question also allows free-text input. All answers are sent together; controls freeze while pending, remain read-only after success, and unlock with the draft preserved after failure. Confirmed native replies restore answered state by question identity.
 - Reasoning, commands, MCP calls, and file work collapse into one process group after completion.
 - Process summaries are low-contrast, unframed rows. Their verbs come only from structured Core events: tool calls are described as calls rather than loads, and command text may be shown inline when exactly one command is represented.
 - Command output and diffs use the mono family and conversation-small size.
 - Timestamps and duration sit at least 6px away from message content.
 - File changes appear once at the end of the turn, grouped by file with semantic status color.
 - Streaming indicators must not resize the message column or steal focus.
-- Fenced Markdown code fills the reply column with one continuous raised surface, a subtle border and dedicated 20px `--radius-code-block`. The header uses a 16px code icon, 13px language label, and 28px wrap/copy controls. Header and body share 16px horizontal padding without a divider. Code uses regular-weight 13px/20px monospace; long lines scroll internally by default, with a per-block wrap toggle that never changes copied text. Inline code remains inline.
+- Fenced Markdown code fills the reply column with one continuous raised surface, no outer stroke and dedicated 12px `--radius-code-block`. The header uses a 16px code icon, 12px language label, and 28px wrap/copy controls. Header and body share 16px horizontal padding without a divider; the header is 32px high with 28px controls. Code uses regular-weight 13px/20px monospace; long lines scroll internally by default, with a per-block wrap toggle that never changes copied text. Inline code remains inline.
 
 ## Composer
 
 - Composer is the dominant bounded tool surface and uses the dedicated 16px composer radius, with a quiet neutral background and a 32px action toolbar. It shares the conversation column width so its edges align with timeline turn frames; assistant content retains its 16px marker indent. The main timeline measures column width outside the scrollbar gutter.
-- Notices and queue panels stack above the composer with an `8px` gap. The goal strip joins the composer directly as described below.
+- Notices and queue panels stack above the composer with an `8px` gap. The goal strip is an independent borderless row with an 8px gap above the composer.
 - The text area has no inner card border; toolbar and input share one surface.
 - In the main conversation, the timeline spans the full area below the header and the composer overlays its bottom center. Resizing the composer must not move the message-navigation rail or shorten the scrollbar track. Reserve the measured composer height after the last turn; keep the latest reply above it when already at the bottom, and preserve the scroll position while browsing history. This does not change the side-chat layout.
 - Main-conversation content and composer share edge clearance of at least one compact control plus `--space-3` (40px), preserving access to both navigation rails. The composer wrapper has transparent, pointer-transparent gutters; its actual contents remain interactive. Verify with sidebar/inspector widths deducted, including a 320px input, rather than treating the full window as the conversation width.
 - Composer height is adjusted from a compact handle at the upper right, with space reserved so it never covers text. Dragging upward expands the input upward while the bottom toolbar stays anchored; dragging downward shrinks it. Preserve the 64–320px input range, support Up/Down keys, and let Escape cancel an active drag. Disable the native bottom-right textarea resizer.
-- An active goal uses a single compact status strip immediately above the composer. Its icon and readable objective lead; status and elapsed time are secondary metadata; a separate right-side icon button owns the clear action. Long objectives truncate with their full text available on hover. The strip and composer meet without a double border.
+- An active goal uses a single compact status strip immediately above the composer. Its icon and readable objective lead; status and elapsed time are secondary metadata; a separate right-side icon button owns the clear action. Long objectives truncate with their full text available on hover. The strip has no bounding box and does not remove the composer’s top corners.
 - Nearby runtime, error, success, and queue notices use `--text-label` for actionable text; reserve `--text-meta` for counts, elapsed time, and secondary state. Notices keep their main message readable and truncate only when space is constrained.
 - Repeated icon-only actions around the composer share the 28px compact-button geometry, 16px Lucide icon, focus ring, and descriptive hover title. Status text itself does not trigger destructive or dismiss actions.
 - Permission triggers are borderless 28px ghost controls with regular 12px labels. Full access retains an amber shield only; do not tint the entire control. Running status uses a small semantic dot and muted 12px text, without a badge border or tinted fill.
 - Left group: add, permission, mode, activity. Right group: model, effort, send.
 - Goal and Plan share one mutually exclusive mode slot.
-- Send and stop use stable 32px squares with the shared 8px panel radius and centered 16px icons. Send uses an upward arrow and the action accent when available; disabled send uses a quiet raised surface. Stop uses a filled square on a neutral surface, with danger color on hover or keyboard focus; no persistent red outline or tinted block.
-- Queued messages appear in one sibling panel immediately above the input, sharing the composer's left and right edges. Use continuous 40px rows, 13px single-line previews, optional 32px image thumbnails, and stable right-aligned actions. The labeled Steer action precedes 28px delete and more buttons; edit lives in the shared menu. Running queues omit repeated waiting labels and headings; idle queues retain the resume action. Long queues scroll within a four-row viewport, and menus render outside that scroll region.
+- Send and stop use stable 32px squares with the shared 12px panel radius and centered 16px icons. Send uses an upward arrow and the yellow action fill when available; disabled send uses a quiet raised surface. Stop uses a filled square on a neutral surface, with danger color on hover or keyboard focus; no persistent red outline or tinted block.
+- Queued messages appear in one borderless sibling list immediately above the input, sharing the composer's left and right edges. Use continuous 40px rows, 13px single-line previews, optional 32px image thumbnails, and stable right-aligned actions. The labeled Steer action precedes 28px delete and more buttons; edit lives in the shared menu. Running queues omit repeated waiting labels and headings; idle queues retain the resume action. Long queues scroll within a four-row viewport, and menus render outside that scroll region.
 
 ## Sketch Workspace
 
@@ -279,7 +284,7 @@ Radii:
 - The drawing toolbar is a small floating capsule centered near the top of the canvas. It uses shared 28px icon buttons, one visible action label for adding an image, and a restrained local selected state for the active tool.
 - Brush size is controlled by a vertical slider on the left edge of the canvas. Color choices sit in a compact bottom palette with circular swatches and one custom-color control. These controls stay over the canvas so they do not create a second panel or reduce the working area with a full-width toolbar.
 - Close remains in the upper-left header action slot; cancel and the single primary save action remain right-aligned in the footer. The save action is the only filled action in that local group.
-- The canvas uses the existing canvas surface as a uniform black working field; popover background, focus ring, and shadow continue to use semantic tokens. Feature CSS must not introduce a new global color, radius, or control scale for drawing tools.
+- The canvas uses the dedicated `--surface-sketch` as a uniform black working field; popover background, focus ring, and shadow continue to use semantic tokens. Feature CSS must not introduce a new global color, radius, or control scale for drawing tools.
 - Tooltips and accessible names are required for icon-only tools, swatches, the size slider, and custom color input. Focus must remain visible, and the layout must fit at 1440x900, 1280x780, 1024x720, and 900x700 without horizontal overflow. Reduced motion keeps the controls static.
 
 ## Responsive Behavior
@@ -303,3 +308,12 @@ Radii:
 - Light/dark contrast is not inferred from screenshots; verify computed colors.
 - Verify desktop at `1280x780` and `1440x900`, compact at `1024x720`, and narrow at `900x700`.
 - Verify keyboard focus, tooltip naming, outside-click dismissal, reduced motion, truncation, and Chinese/Latin alignment.
+
+## Soft Notebook Shared Surfaces
+
+- Skills use unframed two-line rows; remove icon tiles and keep 16px icons, 28px hit targets and right-aligned switches. Search is a quiet inset field. Skill details render readable Markdown on an unframed content area.
+- Settings retain the five actual categories and the same lifecycle. Runtime groups and channel rows have no surrounding cards. Theme previews are three small visual samples. Advanced model choices use lavender selection on a borderless row, never a yellow button wall.
+- Slash, add, permission, model and context menus share a 12px surface radius, subtle boundary and popover shadow; entries have no individual border.
+- Forms use `--surface-input` and `--border-input`; selected controls use lavender and keyboard focus remains visible. Avoid nested cards in approvals, questions and diagnostics.
+- The page title token is 18px; ordinary section titles remain 14px. No illustrative decoration in approvals, settings or error states.
+- Light surfaces use soft shadows only for the composer and floating surfaces. Drawing tools inherit the palette while the canvas stays black in both themes.

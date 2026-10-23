@@ -107,7 +107,7 @@ pub struct PersonalizationSettings {
 }
 
 fn default_theme() -> String {
-    "dark".to_string()
+    "light".to_string()
 }
 
 impl Default for PersonalizationSettings {

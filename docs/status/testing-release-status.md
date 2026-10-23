@@ -5,9 +5,11 @@
 - 当前接口：`pnpm test:quality` 执行 TypeScript、ESLint、Vitest、高德离线测试、production build、Knip、Cargo check、Rust 单测、严格 Clippy 和 diff 检查。专项入口见 [测试脚本说明](../../tests/scripts/README.md)。
 - 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；`package.json` 遗留的 `test:extension-layout` 指向不存在的脚本，MCP 管理可使用现有 `test:mcp-layout`（不等价于全部扩展管理验证），不能把失效入口作为验证证据；Vite 主 chunk 超过 500 kB；Rust 既有格式差异尚未整理，`cargo fmt --check` 未纳入门禁。
 - 下一步：真实系统凭据、多渠道对话、第三方 MCP OAuth、干净 Windows 安装升级和大型历史迁移验收。
-- 最后更新：2026-10-20
+- 最后更新：2026-10-23
 
 ## 当前验证基线
+
+2026-10-23 Soft Notebook UI：487 项前端测试、TypeScript、ESLint、Knip、production build、Cargo check、52 项 Rust 单测（1 项交互用例忽略）、严格 Clippy 与 Debug 构建通过。新增默认浅色/既有主题保留回归。四尺寸 `workbench`、`composer`、`channel`、`mcp`、`async-question`、`image-annotation`、`markdown-code` 与 `soft-notebook` 浏览器探针通过；后者验证技能/详情、斜杠菜单、设置、空状态、Portal、系统主题切换和文字对比度。代码块头部探针按新契约从 44px 调整为 32px。最初对比度检查发现两项浅色选中态低于 4.5:1，已加深文字并复测通过。浏览器数据为 fixture，不覆盖真实系统凭据、在线模型调用或真实 WebView2；未生成或发布安装器。Vite 既有主 chunk 大小警告保留。
 
 2026-10-23 项目文档 Skill 同步：格式校验、代码原则源内容比对、三个 Debug 资源哈希比对、3 项内置资源测试、TypeScript、Cargo check、production build 与 Debug 构建通过。系统 Python 别名未执行校验，改用本机 Conda Python 后校验通过。仅更新技能与说明，未改应用代码，未重跑全量前端／Rust 测试、Clippy 或真实模型任务；公开版本仍为 v0.1.13。
 
