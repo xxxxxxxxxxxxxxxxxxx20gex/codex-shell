@@ -95,17 +95,16 @@ window.show=view=>root.render(h(Host,{key:view+Date.now(),view})); window.show('
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
         if (view === "empty") {
           const art = page.locator('.conversation-empty-mark');
-          await page.waitForFunction(() => document.querySelector('.conversation-empty-mark')?.currentSrc.includes('.png'));
-          const still = await art.screenshot();
-          await page.waitForTimeout(200);
-          assert(still.equals(await art.screenshot()), 'reduced motion keeps dogs static');
-          await page.emulateMedia({ reducedMotion: 'no-preference' });
-          await page.waitForFunction(() => document.querySelector('.conversation-empty-mark')?.currentSrc.includes('.webp'));
-          const moving = await art.screenshot();
-          await page.waitForTimeout(200);
-          assert(!moving.equals(await art.screenshot()), 'dogs animate without moving layout');
+          for (const reducedMotion of ['reduce', 'no-preference']) {
+            await page.emulateMedia({ reducedMotion });
+            await page.waitForFunction(() => document.querySelector('.conversation-empty-mark')?.currentSrc.includes('.webp'));
+            const bounds = await art.boundingBox();
+            const moving = await art.screenshot();
+            await page.waitForTimeout(200);
+            assert(!moving.equals(await art.screenshot()), `dogs animate with ${reducedMotion}`);
+            assert.deepEqual(await art.boundingBox(), bounds, 'animation keeps layout stable');
+          }
           await page.emulateMedia({ reducedMotion: 'reduce' });
-          await page.waitForFunction(() => document.querySelector('.conversation-empty-mark')?.currentSrc.includes('.png'));
         }
         if (view === "skills") {
           await page.getByText("兔子生图", { exact: true }).waitFor();

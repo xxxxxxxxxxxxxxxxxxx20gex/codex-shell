@@ -14,7 +14,7 @@ The design direction is **Soft Notebook**:
 - lavender accent for active text and selection; a separate yellow primary fill with dark ink; blue, amber, and red retain semantic meaning;
 - dark appearance keeps neutral black and gray layers;
 - small 16px icons without decorative tiles; borderless actions and lists with stable 28px hit targets;
-- subtle rounded writing surfaces; the user-provided two-dog illustration is allowed only in an empty state, never in settings or approvals; preserve both reference characters, their poses, proportions and hand-drawn identity; adapt the reference into a transparent illustration without screenshot scenery or a rectangular background; display at 162px wide with its natural aspect ratio, without theme filters. A transparent looping animation may preserve the supplied two-dog dance and intentional outline gaps; use a matching static poster when reduced motion is requested, with identical layout dimensions;
+- subtle rounded writing surfaces; the user-provided two-dog illustration is allowed only in an empty state, never in settings or approvals; preserve both reference characters, their poses, proportions and hand-drawn identity; adapt the reference into a transparent illustration without screenshot scenery or a rectangular background; display at 162px wide with its natural aspect ratio, without theme filters. The transparent looping animation preserves the supplied two-dog dance and intentional outline gaps, with a small muted grass patch and moving grass tufts beneath their feet. At the user’s explicit request this illustration loops even with reduced motion enabled; retain a matching PNG only as a format fallback, with identical layout dimensions;
 - assistant output integrated into the timeline instead of boxed into repeated cards.
 - assistant responses use one 2px action marker at the first answer line; completed responses do not carry a full-height gray rail, and continuation blocks do not repeat the marker.
 - elapsed durations use compact `s`/`m s` units, and transient reconnect notices stay inside the active process status instead of occupying the Composer error slot.
@@ -190,7 +190,7 @@ Radii:
 - Keyboard focus uses a 2px `--accent-info` ring with 2px offset.
 - Hover feedback: `120ms` (`--motion-fast`); popover entry: `160ms` (`--motion-popover`); no interaction exceeds `200ms`.
 - Animate only opacity and transform for transient overlays. Panel width changes (sidebar/inspector open, close, and resize) apply immediately; do not transition grid columns or other layout properties.
-- Respect `prefers-reduced-motion`. The active Turn indicator is the only documented exception: its fixed 5px dot may continue a slow opacity-only status pulse because it has no movement, scaling, or layout effect.
+- Respect `prefers-reduced-motion`. The user-requested empty-state dog loop is an explicit exception. The active Turn indicator is also exempt: its fixed 5px dot may continue a slow opacity-only status pulse because it has no movement, scaling, or layout effect.
 - Hover must not move, resize, or reflow controls.
 
 ## Lists And Navigation
