@@ -2,7 +2,7 @@ import emptyWorkspaceDogs from "../../../assets/illustrations/empty-workspace-do
 
 export function EmptyWorkspace() {
   return <div className="conversation-empty">
-    <img className="conversation-empty-mark" src={emptyWorkspaceDogs} width={162} height={132} alt="" aria-hidden="true" draggable={false} />
+    <img className="conversation-empty-mark" src={emptyWorkspaceDogs} width={162} height={116} alt="" aria-hidden="true" draggable={false} />
     <h2>有什么想一起完成的？</h2>
     <p>选择项目，写下一个任务。从一个小想法开始。</p>
   </div>;

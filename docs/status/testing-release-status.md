@@ -9,7 +9,7 @@
 
 ## 当前验证基线
 
-2026-10-23 双小狗原图替换：空会话直接使用用户提供的 162×132 PNG，原文件与仓库资源 SHA-256 一致，完整保留两只小狗及背景。TypeScript、ESLint、四尺寸深浅主题 Soft Notebook 探针、Cargo check、52 项 Rust 测试（1 项忽略）、严格 Clippy、production build 与 Debug 构建通过；已复核浏览器空状态截图，构建产物包含图片资源。未重跑全量前端单测，未进行真实 WebView2 人工验收。
+2026-10-23 双小狗插画适配：使用 gpt-image-2.5-flare 基于参考图生成双角色插画，去除场景背景并输出透明 PNG，以 162px 宽等比展示。TypeScript、ESLint、四尺寸深浅主题 Soft Notebook 探针、Cargo check、production build 与 Debug 构建通过；复核窄窗口截图和深浅背景合成预览。未重跑全量前端／Rust 单测，未进行真实 WebView2 人工验收。保留既有 Vite 大 chunk 与链接器信息提示。客户端图标另生成四款候选供选择，尚未替换。
 
 2026-10-23 图标重心校正：GPT 重做构图后，SVG 母版改为等高同粗的并排 CS，去除角落黄点，按图形像素重心校正整体横向位置。512px 资源的紫色图形重心约为 (256.2, 256.0)，复核 16–160px 前后对照及 ICO 多尺寸，平台图标由 Tauri icon 统一生成。TypeScript、3 项标题栏测试、Cargo check、52 项 Rust 测试（1 项忽略）、严格 Clippy、production build、Debug 构建和四尺寸工作台探针通过。未改交互逻辑，未重跑完整前端测试；未进行真实 Windows 任务栏缓存刷新或 WebView2 人工验收。空会话插图以 UI 壳当前状态为准。
 
