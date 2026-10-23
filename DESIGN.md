@@ -14,7 +14,7 @@ The design direction is **Soft Notebook**:
 - lavender accent for active text and selection; a separate yellow primary fill with dark ink; blue, amber, and red retain semantic meaning;
 - dark appearance keeps neutral black and gray layers;
 - small 16px icons without decorative tiles; borderless actions and lists with stable 28px hit targets;
-- subtle rounded writing surfaces; a tiny decorative cat is allowed only in an empty state, never in settings or approvals;
+- subtle rounded writing surfaces; a tiny line-drawn floppy-eared dog is allowed only in an empty state, never in settings or approvals;
 - assistant output integrated into the timeline instead of boxed into repeated cards.
 - assistant responses use one 2px action marker at the first answer line; completed responses do not carry a full-height gray rail, and continuation blocks do not repeat the marker.
 - elapsed durations use compact `s`/`m s` units, and transient reconnect notices stay inside the active process status instead of occupying the Composer error slot.
@@ -167,8 +167,8 @@ Radii:
 
 ### Product mark
 
-- The Codex Shell application mark is the negative-core `CS` monogram defined in `assets/branding/cs-app-icon.svg`.
-- The white outer `C`, lime inner `S`, and lime terminal dot sit on the graphite raised surface; the installed application mark retains its original branding colors independently of the Soft Notebook interface.
+- The Codex Shell application mark is the bright lavender `CS` monogram defined in `assets/branding/cs-app-icon.svg`.
+- The violet `C` and `S` sit on a pale lavender rounded square with a small butter-yellow dot. Keep the brand bright in both appearance modes; the app mark is independent of UI semantic tokens. The approved direction is GPT concept A, redrawn as clean SVG for small sizes.
 - Platform icons are generated from the SVG master through the Tauri icon generator. Do not hand-edit individual PNG, ICO, or ICNS derivatives.
 - Keep the transparent outer margin and rounded-square silhouette intact so the mark remains legible in Windows taskbar, shortcut, and installer sizes.
 
