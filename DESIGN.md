@@ -171,6 +171,7 @@ Radii:
 - Preserve the approved generated artwork, centered visual balance, rounded endpoints and open central space. Only remove the outside white canvas and prepare transparent margins; do not redraw the symbol or replace it with letters. Keep the brand bright in both appearance modes, independent of UI semantic tokens.
 - Title-bar branding uses the same PNG master. Platform icons are generated through the Tauri icon generator; do not hand-edit individual PNG, ICO, or ICNS derivatives.
 - Keep the transparent outer margin and rounded-square silhouette intact so the mark remains legible in Windows taskbar, shortcut, and installer sizes.
+- Before showing a Windows window, set its taskbar large icon from the executable's Tauri-generated ICO resource; the small window icon alone does not cover the running taskbar button. Keep both native icon roles aligned with the approved master.
 
 ## Controls
 

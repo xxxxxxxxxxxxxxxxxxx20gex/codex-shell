@@ -11,6 +11,8 @@ mod skill_files;
 mod runtime;
 mod workspace;
 mod window_layout;
+#[cfg(windows)]
+mod window_icon;
 
 use app_server::AppServerState;
 use tauri::Manager;
@@ -24,6 +26,8 @@ pub fn run() {
         .manage(AppServerState::default())
         .setup(|app| {
             let window = app.get_webview_window("main").ok_or("主窗口不存在")?;
+            #[cfg(windows)]
+            window_icon::set_taskbar_icon(&window)?;
             window_layout::restore_to_monitor(&window).map_err(std::io::Error::other)?;
             window_layout::watch_monitor_changes(&window).map_err(std::io::Error::other)?;
             window.maximize()?;
