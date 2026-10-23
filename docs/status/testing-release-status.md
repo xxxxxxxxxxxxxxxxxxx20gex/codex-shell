@@ -9,6 +9,8 @@
 
 ## 当前验证基线
 
+2026-10-23 项目文档 Skill 同步：格式校验、代码原则源内容比对、三个 Debug 资源哈希比对、3 项内置资源测试、TypeScript、Cargo check、production build 与 Debug 构建通过。系统 Python 别名未执行校验，改用本机 Conda Python 后校验通过。仅更新技能与说明，未改应用代码，未重跑全量前端／Rust 测试、Clippy 或真实模型任务；公开版本仍为 v0.1.13。
+
 2026-10-20 v0.1.13：78 文件／487 项前端、34 项高德离线、51 项 Rust 测试通过（1 项交互测试忽略），TypeScript、ESLint、Knip、Cargo check、lib 严格 Clippy、production build、Debug 和生产安装器构建通过。真实 Core 协议探针、同源兼容门禁、release 内置 rg 探针通过；资源区四尺寸 Edge 使用模拟文件与回调验证统一附件、PDF／表格／Markdown、折叠过程文件、点击与焦点，不代表真实 WebView2 人工验收。首次附件断言因同名文件名／路径匹配多个元素失败，限定文件名元素后全量通过。安装器及可信注释签名、更新地址和 Runtime/helper 哈希校验通过；SHA-256 `9428b1fb7c0094f35ace92cd374253095808f716c64fe0615dea1b9b9a40df60`。未执行干净 Windows 安装／真实网络升级，仍有既有 Vite 大 chunk 和链接器信息提示。
 
 2026-10-20 导航遮挡修复：78 文件／486 项前端测试、TypeScript、ESLint、Knip、Cargo check、production build、Debug 构建及 Runtime 哈希校验通过。输入框／时间线探针改为扣除左右栏宽度，四尺寸验证 320px 输入框下导航未被覆盖，并实际点击返回最新；此前全宽夹具不能证明工作台窄列可点击。未改 Rust，未重跑 Rust 单测／Clippy，未进行真实 WebView2 人工验收。
