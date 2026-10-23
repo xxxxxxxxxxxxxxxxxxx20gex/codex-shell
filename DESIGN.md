@@ -176,7 +176,7 @@ Radii:
 
 ### Buttons
 
-- `primary`: `--surface-action` with `--text-on-action`, butter-yellow in light and pale gray in dark; one per action group. The sidebar new-conversation action uses this role too.
+- `primary`: `--surface-action` with `--text-on-action`, butter-yellow in light and pale gray in dark; one per action group. The sidebar new-conversation action uses a quiet raised surface and primary text, with the selected surface on hover or keyboard focus; do not use the bright primary fill across the navigation row.
 - `secondary`: borderless text action with a neutral hover surface.
 - `ghost`: transparent until hover; default for toolbar and row actions.
 - `danger`: neutral by default, danger color on hover and in confirmation.
