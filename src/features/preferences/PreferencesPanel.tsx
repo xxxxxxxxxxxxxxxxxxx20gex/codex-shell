@@ -30,8 +30,8 @@ interface Props {
 export type PreferencesSection = "personalization" | "appearance" | "providers" | "runtime" | "diagnostics";
 
 const themeOptions: Array<{ value: ThemePreference; label: string; description: string }> = [
-  { value: "dark", label: "深色", description: "适合长时间工作" },
   { value: "light", label: "浅色", description: "明亮的工作台" },
+  { value: "dark", label: "深色", description: "中性黑灰，适合夜间" },
   { value: "system", label: "跟随系统", description: "使用 Windows 外观设置" },
 ];
 

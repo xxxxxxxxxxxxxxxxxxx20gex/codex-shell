@@ -22,7 +22,7 @@
   justify-content: space-between;
   padding: 0 var(--space-4);
   color: var(--text-secondary);
-  background: transparent;
+  background: var(--surface-input);
   font-size: var(--text-label);
   line-height: 16px;
  height: var(--control-height); }

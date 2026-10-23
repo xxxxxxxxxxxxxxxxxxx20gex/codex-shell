@@ -52,6 +52,16 @@ window.show=view=>root.render(h(Host,{key:view+Date.now(),view})); window.show('
     await page.emulateMedia({ reducedMotion: "reduce" });
     for (const theme of ["light", "dark"]) {
       await page.evaluate(theme => document.documentElement.dataset.theme = theme, theme);
+      if (theme === "dark") {
+        const tinted = await page.evaluate(() => {
+          const css = getComputedStyle(document.documentElement);
+          return ['--surface-canvas','--surface-sidebar','--surface-panel','--surface-raised','--surface-selected','--surface-input','--surface-action','--accent-action'].filter(name => {
+            const rgb = css.getPropertyValue(name).trim().slice(1).match(/../g).map(x => parseInt(x, 16));
+            return Math.max(...rgb) - Math.min(...rgb) > 8;
+          });
+        });
+        assert.deepEqual(tinted, [], 'dark surfaces and actions stay neutral gray');
+      }
       const contrast = await page.evaluate(() => {
         const css = getComputedStyle(document.documentElement);
         const color = name => css.getPropertyValue(name).trim();
@@ -110,6 +120,7 @@ window.show=view=>root.render(h(Host,{key:view+Date.now(),view})); window.show('
           assert.equal(await page.getByRole('radio',{name:/浅色/}).evaluate(el=>getComputedStyle(el).outlineStyle),'solid');
           await page.getByRole('radio',{name:/深色/}).click();
           assert.equal(await page.getByRole('radio',{name:/深色/}).getAttribute('aria-checked'),'true');
+          await page.getByRole('radio',{name:theme === 'light' ? /浅色/ : /深色/}).click();
         }
         const undersized = await locator.locator('button,input,textarea,small,p,strong,span').evaluateAll(elements => elements.filter(el=>el.getClientRects().length && el.textContent.trim() && parseFloat(getComputedStyle(el).fontSize)<11).map(el=>el.textContent));
         assert.deepEqual(undersized, [], `${view} minimum typography`);
@@ -122,9 +133,9 @@ window.show=view=>root.render(h(Host,{key:view+Date.now(),view})); window.show('
     }
     await page.evaluate(()=>document.documentElement.dataset.theme='system');
     await page.emulateMedia({colorScheme:'dark'});
-    assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--surface-canvas').trim()),'#19171F');
+    assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--surface-canvas').trim()),'#101112');
     await page.emulateMedia({colorScheme:'light'});
-    assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--surface-canvas').trim()),'#FAF7F0');
+    assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--surface-canvas').trim()),'#FCF9F4');
     console.log(`${width}x${height}: skills, menus, settings, empty state, portals, contrast and system theme passed`);
   }
   assert.deepEqual(errors, []);

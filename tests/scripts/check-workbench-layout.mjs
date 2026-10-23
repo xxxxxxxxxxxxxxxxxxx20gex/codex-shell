@@ -31,7 +31,7 @@ try {
  const history=h(ThreadHistoryList,{threads,archived:false,activeThreadId:'thread-0',loading:false,error:'',disabled:false,actionThreadId:null,runningThreadIds:new Set(),hasMore:false,onOpen:noop,onRename:noop,onTogglePin:noop,onArchive:noop,onUnarchive:noop,onDelete:noop,onShowArchived:noop,onLoadMore:noop});
  const iconButton=(label,Icon,cls)=>h(CompactIconButton,{className:cls,label,icon:h(Icon)});
  ReactDOM.createRoot(document.getElementById('root')).render(h('div',{className:'app-shell'},h('div',{style:{padding:'4px 12px',fontSize:13}},'Codex Shell'),h('div',{className:'workspace-grid'+(innerWidth<1180?' inspector-hidden':''),style:{'--sidebar-width':'248px','--inspector-width':'288px'}},
- h('aside',{className:'sidebar panel'},h('div',{className:'sidebar-actions'},h('button',{className:'sidebar-action'},h(Plus),'新建对话')),history,h('button',{className:'sidebar-footer'},h(Settings),h('span',null,h('strong',null,'设置')))),
+ h('aside',{className:'sidebar panel'},h('div',{className:'sidebar-actions'},h('button',{className:'sidebar-action sidebar-action-new'},h(Plus),'新建对话')),history,h('button',{className:'sidebar-footer'},h(Settings),h('span',null,h('strong',null,'设置')))),
  h('section',{className:'conversation panel'},h('header',{className:'conversation-header'},iconButton('显示左侧',PanelLeft,'drawer-toggle'),h('strong',null,'工作台 UI 优化'),iconButton('显示右侧',PanelRight,'drawer-toggle drawer-toggle-right')),
  h('div',{className:'timeline-shell'},h('div',{className:'timeline'},h('div',{className:'conversation-turn-frame first'},h('div',{className:'user-message-group'},h('div',{className:'user-message'},'请优化工作台的 UI 设计')),h('div',{className:'agent-block'},h('div',{className:'agent-accent'}),h('div',{className:'agent-content'},h(MarkdownContent,{className:'agent-response'},content)))))),
  h('div',{className:'composer-wrap'},h(ComposerGoalStatus,{goal:{objective:'统一交互与视觉层级',status:'active',tokensUsed:0,tokenBudget:null,timeUsedSeconds:80},onClear:noop}),h('div',{className:'composer'},h('textarea',{placeholder:'交给 Codex 一个任务…'}),h('div',{className:'composer-toolbar'},h('div',{className:'composer-tools'},h(ComposerAddMenu,{hasThread:true,running:false,onSelectPaths:noop,onCommand:noop,onError:noop,onOpen:noop})),h('div',{className:'composer-actions'},h(PermissionModeSelector,{value:'read',reviewer:'user',onChange:noop,onReviewerChange:noop}),h('button',{className:'model-button'},'GPT-6')))))),
@@ -88,6 +88,8 @@ try {
   await page.keyboard.press('End'); assert(await permissionMenu.locator('button').last().evaluate(el=>el===document.activeElement));
   await page.keyboard.press('Escape'); assert(await permission.evaluate(el=>el===document.activeElement));
   await page.emulateMedia({reducedMotion:'reduce'});
+  await page.evaluate(()=>document.documentElement.dataset.theme='dark');
+  await page.waitForFunction(()=>getComputedStyle(document.querySelector('.thread-title')).color === 'rgb(241, 243, 241)');
   await page.screenshot({path:join(output,'workbench-'+width+'.png')});
   const geometry=await page.evaluate(()=>{
    const f=document.querySelector('.conversation-turn-frame'),c=document.querySelector('.composer'),t=document.querySelector('.timeline');

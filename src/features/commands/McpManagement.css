@@ -26,7 +26,7 @@
 .mcp-row-actions { display: flex; flex: 0 0 auto; align-items: center; gap: var(--space-2); }
 .mcp-row-actions > button:not([role="switch"]) { width: var(--control-height-compact); padding: 0; border: 0; background: transparent; }
 .mcp-row-actions > .skill-enable-switch { width: var(--control-height); height: var(--space-5); min-height: 0; padding: 2px; border: 0; justify-content: flex-start; background: var(--surface-selected); }
-.mcp-row-actions > .skill-enable-switch[aria-checked="true"] { background: var(--accent-action); }
+.mcp-row-actions > .skill-enable-switch[aria-checked="true"] { background: var(--surface-accent); }
 .mcp-server-details { margin-top: var(--space-3); padding-left: calc(16px + var(--space-3)); }
 .mcp-server-details summary { display: flex; align-items: center; gap: var(--space-2); list-style: none; cursor: pointer; color: var(--text-secondary); font-size: var(--text-label); }
 .mcp-server-details summary::-webkit-details-marker { display: none; }

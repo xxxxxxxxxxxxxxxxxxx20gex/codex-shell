@@ -9,6 +9,8 @@
 
 ## 当前验证基线
 
+2026-10-23 主题校正：浅色按批准稿的实际纸面取色，补新建对话主动作、淡化输入框聚焦边线和代码标题栏层次，暗色及系统暗色恢复中性黑灰；主题预览缩小且保持对应配色。487 项前端测试、TypeScript、ESLint、Knip、production build、Cargo check、52 项 Rust 测试（1 项忽略）、严格 Clippy 和 Debug 构建通过；复跑四尺寸 `soft-notebook`、`workbench`、`composer`、`markdown-code` 探针。新增暗色中性约束和系统配色检查，深浅文字对比度通过。工作台截图等待主题文字计算样式完成后采集，避免切换瞬间旧色被截图；已复核深浅截图。未验证真实 WebView2，保留既有 Vite 大 chunk 警告。
+
 2026-10-23 Soft Notebook UI：487 项前端测试、TypeScript、ESLint、Knip、production build、Cargo check、52 项 Rust 单测（1 项交互用例忽略）、严格 Clippy 与 Debug 构建通过。新增默认浅色/既有主题保留回归。四尺寸 `workbench`、`composer`、`channel`、`mcp`、`async-question`、`image-annotation`、`markdown-code` 与 `soft-notebook` 浏览器探针通过；后者验证技能/详情、斜杠菜单、设置、空状态、Portal、系统主题切换和文字对比度。代码块头部探针按新契约从 44px 调整为 32px。最初对比度检查发现两项浅色选中态低于 4.5:1，已加深文字并复测通过。浏览器数据为 fixture，不覆盖真实系统凭据、在线模型调用或真实 WebView2；未生成或发布安装器。Vite 既有主 chunk 大小警告保留。
 
 2026-10-23 项目文档 Skill 同步：格式校验、代码原则源内容比对、三个 Debug 资源哈希比对、3 项内置资源测试、TypeScript、Cargo check、production build 与 Debug 构建通过。系统 Python 别名未执行校验，改用本机 Conda Python 后校验通过。仅更新技能与说明，未改应用代码，未重跑全量前端／Rust 测试、Clippy 或真实模型任务；公开版本仍为 v0.1.13。

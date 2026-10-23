@@ -254,7 +254,7 @@ function App() {
       >
         <aside className="sidebar panel">
           <nav className="sidebar-actions" aria-label="主要操作">
-            <button className="sidebar-action" onClick={() => { setMainView("conversation"); startNewTask(); }} disabled={session.submitting || session.openingThreadId !== null || session.threadActionId !== null}>
+            <button className="sidebar-action sidebar-action-new" onClick={() => { setMainView("conversation"); startNewTask(); }} disabled={session.submitting || session.openingThreadId !== null || session.threadActionId !== null}>
               <MessageSquarePlus aria-hidden="true" />
               <span>新建对话</span>
             </button>

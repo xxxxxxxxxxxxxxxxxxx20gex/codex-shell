@@ -30,7 +30,9 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .sidebar-action { display: flex; width: 100%; min-height: var(--control-height); align-items: center; gap: var(--space-2); padding: 0 var(--space-2); border: 0; border-radius: var(--radius-control); color: var(--text-secondary); text-align: left; background: transparent; font-size: var(--text-ui); cursor: pointer; transition: color var(--motion-fast), background-color var(--motion-fast); }
 .sidebar-action:hover { color: var(--text-primary); background: var(--surface-raised); }
 .sidebar-action.active { color: var(--accent-action); background: var(--surface-selected); }
-.sidebar-action:focus-visible { background: var(--surface-raised); }
+.sidebar-action-new { color: var(--text-on-action); background: var(--surface-action); }
+.sidebar-action-new:hover, .sidebar-action-new:focus-visible { color: var(--text-on-action); background: var(--surface-action); }
+.sidebar-action:not(.sidebar-action-new):focus-visible { background: var(--surface-raised); }
 .sidebar-action:disabled { color: var(--text-disabled); cursor: default; }
 .sidebar-action svg { width: 16px; height: 16px; flex: 0 0 16px; stroke-width: 1.75; }
 .primary-button { border: 0; border-radius: var(--ui-control-radius); color: var(--ui-accent-ink); background: var(--surface-action); font-weight: 500; cursor: pointer; }
@@ -114,7 +116,7 @@ code { color: var(--text-secondary); font-family: var(--font-mono); }
 .composer-goal-status > .compact-icon-button { margin-left: var(--space-1); }
 .composer-goal-status + .composer { border-radius: var(--radius-composer); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-composer); padding: var(--space-4) var(--space-4) var(--space-2); }
 .composer { position: relative; padding: var(--space-4) var(--space-4) var(--space-2); border: 1px solid var(--border-subtle); border-radius: var(--radius-composer); background: var(--surface-panel); box-shadow: var(--shadow-composer); }
-.composer:focus-within { border-color: var(--border-strong); }
+.composer:focus-within { border-color: var(--border-composer-focus); }
 .composer.has-context-heatbar { padding-left: 27px; }
 .composer > .attachment-gallery { margin-bottom: 9px; }
 .composer textarea { width: 100%; min-height: calc(var(--control-height) * 2); max-height: 320px; padding-right: var(--control-height-compact); overflow-y: auto; resize: none; transition-property: none; border: 0; outline: 0; color: var(--text-primary); background: transparent; font-size: var(--conversation-font-size); line-height: 24px; }

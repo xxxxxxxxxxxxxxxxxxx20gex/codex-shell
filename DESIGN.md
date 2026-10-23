@@ -12,6 +12,7 @@ The design direction is **Soft Notebook**:
 - warm ivory writing surfaces, lavender selection and butter-yellow primary actions;
 - high legibility with restrained contrast between structural layers;
 - lavender accent for active text and selection; a separate yellow primary fill with dark ink; blue, amber, and red retain semantic meaning;
+- dark appearance keeps neutral black and gray layers;
 - small 16px icons without decorative tiles; borderless actions and lists with stable 28px hit targets;
 - subtle rounded writing surfaces; a tiny decorative cat is allowed only in an empty state, never in settings or approvals;
 - assistant output integrated into the timeline instead of boxed into repeated cards.
@@ -66,20 +67,20 @@ Rules:
 
 ### Light appearance (default)
 
-Primary action fills use `--surface-action: #FAE1A0` and `--text-on-action: #34333A`. `--accent-action` is lavender foreground, not a filled-button background. Small accent markers use `--text-on-accent` (light: #FFFCF7; dark: #26222E). Editing surfaces use `--surface-input`, with a transparent resting border and a visible focus ring. The black drawing field uses `--surface-sketch: #000000` independently of the theme.
+Primary action fills use `--surface-action: #FAE1A0` and `--text-on-action: #34333A`. `--accent-action` is lavender foreground, not a filled-button background. Small accent markers use `--text-on-accent` (light: #FEFBF7; dark: #191B1C). The light palette follows the approved mockup’s paper samples: near-white cream rather than a yellow wash. `--border-composer-focus` keeps the focused writing surface quiet while keyboard controls retain their visible focus rings. Editing surfaces use `--surface-input`, with a transparent resting border and a visible focus ring. The black drawing field uses `--surface-sketch: #000000` independently of the theme.
 
 ### Neutral surfaces
 
 | Token | Value | Role |
 | --- | --- | --- |
-| `--surface-canvas` | `#FAF7F0` | application canvas |
-| `--surface-sidebar` | `#F7F3ED` | navigation and inspector base |
-| `--surface-panel` | `#FFFCF7` | composer, menus, bounded tools |
-| `--surface-raised` | `#F1ECF3` | hover rows, elevated controls |
-| `--surface-selected` | `#EDE6F5` | selected rows and pressed controls |
-| `--border-subtle` | `#EAE4E9` | structural separators |
-| `--border-default` | `#D7CEDF` | controls and popovers |
-| `--border-strong` | `#8873B5` | focused or emphasized boundaries |
+| `--surface-canvas` | `#FCF9F4` | application canvas |
+| `--surface-sidebar` | `#FBF7F2` | navigation and inspector base |
+| `--surface-panel` | `#FEFBF7` | composer, menus, bounded tools |
+| `--surface-raised` | `#F5F1F5` | hover rows, elevated controls |
+| `--surface-selected` | `#EEE7F7` | selected rows and pressed controls |
+| `--border-subtle` | `#EEE9E7` | structural separators |
+| `--border-default` | `#E5DEE7` | controls and popovers |
+| `--border-strong` | `#B5A2D2` | focused or emphasized boundaries |
 
 ### Text and semantics
 
@@ -109,7 +110,7 @@ Context usage uses a dedicated continuous scale because it encodes a quantitativ
 Rules:
 
 - Accent colors communicate action or state; they are not decoration.
-- The yellow fill appears once per local action group. Lavender active text and selected surfaces do not become filled primary buttons.
+- In light mode the yellow fill appears once per local action group. Lavender active text and selected surfaces do not become filled primary buttons.
 - Text contrast must meet WCAG AA against its actual surface.
 - Avoid pure white, pure black, gradients, glow decoration, and large tinted backgrounds.
 - Destructive controls stay neutral until hover or confirmation, then use danger semantics.
@@ -117,7 +118,7 @@ Rules:
 ### Appearance modes
 
 - The application offers dark, light, and Windows-system appearance preferences.
-- New installations default to light Soft Notebook. Existing explicit dark/light/system preferences remain unchanged. Dark uses plum-charcoal surfaces, lavender selection and the same butter-yellow primary action; system follows Windows live. Dark canvas/sidebar/panel are #19171F / #1E1B25 / #26222E; primary/muted text are #F4EFF8 / #B4A9C0. Palette details live in tokens.css.
+- New installations default to light Soft Notebook. Existing explicit dark/light/system preferences remain unchanged. Dark uses neutral black/gray surfaces, gray selection and pale gray primary actions; system follows Windows live. Dark canvas/sidebar/panel are #101112 / #141617 / #191B1C; primary/muted text are #F1F3F1 / #A0A6A1. Do not carry the light palette’s purple tint into dark surfaces, text or theme previews. Palette details live in tokens.css.
 - Light mode uses the same semantic surface, border, text, and accent roles; feature CSS must never branch on a theme name.
 - System mode resolves through `prefers-color-scheme` and must remain live when Windows changes its appearance.
 - Theme preview colors are tokens owned by `src/styles/tokens.css`; feature styles do not introduce literal colors.
@@ -175,13 +176,13 @@ Radii:
 
 ### Buttons
 
-- `primary`: butter-yellow `--surface-action` with `--text-on-action`, one per action group.
+- `primary`: `--surface-action` with `--text-on-action`, butter-yellow in light and pale gray in dark; one per action group. The sidebar new-conversation action uses this role too.
 - `secondary`: borderless text action with a neutral hover surface.
 - `ghost`: transparent until hover; default for toolbar and row actions.
 - `danger`: neutral by default, danger color on hover and in confirmation.
 - All variants share the same typography, icon geometry, focus ring, and disabled behavior.
 - Text buttons use sentence-case action labels. Icon buttons use familiar symbols without redundant visible text.
-- Binary switches use a compact 32px by 20px rounded track and a 16px circular thumb; lavender (`--accent-action`) denotes enabled, neutral denotes disabled. An unavailable feature must not show an enabled-looking switch; provide its prerequisite action or explain its availability instead.
+- Binary switches use a compact 32px by 20px rounded track and a 16px circular thumb; `--surface-accent` denotes enabled (light lavender in light, neutral gray in dark), neutral selected surface denotes disabled. Keep this fill separate from readable accent text (`--accent-action`). An unavailable feature must not show an enabled-looking switch; provide its prerequisite action or explain its availability instead.
 - In Skill lists and detail dialogs, place the enable switch at the far right of its action group; other buttons precede it. Preserve this horizontal order at narrow widths and in keyboard navigation.
 
 ### Focus And Motion
