@@ -97,7 +97,7 @@ window.show=view=>root.render(h(Host,{key:view+Date.now(),view})); window.show('
           const art = page.locator('.conversation-empty-mark');
           for (const reducedMotion of ['reduce', 'no-preference']) {
             await page.emulateMedia({ reducedMotion });
-            await page.waitForFunction(() => document.querySelector('.conversation-empty-mark')?.currentSrc.includes('.webp'));
+            await page.waitForFunction(() => document.querySelector('.conversation-empty-mark')?.currentSrc.includes('.svg'));
             const bounds = await art.boundingBox();
             const moving = await art.screenshot();
             await page.waitForTimeout(200);

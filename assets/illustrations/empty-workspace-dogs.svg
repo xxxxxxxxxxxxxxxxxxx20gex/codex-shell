@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 190" fill="none">
+  <defs>
+    <clipPath id="grass"><path d="M12 161c8-8 33-12 56-10 22-6 42-3 57 0 24-5 43-3 60 0 22-1 41 5 43 12-5 10-39 12-63 11-29 5-63 3-83 0-30 3-60-1-70-13Z"/></clipPath>
+  </defs>
+  <path d="M12 161c8-8 33-12 56-10 22-6 42-3 57 0 24-5 43-3 60 0 22-1 41 5 43 12-5 10-39 12-63 11-29 5-63 3-83 0-30 3-60-1-70-13Z" fill="#ADC591"/>
+  <g clip-path="url(#grass)" stroke="#779662" stroke-width="1.4" stroke-linecap="round">
+    <g>
+      <animateTransform attributeName="transform" type="translate" values="0 0;-48 0" dur="1.6s" repeatCount="indefinite"/>
+      <path d="m18 162 2 3 3-5m19 10 2-4 2 3m20-7 2 3 3-5m19 10 2-4 2 3m20-7 2 3 3-5m19 10 2-4 2 3m20-7 2 3 3-5m19 10 2-4 2 3m20-7 2 3 3-5m19 10 2-4 2 3m20-7 2 3 3-5m19 10 2-4 2 3"/>
+    </g>
+  </g>
+  <g stroke="#342E29" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+    <!-- The beige dog's limbs overlap under the body so no joints open while moving. -->
+    <g fill="#E5CEA3">
+      <animateTransform attributeName="transform" type="translate" values="0 0;0 -3;0 0;0 -3;0 0" keyTimes="0;.25;.5;.75;1" dur="1.6s" repeatCount="indefinite" calcMode="spline" keySplines=".4 0 .6 1;.4 0 .6 1;.4 0 .6 1;.4 0 .6 1"/>
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="-9 84 128;11 84 128;-9 84 128" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.5;1" keySplines=".4 0 .6 1;.4 0 .6 1"/>
+        <path d="M83 119c12-2 20 3 20 10 7-1 9 4 6 7-5 5-15 1-22-4Z"/>
+      </g>
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="10 77 134;-17 77 134;10 77 134" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.5;1" keySplines=".4 0 .6 1;.4 0 .6 1"/>
+        <path d="M69 129c-2 9 1 22 8 27 7 5 21 2 20-5-1-4-7-5-9-6l-3-15Z"/>
+      </g>
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="-14 54 135;12 54 135;-14 54 135" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.5;1" keySplines=".4 0 .6 1;.4 0 .6 1"/>
+        <path d="M43 127c-2 10-3 24 3 31 4 5 17 5 20 0 3-4-1-9-4-12l1-16Z"/>
+      </g>
+      <path d="M45 80c-9 9-15 26-12 42 1 13 8 21 20 24 11 3 25-2 33-11 8-9 9-25 5-39-3-12-9-20-20-22Z"/>
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="-3 60 79;3 60 79;-3 60 79" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.5;1" keySplines=".4 0 .6 1;.4 0 .6 1"/>
+        <g>
+          <animateTransform attributeName="transform" type="rotate" values="-6 48 42;9 48 42;-6 48 42" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.5;1" keySplines=".4 0 .6 1;.4 0 .6 1"/>
+          <path d="M42 47c-6-7-7-17-3-24 4-7 12-9 17-5 5 5 0 13-5 18l4 11Z"/>
+        </g>
+        <path d="M38 45c8-9 24-12 37-7 11 4 18 13 20 23 2 10-3 19-13 23-12 6-29 8-41 4-12-3-18-12-15-23 1-8 7-14 12-20Z"/>
+        <g>
+          <animateTransform attributeName="transform" type="rotate" values="5 79 49;-8 79 49;5 79 49" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.5;1" keySplines=".4 0 .6 1;.4 0 .6 1"/>
+          <path d="M76 40c9 1 13 8 24 12 6 2 16 1 18 7 3 9-5 20-14 23-9 4-18-1-23-7"/>
+        </g>
+        <path d="M47 82c9 7 20 10 30 5" stroke="#CB6964" stroke-width="3"/>
+        <g fill="#342E29" stroke="none">
+          <ellipse cx="42" cy="61" rx="2.4" ry="3" transform="rotate(12 42 61)"/>
+          <ellipse cx="64" cy="67" rx="2.4" ry="3" transform="rotate(12 64 67)"/>
+          <path d="M46 69c1-4 8-3 9 1 0 3-3 5-5 5-3 0-5-3-4-6Z"/>
+        </g>
+        <path d="m50 74-1 4m-7-3c0 6 5 8 8 3 1 5 7 7 10 2" fill="none" stroke-width="2.2"/>
+      </g>
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="-12 38 97;14 38 97;-12 38 97" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.5;1" keySplines=".4 0 .6 1;.4 0 .6 1"/>
+        <path d="M38 91c-6-6-12-3-15 4-4 9 0 16 6 18 6 2 10-2 12-8"/>
+      </g>
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="10 63 103;-18 63 103;10 63 103" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.5;1" keySplines=".4 0 .6 1;.4 0 .6 1"/>
+        <path d="M70 106c-6-1-13-7-15-12-3-6-10-7-13-2-5 7 0 16 7 22 5 4 10 5 15 5"/>
+      </g>
+    </g>
+    <!-- White fill stays continuous; the separate outline intentionally has small gaps. -->
+    <g fill="#FFFCF5" stroke-width="2.5">
+      <animateTransform attributeName="transform" type="translate" values="0 -2;0 0;0 -2;0 0;0 -2" dur="1.6s" repeatCount="indefinite" calcMode="spline" keySplines=".4 0 .6 1;.4 0 .6 1;.4 0 .6 1;.4 0 .6 1"/>
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="12 188 133;-12 188 133;12 188 133" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.5;1" keySplines=".4 0 .6 1;.4 0 .6 1"/>
+        <path d="M187 128c6-5 12-3 13 2 7-2 11 3 8 7-4 6-13 2-19-1"/>
+      </g>
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="-15 174 141;12 174 141;-15 174 141" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.5;1" keySplines=".4 0 .6 1;.4 0 .6 1"/>
+        <path d="M165 135c0 8 3 19 9 22 5 4 17 3 18-2 0-5-7-6-9-10l-2-11Z"/>
+      </g>
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="12 153 140;-14 153 140;12 153 140" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.5;1" keySplines=".4 0 .6 1;.4 0 .6 1"/>
+        <path d="M144 133c-2 8-5 17-2 23 3 5 14 7 18 3 3-3 0-9-1-14l3-11Z"/>
+      </g>
+      <path d="M147 86c-10 9-14 19-13 33l-2 6 4 4-1 8 5 3 2 7c13 6 27 5 39-2l5-6 1-8 3-5-2-8c1-14-4-25-13-31Z" stroke="none"/>
+      <path d="M143 92c-7 8-10 18-9 27l-2 6 4 4-1 8 5 3m3 8c11 4 23 4 32-1m7-4 4-4 1-8 3-5-2-8c1-10-2-18-7-24" fill="none"/>
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="3 163 90;-3 163 90;3 163 90" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.5;1" keySplines=".4 0 .6 1;.4 0 .6 1"/>
+        <g>
+          <animateTransform attributeName="transform" type="rotate" values="-5 152 63;9 152 63;-5 152 63" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.5;1" keySplines=".4 0 .6 1;.4 0 .6 1"/>
+          <path d="M146 65c-4-6-3-15 1-21 3-4 8-2 9 2l-1 12 7 6"/>
+        </g>
+        <path d="M144 62c8-7 19-6 29-1l9 1 6 7c7 3 12 10 11 18-1 8-8 14-17 15l-8 3-8-1-7 1-7-4c-10-2-16-8-17-16-1-9 3-16 9-23Z" stroke="none"/>
+        <path d="M142 65c-5 6-8 13-7 20 1 6 4 11 9 14m6 3 9 3 7-1 8 1 8-3c9-1 16-7 17-15m-25-26 8 1 6 7" fill="none"/>
+        <g>
+          <animateTransform attributeName="transform" type="rotate" values="6 184 69;-7 184 69;6 184 69" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.5;1" keySplines=".4 0 .6 1;.4 0 .6 1"/>
+          <path d="M183 65c8-1 13 4 21 3 5-1 7 4 4 8l-4 4c1 6-2 11-7 11l-7-3"/>
+        </g>
+        <g fill="#342E29" stroke="none">
+          <ellipse cx="150" cy="80" rx="2.1" ry="2.8"/>
+          <ellipse cx="170" cy="85" rx="2.1" ry="2.8"/>
+          <path d="M153 87c1-3 7-3 8 0 1 3-2 5-4 5-3-1-5-2-4-5Z"/>
+        </g>
+        <path d="m157 92-1 3m-7-2c0 5 5 7 7 2 2 5 7 6 10 2" fill="none" stroke-width="2"/>
+      </g>
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="12 141 110;-17 141 110;12 141 110" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.5;1" keySplines=".4 0 .6 1;.4 0 .6 1"/>
+        <path d="M142 108c-6-8-13-6-15 0-3 7 0 13 6 14l7-2"/>
+      </g>
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="-12 165 116;15 165 116;-12 165 116" dur="1.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.5;1" keySplines=".4 0 .6 1;.4 0 .6 1"/>
+        <path d="M169 117c-6-1-10-5-12-10-3-5-9-5-11 0-3 7 2 13 7 17l10 2"/>
+      </g>
+    </g>
+  </g>
+</svg>
