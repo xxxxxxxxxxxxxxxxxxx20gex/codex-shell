@@ -11,7 +11,7 @@
 
 2026-10-23 双小狗动画：从用户视频提取 23 帧约 1.54 秒循环，保留原动作和白色小狗的线条断口，移除场景并输出透明 WebP 和静态 PNG。四尺寸深浅主题探针验证动画帧确实变化、减少动态效果下帧保持静止及媒体设置实时切换；检查窄窗口截图。TypeScript、ESLint、Cargo check、production build 与 Debug 构建通过。未重跑全量单测，未进行真实 WebView2 人工验收；原视频低分辨率压缩边缘仍可见，保留既有 Vite 大 chunk 和链接器信息提示。
 
-2026-10-23 图标重心校正：GPT 重做构图后，SVG 母版改为等高同粗的并排 CS，去除角落黄点，按图形像素重心校正整体横向位置。512px 资源的紫色图形重心约为 (256.2, 256.0)，复核 16–160px 前后对照及 ICO 多尺寸，平台图标由 Tauri icon 统一生成。TypeScript、3 项标题栏测试、Cargo check、52 项 Rust 测试（1 项忽略）、严格 Clippy、production build、Debug 构建和四尺寸工作台探针通过。未改交互逻辑，未重跑完整前端测试；未进行真实 Windows 任务栏缓存刷新或 WebView2 人工验收。空会话插图以 UI 壳当前状态为准。
+2026-10-23 C 版图标替换：用户选定淡紫底／紫色对称代码符号；生成原图去除外围白底后作为 PNG 母版，标题栏与 Tauri 派生平台图标同步使用，移除旧字母 SVG。检查 756×756 母版透明角落、128px 外观与 ICO 的 16/24/32/48/64/256px 子图。TypeScript、3 项标题栏测试、四尺寸工作台探针、Cargo check、production build 和 Debug 构建通过。未重跑全量单测，未验证真实 Windows 图标缓存刷新或 WebView2 人工验收；保留既有构建警告。
 
 2026-10-23 主题校正：浅色按批准稿的实际纸面取色，补新建对话主动作、淡化输入框聚焦边线和代码标题栏层次，暗色及系统暗色恢复中性黑灰；主题预览缩小且保持对应配色。487 项前端测试、TypeScript、ESLint、Knip、production build、Cargo check、52 项 Rust 测试（1 项忽略）、严格 Clippy 和 Debug 构建通过；复跑四尺寸 `soft-notebook`、`workbench`、`composer`、`markdown-code` 探针。新增暗色中性约束和系统配色检查，深浅文字对比度通过。工作台截图等待主题文字计算样式完成后采集，避免切换瞬间旧色被截图；已复核深浅截图。未验证真实 WebView2，保留既有 Vite 大 chunk 警告。
 

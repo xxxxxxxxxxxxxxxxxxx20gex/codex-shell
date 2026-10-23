@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { WindowTitleBar } from "./WindowTitleBar";
-import productMarkUrl from "../../../assets/branding/cs-app-icon.svg";
+import productMarkUrl from "../../../assets/branding/cs-app-icon.png";
 
 const mocks = vi.hoisted(() => ({
   invoke: vi.fn().mockResolvedValue(undefined),

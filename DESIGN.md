@@ -167,9 +167,9 @@ Radii:
 
 ### Product mark
 
-- The Codex Shell application mark is the bright lavender `CS` monogram defined in `assets/branding/cs-app-icon.svg`.
-- The violet `C` and `S` sit side by side on a pale lavender rounded square. Use the same stroke weight and cap height, balanced upper/lower contours, and an optically centered combined mark. Avoid enclosing one letter inside the other or adding offset accent dots. Keep the brand bright in both appearance modes; the app mark is independent of UI semantic tokens. The GPT concept is redrawn as clean SVG for small sizes.
-- Platform icons are generated from the SVG master through the Tauri icon generator. Do not hand-edit individual PNG, ICO, or ICNS derivatives.
+- The Codex Shell application mark is the approved C concept: two violet mirrored code brackets on a pale lavender rounded square, stored in `assets/branding/cs-app-icon.png`.
+- Preserve the approved generated artwork, centered visual balance, rounded endpoints and open central space. Only remove the outside white canvas and prepare transparent margins; do not redraw the symbol or replace it with letters. Keep the brand bright in both appearance modes, independent of UI semantic tokens.
+- Title-bar branding uses the same PNG master. Platform icons are generated through the Tauri icon generator; do not hand-edit individual PNG, ICO, or ICNS derivatives.
 - Keep the transparent outer margin and rounded-square silhouette intact so the mark remains legible in Windows taskbar, shortcut, and installer sizes.
 
 ## Controls

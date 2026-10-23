@@ -1,4 +1,4 @@
-import productMarkUrl from "../../assets/branding/cs-app-icon.svg";
+import productMarkUrl from "../../assets/branding/cs-app-icon.png";
 
 interface ProductMarkProps {
   className?: string;
