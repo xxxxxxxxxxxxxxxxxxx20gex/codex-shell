@@ -93,6 +93,20 @@ window.show=view=>root.render(h(Host,{key:view+Date.now(),view})); window.show('
           return r.left >= 0 && r.top >= 0 && r.right <= innerWidth + 1 && r.bottom <= innerHeight + 1;
         }), `${view} ${width} bounds`);
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+        if (view === "empty") {
+          const art = page.locator('.conversation-empty-mark');
+          await page.waitForFunction(() => document.querySelector('.conversation-empty-mark')?.currentSrc.includes('.png'));
+          const still = await art.screenshot();
+          await page.waitForTimeout(200);
+          assert(still.equals(await art.screenshot()), 'reduced motion keeps dogs static');
+          await page.emulateMedia({ reducedMotion: 'no-preference' });
+          await page.waitForFunction(() => document.querySelector('.conversation-empty-mark')?.currentSrc.includes('.webp'));
+          const moving = await art.screenshot();
+          await page.waitForTimeout(200);
+          assert(!moving.equals(await art.screenshot()), 'dogs animate without moving layout');
+          await page.emulateMedia({ reducedMotion: 'reduce' });
+          await page.waitForFunction(() => document.querySelector('.conversation-empty-mark')?.currentSrc.includes('.png'));
+        }
         if (view === "skills") {
           await page.getByText("兔子生图", { exact: true }).waitFor();
           assert.equal(await page.locator('.skill-management-icon svg').first().evaluate(el => el.getBoundingClientRect().width), 16);
