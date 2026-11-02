@@ -47,7 +47,7 @@ AI 处理任务时从 `AGENTS.md` 开始，只继续读取与任务直接相关�
 - [测试脚本说明](../tests/scripts/README.md)：专项入口、调用条件和验证边界；通过记录由测试与发布状态维护。
 - [随包许可证说明](../licenses/README.md)：Runtime、companion 和 ripgrep 的许可归属。
 - [模型渠道后续目标](../design-plans/model-channels-v1.md)：尚未实施范围，不表示已完成能力。
-- 随包 Skill 的使用文档分别由 [CS 文档](../bundled/skills/cs-docs/SKILL.md)、[项目文档管理](../bundled/skills/project-management-docs/SKILL.md)、[生图](../bundled/skills/image-gen/SKILL.md) 和 [高德地图](../bundled/skills/amap/SKILL.md) 及其相对引用维护；它们会被复制到用户目录，更新应用不覆盖已安装副本。
+- 随包 Skill 的使用文档分别由 [CS 文档](../bundled/skills/cs-docs/SKILL.md)、[项目文档管理](../bundled/skills/project-management-docs/SKILL.md)、[凭证管理](../bundled/skills/local-credential-memory/SKILL.md)、[生图](../bundled/skills/image-gen/SKILL.md) 和 [高德地图](../bundled/skills/amap/SKILL.md) 及其相对引用维护；它们会被复制到用户目录，更新应用不覆盖已安装副本。
 
 ## 模块状态模板
 

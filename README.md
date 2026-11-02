@@ -8,7 +8,7 @@ CS 复用原版 `codex app-server` 作为执行内核，提供独立的桌面界
 
 [下载 Windows 版](https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/releases/latest) · [配置 GPT / DeepSeek](#配置-gpt--deepseek) · [从源码运行](#从源码运行)
 
-当前版本 `v0.1.13` 使用 Codex Core `0.160.1`，新增历史拖拽排序，优化引导消息即时反馈、输入框布局及回复附件，并提供可选的项目文档管理 Skill；也可[从源码构建 Debug 桌面端](#从源码运行)。从旧版升级前，请关闭 CS 并备份 `%USERPROFILE%\.codex-shell`（自定义 CODEX_HOME 请备份对应目录）；Core 会迁移旧历史，降级安装器不能还原数据。
+当前版本 `v0.2.0` 使用 Codex Core `0.160.1`，带来 Soft Notebook 界面改版、新应用图标与空状态动画，并更新项目文档管理、加入可选凭证管理 Skill；也可[从源码构建 Debug 桌面端](#从源码运行)。从旧版升级前，请关闭 CS 并备份 `%USERPROFILE%\.codex-shell`（自定义 CODEX_HOME 请备份对应目录）；Core 会迁移旧历史，降级安装器不能还原数据。
 
 源码开发版浅色使用 Soft Notebook 界面：纸白奶油底、淡紫选中态和浅黄主动作；深色使用中性黑灰。新配置默认浅色；已有主题选择会保留，可在“设置 → 外观”切换浅色、深色或跟随系统。公开安装器版本以 Releases 为准。
 
@@ -23,7 +23,7 @@ CS 复用原版 `codex app-server` 作为执行内核，提供独立的桌面界
 - **用图片和草图表达问题**：预览本地图片、添加位置批注；还可用 `/绘图` 打开空白画布，或在本地图片上画线、标记后作为附件发送。托管图片仅支持查看。
 - **回复中的文件能直接找**：本地图片和 Markdown 资源集中展示，文件可在 CS 中预览或定位；资源列表先核对文件是否存在，避免把失效路径显示为附件。
 - **执行边界清楚**：支持只读、工作区写入和完全访问等原生权限范围，审批请求与工具状态集中展示。
-- **按需扩展工作流**：管理 Skills 和 MCP；CS 内置目录提供生图、高德地图、项目文档管理和 CS 文档技能，安装后按需启用，外部依赖和 Key 由用户配置。
+- **按需扩展工作流**：管理 Skills 和 MCP；CS 内置目录提供生图、高德地图、项目文档管理、凭证管理和 CS 文档技能，安装后按需启用，外部依赖和 Key 由用户配置。
 - **与官方 Codex 隔离**：配置、Session、SQLite、日志、缓存、Skills 和默认项目目录独立保存，不污染官方 Codex。
 
 多个 Session 共用当前激活渠道；切换渠道需等待任务结束，并会重启执行核心。模型调用使用你配置的服务，费用由对应服务商收取，CS 不提供内置 API 额度。侧边聊天固定只读且不会持久保存；它适合临时讨论，不负责修改文件或处理审批。
@@ -38,7 +38,7 @@ CS 将模型回答、执行过程、文件变更、回复文件和折叠过程�
 
 ![Codex Shell 产品界面](docs/assets/product-showcase.png)
 
-> 公开版本界面示例：执行过程可折叠，生成的图片支持在会话中预览。源码开发版已采用上文说明的 Soft Notebook 主题；实际布局随窗口尺寸、主题和运行状态自适应。
+> v0.1.13 历史界面示例：执行过程可折叠，生成的图片支持在会话中预览。当前 v0.2.0 已采用上文说明的 Soft Notebook 主题；实际布局随窗口尺寸、主题和运行状态自适应。
 
 回复中的本地文件链接、资源缩略图和文件变更条目可右键选择“复制绝对路径”；相对链接按当前会话项目解析，复制结果不包含行号。
 
@@ -52,7 +52,7 @@ CS 将模型回答、执行过程、文件变更、回复文件和折叠过程�
 
 ### 管理扩展
 
-- 左侧 **Skills** 只管理技能，按 **CS 内置、个人、系统** 分组。兔子生图 `image-gen`、高德地图 `amap` 和项目文档管理 `project-management-docs` 安装前后留在 CS 内置组；CS 文档 `cs-docs` 安装前后固定在系统组。内置技能安装后会请求 Core 默认关闭，失败或有效状态仍启用时明确提示。个人组包含独立用户技能；系统组汇总系统、项目和管理员技能，后两者保留来源标签。支持从本地目录安装个人技能；项目和管理员技能不提供卸载入口；CS 文档仍支持安装、启停和卸载，底层使用 CS 隔离用户目录。对话 `/skills` 汇总所有已启用技能。
+- 左侧 **Skills** 只管理技能，按 **CS 内置、个人、系统** 分组。兔子生图 `image-gen`、高德地图 `amap` 、项目文档管理 `project-management-docs` 和凭证管理 `local-credential-memory` 安装前后留在 CS 内置组；CS 文档 `cs-docs` 安装前后固定在系统组。内置技能安装后会请求 Core 默认关闭，失败或有效状态仍启用时明确提示。个人组包含独立用户技能；系统组汇总系统、项目和管理员技能，后两者保留来源标签。支持从本地目录安装个人技能；项目和管理员技能不提供卸载入口；CS 文档仍支持安装、启停和卸载，底层使用 CS 隔离用户目录。对话 `/skills` 汇总所有已启用技能。
 - 在 Composer 的 **MCP** 面板添加、编辑、启停或删除用户级服务器，支持 stdio 命令、JSON 参数数组、环境变量引用及 HTTP。原配置中未编辑的工具策略等字段会保留；项目或管理员层配置不会被此表单删除。
 - HTTP 接入使用 Streamable HTTP：远程地址要求 HTTPS，仅本机回环地址允许 HTTP；旧的远程 HTTP 配置仍可禁用或删除，启用前需改为 HTTPS。Bearer Token 输入后保存到 Windows Credential Manager，普通配置只写环境变量名。新增或更换 Token 后，等待任务结束，在“设置 → 运行环境”重启使其生效；不会自动中断当前任务。stdio 服务的密钥可通过系统环境变量引用。
 - 保存期间 MCP 面板暂时禁止关闭；刷新保留草稿及原编辑版本，出现配置冲突时需返回列表重新编辑。配置／凭据处理完成但重载失败时，可点击“刷新”重试；凭据保存失败需重新编辑输入 Token，删除凭据失败可在确认框重试。
@@ -71,7 +71,7 @@ CS 内置目录也提供“高德地图” `amap`，支持地点、路线、距�
 Skill 所需 Python、LibreOffice 等依赖由 Skill 自己声明和检查；CS 只负责展示 Skill 的安装、启停和错误信息。
 
 已安装的插件不会再由 CS 管理；如需继续使用，请将能力迁移为独立 Skill 并按 Skill 目录安装。
-源码及新 Debug 的内置目录另提供“凭证管理” `local-credential-memory`（已发布 v0.1.13 不含此项），安装后默认关闭。它按授权使用 `%USERPROFILE%\.codex-shell-credentials\credentials.toml` 明文文件，可用 `CS_CREDENTIAL_MEMORY_PATH` 指定位置；不会自动读取 Codex 凭证，也不会导出 CS 渠道的 Windows Credential Manager 密钥。请限制该文件的访问权限。
+v0.2.0 起内置目录提供“凭证管理” `local-credential-memory`，安装后默认关闭。它按授权使用 `%USERPROFILE%\.codex-shell-credentials\credentials.toml` 明文文件，可用 `CS_CREDENTIAL_MEMORY_PATH` 指定位置；不会自动读取 Codex 凭证，也不会导出 CS 渠道的 Windows Credential Manager 密钥。请限制该文件的访问权限。
 
 更新应用不会覆盖已安装的用户 Skill；已有安装请备份自定义修改后，在 CS 内置目录卸载并重新安装新版，再按需启用。
 
@@ -91,8 +91,8 @@ CS 不修改 Codex Core，也不在前端复制一套 Agent 执行循环。所�
 
 ### 下载 Windows 安装包
 
-当前版本为 [Codex Shell v0.1.13](https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/releases/tag/v0.1.13)：下载
-`codex-shell_0.1.13_x64-setup.exe` 后按向导安装。当前版本已启用 Tauri Updater，但公开 Release 未进行 Windows Authenticode 代码签名，
+当前版本为 [Codex Shell v0.2.0](https://github.com/xxxxxxxxxxxxxxxxxxx20gex/codex-shell/releases/tag/v0.2.0)：下载
+`codex-shell_0.2.0_x64-setup.exe` 后按向导安装。当前版本已启用 Tauri Updater，但公开 Release 未进行 Windows Authenticode 代码签名，
 Windows SmartScreen 可能在首次运行时显示提示；这是个人二开项目，不代表 OpenAI
 官方产品或背书。
 
@@ -152,7 +152,7 @@ CS 不会将与功能无关的遥测数据上传到外部服务。
 
 ### 代码签名
 
-当前 `v0.1.13` Windows 安装包使用 Tauri Updater 的 minisign 更新签名校验；安装包本身
+当前 `v0.2.0` Windows 安装包使用 Tauri Updater 的 minisign 更新签名校验；安装包本身
 仍可能因未配置 Windows Authenticode 代码签名而触发
 SmartScreen 提示。Tauri 更新签名与 Windows 代码签名是两套独立机制。签名私钥只保存在
 本机安全目录或其他受控密钥存储中，不提交到仓库。
@@ -243,7 +243,7 @@ CS 采用“代码实现 + 仓库文档 Wiki”协同的开发方式。文档不
 ### 分支与版本
 
 - `main`：个人项目的日常开发与稳定主线；
-- `release/vX.Y.Z`：对应版本的冻结维护分支，并与同名 Git tag 对齐；当前版本为 `release/v0.1.13`。Updater 已生效。
+- `release/vX.Y.Z`：对应版本的冻结维护分支，并与同名 Git tag 对齐；当前版本为 `release/v0.2.0`。Updater 已生效。
 
 日常改动在 `main` 完成并通过质量门禁，默认只构建 Debug。明确发布时才从 `main` 创建版本分支
 和 tag，安装包与该 tag 保持一致。
@@ -337,7 +337,7 @@ pnpm protocol:generate
 pnpm runtime:probe-protocol
 ```
 
-当前 v0.1.13 安装包及 main 发布基线使用 `codex-cli 0.160.1`。
+当前 v0.2.0 安装包及 main 发布基线使用 `codex-cli 0.160.1`。
 升级到改变协议的候选内核时，先保留同源旧 Runtime 文件组，再按以下顺序适配，不能跳过兼容门禁：
 
 ```powershell
