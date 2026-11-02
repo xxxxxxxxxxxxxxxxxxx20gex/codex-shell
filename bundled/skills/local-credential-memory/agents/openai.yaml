@@ -1,0 +1,4 @@
+interface:
+  display_name: "凭证管理"
+  short_description: "按授权保存和复用本机凭证，仅在本地解析所需字段并脱敏反馈。"
+  default_prompt: "使用 $local-credential-memory 管理本次任务所需的凭证。"

@@ -5,7 +5,7 @@
 - 当前接口：`pnpm test:quality` 执行 TypeScript、ESLint、Vitest、高德离线测试、production build、Knip、Cargo check、Rust 单测、严格 Clippy 和 diff 检查。专项入口见 [测试脚本说明](../../tests/scripts/README.md)。
 - 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；`test:extension-layout` 指向缺失文件，技能和 MCP 应分别使用 Soft Notebook、MCP 专项。Vite 主 chunk 超过 500 kB；Rust 既有格式差异尚未整理，`cargo fmt --check` 未纳入门禁。生图 `--mask` 未接通上传，不得据参数存在宣称遮罩编辑可用。
 - 下一步：真实系统凭据、多渠道对话、第三方 MCP OAuth、干净 Windows 安装升级、大型历史迁移，以及生图编辑／遮罩契约补齐后的专项验证。
-- 最后更新：2026-10-23
+- 最后更新：2026-11-02
 
 ## 当前验证基线
 
@@ -28,7 +28,7 @@
 | 草图与终端 | 2026-10-23 草图；2026-10-08 终端探针 | 四尺寸及既有草图 150% DPI、曲线、单击、擦除、撤销／重做和画布比例检查；终端折叠、键盘、字号与边界通过。未验收真实 WebView2 手写触控。 |
 | 历史排序与 Steer | 2026-10-20 排序；2026-10-14 Steer | 排序的持久化、分组、存储失败／上限、指针／键盘、取消和边缘滚动有单测与四尺寸证据；真实 Core＋本机模拟网关确认 steer 客户端 ID 经事件与历史回传。未使用收费模型。 |
 | Runtime 与历史迁移 | 2026-10-07 兼容门禁；2026-10-12 问答／连续侧聊探针 | Core 0.160.1 的 875 个生成文件和当时 101 处调用／订阅门禁通过；原生设置／队列、Goal、分页、回退替换、普通／临时分叉、冷恢复及 legacy CLI／后台迁移通过。使用隔离 CODEX_HOME 与本机模拟 Responses 网关；未验证真实大型旧库或任意旧安装包直接升级。 |
-| 内置 Skill | 2026-10-23 项目文档 Skill；2026-10-05 生图预览 | 项目文档 Skill 格式、八条原则、三个 Debug 资源哈希及 3 项 Rust 资源测试通过；生图预览 14 项 Python 测试覆盖缩放、透明背景、EXIF、防覆盖和非法输入。生图 Images 编辑路由及 `--mask` 未上传的问题于 2026-10-23 静态确认；不视为真实编辑验收。 |
+| 内置 Skill | 2026-11-02 文档／凭证 Skill；2026-10-05 生图预览 | 两份 Skill 格式、三份源参考、7 个 Debug 资源哈希、5 项组件测试及 Edge 四尺寸技能界面通过；本次 TypeScript、ESLint、488 项前端测试、Knip、Cargo check、52 项 Rust 测试（1 项忽略）、严格 Clippy、production build 和 Debug 构建通过，未执行真实凭证存取；生图预览 14 项 Python 测试覆盖缩放、透明背景、EXIF、防覆盖和非法输入。生图 Images 编辑路由及 `--mask` 未上传的问题于 2026-10-23 静态确认；不视为真实编辑验收。 |
 
 ## 未覆盖范围
 

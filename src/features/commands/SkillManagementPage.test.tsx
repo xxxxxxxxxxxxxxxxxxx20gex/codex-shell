@@ -23,6 +23,27 @@ const defaults = () => ({
 const titles = () => Array.from(screen.getByRole("region", { name: "CS 内置" }).querySelectorAll("strong"), (node) => node.textContent);
 const installButton = () => within(screen.getByText("项目文档管理").closest("article")!).getByRole("button", { name: "安装" });
 
+it("installs credential instructions disabled in a stable slot and keeps the plaintext notice in details", async () => {
+  const props = defaults();
+  const credentialPath = "C:/cs-home/skills/local-credential-memory/SKILL.md";
+  let installed = false;
+  props.loadSkills.mockImplementation(async () => installed ? [skill({ name: "local-credential-memory", path: credentialPath })] : []);
+  vi.mocked(invoke).mockImplementation(async (command) => {
+    installed = command === "install_builtin_credentials";
+    return credentialPath;
+  });
+  render(<SkillManagementPage {...props} readSkillContent={async () => "# Credentials"} />);
+  const initial = titles();
+  fireEvent.click(within(screen.getByText("凭证管理").closest("article")!).getByRole("button", { name: "安装" }));
+  const toggle = await screen.findByRole("switch", { name: "local-credential-memory 启用状态" });
+  expect(invoke).toHaveBeenCalledWith("install_builtin_credentials");
+  expect(props.setEnabled).toHaveBeenCalledWith(credentialPath, false);
+  expect(toggle.getAttribute("aria-checked")).toBe("false");
+  expect(titles()).toEqual(initial);
+  fireEvent.click(screen.getByText("凭证管理"));
+  expect((await screen.findByRole("dialog")).textContent).toContain("明文凭证文件");
+});
+
 it("keeps the builtin slot stable across installation, toggling and uninstall", async () => {
   const props = defaults();
   let installed = false;
@@ -36,7 +57,7 @@ it("keeps the builtin slot stable across installation, toggling and uninstall", 
   render(<SkillManagementPage {...props} />);
   await waitFor(() => expect(props.loadSkills).toHaveBeenCalled());
   const initial = titles();
-  expect(initial).toEqual(["兔子生图", "高德地图", "项目文档管理"]);
+  expect(initial).toEqual(["兔子生图", "高德地图", "项目文档管理", "凭证管理"]);
   fireEvent.click(installButton());
   const toggle = await screen.findByRole("switch", { name: "project-management-docs 启用状态" });
   expect(invoke).toHaveBeenCalledWith("install_builtin_project_docs");
@@ -69,7 +90,7 @@ it("does not treat a same-name skill outside the CS user directory as bundled", 
   render(<SkillManagementPage {...props} />);
   const personal = await screen.findByRole("region", { name: "个人" });
   expect(within(personal).queryByRole("button", { name: "卸载" })).toBeNull();
-  expect(titles()).toEqual(["兔子生图", "高德地图", "项目文档管理"]);
+  expect(titles()).toEqual(["兔子生图", "高德地图", "项目文档管理", "凭证管理"]);
   fireEvent.change(screen.getByPlaceholderText("搜索技能"), { target: { value: "project-management-docs" } });
   expect(titles()).toEqual(["项目文档管理"]);
 });

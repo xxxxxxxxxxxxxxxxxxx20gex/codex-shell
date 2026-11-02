@@ -71,6 +71,8 @@ CS 内置目录也提供“高德地图” `amap`，支持地点、路线、距�
 Skill 所需 Python、LibreOffice 等依赖由 Skill 自己声明和检查；CS 只负责展示 Skill 的安装、启停和错误信息。
 
 已安装的插件不会再由 CS 管理；如需继续使用，请将能力迁移为独立 Skill 并按 Skill 目录安装。
+源码及新 Debug 的内置目录另提供“凭证管理” `local-credential-memory`（已发布 v0.1.13 不含此项），安装后默认关闭。它按授权使用 `%USERPROFILE%\.codex-shell-credentials\credentials.toml` 明文文件，可用 `CS_CREDENTIAL_MEMORY_PATH` 指定位置；不会自动读取 Codex 凭证，也不会导出 CS 渠道的 Windows Credential Manager 密钥。请限制该文件的访问权限。
+
 更新应用不会覆盖已安装的用户 Skill；已有安装请备份自定义修改后，在 CS 内置目录卸载并重新安装新版，再按需启用。
 
 ```text
@@ -126,7 +128,7 @@ OpenAI 使用 Core 提供的模型目录，DeepSeek 使用随 CS 提供的目录
 
 保存会等待重启和参数同步完成；若提示“配置已保存，但运行状态同步失败”，请排除连接问题后重试保存。“测试连接”只检查 /models，不保证对话或工具可用。其他限制见 [模型配置状态](docs/status/model-config-status.md)。
 
-API Key 只保存到 Windows Credential Manager，不写入项目文件、Session、日志或普通配置 JSON。
+渠道 API Key 只保存到 Windows Credential Manager，不写入项目文件、Session、日志或普通配置 JSON。
 
 ### 隐私与数据传输
 
@@ -145,7 +147,7 @@ CS 不会在后台主动向外部服务上传会话内容。只有当用户发�
 或工具操作，都属于原任务的后续处理，可能继续产生发往所选模型服务的请求。具体请求的保留、
 日志和处理方式取决于用户配置的模型服务或网关及其隐私政策，CS 无法替代该服务提供方作出承诺。
 
-API Key 仅保存到 Windows Credential Manager，不写入仓库、Session 文件、普通配置文件或应用日志。
+渠道 API Key 仅保存到 Windows Credential Manager，不写入仓库、Session 文件、普通配置文件或应用日志。
 CS 不会将与功能无关的遥测数据上传到外部服务。
 
 ### 代码签名
