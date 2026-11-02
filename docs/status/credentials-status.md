@@ -6,7 +6,7 @@
 - 迁移边界：v1 使用稳定的 vendor-legacy ID，保留 settings.v1.bak.json；新映射及配置成功写入后才删除旧凭据。备份或落盘失败上报且保留旧凭据，重试不会生成另一个随机身份。首次启动也先持久化默认渠道身份。
 - 当前接口：save_model_settings(settings, expected, secretChange)、channel_secret_presence、read_channel_secret（后端）、migrate_legacy_channel_secret、save_mcp_secret、read_environment。
 - MCP 保存边界：与渠道配置事务不同，MCP 依次写 Core 配置、写／删系统凭据、重载；重载失败不跳过凭据处理，配置被上层覆盖作为警告返回。凭据失败时配置可能已落盘，界面明确报告并提供重新编辑或删除重试，不能保证跨存储原子性。远程地址在新增／编辑及启用写入边界要求 HTTPS，HTTP 只允许本机回环。
-- 可选凭证 Skill：`local-credential-memory` 默认关闭，按授权读写独立的 `~/.codex-shell-credentials/credentials.toml`（可由 `CS_CREDENTIAL_MEMORY_PATH` 覆盖）。这是明文文件工作流，不是系统凭据库；不提供渠道密钥导出，也不自动读取官方 Codex 的存储。安装包仅含指令，不含凭证数据。
+- 可选凭证 Skill：`local-credential-memory` 默认关闭，按授权读写独立的 `~/.codex-shell-credentials/credentials.toml`（可由 `CS_CREDENTIAL_MEMORY_PATH` 覆盖）。这是明文文件工作流，不是系统凭据库；不提供渠道密钥导出，也不自动读取官方 Codex 的存储。安装包仅含指令，不含凭证数据。长期规则在 AGENTS.md 区分此授权文件工作流与渠道密钥安全存储；两者均禁止将秘密写入源码、Git、日志或项目文档。
 - 渠道安全边界：Key 不进入源码、普通配置、日志、命令行参数或前端回读。连接探针返回状态与数量，不返回密钥或响应正文。
 - 已知问题：文件系统与系统凭据不支持跨存储崩溃原子提交；进程被强制结束、断电或补偿写入失败时可能需要重新保存渠道密钥。v1 最后删除旧凭据失败时新配置已有效，旧条目可能残留，不能假定自动清理成功。单条映射受 Windows 凭据容量限制。未在真实 Credential Manager 执行本次增删与故障注入验收。
 - 下一步：人工验证真实系统凭据增删、迁移及容量边界；不为测试改动现有用户密钥。

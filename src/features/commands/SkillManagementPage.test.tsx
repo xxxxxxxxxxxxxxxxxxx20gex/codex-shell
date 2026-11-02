@@ -84,6 +84,25 @@ it.each(["reject", "policy"])("reports an unsuccessful default disable: %s", asy
   await waitFor(() => expect(props.loadSkills).toHaveBeenCalledTimes(2));
 });
 
+it.each(["reject", "policy"])("shows detail toggle failures in the modal and clears them on retry: %s", async (failure) => {
+  const props = defaults();
+  let enabled = false;
+  props.loadSkills.mockImplementation(async () => [skill({ enabled })]);
+  if (failure === "reject") props.setEnabled.mockRejectedValueOnce(new Error("write failed"));
+  else props.setEnabled.mockResolvedValueOnce(false);
+  props.setEnabled.mockImplementation(async (_path, next) => { enabled = next; return next; });
+  render(<SkillManagementPage {...props} readSkillContent={async () => "# Skill"} />);
+  await screen.findByRole("switch");
+  fireEvent.click(screen.getByText("项目文档管理"));
+  const dialog = await screen.findByRole("dialog");
+  fireEvent.click(within(dialog).getByRole("switch"));
+  expect((await within(dialog).findByRole("alert")).textContent).toContain(failure === "reject" ? "write failed" : "上层策略限制");
+  expect(screen.getAllByRole("alert")).toHaveLength(1);
+  fireEvent.click(within(dialog).getByRole("switch"));
+  await waitFor(() => expect(within(dialog).getByRole("switch").getAttribute("aria-checked")).toBe("true"));
+  expect(within(dialog).queryByRole("alert")).toBeNull();
+});
+
 it("does not treat a same-name skill outside the CS user directory as bundled", async () => {
   const props = defaults();
   props.loadSkills.mockResolvedValue([skill({ path: "C:/official/skills/project-management-docs/SKILL.md" })]);

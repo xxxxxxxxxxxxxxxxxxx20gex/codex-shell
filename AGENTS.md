@@ -9,7 +9,7 @@ Codex Shell 是面向个人开发者的 Windows 桌面智能体工作台。产�
 - React 负责工作台视图、交互状态和 app-server v2 协议适配。
 - Tauri/Rust 负责进程生命周期、本地配置、Windows Credential Manager 和系统能力。
 - `codex app-server` 是唯一智能体执行核心；stdout 只承载协议消息，stderr 只承载日志。
-- API Key 不得写入源码、日志、状态文档或普通配置文件，也不得通过 Tauri 命令回读到前端。
+- CS 对话渠道 API Key 只保存在 Windows Credential Manager，不得写入普通配置文件，也不得通过 Tauri 命令回读到前端。可选 `local-credential-memory` Skill 可按用户授权将任务凭证保存到独立、受限访问的明文文件，但不得导出渠道密钥或自动读取官方 Codex 凭证。所有秘密均不得进入源码、Git、日志或项目文档。
 - 模型 ID 与模型参数必须解耦。优先使用 app-server 原生模型元数据决定可选参数；第三方模型的专属参数应限制在高级 Provider 适配层，不得硬编码到通用对话流程。
 - 默认只使用稳定 app-server v2 API；实验字段必须由明确的产品需求驱动，限制在最小协议适配层内，并同时提供能力声明、序列化测试和真实 app-server 验证证据。
 
