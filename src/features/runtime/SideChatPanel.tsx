@@ -1,5 +1,5 @@
 import { ChevronLeft, Maximize2, Minimize2, Send, Square, X } from "lucide-react";
-import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 import { ConversationTimeline } from "../threads/ConversationTimeline";
 import { CompactIconButton } from "../../shared/CompactIconButton";
 import type { SideChat } from "./useSideChat";
@@ -14,15 +14,12 @@ interface Props {
 }
 
 export function SideChatPanel({ chat, maximized, onToggleMaximize, onClose, onBack }: Props) {
-  const [draft, setDraft] = useState("");
-  const draftVersionRef = useRef(0);
+  const draft = chat.draft;
 
   async function submit(event?: FormEvent) {
     event?.preventDefault();
-    const message = draft.trim();
-    if (!chat.thread || !message || chat.running || chat.submitting) return;
-    const draftVersion = draftVersionRef.current;
-    if (await chat.send(message) && draftVersion === draftVersionRef.current) setDraft("");
+    if (!chat.thread || !draft.trim() || chat.running || chat.submitting) return;
+    await chat.sendDraft();
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -64,7 +61,7 @@ export function SideChatPanel({ chat, maximized, onToggleMaximize, onClose, onBa
         )}
       </div>
       <form className="side-chat-composer" onSubmit={submit}>
-        <textarea autoFocus value={draft} onChange={(event) => { draftVersionRef.current += 1; setDraft(event.target.value); }} onKeyDown={handleKeyDown} placeholder={!chat.thread ? "正在准备侧聊…" : chat.running ? "正在处理…" : "继续询问…"} disabled={!chat.thread || chat.submitting} rows={2} />
+        <textarea autoFocus value={draft} onChange={(event) => chat.setDraft(event.target.value)} onKeyDown={handleKeyDown} placeholder={!chat.thread ? "正在准备侧聊…" : chat.running ? "正在处理…" : "继续询问…"} disabled={!chat.thread || chat.submitting} rows={2} />
         <div className="side-chat-composer-footer">
           <small>Enter 发送 · Shift+Enter 换行</small>
           {chat.running ? (

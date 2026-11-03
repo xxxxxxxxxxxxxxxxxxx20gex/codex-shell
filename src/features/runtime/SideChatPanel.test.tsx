@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SideChatPanel } from "./SideChatPanel";
 import type { SideChat } from "./useSideChat";
@@ -14,6 +14,9 @@ function fakeChat(overrides: Partial<SideChat> = {}) {
     running: false,
     submitting: false,
     error: "",
+    draft: "",
+    setDraft: vi.fn(),
+    sendDraft: vi.fn(async () => true),
     tokenUsage: null,
     diffsByTurnId: {},
     plansByTurnId: {},
@@ -31,18 +34,6 @@ function fakeChat(overrides: Partial<SideChat> = {}) {
 }
 
 describe("SideChatPanel", () => {
-  it.each(["unchanged", "edited", "restored", "failed"])("preserves the correct draft after delayed send: %s", async (scenario) => {
-    let finish!: (value: boolean) => void;
-    const chat = fakeChat({ send: vi.fn(() => new Promise<boolean>(r => { finish = r; })) });
-    render(<SideChatPanel chat={chat} maximized={false} onToggleMaximize={vi.fn()} onClose={vi.fn()} />);
-    const input = screen.getByRole("textbox") as HTMLTextAreaElement;
-    fireEvent.change(input, { target: { value: "first" } });
-    fireEvent.click(screen.getByRole("button", { name: "发送" }));
-    if (scenario === "edited" || scenario === "restored") fireEvent.change(input, { target: { value: "next draft" } });
-    if (scenario === "restored") fireEvent.change(input, { target: { value: "first" } });
-    await act(async () => finish(scenario !== "failed"));
-    expect(input.value).toBe(scenario === "unchanged" ? "" : scenario === "edited" ? "next draft" : "first");
-  });
   it("wires model questions to the side-chat answer handler", async () => {
     const answerQuestions = vi.fn(async () => true);
     const chat = fakeChat({ answerQuestions, turns: [{ id: "turn", itemsView: "full", status: "completed", error: null, startedAt: 1, completedAt: 2, durationMs: 1000, items: [{ type: "agentMessage", id: "question", text: "请选择", phase: "final_answer", memoryCitation: null, delivery: null, questions: [{ title: "方向", options: ["方案 A", "方案 B"] }] }] }] });
@@ -52,20 +43,21 @@ describe("SideChatPanel", () => {
     await waitFor(() => expect(answerQuestions).toHaveBeenCalledWith(expect.stringContaining("<send_user_message_question_reply>")));
   });
   it("does not send Enter used to confirm IME composition", async () => {
-    const chat = fakeChat();
+    const chat = fakeChat({ draft: "中文" });
     render(<SideChatPanel chat={chat} maximized={false} onToggleMaximize={vi.fn()} onClose={vi.fn()} />);
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "中文" } });
     fireEvent.keyDown(screen.getByRole("textbox"), { key: "Enter", isComposing: true });
-    expect(chat.send).not.toHaveBeenCalled();
+    expect(chat.sendDraft).not.toHaveBeenCalled();
     fireEvent.keyDown(screen.getByRole("textbox"), { key: "Enter" });
-    await waitFor(() => expect(chat.send).toHaveBeenCalledWith("中文"));
+    await waitFor(() => expect(chat.sendDraft).toHaveBeenCalledTimes(1));
   });
   it("submits text through the isolated side-chat session", async () => {
-    const chat = fakeChat();
+    const chat = fakeChat({ draft: "解释这个改动" });
     render(<SideChatPanel chat={chat} maximized={false} onToggleMaximize={vi.fn()} onClose={vi.fn()} />);
-    fireEvent.change(screen.getByRole("textbox"), { target: { value: "解释这个改动" } });
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "下一条草稿" } });
+    expect(chat.setDraft).toHaveBeenCalledWith("下一条草稿");
     fireEvent.click(screen.getByRole("button", { name: "发送" }));
-    await waitFor(() => expect(chat.send).toHaveBeenCalledWith("解释这个改动"));
+    await waitFor(() => expect(chat.sendDraft).toHaveBeenCalledTimes(1));
   });
 
   it("exposes close and maximize controls without changing the composer", () => {
@@ -85,6 +77,6 @@ describe("SideChatPanel", () => {
     expect((textbox as HTMLTextAreaElement).disabled).toBe(true);
     expect((screen.getByRole("button", { name: "发送" }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.change(textbox, { target: { value: "不会丢失" } });
-    expect(chat.send).not.toHaveBeenCalled();
+    expect(chat.sendDraft).not.toHaveBeenCalled();
   });
 });

@@ -177,9 +177,17 @@ try {
   assert.equal(side.thread.ephemeral, true);
   assert.deepEqual(side.thread.turns, []);
   await turn(side.thread.id, "Side chat input");
+  const otherSide = await client.rpc("thread/start", { cwd: home, ephemeral: true, sandbox: "read-only", approvalPolicy: "never", threadSource: "codex-shell-side-chat" });
+  await client.rpc("thread/unsubscribe", { threadId: thread.id });
+  await turn(otherSide.thread.id, "Other side chat input");
   await turn(side.thread.id, "Side chat second input");
+  const retainedInput = JSON.stringify(requests[requests.length - 1].input);
+  assert(retainedInput.includes("Side chat input"), "Retained side chat must keep its earlier model context");
+  assert(!retainedInput.includes("Other side chat input"), "Side chats must not mix context");
+  await client.rpc("thread/unsubscribe", { threadId: otherSide.thread.id });
   await client.rpc("thread/unsubscribe", { threadId: side.thread.id });
-  console.log("PASS ephemeral paginated side-chat fork and turn");
+  await client.rpc("thread/resume", { threadId: thread.id, excludeTurns: true });
+  console.log("PASS retained ephemeral side chats across parent unsubscribe, independent context and continued turns");
   await client.rpc("thread/archive", { threadId: fork.thread.id });
   await client.rpc("thread/unarchive", { threadId: fork.thread.id });
   hold = true;

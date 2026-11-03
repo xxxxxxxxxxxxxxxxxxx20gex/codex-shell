@@ -493,7 +493,7 @@ export function useAgentSession(
 
   return {
     acquireProviderSwitch: () => {
-      if (hasRunningTurns() || submitting || sideChat.submitting) throw new Error("有任务正在执行或提交，请完成后再切换渠道");
+      if (hasRunningTurns() || submitting || sideChat.anySubmitting) throw new Error("有任务正在执行或提交，请完成后再切换渠道");
       return clientRef.current!.pauseExecution();
     },
     codexHome,

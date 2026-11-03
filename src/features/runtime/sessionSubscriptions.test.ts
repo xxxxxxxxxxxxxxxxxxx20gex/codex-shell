@@ -273,8 +273,8 @@ describe("session subscriptions", () => {
       dispatch: (action) => mainActions.push(action),
       onTurnStarted: (notification) => globalStarted.push(notification.threadId),
       sideChat: {
-        currentThreadId: () => "thread-side",
-        dispatch: (action) => sideActions.push(action),
+        ownsThread: (threadId) => ["thread-side", "thread-hidden"].includes(threadId),
+        dispatch: (_threadId, action) => sideActions.push(action),
         onTurnStarted: (notification) => sideStarted.push(notification.threadId),
         onTurnCompleted: () => undefined,
         onError: () => undefined,
@@ -314,6 +314,18 @@ describe("session subscriptions", () => {
       type: "agentDelta",
       notification: { threadId: "thread-side", turnId: "turn-side", itemId: "message-side", delta: "side" },
     }]);
+    transport.emit({
+      method: "item/agentMessage/delta",
+      params: { threadId: "thread-hidden", turnId: "hidden-turn", itemId: "hidden-message", delta: "background" },
+    });
+    expect(sideActions[sideActions.length - 1]).toEqual({ type: "agentDelta", notification: {
+      threadId: "thread-hidden", turnId: "hidden-turn", itemId: "hidden-message", delta: "background",
+    } });
+    const count = sideActions.length;
+    transport.emit({ method: "item/agentMessage/delta", params: {
+      threadId: "unowned", turnId: "other", itemId: "other", delta: "ignored",
+    } });
+    expect(sideActions).toHaveLength(count);
     expect(globalStarted).toEqual(["thread-side"]);
     expect(sideStarted).toEqual(["thread-side"]);
     dispose();

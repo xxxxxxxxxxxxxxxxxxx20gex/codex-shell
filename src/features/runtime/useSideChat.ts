@@ -8,7 +8,7 @@ import type { UserInput } from "../../generated/app-server/v2/UserInput";
 import type { ModelSettings, PersonalizationSettings } from "../models/types";
 import { buildUserInput, type FileMention, type ImageAttachment, type SkillMention } from "./sessionInput";
 import type { AppServerClient } from "./appServerClient";
-import { agentSessionReducer, initialAgentSessionState } from "./sessionState";
+import { agentSessionReducer, initialAgentSessionState, type AgentSessionAction, type AgentSessionState } from "./sessionState";
 import { errorMessage } from "../../shared/errors";
 import { buildHostInstructions } from "./hostInstructions";
 
@@ -51,251 +51,255 @@ function sideTurnStart(client: AppServerClient, threadId: string, input: UserInp
   });
 }
 
-export function useSideChat({
-  clientRef,
-  ensureConnected,
-  mainThread,
-  mainTurns,
-  settings,
-  personalization,
-  markThreadRunning,
-  markThreadStopped,
-}: Props) {
-  const [state, dispatch] = useReducer(agentSessionReducer, initialAgentSessionState);
-  const [submitting, setSubmitting] = useState(false);
-  const [running, setRunning] = useState(false);
-  const [error, setError] = useState("");
-  const threadIdRef = useRef<string | null>(null);
-  const turnsRef = useRef<Turn[]>([]);
-  turnsRef.current = state.turns;
-  const currentThreadId = useCallback(() => threadIdRef.current, []);
-  const operationRef = useRef(false);
-  const generationRef = useRef(0);
-  const completedTurnIdRef = useRef<string | null>(null);
-  const previousMainThreadIdRef = useRef<string | null>(mainThread?.id ?? null);
+const MAX_SIDE_CHATS = 10;
 
-  const resetState = useCallback(() => {
-    generationRef.current += 1;
-    operationRef.current = false;
-    threadIdRef.current = null;
-    turnsRef.current = [];
-    completedTurnIdRef.current = null;
-    setSubmitting(false);
-    setRunning(false);
-    setError("");
-    dispatch({ type: "clear" });
+interface SideChatEntry {
+  state: AgentSessionState;
+  client: AppServerClient | null;
+  submitting: boolean;
+  running: boolean;
+  error: string;
+  draft: string;
+  draftVersion: number;
+  completedTurnId: string | null;
+}
+
+export function useSideChat({
+  clientRef, ensureConnected, mainThread, mainTurns, settings, personalization,
+  markThreadRunning, markThreadStopped,
+}: Props) {
+  const entries = useRef(new Map<string | null, SideChatEntry>());
+  const parentId = mainThread?.id ?? null;
+  const visibleParentId = useRef(parentId);
+  visibleParentId.current = parentId;
+  const [, refresh] = useReducer((value: number) => value + 1, 0);
+  const [openError, setOpenError] = useState<{ parentId: string | null; message: string } | null>(null);
+
+  // Entry identity fences off replies from closed/reset chats, while switches
+  // keep the same entry alive for background events and pending RPCs.
+  const isRetained = useCallback((entry: SideChatEntry) => [...entries.current.values()].includes(entry), []);
+  const findThread = useCallback((threadId: string) =>
+    [...entries.current.values()].find((entry) => entry.state.thread?.id === threadId), []);
+  const apply = useCallback((entry: SideChatEntry, action: AgentSessionAction) => {
+    entry.state = agentSessionReducer(entry.state, action);
+    refresh();
   }, []);
 
+  const release = useCallback(async (entry: SideChatEntry) => {
+    const threadId = entry.state.thread?.id;
+    if (!threadId) return;
+    const turn = [...entry.state.turns].reverse().find((item) => item.status === "inProgress");
+    markThreadStopped(threadId);
+    await releaseSideThread(entry.client ?? clientRef.current, threadId, turn?.id);
+  }, [clientRef, markThreadStopped]);
+
+  const reset = useCallback(() => {
+    const previous = [...entries.current.values()];
+    entries.current.clear();
+    setOpenError(null);
+    refresh();
+    for (const entry of previous) void release(entry);
+  }, [release]);
+
   const close = useCallback(async () => {
-    const threadId = threadIdRef.current;
-    const activeTurn = [...turnsRef.current].reverse().find((turn) => turn.status === "inProgress");
-    resetState();
-    if (threadId) {
-      markThreadStopped(threadId);
-      await releaseSideThread(clientRef.current, threadId, activeTurn?.id);
-    }
-  }, [clientRef, markThreadStopped, resetState]);
+    const entry = entries.current.get(parentId);
+    entries.current.delete(parentId);
+    setOpenError(null);
+    refresh();
+    if (entry) await release(entry);
+  }, [parentId, release]);
 
   const openChat = useCallback(async () => {
-    if (operationRef.current) return false;
-    if (threadIdRef.current) return true;
-    operationRef.current = true;
-    const generation = generationRef.current;
-    // Keep the feature entry disabled while the ephemeral thread is being
-    // created. Otherwise the panel can render a Composer before it has a
-    // thread id and a first send is silently rejected.
-    setSubmitting(true);
-    setError("");
+    const existing = entries.current.get(parentId);
+    if (existing) return Boolean(existing.state.thread);
+    if (entries.current.size >= MAX_SIDE_CHATS) {
+      setOpenError({ parentId, message: `最多保留 ${MAX_SIDE_CHATS} 个侧聊，请先返回已有会话关闭一个侧聊。` });
+      return false;
+    }
+    const entry: SideChatEntry = {
+      state: initialAgentSessionState, client: null, submitting: true, running: false,
+      error: "", draft: "", draftVersion: 0, completedTurnId: null,
+    };
+    entries.current.set(parentId, entry);
+    setOpenError(null);
+    refresh();
     try {
       const client = await ensureConnected();
-      if (generation !== generationRef.current) return false;
+      if (!isRetained(entry)) return false;
+      entry.client = client;
       const permissions = { approvalPolicy: "never" as const, sandbox: "read-only" as const };
       const lastTurnId = lastForkableTurn(mainTurns);
       const response = mainThread && lastTurnId
         ? await client.forkThread({
-            threadId: mainThread.id,
-            lastTurnId,
-            model: settings.modelId,
-            serviceTier: settings.serviceTier,
-            cwd: String(mainThread.cwd),
-            ...permissions,
+            threadId: mainThread.id, lastTurnId, model: settings.modelId,
+            serviceTier: settings.serviceTier, cwd: String(mainThread.cwd), ...permissions,
             developerInstructions: buildHostInstructions(personalization?.customInstructions),
-            ephemeral: true,
-            excludeTurns: true,
-            threadSource: "codex-shell-side-chat",
+            ephemeral: true, excludeTurns: true, threadSource: "codex-shell-side-chat",
           })
         : await client.startThread({
-            model: settings.modelId,
-            serviceTier: settings.serviceTier,
-            cwd: mainThread ? String(mainThread.cwd) : null,
-            ...permissions,
+            model: settings.modelId, serviceTier: settings.serviceTier,
+            cwd: mainThread ? String(mainThread.cwd) : null, ...permissions,
             developerInstructions: buildHostInstructions(personalization?.customInstructions),
-            ephemeral: true,
-            threadSource: "codex-shell-side-chat",
+            ephemeral: true, threadSource: "codex-shell-side-chat",
           });
-      if (generation !== generationRef.current) {
+      if (!isRetained(entry)) {
         await releaseSideThread(client, response.thread.id);
         return false;
       }
-      threadIdRef.current = response.thread.id;
-      // A fork carries the parent turns for model context. They are not new
-      // side-chat messages and must not be rendered a second time in the
-      // inspector; subsequent notifications populate the isolated timeline.
-      dispatch({ type: "loadThread", thread: { ...response.thread, turns: [] } });
-      return true;
-    } catch (openError) {
-      if (generation === generationRef.current) setError(errorMessage(openError));
+      // Inherited parent turns are context, not messages in the side timeline.
+      apply(entry, { type: "loadThread", thread: { ...response.thread, turns: [] } });
+      return visibleParentId.current === parentId;
+    } catch (error) {
+      if (isRetained(entry)) {
+        entries.current.delete(parentId);
+        setOpenError({ parentId, message: errorMessage(error) });
+      }
       return false;
     } finally {
-      if (generation === generationRef.current) {
-        operationRef.current = false;
-        setSubmitting(false);
-      }
+      if (isRetained(entry)) entry.submitting = false;
+      refresh();
     }
-  }, [ensureConnected, mainThread, mainTurns, personalization?.customInstructions, settings.modelId, settings.serviceTier]);
+  }, [apply, ensureConnected, isRetained, mainThread, mainTurns, parentId, personalization?.customInstructions, settings.modelId, settings.serviceTier]);
 
   const send = useCallback(async (
-    text: string,
-    mentions: FileMention[] = [],
-    skills: SkillMention[] = [],
-    images: ImageAttachment[] = [],
+    text: string, mentions: FileMention[] = [], skills: SkillMention[] = [], images: ImageAttachment[] = [],
   ) => {
+    const entry = entries.current.get(parentId);
+    const threadId = entry?.state.thread?.id;
     const message = text.trim();
-    const threadId = threadIdRef.current;
-    if (!threadId || (!message && mentions.length === 0 && images.length === 0) || submitting || running || operationRef.current) return false;
-    operationRef.current = true;
-    const generation = generationRef.current;
-    setSubmitting(true);
-    setError("");
+    if (!entry || !threadId || (!message && mentions.length === 0 && images.length === 0) || entry.submitting || entry.running) return false;
+    entry.submitting = true;
+    entry.error = "";
+    refresh();
     try {
       const input = buildUserInput(message, mentions, skills, images);
       const client = await ensureConnected();
-      if (generation !== generationRef.current) return false;
+      if (!isRetained(entry)) return false;
       const response = await sideTurnStart(client, threadId, input, settings);
-      if (generation !== generationRef.current) {
+      if (!isRetained(entry)) {
         await releaseSideThread(client, threadId, response.turn.id);
         return false;
       }
-      // Notifications may settle a turn before its start response arrives,
-      // including before React has committed the corresponding reducer state.
-      if (completedTurnIdRef.current !== response.turn.id) {
+      // Completion can arrive before the start response, even in one batch.
+      if (entry.completedTurnId !== response.turn.id) {
         markThreadRunning(threadId, response.turn.id, "regular");
-        setRunning(true);
-        dispatch({ type: "turnSubmitted", turn: response.turn, userInput: input, submittedAt: Date.now() / 1_000 });
+        entry.running = true;
+        apply(entry, { type: "turnSubmitted", turn: response.turn, userInput: input, submittedAt: Date.now() / 1_000 });
       }
       return true;
-    } catch (sendError) {
-      if (generation === generationRef.current) setError(errorMessage(sendError));
+    } catch (error) {
+      if (isRetained(entry)) entry.error = errorMessage(error);
       return false;
     } finally {
-      if (generation === generationRef.current) {
-        operationRef.current = false;
-        setSubmitting(false);
-      }
+      if (isRetained(entry)) { entry.submitting = false; refresh(); }
     }
-  }, [ensureConnected, markThreadRunning, running, settings, submitting]);
+  }, [apply, ensureConnected, isRetained, markThreadRunning, parentId, settings]);
+
+  const setDraft = useCallback((draft: string) => {
+    const entry = entries.current.get(parentId);
+    if (!entry) return;
+    entry.draft = draft;
+    entry.draftVersion += 1;
+    refresh();
+  }, [parentId]);
+
+  const sendDraft = useCallback(async () => {
+    const entry = entries.current.get(parentId);
+    if (!entry) return false;
+    const version = entry.draftVersion;
+    const sent = await send(entry.draft);
+    if (sent && isRetained(entry) && version === entry.draftVersion) {
+      entry.draft = "";
+      refresh();
+    }
+    return sent;
+  }, [isRetained, parentId, send]);
 
   const answerQuestions = useCallback(async (text: string) => {
-    const turn = [...turnsRef.current].reverse().find((item) => item.status === "inProgress");
+    const entry = entries.current.get(parentId);
+    const turn = entry && [...entry.state.turns].reverse().find((item) => item.status === "inProgress");
     if (!turn) return send(text);
-    const threadId = threadIdRef.current;
-    if (!threadId || operationRef.current) return false;
-    const generation = generationRef.current;
-    operationRef.current = true;
-    setSubmitting(true);
+    const threadId = entry.state.thread?.id;
+    if (!threadId || entry.submitting) return false;
+    entry.submitting = true;
+    refresh();
     const clientId = crypto.randomUUID();
     try {
       const client = await ensureConnected();
-      if (generation !== generationRef.current) return false;
+      if (!isRetained(entry)) return false;
       const input = buildUserInput(text, [], [], []);
-      dispatch({ type: "optimisticSteer", threadId, turnId: turn.id, clientId, userInput: input });
+      apply(entry, { type: "optimisticSteer", threadId, turnId: turn.id, clientId, userInput: input });
       await client.steerTurn({ threadId, expectedTurnId: turn.id, clientUserMessageId: clientId, input });
-      if (generation !== generationRef.current) return false;
-      return true;
+      return isRetained(entry);
     } catch (error) {
-      if (generation === generationRef.current) dispatch({ type: "steerFailed", threadId, clientId });
+      if (isRetained(entry)) apply(entry, { type: "steerFailed", threadId, clientId });
       throw error;
     } finally {
-      if (generation === generationRef.current) {
-        operationRef.current = false;
-        setSubmitting(false);
-      }
+      if (isRetained(entry)) { entry.submitting = false; refresh(); }
     }
-  }, [ensureConnected, send]);
+  }, [apply, ensureConnected, isRetained, parentId, send]);
 
   const interrupt = useCallback(async () => {
-    const threadId = threadIdRef.current;
-    if (!threadId || !clientRef.current) return;
-    const turn = [...state.turns].reverse().find((item) => item.status === "inProgress");
-    if (!turn) return;
-    try {
-      await clientRef.current.interruptTurn({ threadId, turnId: turn.id });
-    } catch (interruptError) {
-      if (threadId === threadIdRef.current) setError(errorMessage(interruptError));
-    }
-  }, [clientRef, state.turns]);
+    const entry = entries.current.get(parentId);
+    const threadId = entry?.state.thread?.id;
+    const turn = entry && [...entry.state.turns].reverse().find((item) => item.status === "inProgress");
+    if (!entry || !threadId || !turn || !entry.client) return;
+    try { await entry.client.interruptTurn({ threadId, turnId: turn.id }); }
+    catch (error) { if (isRetained(entry)) { entry.error = errorMessage(error); refresh(); } }
+  }, [isRetained, parentId]);
 
   const onTurnStarted = useCallback((notification: TurnStartedNotification) => {
-    if (notification.threadId !== threadIdRef.current) return;
-    setRunning(true);
+    const entry = findThread(notification.threadId);
+    if (!entry) return;
+    entry.running = true;
     markThreadRunning(notification.threadId, notification.turn.id, "regular");
-    dispatch({ type: "turnStarted", turn: notification.turn, startedAt: Date.now() / 1_000 });
-  }, [markThreadRunning]);
+    apply(entry, { type: "turnStarted", turn: notification.turn, startedAt: Date.now() / 1_000 });
+  }, [apply, findThread, markThreadRunning]);
 
   const onTurnCompleted = useCallback((notification: TurnCompletedNotification) => {
-    if (notification.threadId !== threadIdRef.current) return;
-    completedTurnIdRef.current = notification.turn.id;
-    setRunning(false);
+    const entry = findThread(notification.threadId);
+    if (!entry) return;
+    entry.completedTurnId = notification.turn.id;
+    entry.running = false;
     markThreadStopped(notification.threadId);
-    dispatch({ type: "turnCompleted", notification, completedAt: Date.now() / 1_000 });
-    if (notification.turn.error) setError(notification.turn.error.message);
-  }, [markThreadStopped]);
+    if (notification.turn.error) entry.error = notification.turn.error.message;
+    apply(entry, { type: "turnCompleted", notification, completedAt: Date.now() / 1_000 });
+  }, [apply, findThread, markThreadStopped]);
 
   const onError = useCallback((notification: ErrorNotification) => {
-    if (notification.threadId !== threadIdRef.current || notification.willRetry) return;
-    setRunning(false);
+    const entry = findThread(notification.threadId);
+    if (!entry || notification.willRetry) return;
+    entry.running = false;
     markThreadStopped(notification.threadId);
-    setError(notification.error.message);
-  }, [markThreadStopped]);
+    entry.error = notification.error.message;
+    refresh();
+  }, [findThread, markThreadStopped]);
 
-  useEffect(() => {
-    const previous = previousMainThreadIdRef.current;
-    const next = mainThread?.id ?? null;
-    previousMainThreadIdRef.current = next;
-    if (previous !== next) void close();
-  }, [close, mainThread?.id]);
-
-  const closeRef = useRef(close);
-  closeRef.current = close;
-  useEffect(() => () => { void closeRef.current(); }, []);
+  const resetRef = useRef(reset);
+  resetRef.current = reset;
+  useEffect(() => () => resetRef.current(), []);
 
   const subscriptionHandlers = useMemo(() => ({
-    currentThreadId,
-    dispatch,
-    onTurnStarted,
-    onTurnCompleted,
-    onError,
-  }), [currentThreadId, onError, onTurnCompleted, onTurnStarted]);
+    ownsThread: (threadId: string) => Boolean(findThread(threadId)),
+    dispatch: (threadId: string, action: AgentSessionAction) => {
+      const entry = findThread(threadId);
+      if (entry) apply(entry, action);
+    },
+    onTurnStarted, onTurnCompleted, onError,
+  }), [apply, findThread, onError, onTurnCompleted, onTurnStarted]);
 
+  const entry = entries.current.get(parentId);
+  const state = entry?.state ?? initialAgentSessionState;
   return {
-    thread: state.thread,
-    turns: state.turns,
-    running,
-    submitting,
-    error,
-    tokenUsage: state.tokenUsage,
-    diffsByTurnId: state.diffsByTurnId,
-    plansByTurnId: state.plansByTurnId,
-    activeItemTurnIds: state.activeItemTurnIds,
-    mcpProgressByItemId: state.mcpProgressByItemId,
-    processEventsByTurnId: state.processEventsByTurnId,
-    openChat,
-    close,
-    send,
-    answerQuestions,
-    interrupt,
-    reset: resetState,
-    subscriptionHandlers,
+    thread: state.thread, turns: state.turns,
+    running: entry?.running ?? false, submitting: entry?.submitting ?? false,
+    anySubmitting: [...entries.current.values()].some((item) => item.submitting),
+    error: entry?.error || (openError?.parentId === parentId ? openError.message : ""),
+    draft: entry?.draft ?? "", setDraft, sendDraft,
+    tokenUsage: state.tokenUsage, diffsByTurnId: state.diffsByTurnId,
+    plansByTurnId: state.plansByTurnId, activeItemTurnIds: state.activeItemTurnIds,
+    mcpProgressByItemId: state.mcpProgressByItemId, processEventsByTurnId: state.processEventsByTurnId,
+    openChat, close, send, answerQuestions, interrupt, reset, subscriptionHandlers,
   };
 }
 

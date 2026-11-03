@@ -3,69 +3,12 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { AppServerClient } from "./appServerClient";
-import type { ModelSettings } from "../models/types";
 import type { Thread } from "../../generated/app-server/v2/Thread";
 import type { Turn } from "../../generated/app-server/v2/Turn";
 import type { TurnStartedNotification } from "../../generated/app-server/v2/TurnStartedNotification";
 import { useSideChat } from "./useSideChat";
 
-const settings: ModelSettings = {
-  modelId: "gpt-test",
-  reasoningEffort: "medium",
-  reasoningSummary: "auto",
-  verbosity: "medium",
-  serviceTier: "default",
-};
-
-function fakeThread(): Thread {
-  return {
-    id: "side-thread",
-    environments: null,
-    sessionId: "session",
-    forkedFromId: null,
-    parentThreadId: null,
-    preview: "",
-    ephemeral: true,
-    section: null,
-    sectionEnteredAt: null,
-    projectId: null,
-    historyMode: "legacy",
-    extra: null,
-    model: null,
-    reasoningEffort: null,
-    canAcceptDirectInput: null,
-    modelProvider: "openai",
-    createdAt: 0,
-    updatedAt: 0,
-    recencyAt: null,
-    status: { type: "idle" },
-    path: null,
-    cwd: "C:\\work",
-    cliVersion: "test",
-    originator: null,
-    source: "appServer",
-    threadSource: "codex-shell-side-chat",
-    agentNickname: null,
-    agentRole: null,
-    gitInfo: null,
-    name: null,
-    daybreakEnabled: null,
-    turns: [],
-  };
-}
-
-function fakeTurn(status: Turn["status"]): Turn {
-  return {
-    id: "turn-1",
-    items: [],
-    itemsView: "full",
-    status,
-    error: null,
-    startedAt: 1,
-    completedAt: null,
-    durationMs: null,
-  };
-}
+import { settings, fakeThread, fakeTurn } from "./sideChatTestFixtures";
 
 function setup() {
   const markThreadRunning = vi.fn();
@@ -108,6 +51,26 @@ it("forks paginated side chat without requesting copied history", async () => {
 });
 
 describe("useSideChat", () => {
+  it.each(["unchanged", "edited", "restored", "failed"])("preserves draft versions after delayed send: %s", async (scenario) => {
+    const { client, result } = setup();
+    let finish!: (value: { turn: Turn }) => void;
+    let reject!: (error: Error) => void;
+    client.startTurn = vi.fn(() => new Promise<{ turn: Turn }>((resolve, fail) => { finish = resolve; reject = fail; }));
+    await act(async () => { await result.current.openChat(); });
+    act(() => result.current.setDraft("first"));
+    let sending!: Promise<boolean>;
+    act(() => { sending = result.current.sendDraft(); });
+    await act(async () => {});
+    if (scenario === "edited" || scenario === "restored") act(() => result.current.setDraft("next"));
+    if (scenario === "restored") act(() => result.current.setDraft("first"));
+    await act(async () => {
+      if (scenario === "failed") reject(new Error("offline"));
+      else finish({ turn: fakeTurn("inProgress") });
+      await sending;
+    });
+    expect(result.current.draft).toBe(scenario === "unchanged" ? "" : scenario === "edited" ? "next" : "first");
+  });
+
   it.each(["completed", "failed", "interrupted"] as const)("preserves %s when completion precedes the start response in the same batch", async (status) => {
     const { client, result, markThreadRunning } = setup();
     let finish!: (value: { turn: Turn }) => void;
@@ -132,7 +95,7 @@ describe("useSideChat", () => {
     expect(result.current.running).toBe(true);
     expect(markThreadRunning).toHaveBeenCalledWith("side-thread", "next", "regular");
   });
-  it.each(["switch", "reset", "close", "unmount"])("discards late creation after %s", async (action) => {
+  it.each(["reset", "close", "unmount"])("discards late creation after %s", async (action) => {
     let finish!: (value: { thread: Thread }) => void;
     const client = { connectionStatus: "ready", startThread: vi.fn(() => new Promise<{ thread: Thread }>(r => { finish = r; })), unsubscribeThread: vi.fn(async () => ({})) };
     const hook = renderHook(({ mainThread }: { mainThread: Thread | null }) => useSideChat({
@@ -142,7 +105,6 @@ describe("useSideChat", () => {
     let opening!: Promise<boolean>;
     await act(async () => { opening = hook.result.current.openChat(); });
     await act(async () => {
-      if (action === "switch") hook.rerender({ mainThread: { ...fakeThread(), id: "new-main" } });
       if (action === "reset") hook.result.current.reset();
       if (action === "close") await hook.result.current.close();
       if (action === "unmount") hook.unmount();
@@ -259,7 +221,7 @@ describe("useSideChat", () => {
     expect(result.current.thread).toBeNull();
   });
 
-  it("closes the ephemeral thread when the main Session changes", async () => {
+  it("keeps the ephemeral thread when switching away and back", async () => {
     const { client, result, rerender } = (() => {
       const interruptTurn = vi.fn(async () => ({}));
       const unsubscribeThread = vi.fn(async () => ({ status: "unsubscribed" }));
@@ -289,6 +251,10 @@ describe("useSideChat", () => {
     });
 
     expect(result.current.thread).toBeNull();
-    expect(client.unsubscribeThread).toHaveBeenCalledWith({ threadId: "side-thread" });
+    expect(client.unsubscribeThread).not.toHaveBeenCalled();
+    await act(async () => { rerender({ mainThread: null }); });
+    expect(result.current.thread?.id).toBe("side-thread");
+    await act(async () => { expect(await result.current.openChat()).toBe(true); });
+    expect(client.startThread).toHaveBeenCalledTimes(1);
   });
 });

@@ -4,6 +4,8 @@
 
 ## 脚本
 
+- `pnpm test:side-chat-layout <playwright/index.mjs绝对路径> <浏览器exe绝对路径> [Vite端口=1436]`：先启动 Vite，挂载真实侧聊 Hook／面板与模拟 IPC，四尺寸深浅主题验证切换保留、隐藏回复、独立草稿、返回／重开、关闭与 Runtime 重置、布局、字号及键盘焦点；截图存入临时目录，不挂载完整 App，不访问用户历史或真实模型。
+
 - `powershell -NoProfile -File tests/scripts/check-window-icon.ps1 -ProcessId <运行中的客户端PID>`：通过真实 Win32 窗口读取 `ICON_SMALL` / `ICON_BIG`，要求任务栏大图标存在并与该进程 EXE 图标逐像素一致；导出三张 PNG 到临时目录。先启动待测 Debug 客户端；脚本不启动或关闭进程，也不清理系统图标缓存。
 
 - `pnpm test:composer-timeline-layout <playwright/index.mjs绝对路径> <浏览器exe绝对路径>`：Vite 端口 1436；挂载真实时间线和输入框拖动控件，按左右栏默认宽度扣除可用区域，四尺寸验证输入框向上展开、左右导航／滚动轨道／底部固定、最新回复避让、历史浏览锚点、键盘缩放和 Escape 恢复；320px 输入高度检查两侧导航点击命中并实际点击返回最新；覆盖 reduced-motion，使用模拟会话。
@@ -15,7 +17,7 @@
 - `check-async-question-layout.mjs <playwright/index.mjs绝对路径> <浏览器exe绝对路径> [Vite端口=1436]`：挂载真实异步问答卡片，验证四尺寸深浅主题、选项题自由输入、键盘焦点、非模态草稿保留、发送中锁定和完成状态。只模拟发送回调，不访问模型或用户历史。
 - `check-rust.ps1`：加载 Windows C++ 编译环境，在独立临时 target 目录中依次执行 `src-tauri` 的 `cargo check`、`cargo test --lib` 和严格 Clippy（警告视为错误）。
 - `run-quality-gates.ps1`：依次运行类型检查、ESLint、Vitest、高德 Bun 离线测试、生产构建、Knip、完整 Rust 质量检查和 `git diff --check`。完整门禁需要 Bun，高德测试不访问真实 API。
-- `probe-runtime-upgrade.mjs [候选 exe] [旧版 exe]`：默认验证暂存 Runtime 的分页、回退替换、分叉、归档、设置、队列和冷恢复；提供旧版 exe 时在隔离目录生成 legacy 历史，验证官方 CLI 及启动后台迁移。仅调用本机模拟 Responses 网关，不访问用户会话或真实模型服务。
+- `probe-runtime-upgrade.mjs [候选 exe] [旧版 exe]`：默认验证暂存 Runtime 的分页、回退替换、分叉、归档、设置、队列和冷恢复，以及父会话退订后两个临时侧聊独立续聊与上下文隔离；提供旧版 exe 时在隔离目录生成 legacy 历史，验证官方 CLI 及启动后台迁移。仅调用本机模拟 Responses 网关，不访问用户会话或真实模型服务。
 - `check-terminal-interaction-layout.mjs`：挂载真实终端交互组件，在四种窗口尺寸下检查默认折叠、键盘切换、字号和横向溢出。
 
 ## 调用

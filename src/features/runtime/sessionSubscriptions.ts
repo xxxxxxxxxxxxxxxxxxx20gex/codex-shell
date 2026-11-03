@@ -89,10 +89,10 @@ interface Handlers {
     requestId: JsonRpcId,
     interaction: ServerInteractionPayload,
   ) => Promise<ReverseRequestResult>;
-  /** Optional secondary stream used by the Codex-style side chat. */
+  /** Retained side chats route events by thread identity, including hidden chats. */
   sideChat?: {
-    currentThreadId: () => string | null;
-    dispatch: (action: AgentSessionAction) => void;
+    ownsThread: (threadId: string) => boolean;
+    dispatch: (threadId: string, action: AgentSessionAction) => void;
     onTurnStarted: (notification: TurnStartedNotification) => void;
     onTurnCompleted: (notification: TurnCompletedNotification) => void;
     onError: (notification: ErrorNotification) => void;
@@ -107,8 +107,8 @@ export function subscribeToSessionEvents(client: AppServerClient, handlers: Hand
     const notification = params as T;
     if (notification.threadId === handlers.currentThreadId()) {
       handlers.dispatch(mainAction(notification));
-    } else if (notification.threadId === handlers.sideChat?.currentThreadId()) {
-      handlers.sideChat.dispatch(mainAction(notification));
+    } else if (handlers.sideChat?.ownsThread(notification.threadId)) {
+      handlers.sideChat.dispatch(notification.threadId, mainAction(notification));
     }
   }
 
@@ -128,17 +128,17 @@ export function subscribeToSessionEvents(client: AppServerClient, handlers: Hand
     client.onNotification("turn/started", (params) => {
       const notification = params as TurnStartedNotification;
       handlers.onTurnStarted(notification);
-      if (notification.threadId === handlers.sideChat?.currentThreadId()) handlers.sideChat.onTurnStarted(notification);
+      if (handlers.sideChat?.ownsThread(notification.threadId)) handlers.sideChat.onTurnStarted(notification);
     }),
     client.onNotification("turn/completed", (params) => {
       const notification = params as TurnCompletedNotification;
       handlers.onTurnCompleted(notification);
-      if (notification.threadId === handlers.sideChat?.currentThreadId()) handlers.sideChat.onTurnCompleted(notification);
+      if (handlers.sideChat?.ownsThread(notification.threadId)) handlers.sideChat.onTurnCompleted(notification);
     }),
     client.onNotification("error", (params) => {
       const notification = params as ErrorNotification;
       handlers.onError(notification);
-      if (notification.threadId === handlers.sideChat?.currentThreadId()) handlers.sideChat.onError(notification);
+      if (handlers.sideChat?.ownsThread(notification.threadId)) handlers.sideChat.onError(notification);
     }),
     client.onNotification("thread/name/updated", (params) => handlers.onThreadName(params as ThreadNameUpdatedNotification)),
     client.onNotification("thread/settings/updated", (params) => handlers.onThreadSettings(params as ThreadSettingsUpdatedNotification)),

@@ -181,15 +181,18 @@ function App() {
     setSideChatMaximized((value) => !value);
   }
 
+  const inspectorParentId = useRef(session.thread?.id);
   useEffect(() => {
-    // Session switches and Runtime resets clear the ephemeral side thread
-    // from the session hook. Return to the feature entry instead of leaving
-    // an empty, disabled detail view mounted in the inspector.
-    if (inspectorView === "chat" && !session.sideChat.thread && !session.sideChat.submitting) {
+    const switched = inspectorParentId.current !== session.thread?.id;
+    inspectorParentId.current = session.thread?.id;
+    if (switched) {
+      setSideChatMaximized(false);
+      setInspectorView(session.sideChat.thread || session.sideChat.submitting ? "chat" : "home");
+    } else if (inspectorView === "chat" && !session.sideChat.thread && !session.sideChat.submitting) {
       setSideChatMaximized(false);
       setInspectorView("home");
     }
-  }, [inspectorView, session.sideChat.submitting, session.sideChat.thread]);
+  }, [inspectorView, session.thread?.id, session.sideChat.submitting, session.sideChat.thread]);
 
   useEffect(() => {
     const handleShortcut = (event: globalThis.KeyboardEvent) => {
@@ -428,6 +431,7 @@ function App() {
         <aside className={`inspector panel ${inspectorView !== "home" ? "inspector-detail" : ""} ${inspectorView === "chat" ? "inspector-chat" : ""}`}>
           {inspectorView === "home" && <>
             <div className="inspector-heading"><strong>功能区</strong></div>
+            {session.sideChat.error && <p className="error" role="alert">{session.sideChat.error}</p>}
             <div className="inspector-home" aria-label="右侧功能入口">
               <button type="button" className="inspector-feature-entry" onClick={() => {
                 if (currentProjectPath) {
@@ -458,16 +462,16 @@ function App() {
             <div className="inspector-heading inspector-detail-heading"><CompactIconButton onClick={() => setInspectorView("home")} label="返回功能区" icon={<ChevronLeft aria-hidden="true" />} /><strong>项目文件</strong></div>
             <div className="inspector-project-empty">项目路径尚未准备好。选择项目或等待默认工作区加载后，再从功能区打开项目文件。</div>
           </>}
-          {inspectorView === "chat" && <SideChatPanel chat={session.sideChat} maximized={sideChatMaximized} onToggleMaximize={toggleInspectorMaximized} onBack={() => setInspectorView("home")} onClose={() => { setSideChatMaximized(false); void session.sideChat.close(); setInspectorView("home"); }} />}
+          {inspectorView === "chat" && <SideChatPanel key={session.sideChat.thread?.id ?? session.thread?.id ?? "new"} chat={session.sideChat} maximized={sideChatMaximized} onToggleMaximize={toggleInspectorMaximized} onBack={() => setInspectorView("home")} onClose={() => { setSideChatMaximized(false); void session.sideChat.close(); setInspectorView("home"); }} />}
         </aside>
       </section>
 
-      {settingsOpen && <ModelSettingsPanel settings={conversation} providerSettings={settings} loadModels={loadModels} onManageChannels={() => { setSettingsOpen(false); openPreferences("providers"); }} switchDisabled={session.running || session.runningThreadCount > 0 || session.sideChat.submitting} onClose={() => setSettingsOpen(false)} onSave={saveAdvancedModelSettings} />}
+      {settingsOpen && <ModelSettingsPanel settings={conversation} providerSettings={settings} loadModels={loadModels} onManageChannels={() => { setSettingsOpen(false); openPreferences("providers"); }} switchDisabled={session.running || session.runningThreadCount > 0 || session.sideChat.anySubmitting} onClose={() => setSettingsOpen(false)} onSave={saveAdvancedModelSettings} />}
       {preferencesOpen && <PreferencesPanel
         settings={personalization}
         providerSettings={settings}
         onSaveProviderSettings={saveProviderSettings}
-        providerSwitchBlocked={session.running || session.runningThreadCount > 0 || session.sideChat.submitting}
+        providerSwitchBlocked={session.running || session.runningThreadCount > 0 || session.sideChat.anySubmitting}
         initialSection={preferencesSection}
         codexHome={session.codexHome}
         codexHomeDisabled={session.runningThreadCount > 0 || session.submitting}
