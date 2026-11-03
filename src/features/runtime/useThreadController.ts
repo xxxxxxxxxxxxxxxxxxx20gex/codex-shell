@@ -33,6 +33,9 @@ import { useTurnExecution } from "./useTurnExecution";
 type EnsureConnected = () => Promise<AppServerClient>;
 
 interface Props {
+  onThreadCreated?: (threadId: string) => void;
+  onThreadDeleted?: (threadId: string) => void;
+  onNewTask?: () => void;
   clientRef: MutableRefObject<AppServerClient | null>;
   ensureConnected: EnsureConnected;
   settings: ModelSettings;
@@ -66,6 +69,7 @@ function canResumeAfterReadError(error: unknown) {
 export function useThreadController(props: Props) {
   const {
     approvalReviewer,
+    onThreadCreated, onThreadDeleted, onNewTask,
     clientRef,
     dispatch,
     ensureConnected,
@@ -152,6 +156,7 @@ export function useThreadController(props: Props) {
   }, [applyThreadRuntimeState, dispatch, ensureConnected]);
 
   const { send, steer, interrupt } = useTurnExecution({
+    onThreadCreated,
     clientRef: clientRef,
     threadIdRef,
     threadOperationRef,
@@ -223,6 +228,7 @@ export function useThreadController(props: Props) {
   });
 
   const clearActiveThread = useCallback(() => {
+    onNewTask?.();
     const previousThreadId = threadIdRef.current;
     invalidateRevert();
     threadIdRef.current = null;
@@ -231,7 +237,7 @@ export function useThreadController(props: Props) {
     dispatch({ type: "clear" });
     showArchivedHistory(false);
     void unsubscribeIfIdle(previousThreadId);
-  }, [dispatch, invalidateRevert, setError, setSubmitting, showArchivedHistory, unsubscribeIfIdle]);
+  }, [dispatch, invalidateRevert, onNewTask, setError, setSubmitting, showArchivedHistory, unsubscribeIfIdle]);
 
   const {
     threadActionId,
@@ -244,6 +250,7 @@ export function useThreadController(props: Props) {
     deleteThread,
     forkThread,
   } = useThreadActions({
+    onThreadDeleted,
     threadIdRef,
     threadOperationRef,
     subscribedThreadIdsRef,

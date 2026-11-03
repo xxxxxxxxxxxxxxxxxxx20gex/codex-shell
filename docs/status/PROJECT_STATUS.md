@@ -47,7 +47,7 @@
 
 ## 完整验证基线
 
-- 2026-11-03 main 侧聊保留修复：`pnpm test:quality` 通过，包含 496 项前端、34 项高德离线、52 项 Rust 测试（1 项交互测试忽略）、TypeScript、ESLint、Knip、production build、Cargo check 和严格 Clippy。侧聊四尺寸深浅主题回归及真实 Core 隔离续聊探针通过，Debug 已重建；未发布新生产包。浏览器夹具不等同于完整 App／WebView2 或真实外部服务验收。
+- 2026-11-03 main 侧聊保留修复：`pnpm test:quality` 通过，包含 502 项前端、34 项高德离线、52 项 Rust 测试（1 项交互测试忽略）、TypeScript、ESLint、Knip、production build、Cargo check 和严格 Clippy。侧聊四尺寸深浅主题回归及真实 Core 隔离续聊探针通过，Debug 已重建；未发布新生产包。浏览器夹具不等同于完整 App／WebView2 或真实外部服务验收。
 - v0.2.0 的签名 NSIS、manifest 与 Runtime 同源哈希校验通过，47 个随包 Skill 文件与源码一致；同版本 Debug 已重建。资产与未覆盖范围见 [测试与发布状态](testing-release-status.md#最近发布)。
 - 当前验证、发布资产和未覆盖边界统一见 [测试与发布状态](testing-release-status.md)；历史发布基线由 Git 保留。当前仍不把模拟探针、局部浏览器检查或用户未枚举的手工检查宣称为全量桌面、真实外部 API 或干净机器验收。
 - 当前发布基线：发布冻结分支 `release/v0.2.0` 和 Tag `v0.2.0` 与本次发布提交保持一致；后续功能直接在 `main` 开发，发布时按新的版本号重新建立发布分支和 Tag。

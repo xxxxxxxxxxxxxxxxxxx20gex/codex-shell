@@ -71,6 +71,7 @@ function setup() {
   threads.set("thread-fork", thread("thread-fork", { forkedFromId: "thread-a", turns: [turn("turn-previous", "completed")] }));
   const nativeQueues = new Map<string, ThreadQueueListResponse["data"]>();
   const client = {
+    deleteThread: vi.fn(async () => ({})),
     listQueuedSubmissions: vi.fn(async ({ threadId }: { threadId: string }): Promise<ThreadQueueListResponse> => ({ data: nativeQueues.get(threadId) ?? [], nextCursor: null })),
     addQueuedSubmission: vi.fn(async (params: import("../../generated/app-server/v2/ThreadQueueAddParams").ThreadQueueAddParams) => {
       const queuedSubmission = { id: "server-" + params.clientUserMessageId, clientUserMessageId: params.clientUserMessageId, input: params.input };
@@ -769,4 +770,23 @@ describe("useThreadController", () => {
       "unknown",
     );
   });
+});
+
+it("notifies side-chat ownership only on new creation, reset and successful deletion", async () => {
+  const { props, client } = setup();
+  const onThreadCreated = vi.fn();
+  const onNewTask = vi.fn();
+  const onThreadDeleted = vi.fn();
+  const { result } = renderHook(() => useThreadController({ ...props, onThreadCreated, onNewTask, onThreadDeleted }));
+  await act(async () => { await result.current.send("first"); });
+  expect(onThreadCreated).toHaveBeenCalledExactlyOnceWith("thread-new");
+  act(() => result.current.startNewTask());
+  expect(onNewTask).toHaveBeenCalledTimes(1);
+  await act(async () => { await result.current.openThread("thread-a"); });
+  expect(onThreadCreated).toHaveBeenCalledTimes(1);
+  client.deleteThread.mockRejectedValueOnce(new Error("denied"));
+  await act(async () => { expect(await result.current.deleteThread("thread-b")).toBe(false); });
+  expect(onThreadDeleted).not.toHaveBeenCalled();
+  await act(async () => { expect(await result.current.deleteThread("thread-b")).toBe(true); });
+  expect(onThreadDeleted).toHaveBeenCalledExactlyOnceWith("thread-b");
 });

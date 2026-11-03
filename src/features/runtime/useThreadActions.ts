@@ -6,6 +6,7 @@ import type { AgentSessionAction } from "./sessionState";
 import { isThreadPinned, PINNED_THREAD_SECTION_ID } from "../threads/threadPresentation";
 
 interface Props {
+  onThreadDeleted?: (threadId: string) => void;
   threadIdRef: MutableRefObject<string | null>;
   threadOperationRef: MutableRefObject<boolean>;
   subscribedThreadIdsRef: MutableRefObject<Set<string>>;
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export function useThreadActions({
+  onThreadDeleted,
   threadIdRef,
   threadOperationRef,
   subscribedThreadIdsRef,
@@ -174,8 +176,11 @@ export function useThreadActions({
   }, [beginAction, ensureConnected, finishAction, isCurrent, removeFromHistory, setError]);
 
   const deleteThread = useCallback(
-    (threadId: string) => removeThreadFromServer(threadId, (client, id) => client.deleteThread({ threadId: id })),
-    [removeThreadFromServer],
+    (threadId: string) => removeThreadFromServer(threadId, async (client, id) => {
+      await client.deleteThread({ threadId: id });
+      onThreadDeleted?.(id);
+    }),
+    [onThreadDeleted, removeThreadFromServer],
   );
 
   const forkThread = useCallback(async (threadId: string, lastTurnId?: string) => {

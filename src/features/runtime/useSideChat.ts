@@ -54,6 +54,7 @@ function sideTurnStart(client: AppServerClient, threadId: string, input: UserInp
 const MAX_SIDE_CHATS = 10;
 
 interface SideChatEntry {
+  parentId: string | null;
   state: AgentSessionState;
   client: AppServerClient | null;
   submitting: boolean;
@@ -101,13 +102,31 @@ export function useSideChat({
     for (const entry of previous) void release(entry);
   }, [release]);
 
-  const close = useCallback(async () => {
-    const entry = entries.current.get(parentId);
-    entries.current.delete(parentId);
-    setOpenError(null);
+  const closeForParent = useCallback(async (id: string | null) => {
+    const entry = entries.current.get(id);
+    entries.current.delete(id);
+    setOpenError(error => error?.parentId === id ? null : error);
     refresh();
     if (entry) await release(entry);
-  }, [parentId, release]);
+  }, [release]);
+
+  const close = useCallback(() => closeForParent(parentId), [closeForParent, parentId]);
+  const discardDraft = useCallback(() => { void closeForParent(null); }, [closeForParent]);
+  const adoptDraft = useCallback((id: string) => {
+    const entry = entries.current.get(null);
+    if (!entry) return;
+    entries.current.delete(null);
+    entry.parentId = id;
+    entries.current.set(id, entry);
+    setOpenError(null);
+    refresh();
+  }, []);
+
+  // Opening existing history abandons the unnamed draft; creation explicitly
+  // adopts it before publishing the new main thread to React.
+  useEffect(() => {
+    if (parentId !== null && entries.current.has(null)) discardDraft();
+  }, [discardDraft, parentId]);
 
   const openChat = useCallback(async () => {
     const existing = entries.current.get(parentId);
@@ -117,7 +136,7 @@ export function useSideChat({
       return false;
     }
     const entry: SideChatEntry = {
-      state: initialAgentSessionState, client: null, submitting: true, running: false,
+      parentId, state: initialAgentSessionState, client: null, submitting: true, running: false,
       error: "", draft: "", draftVersion: 0, completedTurnId: null,
     };
     entries.current.set(parentId, entry);
@@ -148,11 +167,11 @@ export function useSideChat({
       }
       // Inherited parent turns are context, not messages in the side timeline.
       apply(entry, { type: "loadThread", thread: { ...response.thread, turns: [] } });
-      return visibleParentId.current === parentId;
+      return entries.current.get(visibleParentId.current) === entry;
     } catch (error) {
       if (isRetained(entry)) {
-        entries.current.delete(parentId);
-        setOpenError({ parentId, message: errorMessage(error) });
+        entries.current.delete(entry.parentId);
+        setOpenError({ parentId: entry.parentId, message: errorMessage(error) });
       }
       return false;
     } finally {
@@ -299,7 +318,7 @@ export function useSideChat({
     tokenUsage: state.tokenUsage, diffsByTurnId: state.diffsByTurnId,
     plansByTurnId: state.plansByTurnId, activeItemTurnIds: state.activeItemTurnIds,
     mcpProgressByItemId: state.mcpProgressByItemId, processEventsByTurnId: state.processEventsByTurnId,
-    openChat, close, send, answerQuestions, interrupt, reset, subscriptionHandlers,
+    openChat, close, closeForParent, adoptDraft, discardDraft, send, answerQuestions, interrupt, reset, subscriptionHandlers,
   };
 }
 

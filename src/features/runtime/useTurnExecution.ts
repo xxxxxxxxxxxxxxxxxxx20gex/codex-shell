@@ -40,6 +40,7 @@ interface Props {
   markThreadRunning: (threadId: string, turnId: string | null, kind: RunningTurnKind) => void;
   markThreadStopped: (threadId: string) => void;
   showActiveWith: (thread: Thread) => void;
+  onThreadCreated?: (threadId: string) => void;
 }
 
 function startTurn(
@@ -123,6 +124,7 @@ export function useTurnExecution(props: Props) {
         props.subscribedThreadIdsRef.current.add(threadId);
         const preview = message || mentions[0]?.name || images[0]?.name || "附件";
         const optimisticThread = { ...response.thread, preview: response.thread.preview || preview };
+        props.onThreadCreated?.(threadId);
         props.dispatch({ type: "loadThread", thread: optimisticThread });
         props.showActiveWith(optimisticThread);
       } else if (!props.subscribedThreadIdsRef.current.has(threadId)) {

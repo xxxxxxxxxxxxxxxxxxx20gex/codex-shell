@@ -239,7 +239,7 @@ describe("useSideChat", () => {
         settings,
         markThreadRunning: vi.fn(),
         markThreadStopped: vi.fn(),
-      }), { initialProps: { mainThread: null as Thread | null } });
+      }), { initialProps: { mainThread: { ...fakeThread(), id: "main-a" } as Thread | null } });
       return { client, result: hook.result, rerender: hook.rerender };
     })();
 
@@ -252,7 +252,7 @@ describe("useSideChat", () => {
 
     expect(result.current.thread).toBeNull();
     expect(client.unsubscribeThread).not.toHaveBeenCalled();
-    await act(async () => { rerender({ mainThread: null }); });
+    await act(async () => { rerender({ mainThread: { ...fakeThread(), id: "main-a" } }); });
     expect(result.current.thread?.id).toBe("side-thread");
     await act(async () => { expect(await result.current.openChat()).toBe(true); });
     expect(client.startThread).toHaveBeenCalledTimes(1);

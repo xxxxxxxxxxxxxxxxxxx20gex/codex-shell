@@ -22,9 +22,9 @@ function setup() {
   const ensureConnected = vi.fn(async () => clientRef.current);
   const markThreadStopped = vi.fn();
   const hook = renderHook(({ parentId }) => useSideChat({
-    clientRef, ensureConnected, mainThread: { ...fakeThread(), id: parentId }, mainTurns: [],
+    clientRef, ensureConnected, mainThread: parentId === null ? null : { ...fakeThread(), id: parentId }, mainTurns: [],
     settings, markThreadRunning: vi.fn(), markThreadStopped,
-  }), { initialProps: { parentId: "main-a" } });
+  }), { initialProps: { parentId: "main-a" as string | null } });
   return { ...hook, client, ensureConnected, markThreadStopped };
 }
 
@@ -156,4 +156,58 @@ it("bounds retained chats without silently evicting messages and frees capacity 
   rerender({ parentId: "overflow" });
   await act(async () => { expect(await result.current.openChat()).toBe(true); });
   expect(result.current.error).toBe("");
+});
+
+it("adopts an unnamed side chat on first main creation without reusing it in another draft", async () => {
+  const { result, rerender, client } = setup();
+  rerender({ parentId: null });
+  await act(async () => { await result.current.openChat(); });
+  act(() => { result.current.setDraft("keep draft"); result.current.adoptDraft("created-main"); });
+  rerender({ parentId: "created-main" });
+  expect(result.current.thread?.id).toBe("side-1");
+  expect(result.current.draft).toBe("keep draft");
+  rerender({ parentId: null });
+  expect(result.current.thread).toBeNull();
+  expect(result.current.draft).toBe("");
+  expect(client.unsubscribeThread).not.toHaveBeenCalled();
+});
+
+it.each(["new", "history"])("discards an abandoned unnamed side chat when opening %s", async (target) => {
+  const { result, rerender, client } = setup();
+  rerender({ parentId: null });
+  await act(async () => { await result.current.openChat(); });
+  if (target === "new") await act(async () => result.current.discardDraft());
+  else rerender({ parentId: "existing" });
+  rerender({ parentId: null });
+  expect(result.current.thread).toBeNull();
+  expect(client.unsubscribeThread).toHaveBeenCalledWith({ threadId: "side-1" });
+});
+
+it("keeps a pending creation attached to its adopted parent and cleans it if deleted", async () => {
+  const { result, rerender, client } = setup();
+  rerender({ parentId: null });
+  let finish!: (response: { thread: Thread }) => void;
+  client.startThread.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+  let opening!: Promise<boolean>;
+  await act(async () => { opening = result.current.openChat(); });
+  act(() => result.current.adoptDraft("created-main"));
+  rerender({ parentId: "created-main" });
+  expect(result.current.submitting).toBe(true);
+  rerender({ parentId: "other" });
+  await act(async () => { await result.current.closeForParent("created-main"); });
+  await act(async () => { finish({ thread: fakeThread() }); expect(await opening).toBe(false); });
+  expect(client.unsubscribeThread).toHaveBeenCalledWith({ threadId: "side-thread" });
+  expect(result.current.anySubmitting).toBe(false);
+});
+
+it("deleting a hidden parent interrupts its side chat and leaves the visible chat intact", async () => {
+  const { result, rerender, client } = setup();
+  await act(async () => { await result.current.openChat(); await result.current.send("A"); });
+  rerender({ parentId: "main-b" });
+  await act(async () => { await result.current.openChat(); });
+  await act(async () => { await result.current.closeForParent("main-a"); await result.current.closeForParent("main-a"); });
+  expect(client.interruptTurn).toHaveBeenCalledExactlyOnceWith({ threadId: "side-1", turnId: "turn-1" });
+  expect(client.unsubscribeThread).toHaveBeenCalledExactlyOnceWith({ threadId: "side-1" });
+  expect(result.current.thread?.id).toBe("side-2");
+  expect(result.current.subscriptionHandlers.ownsThread("side-1")).toBe(false);
 });

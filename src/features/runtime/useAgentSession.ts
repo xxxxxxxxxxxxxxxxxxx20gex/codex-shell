@@ -152,7 +152,22 @@ export function useAgentSession(
     return client;
   }, [readSandboxReadiness]);
 
+  const sideChat = useSideChat({
+    clientRef,
+    ensureConnected,
+    mainThread: sessionState.thread,
+    mainTurns: sessionState.turns,
+    settings,
+    personalization,
+    markThreadRunning,
+    markThreadStopped,
+  });
+  const closeSideChatForParent = sideChat.closeForParent;
+  const closeDeletedSideChat = useCallback((id: string) => { void closeSideChatForParent(id); }, [closeSideChatForParent]);
   const threads = useThreadController({
+    onThreadCreated: sideChat.adoptDraft,
+    onThreadDeleted: closeDeletedSideChat,
+    onNewTask: sideChat.discardDraft,
     clientRef,
     ensureConnected,
     settings,
@@ -170,16 +185,6 @@ export function useAgentSession(
     markThreadStatus,
     getRunningTurn,
     isThreadRunning,
-  });
-  const sideChat = useSideChat({
-    clientRef,
-    ensureConnected,
-    mainThread: sessionState.thread,
-    mainTurns: sessionState.turns,
-    settings,
-    personalization,
-    markThreadRunning,
-    markThreadStopped,
   });
   const sideChatSubscriptionHandlers = sideChat.subscriptionHandlers;
   const resetSideChat = sideChat.reset;
@@ -243,7 +248,10 @@ export function useAgentSession(
       onThreadStarted,
       onThreadStatus,
       onThreadArchived: (notification) => removeThread(notification.threadId),
-      onThreadDeleted: (notification) => removeThread(notification.threadId),
+      onThreadDeleted: (notification) => {
+        closeDeletedSideChat(notification.threadId);
+        removeThread(notification.threadId);
+      },
       onThreadUnarchived: (notification) => onThreadUnarchived(notification.threadId),
       onThreadClosed: (notification) => {
         runtimeNoticeStore.dismissWhere((notice) => notice.category === "modelBuffering" && notice.threadId === notification.threadId);
@@ -370,6 +378,7 @@ export function useAgentSession(
     });
   }, [
     clearRunningTurns,
+    closeDeletedSideChat,
     currentThreadId,
     interactionStore,
     markThreadStopped,
