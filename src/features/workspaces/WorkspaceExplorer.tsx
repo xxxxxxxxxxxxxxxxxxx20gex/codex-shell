@@ -1,3 +1,4 @@
+import { PdfPreview } from "./PdfPreview";
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import {
   ChevronDown,
@@ -353,7 +354,7 @@ export function WorkspaceExplorer({ rootPath, initialFilePath = null, onClose, r
             {preview?.kind === "binary" && <div className="explorer-empty"><span><FileCog aria-hidden="true" /></span><strong>二进制文件</strong><p>该文件共 {formatFileSize(preview.byteSize)}，不适合以文本方式显示。</p></div>}
             {preview?.kind === "tooLarge" && <div className="explorer-empty"><span><FileWarning aria-hidden="true" /></span><strong>文件过大，暂不预览</strong><p>该文件共 {formatFileSize(preview.byteSize)}，超过 20 MiB 预览上限。</p></div>}
             {preview?.kind === "image" && <div className="explorer-image-preview"><button type="button" className="explorer-image-open" onClick={() => setAnnotationPath(selectedPath)} title="打开图片预览与批注" aria-label="打开图片预览与批注"><img src={preview.dataUrl} alt={fileName(selectedPath ?? "图片预览")} /></button></div>}
-            {preview?.kind === "pdf" && <iframe className="explorer-pdf-preview" src={preview.dataUrl} title={`预览 ${fileName(selectedPath ?? "PDF")}`} />}
+            {preview?.kind === "pdf" && <PdfPreview key={selectedPath} dataUrl={preview.dataUrl} name={fileName(selectedPath ?? "PDF")} />}
             {preview?.kind === "text" && <div className="explorer-code-preview">
               {preview.truncated && <div className="preview-truncated">文件较大，仅显示前 200 KB / 4000 行。</div>}
               <pre>{previewLines.map((line, index) => <span className="preview-line" key={index}><i>{index + 1}</i><code>{line || " "}</code></span>)}</pre>

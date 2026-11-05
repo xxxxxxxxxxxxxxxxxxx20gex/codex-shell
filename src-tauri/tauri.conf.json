@@ -23,7 +23,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; img-src 'self' data: asset: http://asset.localhost; style-src 'self' 'unsafe-inline'; connect-src ipc: http://ipc.localhost https:"
+      "csp": "default-src 'self'; img-src 'self' data: asset: http://asset.localhost; style-src 'self' 'unsafe-inline'; worker-src 'self'; font-src 'self' blob:; connect-src 'self' data: ipc: http://ipc.localhost https:"
     }
   },
   "plugins": {
@@ -55,6 +55,7 @@
     "resources": [
       "../licenses/Apache-2.0.txt",
       "../licenses/CODEX-NOTICE",
+      "../licenses/PDFJS-NOTICE.txt",
       "../licenses/RIPGREP-MIT.txt",
       "../licenses/README.md",
       "../bundled/skills"

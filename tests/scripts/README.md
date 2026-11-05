@@ -4,6 +4,8 @@
 
 ## 脚本
 
+- `pnpm test:pdf-preview <playwright/index.mjs绝对路径> <浏览器exe绝对路径> <两页PDF绝对路径>`：Vite 端口 1436；真实 PDF.js／Worker 读取指定测试文件，四尺寸检查两页非白像素、翻页、键盘、损坏文件错误和卸载。文件只读，截图写入临时目录；开发服务器探针不代替打包后 WebView2 验证。
+
 - `pnpm test:file-citation-layout <playwright/index.mjs绝对路径> <浏览器exe绝对路径>`：先启动端口 1436 的 Vite；真实 Markdown 与附件组件使用模拟打开回调，四尺寸深浅主题验证文件引用链接、附件提取、键盘激活与横向溢出，截图写入临时目录。不访问用户文件或验证系统 PDF 阅读器。
 
 - `pnpm test:side-chat-layout <playwright/index.mjs绝对路径> <浏览器exe绝对路径> [Vite端口=1436]`：先启动 Vite，挂载真实侧聊 Hook／面板与模拟 IPC，四尺寸深浅主题验证切换保留、隐藏回复、独立草稿、返回／重开、关闭与 Runtime 重置、布局、字号及键盘焦点；截图存入临时目录，不挂载完整 App，不访问用户历史或真实模型。

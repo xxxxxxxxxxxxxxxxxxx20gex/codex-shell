@@ -45,5 +45,4 @@
 @media (max-width: 899px) { .explorer-body { grid-template-columns: var(--explorer-tree-width, 225px) 8px minmax(0,1fr); } }
 .explorer-image-open { display: contents; cursor: zoom-in; }
 .explorer-image-open:focus-visible img { outline: 2px solid var(--accent-info); outline-offset: 2px; }
-.explorer-pdf-preview { width: 100%; height: min(70vh, 720px); border: 0; background: var(--surface-panel); }
 .explorer-action-error { position: absolute; z-index: 3; bottom: var(--space-2); margin: var(--space-2); padding: var(--space-2); color: var(--accent-danger); background: var(--surface-panel); font-size: var(--text-ui); overflow-wrap: anywhere; }

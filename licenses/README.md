@@ -4,6 +4,7 @@ Codex Shell bundles an unmodified Codex Runtime and its companion binaries so
 that the application can run without a separate Codex installation.
 
 - `Apache-2.0.txt` is the Apache License 2.0 text used by the Codex project.
+- `PDFJS-NOTICE.txt` covers PDF.js (Apache-2.0) and bundled Foxit / Liberation fonts and Adobe CMaps used for internal PDF preview.
 - `CODEX-NOTICE` is the notice file distributed with the Codex source tree.
 - `RIPGREP-MIT.txt` covers the separately bundled, unmodified ripgrep 15.2.0
   Windows x64 MSVC executable under the MIT license (upstream also offers
