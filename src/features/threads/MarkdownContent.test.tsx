@@ -102,3 +102,12 @@ describe("MarkdownContent code blocks", () => {
     expect(view.container.querySelector("code")?.textContent).toBe("pnpm test");
   });
 });
+
+it("renders native file citations using the existing local-file action", async () => {
+  const onOpenPath = vi.fn();
+  const path = "C:\\work\\报告 (最终)_100%.pdf";
+  const view = render(<MarkdownContent onOpenPath={onOpenPath}>{`:codex-file-citation{path="${path}" purpose="output"}`}</MarkdownContent>);
+  fireEvent.click(view.getByRole("link", { name: "报告 (最终)_100%.pdf" }));
+  await waitFor(() => expect(onOpenPath).toHaveBeenCalledWith("C:/work/报告 (最终)_100%.pdf"));
+  expect(view.container.textContent).not.toContain("codex-file-citation");
+});

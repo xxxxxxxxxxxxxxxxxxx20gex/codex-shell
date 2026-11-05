@@ -4,6 +4,8 @@
 
 ## 脚本
 
+- `pnpm test:file-citation-layout <playwright/index.mjs绝对路径> <浏览器exe绝对路径>`：先启动端口 1436 的 Vite；真实 Markdown 与附件组件使用模拟打开回调，四尺寸深浅主题验证文件引用链接、附件提取、键盘激活与横向溢出，截图写入临时目录。不访问用户文件或验证系统 PDF 阅读器。
+
 - `pnpm test:side-chat-layout <playwright/index.mjs绝对路径> <浏览器exe绝对路径> [Vite端口=1436]`：先启动 Vite，挂载真实侧聊 Hook／面板与模拟 IPC，四尺寸深浅主题验证切换保留、隐藏回复、独立草稿、返回／重开、关闭与 Runtime 重置、布局、字号及键盘焦点；截图存入临时目录，不挂载完整 App，不访问用户历史或真实模型。
 
 - `powershell -NoProfile -File tests/scripts/check-window-icon.ps1 -ProcessId <运行中的客户端PID>`：通过真实 Win32 窗口读取 `ICON_SMALL` / `ICON_BIG`，要求任务栏大图标存在并与该进程 EXE 图标逐像素一致；导出三张 PNG 到临时目录。先启动待测 Debug 客户端；脚本不启动或关闭进程，也不清理系统图标缓存。

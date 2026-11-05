@@ -1,3 +1,4 @@
+import { normalizeFileCitations } from "./fileCitations";
 import { FileSearch, FileSpreadsheet, FileText, FolderOpen, Image as ImageIcon } from "lucide-react";
 import type { ThreadItem } from "../../generated/app-server/v2/ThreadItem";
 import { ImageAttachmentPreview } from "../attachments/AttachmentGallery";
@@ -46,7 +47,7 @@ function replyPaths(items: ThreadItem[]) {
   const messages = items.filter((item) => item.type === "agentMessage" && item.phase !== "commentary");
   for (const message of messages) {
     if (message.type !== "agentMessage") continue;
-    const tree = parser.parse(message.text);
+    const tree = parser.parse(normalizeFileCitations(message.text));
     const definitions = new Map(tree.children.flatMap((node) => node.type === "definition" ? [[node.identifier, node.url] as const] : []));
     function visit(node: { type: string; url?: string; identifier?: string; children?: typeof tree.children }) {
       const url = node.type === "link" || node.type === "image" ? node.url

@@ -1,3 +1,4 @@
+import { normalizeFileCitations } from "./fileCitations";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { File } from "lucide-react";
 import { isValidElement, type ReactElement, type ReactNode } from "react";
@@ -141,7 +142,7 @@ export function MarkdownContent({ children, className, onOpenPath, onOpenError }
           },
         }}
       >
-        {children}
+        {normalizeFileCitations(children)}
       </ReactMarkdown>
     </div>
   );

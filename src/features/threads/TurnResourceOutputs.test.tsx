@@ -93,3 +93,10 @@ it("does not read or list an invalid Core file URL", () => {
   expect(pathExists).not.toHaveBeenCalled();
   expect(readFile).not.toHaveBeenCalled();
 });
+
+it("discovers citation outputs and deduplicates Markdown and process references", () => {
+  const message: ThreadItem = { type: "agentMessage", id: "a", text: ':codex-file-citation{path="C:/work/report.pdf" purpose="output"}\n[报告](C:/work/report.pdf)', phase: "final_answer", memoryCitation: null, questions: null, delivery: null };
+  const view = render(<TurnResourceOutputs items={[message, { type: "fileChange", id: "f", changes: [{ path: "C:/work/report.pdf", kind: { type: "add" }, diff: "" }], status: "completed" }]} onOpenPath={vi.fn()} />);
+  expect(view.getAllByRole("button", { name: "打开 C:/work/report.pdf" })).toHaveLength(1);
+  expect(view.queryByText(/过程资源/)).toBeNull();
+});
