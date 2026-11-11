@@ -3,7 +3,7 @@
 - 当前阶段：Milestone 2 - P0 桌面编程工作台；发布版本为 v0.2.0，Core 为 0.160.1；包含 Soft Notebook、品牌图标、空状态动画、任务栏修复和文档／凭证 Skill。
 - 总体状态：核心对话、Session、工具活动、审批、文件、Diff 和模型配置可用；已发布带 minisign 更新签名的 NSIS Windows 安装包，Windows Authenticode 代码签名、CI 与 Runtime 恢复能力尚未完成。
 - 文档边界：本文件只记录跨模块当前快照、项目级风险、下一里程碑和完整验证基线。模块行为和定向证据以 [模块状态索引](../README.md#当前状态) 为准，历史由 Git 保留。
-- 最后更新：2026-11-05
+- 最后更新：2026-11-11
 
 ## 跨模块当前快照
 
@@ -47,7 +47,7 @@
 
 ## 完整验证基线
 
-- 2026-11-05 main PDF 内部预览修复：`pnpm test:quality` 通过，包含 515 项前端、34 项高德离线、52 项 Rust 测试（1 项交互测试忽略）、TypeScript、ESLint、Knip、production build、Cargo check 和严格 Clippy。PDF 四尺寸回归及真实 Debug WebView2 两页渲染／翻页验证通过，Debug 已重建；未发布新生产包。浏览器夹具不等同于完整 App／WebView2 或真实外部服务验收。
+- 2026-11-11 main 侧聊布局修复：`pnpm test:quality` 通过，包含 515 项前端、34 项高德离线、52 项 Rust 测试（1 项交互测试忽略）、TypeScript、ESLint、Knip、production build、Cargo check 和严格 Clippy。侧聊长回复四尺寸深浅主题、错误显隐与关闭操作浏览器回归通过，Debug 已重建；未发布新生产包。浏览器夹具不等同于完整 App／WebView2 或真实外部服务验收。
 - v0.2.0 的签名 NSIS、manifest 与 Runtime 同源哈希校验通过，47 个随包 Skill 文件与源码一致；同版本 Debug 已重建。资产与未覆盖范围见 [测试与发布状态](testing-release-status.md#最近发布)。
 - 当前验证、发布资产和未覆盖边界统一见 [测试与发布状态](testing-release-status.md)；历史发布基线由 Git 保留。当前仍不把模拟探针、局部浏览器检查或用户未枚举的手工检查宣称为全量桌面、真实外部 API 或干净机器验收。
 - 当前发布基线：发布冻结分支 `release/v0.2.0` 和 Tag `v0.2.0` 与本次发布提交保持一致；后续功能直接在 `main` 开发，发布时按新的版本号重新建立发布分支和 Tag。

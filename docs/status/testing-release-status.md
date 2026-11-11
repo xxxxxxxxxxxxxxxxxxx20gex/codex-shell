@@ -5,11 +5,11 @@
 - 当前接口：`pnpm test:quality` 执行 TypeScript、ESLint、Vitest、高德离线测试、production build、Knip、Cargo check、Rust 单测、严格 Clippy 和 diff 检查。专项入口见 [测试脚本说明](../../tests/scripts/README.md)。
 - 已知问题：缺少 CI、Windows Authenticode、超长活动虚拟化和三栏拖拽端到端覆盖；`test:extension-layout` 指向缺失文件，技能和 MCP 应分别使用 Soft Notebook、MCP 专项。Vite 主 chunk 超过 500 kB；Rust 既有格式差异尚未整理，`cargo fmt --check` 未纳入门禁。生图 `--mask` 未接通上传，不得据参数存在宣称遮罩编辑可用。
 - 下一步：真实系统凭据、多渠道对话、第三方 MCP OAuth、干净 Windows 安装升级、大型历史迁移，以及生图编辑／遮罩契约补齐后的专项验证。
-- 最后更新：2026-11-05
+- 最后更新：2026-11-11
 
 ## 当前验证基线
 
-- 2026-11-05，main PDF 内部预览修复执行 `pnpm test:quality` 通过：80 个文件／515 项前端、34 项高德离线、52 项 Rust 测试通过，1 项交互测试忽略；TypeScript、ESLint、Knip、production build、Cargo check、严格 Clippy 和 diff 检查通过。`pnpm desktop:build` 通过，Debug Runtime 与 companion 哈希通过；未生成新生产包，线上仍为 v0.2.0。保留 Vite 大 chunk 与 Debug 链接器信息提示。
+- 2026-11-11，main 侧聊布局修复执行 `pnpm test:quality` 通过：80 个文件／515 项前端、34 项高德离线、52 项 Rust 测试通过，1 项交互测试忽略；TypeScript、ESLint、Knip、production build、Cargo check、严格 Clippy 和 diff 检查通过。`pnpm desktop:build` 通过，Debug Runtime 与 companion 哈希通过；未生成新生产包，线上仍为 v0.2.0。保留 Vite 大 chunk 与 Debug 链接器信息提示。
 - 2026-11-02，`pnpm desktop:build` 与 `pnpm release:package` 通过；Debug／Release 文件版本均为 0.2.0。Runtime 兼容门禁、安装器 minisign 签名、可信注释、manifest 及 Core／三个 helper 哈希通过；47 个 Release Skill 资源与源码一致。保留既有 Vite 大 chunk 与 Rust 链接器信息提示。
 - 2026-10-23，复核全部 39 份跟踪 Markdown 的职责与引用；本地链接、标题锚点、文档中的 pnpm 命令名称，以及发布分支与 tag 的提交一致性分别检查。有效入口不等于已运行专项；已知失效的 extension 探针单独保留为问题。
 - 以下为当前实现仍有效的最近专项证据，各行日期独立，不意味着本次文档整理重新执行了全部浏览器、Runtime 或在线服务验收。旧版本和被替代的验证流水由 Git 保留。
@@ -22,6 +22,7 @@
 | --- | --- | --- |
 | PDF 内部预览 | 2026-11-05，`test:pdf-preview` 与真实 Debug WebView2 | 指定两页 PDF 在四尺寸浏览器中像素非空、翻页／键盘、损坏输入和卸载通过；打包后在真实 WebView2 从原会话链接打开同一 PDF，两页内容与翻页正常，无 CSP／Worker／渲染错误。未覆盖所有 PDF 编码、加密文件输入或交互表单。 |
 | 文件引用 | 2026-11-05，`test:file-citation-layout` | 四尺寸深浅主题通过正文链接、回复附件、键盘激活与溢出检查；29 项定向测试覆盖指令解析、特殊路径、代码保护、非法地址与资源去重。模拟打开回调，未验证系统 PDF 阅读器。 |
+| 侧聊长回复布局 | 2026-11-11，`test:side-chat-layout` | 原实现因可选错误提示缺席而错排行，新增长回复测试在修复前失败；修复后四尺寸深浅主题通过消息区内部滚动、错误显隐、输入框边界、关闭按钮命中与实际关闭。使用真实组件／模拟 IPC，不宣称完整 WebView2 验收。 |
 | 侧聊跨会话保留 | 2026-11-03，`test:side-chat-layout`、`runtime:probe-upgrade` | 真实 Hook／面板的四尺寸深浅主题检查切回消息／草稿、后台回复、返回重开、独立关闭和重置、字号／图标／焦点；Core 隔离探针确认父 Thread 退订后两个临时侧聊仍可续聊、上下文独立。定向测试覆盖迟到响应、容量边界、新对话归属迁移和删除清理；浏览器为模拟 IPC，不覆盖完整 App／WebView2 或收费模型。 |
 | Windows 任务栏图标 | 2026-10-23，`check-window-icon.ps1` | 旧 Debug 复现缺少 `ICON_BIG`；修复后真实窗口小图标存在，大图标按实际 DPI 尺寸与 EXE 资源逐像素一致。Windows PowerShell 5／7 通过，150% DPI 为 48×48，真实任务栏截图正确；未验证固定快捷方式缓存或干净安装。 |
 | 主题与共用界面 | 2026-10-23，`test:soft-notebook-layout` | 四尺寸技能、详情、斜杠菜单、个性化／外观／运行环境／诊断、空状态和 Portal；深浅对比度、系统实时切换、焦点、Escape／外部点击、文字下限通过。使用真实子组件与模拟数据，不挂载完整 App 或 Runtime；模型渠道由专用探针覆盖。 |

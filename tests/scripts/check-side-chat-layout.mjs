@@ -35,15 +35,16 @@ function Host(){
  const [parentId,setParentId]=React.useState('A');
  const [visible,setVisible]=React.useState(true);
  const [maximized,setMaximized]=React.useState(false);
+ const [error,setError]=React.useState(''); window.setSideError=setError;
  const chat=useSideChat({clientRef,ensureConnected,mainThread:{...fakeThread(),id:parentId},mainTurns:[],settings,markThreadRunning:noop,markThreadStopped:noop});
- window.finishA=()=>chat.subscriptionHandlers.onTurnCompleted({threadId:'side-1',turn:{...fakeTurn('completed'),items:[
+ window.finishA=(long=false)=>chat.subscriptionHandlers.onTurnCompleted({threadId:'side-1',turn:{...fakeTurn('completed'),items:[
   {type:'userMessage',id:'user-A',content:[{type:'text',text:'问题 A',text_elements:[]}]},
-  {type:'agentMessage',id:'answer-A',text:'后台回答 A',phase:'final_answer',memoryCitation:null,delivery:null,questions:null}
+  {type:'agentMessage',id:'answer-A',text:long ? '长回复段落，包含代码与表格。\\n\\n'.repeat(150) : '后台回答 A',phase:'final_answer',memoryCitation:null,delivery:null,questions:null}
  ]}});
  return h('div',{style:{height:'100vh',display:'grid',gridTemplateRows:'40px minmax(0,1fr)'}},
   h('nav',null,...['A','B'].map(id=>h('button',{key:id,onClick:()=>{setParentId(id);setVisible(true)}},'主会话 '+id)),h('button',{onClick:()=>chat.reset()},'模拟 Runtime 重置')),
   h('aside',{style:{width:maximized?'100%':'288px',maxWidth:'100%',justifySelf:'end',minHeight:0}},
-   chat.thread && visible ? h(SideChatPanel,{key:chat.thread.id,chat,maximized,onToggleMaximize:()=>setMaximized(v=>!v),onBack:()=>setVisible(false),onClose:()=>chat.close()})
+   chat.thread && visible ? h(SideChatPanel,{key:chat.thread.id,chat:{...chat,error},maximized,onToggleMaximize:()=>setMaximized(v=>!v),onBack:()=>setVisible(false),onClose:()=>chat.close()})
     : h('button',{onClick:async()=>{await chat.openChat();setVisible(true)}},'打开侧聊')));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(h(Host));
@@ -74,6 +75,30 @@ ReactDOM.createRoot(document.getElementById('root')).render(h(Host));
       await page.getByRole("button", { name: "打开侧聊" }).click();
       assert.equal(await page.getByRole("textbox").inputValue(), "草稿 A");
       const panel = page.getByRole("region", { name: "侧边聊天" });
+      await page.evaluate(() => window.finishA(true));
+      for (const error of ["", "连接失败，请重试", ""]) {
+        await page.evaluate(error => window.setSideError(error), error);
+        await page.getByRole("textbox").focus();
+        const geometry = await panel.evaluate(el => {
+          const header = el.querySelector('.side-chat-header').getBoundingClientRect();
+          const composer = el.querySelector('.side-chat-composer').getBoundingClientRect();
+          const timeline = el.querySelector('.timeline');
+          const button = el.querySelector('[aria-label="关闭侧边聊天"]');
+          const rect = button.getBoundingClientRect();
+          return {headerTop:header.top, composerBottom:composer.bottom, composerTop:composer.top,
+            timelineBottom:timeline.getBoundingClientRect().bottom, timelineHeight:timeline.clientHeight,
+            scrollHeight:timeline.scrollHeight, panelScroll:el.scrollTop,
+            closeReachable:button.contains(document.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2))};
+        });
+        assert(geometry.headerTop >= 40 && geometry.composerBottom <= height + 1);
+        assert(geometry.timelineHeight > 0 && geometry.timelineHeight < height);
+        assert(geometry.scrollHeight > geometry.timelineHeight);
+        assert(geometry.timelineBottom <= geometry.composerTop + 1);
+        assert.equal(geometry.panelScroll, 0);
+        assert.equal(geometry.closeReachable, true);
+        await panel.locator('.timeline').evaluate(el => { el.scrollTop = 100; });
+        assert.equal(await panel.locator('.timeline').evaluate(el => el.scrollTop), 100);
+      }
       const bounds = await panel.boundingBox();
       assert(bounds.x >= 0 && bounds.x + bounds.width <= width + 1 && bounds.y + bounds.height <= height + 1);
       assert.equal(await panel.locator('.side-chat-actions svg').first().evaluate(el => el.getBoundingClientRect().width), 16);
